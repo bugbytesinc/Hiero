@@ -1,0 +1,50 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<PackageId>Hiero</PackageId>
+		<TargetFramework>net9.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<RootNamespace>Hiero</RootNamespace>
+		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+		<Authors>BugBytes, Inc.</Authors>
+		<Company>BugBytes, Inc.</Company>
+		<Title>Hiero .NET SDK</Title>
+		<Description>.NET Client Library for Hiero Network and Hedera Hashgraph</Description>
+		<Copyright>Copyright 2025 BugBytes, Inc. All Rights Reserved.</Copyright>
+		<PackageLicenseFile></PackageLicenseFile>
+		<PackageProjectUrl>https://bugbytesinc.github.io/Hiero/</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/bugbytesinc/Hiero.git</RepositoryUrl>
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<EmbedUntrackedSources>true</EmbedUntrackedSources>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<PackageTags>Hiero;Hedera;Hashgraph;web3</PackageTags>
+		<PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
+		<RepositoryType>GitHub</RepositoryType>
+		<PackageIcon>icon.png</PackageIcon>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+	</PropertyGroup>
+	<ItemGroup>
+		<None Include="..\Reference\Images\icon.png" Pack="true" PackagePath="\" />
+		<None Include="..\README.md" Pack="true" PackagePath="\"/>
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Portable.BouncyCastle" Version="1.9.0" />
+		<PackageReference Include="Google.Protobuf" Version="3.32.0" />
+		<PackageReference Include="Grpc.Net.Client" Version="2.71.0" />
+		<PackageReference Include="Grpc.Tools" Version="2.72.0">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
+	</ItemGroup>
+	<ItemGroup>
+		<Protobuf Include="..\Reference\hedera-protobufs\**\*.proto" GrpcServices="Client" ProtoRoot="..\Reference\hedera-protobufs">
+			<Link>Proto\%(RecursiveDir)%(Filename)%(Extension)</Link>
+		</Protobuf>
+		<Protobuf Include="..\Reference\hedera-mirror\proto\ConsensusService-Mirror.proto" GrpcServices="Client">
+			<Link>Proto\%(RecursiveDir)%(Filename)%(Extension)</Link>
+		</Protobuf>
+	</ItemGroup>
+</Project>
