@@ -1,10 +1,6 @@
 ﻿using Hiero.Mirror.Filters;
-using System;
 using System.Diagnostics;
-using System.Linq;
-using System.Net.Http;
 using System.Text.Json;
-using System.Threading.Tasks;
 using System.Web;
 
 namespace Hiero.Mirror.Implementation;

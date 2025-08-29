@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Hiero;
+﻿namespace Hiero;
 
 /// <summary>
 /// Represents the condition where a submitted transaction 

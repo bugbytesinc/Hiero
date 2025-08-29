@@ -1,6 +1,4 @@
 ﻿#pragma warning disable CS8618
-using System;
-
 namespace Hiero;
 /// <summary>
 /// Represents a Topics Message retrieved from a mirror node.

@@ -1,11 +1,7 @@
 ﻿using Hiero.Implementation;
 using Proto;
-using System;
 using System.ComponentModel;
-using System.Linq;
 using System.Numerics;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Hiero;
 /// <summary>
@@ -110,6 +106,6 @@ public static class TopicInfoExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
     public static async Task<TopicInfo> GetTopicInfoAsync(this ConsensusClient client, EntityId topic, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
     {
-        return new TopicInfo(await client.ExecuteQueryAsync(new ConsensusGetTopicInfoQuery { TopicID = new TopicID(topic) }, cancellationToken, configure).ConfigureAwait(false));
+        return new TopicInfo(await Engine.QueryAsync(client, new ConsensusGetTopicInfoQuery { TopicID = new TopicID(topic) }, cancellationToken, configure).ConfigureAwait(false));
     }
 }

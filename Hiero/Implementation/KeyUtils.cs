@@ -8,7 +8,6 @@ using Org.BouncyCastle.Math;
 using Org.BouncyCastle.Math.EC.Rfc8032;
 using Org.BouncyCastle.Security;
 using Org.BouncyCastle.X509;
-using System;
 
 namespace Hiero.Implementation;
 

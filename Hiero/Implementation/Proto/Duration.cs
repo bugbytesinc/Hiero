@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Proto;
+﻿namespace Proto;
 
 public sealed partial class Duration
 {

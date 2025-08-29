@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Hiero;
+﻿namespace Hiero;
 /// <summary>
 /// Enumerates known HD Key Derivitation paths for
 /// various Key formats and Wallets in the Hedera eccosystem.

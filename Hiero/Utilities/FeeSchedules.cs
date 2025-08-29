@@ -1,9 +1,5 @@
 ﻿using Proto;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Hiero;
 
@@ -61,7 +57,7 @@ public static class FeeSchedulesExtensions
     /// NOTE: this method incours a charge to retrieve the file from the network.
     /// </remarks>
     /// <param name="client">
-    /// Consensus Client to Query
+    /// Consensus Client to QueryAsync
     /// </param>
     /// <param name="configure">
     /// Optional callback method providing an opportunity to modify 

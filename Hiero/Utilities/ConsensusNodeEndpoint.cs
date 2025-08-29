@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Hiero;
+﻿namespace Hiero;
 /// <summary>
 /// Represents an Hedera Node ConsensusNodeEndpoint IP Payer and Port
 /// </summary>

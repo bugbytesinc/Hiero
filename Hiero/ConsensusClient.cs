@@ -1,9 +1,7 @@
 ﻿using Grpc.Net.Client;
 using Hiero.Implementation;
-using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
 
 [assembly: InternalsVisibleTo("Hashgraph.Test")]
 

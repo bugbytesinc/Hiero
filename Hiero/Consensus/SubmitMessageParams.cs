@@ -1,10 +1,7 @@
 ﻿using Google.Protobuf;
 using Hiero.Implementation;
 using Proto;
-using System;
 using System.ComponentModel;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Hiero;
 
@@ -212,8 +209,8 @@ public static class SubmitMessageExtensions
                 configure?.Invoke(ctx);
                 configuredContext = (GossipContextStack)ctx;
             });
-            var initialChunkTransactionId = ConsensusEngine.GetOrCreateTransactionID(configuredContext).AsTxId();
-            if (ConsensusEngine.GatherSignatories(configuredContext, submitParams.Signatory).GetSchedule() is null)
+            var initialChunkTransactionId = Engine.GetOrCreateTransactionID(configuredContext).AsTxId();
+            if (Engine.CoalesceSignatories(configuredContext.Signatory, submitParams.Signatory)?.GetSchedule() is null)
             {
                 // The easy path, this is not a scheduled transaction.
                 submitParams = submitParams.CloneWithTransactionId(initialChunkTransactionId);

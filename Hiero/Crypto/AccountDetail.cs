@@ -1,12 +1,7 @@
 ﻿using Hiero.Implementation;
 using Proto;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using System.Numerics;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Hiero;
 
@@ -161,6 +156,6 @@ public static class AccountDetailExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
     public static async Task<AccountDetail> GetAccountDetailAsync(this ConsensusClient client, EntityId address, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
     {
-        return new AccountDetail(await client.ExecuteQueryAsync(new GetAccountDetailsQuery { AccountId = new AccountID(address) }, cancellationToken, configure).ConfigureAwait(false));
+        return new AccountDetail(await Engine.QueryAsync(client, new GetAccountDetailsQuery { AccountId = new AccountID(address) }, cancellationToken, configure).ConfigureAwait(false));
     }
 }

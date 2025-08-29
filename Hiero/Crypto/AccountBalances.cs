@@ -1,11 +1,7 @@
 ﻿using Hiero.Implementation;
 using Proto;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Hiero;
 /// <summary>
@@ -89,7 +85,7 @@ public static class ContractBalancesExtensions
     /// </returns>
     public static async Task<AccountBalances> GetContractBalancesAsync(this ConsensusClient client, EntityId contract, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
     {
-        return new AccountBalances(await client.ExecuteQueryAsync(new CryptoGetAccountBalanceQuery { ContractID = new ContractID(contract) }, cancellationToken, configure).ConfigureAwait(false));
+        return new AccountBalances(await Engine.QueryAsync(client, new CryptoGetAccountBalanceQuery { ContractID = new ContractID(contract) }, cancellationToken, configure).ConfigureAwait(false));
     }
     /// <summary>
     /// Retrieves the balance in tinybars from the network for a given contract.
@@ -113,7 +109,7 @@ public static class ContractBalancesExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
     public static async Task<ulong> GetContractBalanceAsync(this ConsensusClient client, EntityId contract, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
     {
-        return new AccountBalances(await client.ExecuteQueryAsync(new CryptoGetAccountBalanceQuery { ContractID = new ContractID(contract) }, cancellationToken, configure).ConfigureAwait(false)).Crypto;
+        return new AccountBalances(await Engine.QueryAsync(client, new CryptoGetAccountBalanceQuery { ContractID = new ContractID(contract) }, cancellationToken, configure).ConfigureAwait(false)).Crypto;
     }
     /// <summary>
     /// Retrieves the crypto and token blances from the network for a given address.
@@ -136,7 +132,7 @@ public static class ContractBalancesExtensions
     /// </returns>
     public static async Task<AccountBalances> GetAccountBalancesAsync(this ConsensusClient client, EntityId address, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
     {
-        return new AccountBalances(await client.ExecuteQueryAsync(new CryptoGetAccountBalanceQuery { AccountID = new AccountID(address) }, cancellationToken, configure).ConfigureAwait(false));
+        return new AccountBalances(await Engine.QueryAsync(client, new CryptoGetAccountBalanceQuery { AccountID = new AccountID(address) }, cancellationToken, configure).ConfigureAwait(false));
     }
     /// <summary>
     /// Retrieves the balance in tinybars from the network for a given address.
@@ -160,6 +156,6 @@ public static class ContractBalancesExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
     public static async Task<ulong> GetAccountBalanceAsync(this ConsensusClient client, EntityId address, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
     {
-        return new AccountBalances(await client.ExecuteQueryAsync(new CryptoGetAccountBalanceQuery { AccountID = new AccountID(address) }, cancellationToken, configure).ConfigureAwait(false)).Crypto;
+        return new AccountBalances(await Engine.QueryAsync(client, new CryptoGetAccountBalanceQuery { AccountID = new AccountID(address) }, cancellationToken, configure).ConfigureAwait(false)).Crypto;
     }
 }

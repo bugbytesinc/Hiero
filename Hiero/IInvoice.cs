@@ -1,7 +1,4 @@
-﻿using System;
-using System.Threading;
-
-namespace Hiero;
+﻿namespace Hiero;
 /// <summary>
 /// Represents a transaction signing request.  
 /// This structure is passed to each configured 

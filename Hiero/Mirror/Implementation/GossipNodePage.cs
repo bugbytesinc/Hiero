@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace Hiero.Mirror.Implementation;
+﻿namespace Hiero.Mirror.Implementation;
 /// <summary>
 /// Paged list of gossip nodes.
 /// </summary>

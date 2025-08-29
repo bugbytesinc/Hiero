@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Hiero;
+﻿namespace Hiero;
 /// <summary>
 /// Record produced from creating a new contract.
 /// </summary>

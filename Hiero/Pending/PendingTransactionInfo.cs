@@ -1,11 +1,8 @@
 ﻿using Google.Protobuf;
 using Hiero.Implementation;
 using Proto;
-using System;
 using System.ComponentModel;
 using System.Numerics;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Hiero;
 /// <summary>
@@ -124,6 +121,6 @@ public static class PendingTransactionInfoExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
     public static async Task<PendingTransactionInfo> GetPendingTransactionInfoAsync(this ConsensusClient client, EntityId pending, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
     {
-        return new PendingTransactionInfo(await client.ExecuteQueryAsync(new ScheduleGetInfoQuery { ScheduleID = new ScheduleID(pending) }, cancellationToken, configure).ConfigureAwait(false));
+        return new PendingTransactionInfo(await Engine.QueryAsync(client, new ScheduleGetInfoQuery { ScheduleID = new ScheduleID(pending) }, cancellationToken, configure).ConfigureAwait(false));
     }
 }

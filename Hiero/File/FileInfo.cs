@@ -1,10 +1,7 @@
 ﻿using Hiero.Implementation;
 using Proto;
-using System;
 using System.ComponentModel;
 using System.Numerics;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Hiero;
 /// <summary>
@@ -83,7 +80,7 @@ public static class FileInfoExtensions
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
     public static async Task<ReadOnlyMemory<byte>> GetFileContentAsync(this ConsensusClient client, EntityId file, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
     {
-        var response = await client.ExecuteQueryAsync(new FileGetContentsQuery { FileID = new FileID(file) }, cancellationToken, configure).ConfigureAwait(false);
+        var response = await Engine.QueryAsync(client, new FileGetContentsQuery { FileID = new FileID(file) }, cancellationToken, configure).ConfigureAwait(false);
         return response.FileGetContents.FileContents.Contents.Memory;
     }
     /// <summary>
@@ -108,6 +105,6 @@ public static class FileInfoExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
     public static async Task<FileInfo> GetFileInfoAsync(this ConsensusClient client, EntityId file, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
     {
-        return new FileInfo(await client.ExecuteQueryAsync(new FileGetInfoQuery { FileID = new FileID(file) }, cancellationToken, configure).ConfigureAwait(false));
+        return new FileInfo(await Engine.QueryAsync(client, new FileGetInfoQuery { FileID = new FileID(file) }, cancellationToken, configure).ConfigureAwait(false));
     }
 }

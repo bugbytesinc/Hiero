@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Hiero;
+﻿namespace Hiero;
 /// <summary>
 /// Represents an error with a contract query that passed the gateway node 
 /// pre-check and was processed by the gossip node but did not succeed.  It

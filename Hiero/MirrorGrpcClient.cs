@@ -1,11 +1,6 @@
-﻿using Com.Hedera.Mirror.Api.Proto;
-using Grpc.Core;
+﻿using Grpc.Core;
 using Grpc.Net.Client;
 using Hiero.Implementation;
-using System;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Hiero;
 /// <summary>
@@ -209,7 +204,7 @@ public sealed class MirrorGrpcClient : IAsyncDisposable
         {
             throw new InvalidOperationException("The Mirror Node Urul has not been configured. Please check that 'Url' is set in the Mirror context.");
         }
-        var query = new ConsensusTopicQuery()
+        var query = new Com.Hedera.Mirror.Api.Proto.ConsensusTopicQuery()
         {
             TopicID = new Proto.TopicID(subscribeParameters.Topic),
             Limit = subscribeParameters.MaxCount

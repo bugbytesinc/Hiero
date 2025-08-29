@@ -1,11 +1,7 @@
 ﻿using Hiero.Implementation;
 using Proto;
-using System;
 using System.ComponentModel;
-using System.Linq;
 using System.Numerics;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Hiero;
 /// <summary>
@@ -116,6 +112,6 @@ public static class NftInfoExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
     public static async Task<NftInfo> GetNftInfoAsync(this ConsensusClient client, Nft nft, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
     {
-        return new NftInfo(await client.ExecuteQueryAsync(new Proto.TokenGetNftInfoQuery { NftID = new Proto.NftID(nft) }, cancellationToken, configure).ConfigureAwait(false));
+        return new NftInfo(await Engine.QueryAsync(client, new TokenGetNftInfoQuery { NftID = new NftID(nft) }, cancellationToken, configure).ConfigureAwait(false));
     }
 }

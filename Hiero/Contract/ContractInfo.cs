@@ -1,11 +1,7 @@
 ﻿using Hiero.Implementation;
 using Proto;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Numerics;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Hiero;
 /// <summary>
@@ -146,7 +142,7 @@ public static class ContractInfoExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
     public static async Task<ReadOnlyMemory<byte>> GetContractBytecodeAsync(this ConsensusClient client, EntityId contract, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
     {
-        return (await client.ExecuteQueryAsync(new ContractGetBytecodeQuery { ContractID = new ContractID(contract) }, cancellationToken, configure).ConfigureAwait(false)).ContractGetBytecodeResponse.Bytecode.Memory;
+        return (await Engine.QueryAsync(client, new ContractGetBytecodeQuery { ContractID = new ContractID(contract) }, cancellationToken, configure).ConfigureAwait(false)).ContractGetBytecodeResponse.Bytecode.Memory;
     }
     /// <summary>
     /// Retrieves detailed information regarding a Smart Contract Instance.
@@ -170,6 +166,6 @@ public static class ContractInfoExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
     public static async Task<ContractInfo> GetContractInfoAsync(this ConsensusClient client, EntityId contract, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
     {
-        return new ContractInfo(await client.ExecuteQueryAsync(new ContractGetInfoQuery { ContractID = new ContractID(contract) }, cancellationToken, configure).ConfigureAwait(false));
+        return new ContractInfo(await Engine.QueryAsync(client, new ContractGetInfoQuery { ContractID = new ContractID(contract) }, cancellationToken, configure).ConfigureAwait(false));
     }
 }

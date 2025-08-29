@@ -1,8 +1,5 @@
 ﻿using Proto;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
 
 namespace Hiero;
 /// <summary>
@@ -62,7 +59,7 @@ public sealed record ContractCallResult
     /// <summary>
     /// A list of updated contract account nonces containing the new nonce 
     /// value for each contract account involved in this transaction. For
-    /// Query transactions, this should be empty as a Contract Query call
+    /// QueryAsync transactions, this should be empty as a Contract QueryAsync call
     /// does not change the state of the EVM.
     /// </summary>
     public ReadOnlyDictionary<EntityId, long> Nonces { get; private init; }

@@ -1,11 +1,8 @@
 ﻿using Google.Protobuf;
 using Hiero.Implementation;
 using Proto;
-using System;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Hiero;
 
@@ -31,7 +28,7 @@ public static class UtilityExtensions
         var context = client.CreateChildContext(configure);
         try
         {
-            return ConsensusEngine.GetOrCreateTransactionID(context).AsTxId();
+            return Engine.GetOrCreateTransactionID(context).AsTxId();
         }
         finally
         {
@@ -87,7 +84,7 @@ public static class UtilityExtensions
         });
         var stopwatch = new Stopwatch();
         stopwatch.Start();
-        var answer = await ConsensusEngine.ExecuteNetworkRequestWithRetryAsync(context, envelope, query.InstantiateNetworkRequestMethod, shouldRetryRequest, cancellationToken).ConfigureAwait(false);
+        var answer = await Engine.SubmitGrpcMessageWithRetry(context, envelope, query.InstantiateNetworkRequestMethod, shouldRetryRequest, cancellationToken).ConfigureAwait(false);
         stopwatch.Stop();
         var code = answer.ResponseHeader?.NodeTransactionPrecheckCode ?? ResponseCodeEnum.Unknown;
         if (code != ResponseCodeEnum.Ok)

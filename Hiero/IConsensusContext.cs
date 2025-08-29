@@ -1,5 +1,4 @@
 ﻿using Google.Protobuf;
-using System;
 
 namespace Hiero;
 /// <summary>
@@ -112,7 +111,7 @@ public interface IConsensusContext
     TimeSpan RetryDelay { get; set; }
     /// <summary>
     /// The additional amount of tinybars to add to the estimated
-    /// cost of a Query when a query fee is required.  Sometimes the
+    /// cost of a QueryAsync when a query fee is required.  Sometimes the
     /// network can under-report the required query fee.  For critical
     /// application paths, this value can be used to hedge any last
     /// nanosecond changes to the cost of a query.  Most use cases

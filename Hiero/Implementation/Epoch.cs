@@ -1,7 +1,4 @@
-﻿using System;
-using System.Threading;
-
-namespace Hiero.Implementation;
+﻿namespace Hiero.Implementation;
 
 /// <summary>
 /// Helper class providing .net to Hedera timestamp and 

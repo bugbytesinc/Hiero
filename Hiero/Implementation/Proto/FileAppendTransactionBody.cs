@@ -1,8 +1,6 @@
 ﻿using Grpc.Core;
 using Grpc.Net.Client;
 using Hiero.Implementation;
-using System;
-using System.Threading;
 
 namespace Proto;
 

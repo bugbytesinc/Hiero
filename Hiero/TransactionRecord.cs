@@ -1,13 +1,8 @@
 ﻿using Google.Protobuf.Collections;
 using Hiero.Implementation;
 using Proto;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Hiero;
 
@@ -133,7 +128,7 @@ public static class TransactionRecordExtensions
         // The Receipt status returned does notmatter in this case.  
         // We may be retrieving a failed records (the status would not equal OK).
         await WaitForConsensusReceipt(context, transactionId, cancellationToken).ConfigureAwait(false);
-        var record = (await ConsensusEngine.ExecuteQueryInContextAsync(new TransactionGetRecordQuery { TransactionID = transactionId }, context, cancellationToken).ConfigureAwait(false)).TransactionGetRecord.TransactionRecord;
+        var record = (await Engine.QueryAsync(context, new TransactionGetRecordQuery { TransactionID = transactionId }, cancellationToken).ConfigureAwait(false)).TransactionGetRecord.TransactionRecord;
         return FromProtobuf(record);
     }
     /// <summary>
@@ -167,12 +162,12 @@ public static class TransactionRecordExtensions
         // The Receipt status returned does notmatter in this case.  
         // We may be retrieving a failed records (the status would not equal OK).
         await WaitForConsensusReceipt(context, transactionId, cancellationToken).ConfigureAwait(false);
-        var response = await ConsensusEngine.ExecuteQueryInContextAsync(new TransactionGetRecordQuery
+        var response = await Engine.QueryAsync(context, new TransactionGetRecordQuery
         {
             TransactionID = transactionId,
             IncludeDuplicates = true,
             IncludeChildRecords = true
-        }, context, cancellationToken).ConfigureAwait(false);
+        }, cancellationToken).ConfigureAwait(false);
         var records = response.TransactionGetRecord;
         return TransactionRecordExtensions.Create(records.TransactionRecord, records.ChildTransactionRecords, records.DuplicateTransactionRecords);
     }
@@ -185,7 +180,7 @@ public static class TransactionRecordExtensions
     private static async Task WaitForConsensusReceipt(GossipContextStack context, TransactionID transactionId, CancellationToken cancellationToken)
     {
         INetworkQuery query = new TransactionGetReceiptQuery { TransactionID = transactionId };
-        await ConsensusEngine.ExecuteNetworkRequestWithRetryAsync(context, query.CreateEnvelope(), query.InstantiateNetworkRequestMethod, shouldRetry, cancellationToken).ConfigureAwait(false);
+        await Engine.SubmitGrpcMessageWithRetry(context, query.CreateEnvelope(), query.InstantiateNetworkRequestMethod, shouldRetry, cancellationToken).ConfigureAwait(false);
 
         static bool shouldRetry(Response response)
         {
@@ -222,7 +217,7 @@ public static class TransactionRecordExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
     public static async Task<TransactionRecord[]> GetAccountRecordsAsync(this ConsensusClient client, EntityId address, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
     {
-        var records = (await client.ExecuteQueryAsync(new CryptoGetAccountRecordsQuery { AccountID = new AccountID(address) }, cancellationToken, configure).ConfigureAwait(false)).CryptoGetAccountRecords;
+        var records = (await Engine.QueryAsync(client, new CryptoGetAccountRecordsQuery { AccountID = new AccountID(address) }, cancellationToken, configure).ConfigureAwait(false)).CryptoGetAccountRecords;
         if (records.Records.Count != 0)
         {
             return [.. records.Records.Select(FromProtobuf)];

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Hiero;
+﻿namespace Hiero;
 /// <summary>
 /// A transaction record containing information concerning the 
 /// newly created unbounded 384 bit psudo random number.

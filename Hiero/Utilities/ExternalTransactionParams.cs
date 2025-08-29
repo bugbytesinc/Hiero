@@ -211,7 +211,7 @@ public static class ExternalTransactionParamsExtensions
         await using var context = client.CreateChildContext(configure);
         var (transactionParams, networkTransaction, signedTransactionBytes, transactionId, cancellationToken) = await ExternalTransactionParamsOrchestrator.CreateSignedTransactionBytesAsync(context, externalParams);
         var transaction = new Transaction { SignedTransactionBytes = signedTransactionBytes };
-        var precheck = await ConsensusEngine.ExecuteSignedRequestWithRetryImplementationAsync(context, transaction, networkTransaction.InstantiateNetworkRequestMethod, getResponseCode, cancellationToken).ConfigureAwait(false);
+        var precheck = await Engine.SubmitTimeBoxedGrpcMessageWithRetry(context, transaction, networkTransaction.InstantiateNetworkRequestMethod, getResponseCode, cancellationToken).ConfigureAwait(false);
         return (ResponseCode)precheck.NodeTransactionPrecheckCode;
 
         static ResponseCodeEnum getResponseCode(TransactionResponse response)
@@ -309,6 +309,6 @@ public static class ExternalTransactionParamsExtensions
     {
         await using var context = client.CreateChildContext(configure);
         var (transactionParams, networkTransaction, signedTransactionBytes, transactionId, cancellationToken) = await ExternalTransactionParamsOrchestrator.CreateSignedTransactionBytesAsync(context, externalParams);
-        return await ConsensusEngine.ExecuteSignedTransactionBytesAsync<TransactionReceipt>(context, signedTransactionBytes, transactionParams, networkTransaction, transactionId, cancellationToken).ConfigureAwait(false);
+        return await Engine.ExecuteSignedTransactionBytesAsync<TransactionReceipt>(context, signedTransactionBytes, transactionParams, networkTransaction, transactionId, cancellationToken).ConfigureAwait(false);
     }
 }

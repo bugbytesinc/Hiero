@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Hiero;
+﻿namespace Hiero;
 
 /// <summary>
 /// Represents an unexpected termination or exception received

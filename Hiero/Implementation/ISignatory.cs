@@ -1,6 +1,4 @@
-﻿using System.Threading.Tasks;
-
-namespace Hiero.Implementation;
+﻿namespace Hiero.Implementation;
 
 /// <summary>
 /// Internal interface implemented by objects that 

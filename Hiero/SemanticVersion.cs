@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Hiero;
+﻿namespace Hiero;
 
 /// <summary>
 /// Represents a Semantic Version Number (major, minor, patch)

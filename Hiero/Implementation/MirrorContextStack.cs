@@ -1,7 +1,5 @@
 ﻿using Google.Protobuf;
 using Grpc.Net.Client;
-using System;
-using System.Linq;
 
 namespace Hiero.Implementation;
 

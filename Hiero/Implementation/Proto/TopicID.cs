@@ -1,5 +1,4 @@
 ﻿using Hiero;
-using System;
 
 namespace Proto;
 

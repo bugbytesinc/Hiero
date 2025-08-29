@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Hiero;
+﻿namespace Hiero;
 /// <summary>
 /// Represents an error with a transaction that passed the gateway node 
 /// pre-check and was processed by the network but did not succeed.

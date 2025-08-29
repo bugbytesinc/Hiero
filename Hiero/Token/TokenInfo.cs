@@ -1,12 +1,7 @@
 ﻿using Hiero.Implementation;
 using Proto;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Numerics;
-using System.Threading;
-using System.Threading.Tasks;
-using static Proto.CustomFee;
 
 namespace Hiero;
 /// <summary>
@@ -171,9 +166,9 @@ public sealed record TokenInfo
             {
                 list.Add(fee.FeeCase switch
                 {
-                    FeeOneofCase.RoyaltyFee => new NftRoyalty(fee),
-                    FeeOneofCase.FractionalFee => new TokenRoyalty(fee),
-                    FeeOneofCase.FixedFee => new FixedRoyalty(fee),
+                    CustomFee.FeeOneofCase.RoyaltyFee => new NftRoyalty(fee),
+                    CustomFee.FeeOneofCase.FractionalFee => new TokenRoyalty(fee),
+                    CustomFee.FeeOneofCase.FixedFee => new FixedRoyalty(fee),
                     // Should not get here?, if its invalid info, what do we do?
                     _ => new FixedRoyalty(EntityId.None, EntityId.None, 0),
                 });
@@ -216,6 +211,6 @@ public static class TokenInfoExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
     public static async Task<TokenInfo> GetTokenInfoAsync(this ConsensusClient client, EntityId token, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
     {
-        return new TokenInfo(await client.ExecuteQueryAsync(new TokenGetInfoQuery { Token = new TokenID(token) }, cancellationToken, configure).ConfigureAwait(false));
+        return new TokenInfo(await Engine.QueryAsync(client, new TokenGetInfoQuery { Token = new TokenID(token) }, cancellationToken, configure).ConfigureAwait(false));
     }
 }

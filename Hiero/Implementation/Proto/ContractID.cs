@@ -1,6 +1,5 @@
 ﻿using Google.Protobuf;
 using Hiero;
-using System;
 
 namespace Proto;
 

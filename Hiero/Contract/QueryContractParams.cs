@@ -1,16 +1,13 @@
 ﻿using Google.Protobuf;
 using Hiero.Implementation;
 using Proto;
-using System;
 using System.ComponentModel;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Hiero;
 /// <summary>
 /// Provides the details of the request to the client when invoking a contract local query function.
 /// </summary>
-public class QueryContractParams : IQueryParams
+public class QueryContractParams
 {
     /// <summary>
     /// The address of the contract to call.
@@ -56,17 +53,6 @@ public class QueryContractParams : IQueryParams
     /// Optional Cancellation token that interrupt the query.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
-    INetworkQuery IQueryParams.CreateNetworkQuery()
-    {
-        return new ContractCallLocalQuery
-        {
-            ContractID = new ContractID(Contract),
-            Gas = Gas + ReturnedDataGasAllowance,
-            FunctionParameters = ByteString.CopyFrom(Abi.EncodeFunctionWithArguments(MethodName, MethodArgs).Span),
-            SenderId = MessageSender.IsNullOrNone() ? null : new AccountID(MessageSender),
-            ThrowOnFail = ThrowOnFail
-        };
-    }
 }
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class QueryContractExtensions
@@ -83,7 +69,7 @@ public static class QueryContractExtensions
     /// <param name="client">
     /// The Consensus Node Client to query.
     /// </param>
-    /// <param name="queryParameters">
+    /// <param name="queryContractParams">
     /// The parameters identifying the contract and function method to call.
     /// </param>
     /// <param name="configure">
@@ -101,8 +87,16 @@ public static class QueryContractExtensions
     /// some reason.  Contains additional information returned from the contract virual machine.  Only thrown if
     /// the <see cref="QueryContractParams.ThrowOnFail"/> is set to <code>true</code>, the default, otherwise
     /// the method returns a <see cref="ContractCallResult"/> with the same information.</exception>
-    public static async Task<ContractCallResult> QueryContractAsync(this ConsensusClient client, QueryContractParams queryParameters, Action<IConsensusContext>? configure = null)
+    public static async Task<ContractCallResult> QueryContractAsync(this ConsensusClient client, QueryContractParams queryContractParams, Action<IConsensusContext>? configure = null)
     {
-        return new ContractCallResult(await client.CreateAndExecuteQueryAsync(queryParameters, configure).ConfigureAwait(false));
+        var query = new ContractCallLocalQuery
+        {
+            ContractID = new ContractID(queryContractParams.Contract),
+            Gas = queryContractParams.Gas + queryContractParams.ReturnedDataGasAllowance,
+            FunctionParameters = ByteString.CopyFrom(Abi.EncodeFunctionWithArguments(queryContractParams.MethodName, queryContractParams.MethodArgs).Span),
+            SenderId = queryContractParams.MessageSender.IsNullOrNone() ? null : new AccountID(queryContractParams.MessageSender),
+            ThrowOnFail = queryContractParams.ThrowOnFail
+        };
+        return new ContractCallResult(await Engine.QueryAsync(client, query, queryContractParams.CancellationToken ?? default, configure));
     }
 }

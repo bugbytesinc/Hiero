@@ -1,11 +1,7 @@
 ﻿using Google.Protobuf.Collections;
 using Hiero.Implementation;
 using Proto;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Hiero;
 
@@ -101,7 +97,7 @@ public static class TransactionReceiptExtensions
     {
         await using var context = client.CreateChildContext(configure);
         var transactionId = new TransactionID(transaction);
-        var receipt = FromProtobuf(transactionId, await ConsensusEngine.GetReceiptAsync(context, transactionId, cancellationToken).ConfigureAwait(false));
+        var receipt = FromProtobuf(transactionId, await Engine.GetReceiptAsync(context, transactionId, cancellationToken).ConfigureAwait(false));
         if (receipt.Status != ResponseCode.Success && context.ThrowIfNotSuccess)
         {
             throw new TransactionException($"Unable to retreive receipt, status: {receipt.Status}", receipt);
@@ -142,7 +138,7 @@ public static class TransactionReceiptExtensions
             IncludeDuplicates = true,
             IncludeChildReceipts = true
         };
-        var response = await ConsensusEngine.ExecuteNetworkRequestWithRetryAsync(context, query.CreateEnvelope(), query.InstantiateNetworkRequestMethod, shouldRetry, cancellationToken).ConfigureAwait(false);
+        var response = await Engine.SubmitGrpcMessageWithRetry(context, query.CreateEnvelope(), query.InstantiateNetworkRequestMethod, shouldRetry, cancellationToken).ConfigureAwait(false);
         var responseCode = response.TransactionGetReceipt.Header.NodeTransactionPrecheckCode;
         if (responseCode == ResponseCodeEnum.Busy)
         {

@@ -5,15 +5,66 @@ using Grpc.Net.Client;
 using Proto;
 
 namespace Hiero.Implementation;
-
-internal static class ConsensusEngine
+/// <summary>
+/// Consensus Node gRPC Endpoint Interaction Logic.
+/// </summary>
+internal static class Engine
 {
+    /// <summary>
+    /// Creates, signs, submits a transaction and waits for a response from 
+    /// the target consensus node, returning a receipt.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The type of receipt to return.
+    /// </typeparam>
+    /// <param name="client">
+    /// The consensus client holding the configuration for endpoint, and other parameters.
+    /// </param>
+    /// <param name="networkParams">
+    /// The details of the transaction to create, sign and submit.
+    /// </param>
+    /// <param name="configure">
+    /// Optional callback to configure the calling context immediately 
+    /// before assembling the transaction for submission.
+    /// </param>
+    /// <returns>
+    /// A receipt object.
+    /// </returns>
+    /// <exception cref="PrecheckException">
+    /// If there was a problem submitting the request, including the consensus node
+    /// considering the request invalid.
+    /// </exception>
+    /// <exception cref="TransactionException">
+    /// If the consensus node returned a failure code and throw on failure is set to
+    /// <code>true</code> in the client context configuration.
+    /// </exception>
     internal static async Task<T> ExecuteNetworkParamsAsync<T>(this ConsensusClient client, INetworkParams networkParams, Action<IConsensusContext>? configure) where T : TransactionReceipt
     {
         await using var context = client.CreateChildContext(configure);
-        var (networkTransaction, signedTransactionBytes, transactionId, cancellationToken) = await CreateSignedTransactionBytesAsync(context, networkParams, true);
+        var (networkTransaction, signedTransactionBytes, transactionId, cancellationToken) = await CreateSignedTransactionBytesAsync(context, networkParams, true).ConfigureAwait(false);
         return await ExecuteSignedTransactionBytesAsync<T>(context, signedTransactionBytes, networkParams, networkTransaction, transactionId, cancellationToken).ConfigureAwait(false);
     }
+    /// <summary>
+    /// Creates the signed transaction bytes and other metadata associated with a request.
+    /// </summary>
+    /// <param name="context">
+    /// The Calling Request Context, contains endpoint and other configuration parameters.
+    /// </param>
+    /// <param name="networkParams">
+    /// The details of the transaction to create, sign and submit.
+    /// </param>
+    /// <param name="failIfNoSignatures">
+    /// Flag indicating that it is an error if the created transaction bytes have no attached
+    /// signatures.  Some use cases require a signature and others do not, since parsing this
+    /// info out of the bytes would be expensive, this flag is passed in instead.
+    /// </param>
+    /// <returns>
+    /// The resulting configured and signed transaction, in serialized and structured form, along
+    /// side the transaction ID and consolidated cancellation token from potentially multiple sources.
+    /// </returns>
+    /// <exception cref="InvalidOperationException">
+    /// If there is a misconfiguration or missing data in the calling context.
+    /// </exception>
     internal async static Task<(INetworkTransaction, ByteString, TransactionID, CancellationToken)> CreateSignedTransactionBytesAsync(GossipContextStack context, INetworkParams networkParams, bool failIfNoSignatures)
     {
         var gateway = context.Endpoint;
@@ -23,8 +74,8 @@ internal static class ConsensusEngine
         }
         var networkTransaction = networkParams.CreateNetworkTransaction();
         var cancellationToken = networkParams.CancellationToken ?? default;
-        var signatory = GatherSignatories(context, networkParams.Signatory);
-        var schedule = signatory.GetSchedule();
+        var signatory = CoalesceSignatories(context.Signatory, networkParams.Signatory);
+        var schedule = signatory?.GetSchedule();
         if (schedule is not null)
         {
             var scheduledTransactionBody = networkTransaction.CreateSchedulableTransactionBody();
@@ -46,13 +97,55 @@ internal static class ConsensusEngine
         transactionBody.TransactionValidDuration = new Proto.Duration(context.TransactionDuration);
         transactionBody.Memo = context.Memo ?? "";
         var invoice = new Invoice(transactionBody, context.SignaturePrefixTrimLimit, cancellationToken);
-        await signatory.SignAsync(invoice).ConfigureAwait(false);
+        if (signatory is not null)
+        {
+            await signatory.SignAsync(invoice).ConfigureAwait(false);
+        }
         return (networkTransaction, invoice.GenerateSignedTransactionFromSignatures(failIfNoSignatures).ToByteString(), transactionBody.TransactionID, cancellationToken);
     }
+    /// <summary>
+    /// Submits the signed transaction bytes to the appropriate consensus node
+    /// endpoint, waits for results and returns the receipt for the transaction.
+    /// </summary>
+    /// <typeparam name="T">
+    /// Type of receipt to return
+    /// </typeparam>
+    /// <param name="context">
+    /// The Calling Request Context, contains endpoint and other configuration parameters.
+    /// </param>
+    /// <param name="signedTransactionBytes">
+    /// A serizlized Protobuf Signed Transaction ready for submission to the network.
+    /// </param>
+    /// <param name="networkParams">
+    /// Additional metadata surrounding the request, includes a method knowing how to
+    /// create the resulting receipt.
+    /// </param>
+    /// <param name="networkTransaction">
+    /// The structured source of the transaction that was turned into bytes and then signed.
+    /// </param>
+    /// <param name="transactionId">
+    /// The transaction ID of this request.
+    /// </param>
+    /// <param name="cancellationToken">
+    /// Optional cancellation token that can be used to terminate the request.
+    /// </param>
+    /// <returns>
+    /// A receipt of the desired type identified by the templated type and implemented 
+    /// by networkParams, or an exception if the request produced a failed result and 
+    /// the context is configured to throw on failed results.
+    /// </returns>
+    /// <exception cref="PrecheckException">
+    /// If there was a problem submitting the request, including the consensus node
+    /// considering the request invalid.
+    /// </exception>
+    /// <exception cref="TransactionException">
+    /// If the consensus node returned a failure code and throw on failure is set to
+    /// <code>true</code> in the client context configuration.
+    /// </exception>
     internal static async Task<T> ExecuteSignedTransactionBytesAsync<T>(GossipContextStack context, ByteString signedTransactionBytes, INetworkParams networkParams, INetworkTransaction networkTransaction, TransactionID transactionId, CancellationToken cancellationToken) where T : TransactionReceipt
     {
         var transaction = new Transaction { SignedTransactionBytes = signedTransactionBytes };
-        var precheck = await ExecuteSignedRequestWithRetryImplementationAsync(context, transaction, networkTransaction.InstantiateNetworkRequestMethod, getResponseCode, cancellationToken).ConfigureAwait(false);
+        var precheck = await SubmitTimeBoxedGrpcMessageWithRetry(context, transaction, networkTransaction.InstantiateNetworkRequestMethod, getResponseCode, cancellationToken).ConfigureAwait(false);
         if (precheck.NodeTransactionPrecheckCode != ResponseCodeEnum.Ok)
         {
             var responseCode = (ResponseCode)precheck.NodeTransactionPrecheckCode;
@@ -75,17 +168,48 @@ internal static class ConsensusEngine
             return response.NodeTransactionPrecheckCode;
         }
     }
-    internal static Task<Response> CreateAndExecuteQueryAsync(this ConsensusClient client, IQueryParams queryParams, Action<IConsensusContext>? configure)
-    {
-        return client.ExecuteQueryAsync(queryParams.CreateNetworkQuery(), queryParams.CancellationToken ?? default, configure);
-    }
-    internal static async Task<Response> ExecuteQueryAsync(this ConsensusClient client, INetworkQuery networkQuery, CancellationToken cancellationToken, Action<IConsensusContext>? configure)
+    /// <summary>
+    /// Submits a Query to a conesnsus endpoint and waits for the results.
+    /// </summary>
+    /// <param name="client">
+    /// The consensus client holding the configuration for endpoint, and other parameters.
+    /// </param>
+    /// <param name="networkQuery">
+    /// An instance of the query details to submit.
+    /// </param>
+    /// <param name="cancellationToken">
+    /// Optional cancellation token that can be used to terminate the request.
+    /// </param>
+    /// <returns>
+    /// A Protobuf Response object matching the type of request submitted.
+    /// </returns>
+    /// <exception cref="PrecheckException">
+    /// If there is a problem with the request, configuration or reachability of the consensus node.
+    /// </exception>
+    internal static async Task<Response> QueryAsync(ConsensusClient client, INetworkQuery networkQuery, CancellationToken cancellationToken, Action<IConsensusContext>? configure)
     {
         await using var context = client.CreateChildContext(configure);
-        return await ExecuteQueryInContextAsync(networkQuery, context, cancellationToken).ConfigureAwait(false);
-
+        return await QueryAsync(context, networkQuery, cancellationToken).ConfigureAwait(false);
     }
-    internal static async Task<Response> ExecuteQueryInContextAsync(INetworkQuery networkQuery, GossipContextStack context, CancellationToken cancellationToken)
+    /// <summary>
+    /// Submits a Query to a conesnsus endpoint and waits for the results.
+    /// </summary>
+    /// <param name="context">
+    /// The Calling Request Context, contains endpoint and other configuration parameters.
+    /// </param>
+    /// <param name="networkQuery">
+    /// An instance of the query details to submit.
+    /// </param>
+    /// <param name="cancellationToken">
+    /// Optional cancellation token that can be used to terminate the request.
+    /// </param>
+    /// <returns>
+    /// A Protobuf Response object matching the type of request submitted.
+    /// </returns>
+    /// <exception cref="PrecheckException">
+    /// If there is a problem with the request, configuration or reachability of the consensus node.
+    /// </exception>
+    internal static async Task<Response> QueryAsync(GossipContextStack context, INetworkQuery networkQuery, CancellationToken cancellationToken)
     {
         var envelope = networkQuery.CreateEnvelope();
         networkQuery.SetHeader(new QueryHeader
@@ -97,8 +221,8 @@ internal static class ConsensusEngine
         ulong cost = response.ResponseHeader?.Cost ?? 0UL;
         if (cost > 0)
         {
-            var transactionId = ConsensusEngine.GetOrCreateTransactionID(context);
-            networkQuery.SetHeader(await ConsensusEngine.CreateSignedQueryHeader(context, (long)cost, transactionId, cancellationToken).ConfigureAwait(false));
+            var transactionId = GetOrCreateTransactionID(context);
+            networkQuery.SetHeader(await CreateSignedQueryHeader(context, (long)cost, transactionId, cancellationToken).ConfigureAwait(false));
             response = await executeSignedQuery().ConfigureAwait(false);
             networkQuery.CheckResponse(transactionId, response);
         }
@@ -106,7 +230,7 @@ internal static class ConsensusEngine
 
         async Task<Response> executeAskQuery()
         {
-            var answer = await ConsensusEngine.ExecuteNetworkRequestWithRetryAsync(context, envelope, networkQuery.InstantiateNetworkRequestMethod, shouldRetryRequest, cancellationToken).ConfigureAwait(false);
+            var answer = await SubmitGrpcMessageWithRetry(context, envelope, networkQuery.InstantiateNetworkRequestMethod, shouldRetryRequest, cancellationToken).ConfigureAwait(false);
             var code = answer.ResponseHeader?.NodeTransactionPrecheckCode ?? ResponseCodeEnum.Unknown;
             if (code != ResponseCodeEnum.Ok)
             {
@@ -116,8 +240,8 @@ internal static class ConsensusEngine
                     // It will not answer a COST_ASK without a signature.  Try signing with an
                     // empty transfer instead, this is not the most efficient, but we're already
                     // in a failure mode and performance is already broken.
-                    var transactionId = ConsensusEngine.GetOrCreateTransactionID(context);
-                    networkQuery.SetHeader(await ConsensusEngine.CreateSignedQueryHeader(context, 0, transactionId, cancellationToken).ConfigureAwait(false));
+                    var transactionId = GetOrCreateTransactionID(context);
+                    networkQuery.SetHeader(await CreateSignedQueryHeader(context, 0, transactionId, cancellationToken).ConfigureAwait(false));
                     answer = await executeSignedQuery().ConfigureAwait(false);
                     // If we get a valid repsonse back, it turns out that we needed to identify
                     // ourselves with the signature, the rest of the process can proceed as normal.
@@ -140,7 +264,7 @@ internal static class ConsensusEngine
 
         Task<Response> executeSignedQuery()
         {
-            return ConsensusEngine.ExecuteSignedRequestWithRetryImplementationAsync(context, envelope, networkQuery.InstantiateNetworkRequestMethod, getResponseCode, cancellationToken);
+            return SubmitTimeBoxedGrpcMessageWithRetry(context, envelope, networkQuery.InstantiateNetworkRequestMethod, getResponseCode, cancellationToken);
 
             static ResponseCodeEnum getResponseCode(Response response)
             {
@@ -148,46 +272,60 @@ internal static class ConsensusEngine
             }
         }
     }
-    internal static ISignatory GatherSignatories(GossipContextStack context, params Signatory?[] extraSignatories)
+    /// <summary>
+    /// Coaleses zero or more Signatories into a single ISignatory (which 
+    /// may include child signatories).
+    /// </summary>
+    /// <param name="signatories">
+    /// List of signatory entries, individual entries may be null.
+    /// </param>
+    /// <returns>
+    /// A Signatory grouping all the signatories found in the list or
+    /// <code>null</code> if the list was empty or full of null values.
+    /// </returns>
+    internal static ISignatory? CoalesceSignatories(params Signatory?[] signatories)
     {
-        var signatories = new List<Signatory>(1 + extraSignatories.Length);
-        var contextSignatory = context.Signatory;
-        if (contextSignatory is not null)
-        {
-            signatories.Add(contextSignatory);
-        }
-        foreach (var extraSignatory in extraSignatories)
+        var signers = new List<Signatory>(signatories.Length);
+        foreach (var extraSignatory in signatories)
         {
             if (extraSignatory is not null)
             {
-                signatories.Add(extraSignatory);
+                signers.Add(extraSignatory);
             }
         }
-        return signatories.Count == 1 ?
-            signatories[0] :
-            new Signatory(signatories.ToArray());
+        return signers.Count switch
+        {
+            0 => null,
+            1 => signers[0],
+            _ => new Signatory([.. signers])
+        };
     }
+    /// <summary>
+    /// Returns a transaction ID for the given calling context, it is either
+    /// a configured ID from the context, or a newly generated transaction
+    /// ID guranteed to be uniquie within the application service process.
+    /// </summary>
+    /// <param name="context">
+    /// The Calling Request Context
+    /// </param>
+    /// <returns>
+    /// A newly generated transaction ID for the configured payer and time
+    /// to live properties specified within the context, or a specific
+    /// transaction ID that was specified in the context overriding the
+    /// automatic genration of the ID.
+    /// </returns>
+    /// <exception cref="InvalidOperationException"></exception>
+    /// <exception cref="ArgumentException">
+    /// If neither the Payer or Explicit Transaction ID are specified, there is 
+    /// not enough information to generate a transaction ID and this exception
+    /// will be thrown.
+    /// </exception>
     internal static TransactionID GetOrCreateTransactionID(GossipContextStack context)
     {
         var preExistingTransaction = context.TransactionId;
         if (preExistingTransaction is null)
         {
-            var payer = context.Payer;
-            return payer is null
-                ? throw new InvalidOperationException("The Payer address has not been configured. Please check that 'Payer' is set in the Client context.")
-                : createTransactionID(context, payer);
-        }
-        else if (preExistingTransaction.Scheduled)
-        {
-            throw new ArgumentException("Can not set the context's Transaction ID's Pending field of a transaction to true.", nameof(context.TransactionId));
-        }
-        else
-        {
-            return new TransactionID(preExistingTransaction);
-        }
-
-        static TransactionID createTransactionID(GossipContextStack context, EntityId payer)
-        {
+            var payer = context.Payer ?? throw new InvalidOperationException("The Payer address has not been configured. Please check that 'Payer' is set in the Client context.");
             var (seconds, nanos) = Epoch.UniqueSecondsAndNanos(context.AdjustForLocalClockDrift);
             return new TransactionID
             {
@@ -199,13 +337,59 @@ internal static class ConsensusEngine
                 }
             };
         }
+        else if (preExistingTransaction.Scheduled)
+        {
+            throw new ArgumentException("Can not set the context's Transaction ID's Pending field of a transaction to true.", nameof(context.TransactionId));
+        }
+        else
+        {
+            return new TransactionID(preExistingTransaction);
+        }
     }
-    internal static Task<TResponse> ExecuteSignedRequestWithRetryImplementationAsync<TRequest, TResponse>(GossipContextStack context, TRequest request, Func<GrpcChannel, Func<TRequest, Metadata?, DateTime?, CancellationToken, AsyncUnaryCall<TResponse>>> instantiateRequestMethod, Func<TResponse, ResponseCodeEnum> getResponseCode, CancellationToken cancellationToken) where TRequest : IMessage where TResponse : IMessage
+    /// <summary>
+    /// Time Aware Core Execution Method for submitting a request to a gossip node's gRPC
+    /// endpoint and polling for a result.  It is specifically aware of the time-boxing 
+    /// nature (typ 3 minute time to live window) involving requests with signed transactions.
+    /// Additionally, it includes additional gossip node specific wait and retry logic.
+    /// </summary>
+    /// <typeparam name="TRequest">
+    /// The request message type being sent to the gossip node.
+    /// </typeparam>
+    /// <typeparam name="TResponse">
+    /// The request response message type returned from the gossip node (when ready).
+    /// </typeparam>
+    /// <param name="context">
+    /// The Calling Request Context
+    /// </param>
+    /// <param name="request">
+    /// The message request, typically a Transaction or QueryAsync object.
+    /// </param>
+    /// <param name="instantiateRequestMethod">
+    /// A method returning the proper gRPC service matching the request.
+    /// </param>
+    /// <param name="getResponseCode">
+    /// A method knowing how to extract the gossip node's embedded response
+    /// code from the specific resonse type.
+    /// </param>
+    /// <param name="cancellationToken">
+    /// Optional cancellation token that, when triggered, causes a cancellation exception
+    /// to be thrown.  When triggered, the transaction may or may not have been submitted.
+    /// </param>
+    /// <returns>
+    /// The message response, typically a TransactionResponse or QueryResponse object.
+    /// </returns>
+    /// <exception cref="PrecheckException">
+    /// Certain conditions indicate immediate failure when submitting a message, the details
+    /// are populated thru this exception object when thrown.  When thrown, the algorithim
+    /// generally beleives that the transaction or query has NOT been sucessfully submitted
+    /// or accepted by the network, and should not have charged the payer account.
+    /// </exception>
+    internal static Task<TResponse> SubmitTimeBoxedGrpcMessageWithRetry<TRequest, TResponse>(GossipContextStack context, TRequest request, Func<GrpcChannel, Func<TRequest, Metadata?, DateTime?, CancellationToken, AsyncUnaryCall<TResponse>>> instantiateRequestMethod, Func<TResponse, ResponseCodeEnum> getResponseCode, CancellationToken cancellationToken) where TRequest : IMessage where TResponse : IMessage
     {
         var trackTimeDrift = context.AdjustForLocalClockDrift && context.TransactionId is null;
         var startingInstant = trackTimeDrift ? Epoch.UniqueClockNanos() : 0;
 
-        return ExecuteNetworkRequestWithRetryAsync(context, request, instantiateRequestMethod, shouldRetryRequest, cancellationToken);
+        return SubmitGrpcMessageWithRetry(context, request, instantiateRequestMethod, shouldRetryRequest, cancellationToken);
 
         bool shouldRetryRequest(TResponse response)
         {
@@ -219,7 +403,44 @@ internal static class ConsensusEngine
                 code == ResponseCodeEnum.InvalidTransactionStart;
         }
     }
-    internal static async Task<TResponse> ExecuteNetworkRequestWithRetryAsync<TRequest, TResponse>(GossipContextStack context, TRequest request, Func<GrpcChannel, Func<TRequest, Metadata?, DateTime?, CancellationToken, AsyncUnaryCall<TResponse>>> instantiateRequestMethod, Func<TResponse, bool> shouldRetryRequest, CancellationToken cancellationToken) where TRequest : IMessage where TResponse : IMessage
+    /// <summary>
+    /// Core Execution Method for submitting a request to a gossip node's gRPC
+    /// endpoint and polling for a result.  It includes gossip node specific
+    /// wait and retry logic.
+    /// </summary>
+    /// <typeparam name="TRequest">
+    /// The request message type being sent to the gossip node.
+    /// </typeparam>
+    /// <typeparam name="TResponse">
+    /// The request response type message returned from the gossip node (when ready).
+    /// </typeparam>
+    /// <param name="context">
+    /// The Calling Request Context
+    /// </param>
+    /// <param name="request">
+    /// The message request, typically a Transaction or QueryAsync object.
+    /// </param>
+    /// <param name="instantiateRequestMethod">
+    /// A method returning the proper gRPC service matching the request.
+    /// </param>
+    /// <param name="shouldRetryRequest">
+    /// A method participating in the retry evaluation loop, typically looks
+    /// for BUSY signals and other indicators that the request should be retried.
+    /// </param>
+    /// <param name="cancellationToken">
+    /// Optional cancellation token that, when triggered, causes a cancellation exception
+    /// to be thrown.  When triggered, the transaction may or may not have been submitted.
+    /// </param>
+    /// <returns>
+    /// The message response, typically a TransactionResponse or QueryResponse object.
+    /// </returns>
+    /// <exception cref="PrecheckException">
+    /// Certain conditions indicate immediate failure when submitting a message, the details
+    /// are populated thru this exception object when thrown.  When thrown, the algorithim
+    /// generally beleives that the transaction or query has NOT been sucessfully submitted
+    /// or accepted by the network, and should not have charged the payer account.
+    /// </exception>
+    internal static async Task<TResponse> SubmitGrpcMessageWithRetry<TRequest, TResponse>(GossipContextStack context, TRequest request, Func<GrpcChannel, Func<TRequest, Metadata?, DateTime?, CancellationToken, AsyncUnaryCall<TResponse>>> instantiateRequestMethod, Func<TResponse, bool> shouldRetryRequest, CancellationToken cancellationToken) where TRequest : IMessage where TResponse : IMessage
     {
         try
         {
@@ -242,7 +463,7 @@ internal static class ConsensusEngine
                         return tenativeResponse;
                     }
                 }
-                catch (RpcException rpcex) when (request is Query query && query.QueryCase == Query.QueryOneofCase.TransactionGetReceipt)
+                catch (RpcException rpcex) when (request is Query query && query.QueryCase == Proto.Query.QueryOneofCase.TransactionGetReceipt)
                 {
                     var channel = context.GetChannel();
                     var message = channel.State == ConnectivityState.Connecting ?
@@ -375,6 +596,26 @@ internal static class ConsensusEngine
             throw new PrecheckException(message, transactionId.AsTxId(), ResponseCode.RpcError, 0, rpcex);
         }
     }
+    /// <summary>
+    /// Creates a Protobuf QueryAsync Header structure containing a signed transaction
+    /// payment to pay for the corresponding query.
+    /// </summary>
+    /// <param name="context">
+    /// The Calling Request Context
+    /// </param>
+    /// <param name="queryFee">
+    /// The amount of fee required in tinybars
+    /// </param>
+    /// <param name="transactionId">
+    /// The Transaction ID to use when creating the transaction.
+    /// </param>
+    /// <param name="cancellationToken"></param>
+    /// <returns>
+    /// A Protobuf QueryAsync Header Structure to be attached to the corresponding QueryAsync
+    /// </returns>
+    /// <exception cref="InvalidOperationException">
+    /// If the configuration is missing payment information or the target gossip node endpoint.
+    /// </exception>
     internal static async Task<QueryHeader> CreateSignedQueryHeader(GossipContextStack context, long queryFee, TransactionID transactionId, CancellationToken cancellationToken)
     {
         var payer = context.Payer;
@@ -429,59 +670,34 @@ internal static class ConsensusEngine
             return null;
         }
     }
-    private static Action<IMessage> InstantiateOnSendingRequestHandler(GossipContextStack context)
-    {
-        var handlers = context.GetAll<Action<IMessage>>(nameof(context.OnSendingRequest)).Where(h => h != null).ToArray();
-        if (handlers.Length > 0)
-        {
-            return (IMessage request) => ExecuteHandlers(handlers, request);
-        }
-        else
-        {
-            return NoOp;
-        }
-        static void ExecuteHandlers(Action<IMessage>[] handlers, IMessage request)
-        {
-            var data = new ReadOnlyMemory<byte>(request.ToByteArray());
-            foreach (var handler in handlers)
-            {
-                handler(request);
-            }
-        }
-        static void NoOp(IMessage request)
-        {
-        }
-    }
-    private static Action<int, IMessage> InstantiateOnResponseReceivedHandler(GossipContextStack context)
-    {
-        var handlers = context.GetAll<Action<int, IMessage>>(nameof(context.OnResponseReceived)).Where(h => h != null).ToArray();
-        if (handlers.Length > 0)
-        {
-            return (int tryNumber, IMessage response) => ExecuteHandlers(handlers, tryNumber, response);
-        }
-        else
-        {
-            return NoOp;
-        }
-        static void ExecuteHandlers(Action<int, IMessage>[] handlers, int tryNumber, IMessage response)
-        {
-            foreach (var handler in handlers)
-            {
-                handler(tryNumber, response);
-            }
-        }
-        static void NoOp(int tryNumber, IMessage response)
-        {
-        }
-    }
     /// <summary>
-    /// Internal Helper function to retrieve receipt record provided by 
-    /// the network following network consensus regarding a networkQuery or networkTransaction.
+    /// Retrieves a Receipt from the network given a protobuf transaction id.
     /// </summary>
+    /// <param name="context">
+    /// The Calling Request Context
+    /// </param>
+    /// <param name="transactionId">
+    /// Protobuf Transaction ID
+    /// </param>
+    /// <param name="cancellationToken">
+    /// Optional Cancellation token.
+    /// </param>
+    /// <returns>
+    /// A Protobuf Transaction Receipt, if found, otherwise throws an exception.
+    /// </returns>
+    /// <exception cref="ConsensusException">
+    /// When a receipt can not be found within the time frame of its possible
+    /// existence, it may exist, or it may have been submitted but for some
+    /// (rare) reason, the network never came to consensus regarding the transaction.
+    /// </exception>
+    /// <exception cref="TransactionException">
+    /// The conesnsus node queried for this transaction is unaware of the 
+    /// transactions existence.
+    /// </exception>
     internal static async Task<Proto.TransactionReceipt> GetReceiptAsync(GossipContextStack context, TransactionID transactionId, CancellationToken cancellationToken)
     {
         INetworkQuery query = new TransactionGetReceiptQuery { TransactionID = transactionId };
-        var response = await ExecuteNetworkRequestWithRetryAsync(context, query.CreateEnvelope(), query.InstantiateNetworkRequestMethod, shouldRetry, cancellationToken).ConfigureAwait(false);
+        var response = await SubmitGrpcMessageWithRetry(context, query.CreateEnvelope(), query.InstantiateNetworkRequestMethod, shouldRetry, cancellationToken).ConfigureAwait(false);
         if (!context.ThrowIfNotSuccess)
         {
             return response.TransactionGetReceipt.Receipt;
@@ -517,10 +733,94 @@ internal static class ConsensusEngine
                 response.TransactionGetReceipt?.Receipt?.Status == ResponseCodeEnum.Unknown;
         }
     }
+    /// <summary>
+    /// Extracts a Transaction ID from the Protobuf Transaction structure
+    /// </summary>
+    /// <param name="transaction">
+    /// Protobuf Transaction Structure
+    /// </param>
+    /// <returns>
+    /// Protobuf Transaction ID from the Protobuf Transaction structure
+    /// </returns>
     private static TransactionID ExtractTransactionID(Transaction transaction)
     {
         var signedTransaction = SignedTransaction.Parser.ParseFrom(transaction.SignedTransactionBytes);
         var transactionBody = TransactionBody.Parser.ParseFrom(signedTransaction.BodyBytes);
         return transactionBody.TransactionID;
+    }
+    /// <summary>
+    /// Generates the optional sending request hook method, if configured in the context.
+    /// </summary>
+    /// <remarks>
+    /// Unlike other context methods and properties, ALL the configured handlers in all
+    /// of the parent contexts are included in the return value, request handlers can 
+    /// be stacked thru contexts.
+    /// </remarks>
+    /// <param name="context">
+    /// Context that may be configured with a sending request callback.
+    /// </param>
+    /// <returns>
+    /// An Action that may or may not delegate to multiple handlers that are called just
+    /// before a message is sent to the gossip node grpc endpoint.
+    /// </returns>
+    private static Action<IMessage> InstantiateOnSendingRequestHandler(GossipContextStack context)
+    {
+        var handlers = context.GetAll<Action<IMessage>>(nameof(context.OnSendingRequest)).Where(h => h != null).ToArray();
+        if (handlers.Length > 0)
+        {
+            return (IMessage request) => ExecuteHandlers(handlers, request);
+        }
+        else
+        {
+            return NoOp;
+        }
+        static void ExecuteHandlers(Action<IMessage>[] handlers, IMessage request)
+        {
+            var data = new ReadOnlyMemory<byte>(request.ToByteArray());
+            foreach (var handler in handlers)
+            {
+                handler(request);
+            }
+        }
+        static void NoOp(IMessage request)
+        {
+        }
+    }
+    /// <summary>
+    /// Generates the optional receiving request hook method, if configured in the context.
+    /// </summary>
+    /// <remarks>
+    /// Unlike other context methods and properties, ALL the configured handlers in all
+    /// of the parent contexts are included in the return value, request handlers can 
+    /// be stacked thru contexts.
+    /// </remarks>
+    /// <param name="context">
+    /// Context that may be configured with a receiving request callback.
+    /// </param>
+    /// <returns>
+    /// An Action that may or may not delegate to multiple handlers that are called just
+    /// after a message is received from the gossip node grpc endpoint.
+    /// </returns>
+    private static Action<int, IMessage> InstantiateOnResponseReceivedHandler(GossipContextStack context)
+    {
+        var handlers = context.GetAll<Action<int, IMessage>>(nameof(context.OnResponseReceived)).Where(h => h != null).ToArray();
+        if (handlers.Length > 0)
+        {
+            return (int tryNumber, IMessage response) => ExecuteHandlers(handlers, tryNumber, response);
+        }
+        else
+        {
+            return NoOp;
+        }
+        static void ExecuteHandlers(Action<int, IMessage>[] handlers, int tryNumber, IMessage response)
+        {
+            foreach (var handler in handlers)
+            {
+                handler(tryNumber, response);
+            }
+        }
+        static void NoOp(int tryNumber, IMessage response)
+        {
+        }
     }
 }

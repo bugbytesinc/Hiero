@@ -1,6 +1,4 @@
-﻿using System.Threading;
-
-namespace Hiero.Implementation;
+﻿namespace Hiero.Implementation;
 
 /// <summary>
 /// Defines the common properties required by all transaction parameter objects.

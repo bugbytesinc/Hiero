@@ -162,12 +162,12 @@ public enum ResponseCode
     /// </summary>
     [Description("CONTRACT_EXECUTION_EXCEPTION")] ContractExecutionException = 34,
     /// <summary>
-    /// In Query validation, account with +ve(amount) value should be Receiving node account, the
+    /// In QueryAsync validation, account with +ve(amount) value should be Receiving node account, the
     /// receiver account should be only one account in the list
     /// </summary>
     [Description("INVALID_RECEIVING_NODE_ACCOUNT")] InvalidReceivingNodeAccount = 35,
     /// <summary>
-    /// Header is missing in Query request
+    /// Header is missing in QueryAsync request
     /// </summary>
     [Description("MISSING_QUERY_HEADER")] MissingQueryHeader = 36,
     /// <summary>

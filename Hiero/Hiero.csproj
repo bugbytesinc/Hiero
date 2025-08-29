@@ -13,7 +13,7 @@
 		<Description>.NET Client Library for Hiero Network and Hedera Hashgraph</Description>
 		<Copyright>Copyright 2025 BugBytes, Inc. All Rights Reserved.</Copyright>
 		<PackageLicenseFile></PackageLicenseFile>
-		<PackageProjectUrl>https://bugbytesinc.github.io/Hiero/</PackageProjectUrl>
+		<PackageProjectUrl>https://hashgraph.bugbytes.com/</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/bugbytesinc/Hiero.git</RepositoryUrl>
 		<PublishRepositoryUrl>true</PublishRepositoryUrl>
 		<EmbedUntrackedSources>true</EmbedUntrackedSources>

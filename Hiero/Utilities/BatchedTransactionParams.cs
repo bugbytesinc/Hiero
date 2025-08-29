@@ -66,22 +66,36 @@ internal sealed class BatchedParamsOrchestrator : INetworkParams
             var networkParams = (batchMetadata?.TransactionParams ?? transactionParams) as INetworkParams;
             if (networkParams is null)
             {
-                throw new ArgumentException($"The transaction at index {i} is not a batchable transaction.", nameof(batchParams.TransactionParams));
+                // TODO: This still leaves too many edge cases dangling
+                // all of this needs to be rethought and cleaned up.
+                var externalParamms = ((batchMetadata?.TransactionParams ?? transactionParams) as ExternalTransactionParams) ?? throw new ArgumentException($"The transaction at index {i} is not a batchable transaction.", nameof(batchParams.TransactionParams));
+                if (externalParamms.CancellationToken?.CanBeCanceled == true)
+                {
+                    cancellationTokens.Add(externalParamms.CancellationToken.Value);
+                }
+                if (externalParamms.Signatory is not null)
+                {
+                    throw new NotSupportedException($"The transaction at index {i} is an externally created transaction paired with an additional signer, this is not supported at this time.");
+                }
+                signTasks[i] = Task.FromResult(ByteString.CopyFrom(externalParamms.SignedTransactionBytes.Span));
             }
-            var networkTransaction = networkParams.CreateNetworkTransaction();
-            var transactionBody = networkTransaction.CreateTransactionBody();
-            transactionBody.BatchKey = batchMetadata?.Endorsement is null ? getDefaultBatchKey() : new Key(batchMetadata.Endorsement);
-            transactionBody.TransactionID = computeTransactionId(batchMetadata, i);
-            transactionBody.TransactionFee = (ulong)context.FeeLimit;
-            transactionBody.TransactionValidDuration = new Duration(context.TransactionDuration);
-            transactionBody.Memo = batchMetadata?.Memo ?? "";
-            transactionBody.NodeAccountID = new AccountID { AccountNum = 0 };
-            transactionBodies[i] = transactionBody;
-            if (networkParams.CancellationToken?.CanBeCanceled == true)
+            else
             {
-                cancellationTokens.Add(networkParams.CancellationToken.Value);
+                var networkTransaction = networkParams.CreateNetworkTransaction();
+                var transactionBody = networkTransaction.CreateTransactionBody();
+                transactionBody.BatchKey = batchMetadata?.Endorsement is null ? getDefaultBatchKey() : new Key(batchMetadata.Endorsement);
+                transactionBody.TransactionID = computeTransactionId(batchMetadata, i);
+                transactionBody.TransactionFee = (ulong)context.FeeLimit;
+                transactionBody.TransactionValidDuration = new Duration(context.TransactionDuration);
+                transactionBody.Memo = batchMetadata?.Memo ?? "";
+                transactionBody.NodeAccountID = new AccountID { AccountNum = 0 };
+                transactionBodies[i] = transactionBody;
+                if (networkParams.CancellationToken?.CanBeCanceled == true)
+                {
+                    cancellationTokens.Add(networkParams.CancellationToken.Value);
+                }
+                signatories[i] = coalesceSignatories(batchMetadata, networkParams, i);
             }
-            signatories[i] = coalesceSignatories(batchMetadata, networkParams, i);
         }
         if (batchParams.CancellationToken?.CanBeCanceled == true)
         {
@@ -95,7 +109,10 @@ internal sealed class BatchedParamsOrchestrator : INetworkParams
         };
         for (int i = 0; i < count; i++)
         {
-            signTasks[i] = signBatchedTransactionAsync(transactionBodies[i], signatories[i]);
+            if (signTasks[i] is null)
+            {
+                signTasks[i] = signBatchedTransactionAsync(transactionBodies[i], signatories[i]);
+            }
         }
         var signedTransactions = await Task.WhenAll(signTasks).ConfigureAwait(false);
         var atomicBatchTransactionBody = new AtomicBatchTransactionBody();

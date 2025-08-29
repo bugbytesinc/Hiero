@@ -1,9 +1,6 @@
 ﻿using Hiero.Implementation;
 using Proto;
-using System;
 using System.ComponentModel;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Hiero;
 /// <summary>
@@ -38,7 +35,7 @@ public static class VersionInfoExtensions
     /// Retrieves version information from the node.
     /// </summary>
     /// <param name="client">
-    /// Consensus Client to Query
+    /// Consensus Client to QueryAsync
     /// </param>
     /// <param name="configure">
     /// Optional callback method providing an opportunity to modify 
@@ -53,6 +50,6 @@ public static class VersionInfoExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
     public static async Task<VersionInfo> GetVersionInfoAsync(this ConsensusClient client, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
     {
-        return new VersionInfo(await client.ExecuteQueryAsync(new NetworkGetVersionInfoQuery(), cancellationToken, configure).ConfigureAwait(false));
+        return new VersionInfo(await Engine.QueryAsync(client, new NetworkGetVersionInfoQuery(), cancellationToken, configure).ConfigureAwait(false));
     }
 }
