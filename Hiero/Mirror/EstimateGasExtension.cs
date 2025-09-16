@@ -147,8 +147,7 @@ public static class EstimateGasExtension
                 break;
             }
         }
-        var result = evmGas + ComputeIntrinsicGas(callData);
-        return result;
+        return evmGas;
     }
     /// <summary>
     /// Helper function that creates the constructor data for a contract creation call.
@@ -174,6 +173,9 @@ public static class EstimateGasExtension
         }
         return byteCode;
     }
+    // NOTE: Previous versions of mirror nodes appeared to not include
+    // intrinsic gas.  This has recently changed, the code below is no
+    // longer used, consider removing
     /// <summary>
     /// Internal helper function that computes the intrinsic gas for a given call data.
     /// </summary>
@@ -183,10 +185,10 @@ public static class EstimateGasExtension
     /// <returns>
     /// The computed intrinsic gas based on the number of zero and non-zero bytes in the data.
     /// </returns>
-    private static long ComputeIntrinsicGas(EvmCallData callData)
-    {
-        var zeroBytes = callData.Data!.Value.ToArray().Count(b => b == 0);
-        var nonZeroBytes = callData.Data.Value.Length - zeroBytes;
-        return 21000L + 4L * zeroBytes + 16L * nonZeroBytes;
-    }
+    //private static long ComputeIntrinsicGas(EvmCallData callData)
+    //{
+    //    var zeroBytes = callData.Data!.Value.ToArray().Count(b => b == 0);
+    //    var nonZeroBytes = callData.Data.Value.Length - zeroBytes;
+    //    return 21000L + 4L * zeroBytes + 16L * nonZeroBytes;
+    //}
 }

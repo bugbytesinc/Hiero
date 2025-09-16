@@ -86,6 +86,27 @@ public static class ExternalExtensions
             return response.ResponseHeader?.NodeTransactionPrecheckCode ?? ResponseCodeEnum.Unknown;
         }
     }
+    /// <summary>
+    /// Creates a protobuf encoded signed transaction suitable for submission to the Hedera
+    /// Network.  The client must be configured with a gossip node and payer, however signatories
+    /// are optional to support the use case of signing by third party external wallets.
+    /// </summary>
+    /// <param name="client">
+    /// Consensus Node Client
+    /// </param>
+    /// <param name="transactionParams">
+    /// One of the supported transaction parameters objects, typically each network function
+    /// has a corresponding set of parameters necessary to define the details of each requst.
+    /// </param>
+    /// <param name="configure">
+    /// Optional callback method providing an opportunity to modify 
+    /// the execution configuration for just this method call. 
+    /// It is executed prior to submitting the request to the network.
+    /// </param>
+    /// <returns>
+    /// Binary serialized encoding of a SignedTransaction Protobuf primitive
+    /// represenging the desired hedera transaction.
+    /// </returns>
     public static async Task<ReadOnlyMemory<byte>> PrepareExternalTransactionAsync(this ConsensusClient client, TransactionParams transactionParams, Action<IConsensusContext>? configure = null)
     {
         if (transactionParams is BatchedTransactionMetadata batchMetadata)
