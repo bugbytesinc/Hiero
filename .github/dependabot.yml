@@ -9,10 +9,7 @@ updates:
       timezone: "America/New_York"
     open-pull-requests-limit: 10
     rebase-strategy: "auto"
-    versioning-strategy: "auto"
     labels: ["dependencies", "nuget"]
-    reviewers:
-      - "bugbytesinc"
     ignore:
       - dependency-name: "*"
         versions: ["*-alpha*", "*-beta*", "*-rc*"]
@@ -30,5 +27,3 @@ updates:
     open-pull-requests-limit: 10
     rebase-strategy: "auto"
     labels: ["dependencies", "github-actions"]
-    reviewers:
-      - "bugbytesinc"
