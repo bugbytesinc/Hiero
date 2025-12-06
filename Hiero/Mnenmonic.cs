@@ -53,8 +53,13 @@ public class Mnenmonic
     {
         var mnemonicBytes = Encoding.UTF8.GetBytes(string.Join(' ', words));
         var saltBytes = Encoding.UTF8.GetBytes("mnemonic" + (passphrase ?? ""));
-        using var derive = new Rfc2898DeriveBytes(mnemonicBytes, saltBytes, 2048, HashAlgorithmName.SHA512);
-        _seed = derive.GetBytes(64);
+        _seed = Rfc2898DeriveBytes.Pbkdf2(
+            mnemonicBytes,
+            saltBytes,
+            2048,
+            HashAlgorithmName.SHA512,
+            64
+        );
     }
     /// <summary>
     /// Computes the HD key pair for this mnenmonic.
