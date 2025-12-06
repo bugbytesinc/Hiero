@@ -83,5 +83,5 @@ public interface IInvoice
     /// The bytes representing the signature corresponding
     /// to the associated private/public key.
     /// </param>
-    public void AddSignature(KeyType type, ReadOnlyMemory<byte> publicPrefix, ReadOnlyMemory<byte> signature);
+    public void AddSignature(KeyType type, ReadOnlySpan<byte> publicPrefix, ReadOnlySpan<byte> signature);
 }

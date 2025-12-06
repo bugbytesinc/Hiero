@@ -129,11 +129,11 @@ internal sealed class BatchedParamsOrchestrator : INetworkParams
                 }
                 else
                 {
-                    var batchKeySignatory = context.Signatory ?? batchParams.Signatory ?? throw new InvalidOperationException("No Signatories found for this transaction.");
+                    var batchKeySignatory = context.Signatory ?? batchParams.Signatory ?? throw new InvalidOperationException("No Signatories found for this batched transaction.");
                     var batchEndorsements = batchKeySignatory.GetEndorsements();
                     if (batchEndorsements.Count == 0)
                     {
-                        throw new InvalidOperationException("No Signatories found for this transaction.");
+                        throw new InvalidOperationException("Unable to derive the batch key endorsment from the primary signatory for this batched transaction.");
                     }
                     if (batchEndorsements.Count == 1)
                     {

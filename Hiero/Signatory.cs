@@ -419,7 +419,7 @@ public sealed class Signatory : ISignatory, IEquatable<Signatory>
     /// embedded information making up the transaction.
     /// </param>
     /// <returns></returns>
-    async Task ISignatory.SignAsync(IInvoice invoice)
+    async ValueTask ISignatory.SignAsync(IInvoice invoice)
     {
         switch (_type)
         {

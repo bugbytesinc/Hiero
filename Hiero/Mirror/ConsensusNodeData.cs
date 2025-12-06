@@ -5,12 +5,12 @@ using System.Text.Json.Serialization;
 
 namespace Hiero.Mirror;
 /// <summary>
-/// Represents gossip node information returned from the mirror node.
+/// Represents consensus node information returned from the mirror node.
 /// </summary>
-public class GossipNodeData
+public class ConsensusNodeData
 {
     /// <summary>
-    /// The gossip nodes account ID (for payment purposes).
+    /// The consensus nodes account ID (for payment purposes).
     /// </summary>
     [JsonPropertyName("node_account_id")]
     public EntityId Account { get; set; } = default!;
@@ -103,7 +103,7 @@ public class GossipNodeData
     public TimestampRangeData ValidRange { get; set; } = default!;
 }
 [EditorBrowsable(EditorBrowsableState.Never)]
-public static class GossipNodeDataExtensions
+public static class ConsensusNodeDataExtensions
 {
     /// <summary>
     /// Retrieves the list of known Hedera Gossip Nodes.
@@ -114,9 +114,9 @@ public static class GossipNodeDataExtensions
     /// <returns>
     /// The list of known Hedera Gossip Nodes.
     /// </returns>
-    public static IAsyncEnumerable<GossipNodeData> GetGossipNodesAsync(this MirrorRestClient client)
+    public static IAsyncEnumerable<ConsensusNodeData> GetConsensusNodesAsync(this MirrorRestClient client)
     {
-        return client.GetPagedItemsAsync<GossipNodePage, GossipNodeData>("network/nodes");
+        return client.GetPagedItemsAsync<ConsensusNodeDataPage, ConsensusNodeData>("network/nodes");
     }
     /// <summary>
     /// Retrieves a list of Hedera gRPC nodes known to the 
@@ -136,10 +136,10 @@ public static class GossipNodeDataExtensions
     /// A dictionary of gateways and the corresponding response
     /// time (in miliseconds).
     /// </returns>
-    public static async Task<IReadOnlyDictionary<ConsensusNodeEndpoint, long>> GetActiveGatewaysAsync(this MirrorRestClient client, int maxTimeoutInMiliseconds)
+    public static async Task<IReadOnlyDictionary<ConsensusNodeEndpoint, long>> GetActiveConsensusNodesAsync(this MirrorRestClient client, int maxTimeoutInMiliseconds)
     {
         var list = new List<Task<(ConsensusNodeEndpoint gatway, long response)>>();
-        await foreach (var node in client.GetGossipNodesAsync())
+        await foreach (var node in client.GetConsensusNodesAsync())
         {
             foreach (var endpoint in node.Endpoints)
             {

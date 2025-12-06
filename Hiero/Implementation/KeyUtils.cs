@@ -204,7 +204,7 @@ internal static class KeyUtils
         var signature = ed25519Signer.GenerateSignature();
         ed25519Signer.Reset();
         var publicKey = privateKey.GeneratePublicKey().GetEncoded();
-        var prefix = new ReadOnlyMemory<byte>(publicKey, 0, Math.Min(Math.Max(6, invoice.MinimumDesiredPrefixSize), publicKey.Length));
+        var prefix = publicKey.AsSpan(0, Math.Min(Math.Max(6, invoice.MinimumDesiredPrefixSize), publicKey.Length));
         invoice.AddSignature(KeyType.Ed25519, prefix, signature);
     }
 
@@ -306,7 +306,7 @@ internal static class KeyUtils
         Insert256Int(components[0], 0, encoded);
         Insert256Int(components[1], 32, encoded);
         var publicKey = EcdsaSecp256k1DomainParams.G.Multiply(privateKey.D).GetEncoded(true);
-        var prefix = new ReadOnlyMemory<byte>(publicKey, 0, Math.Min(Math.Max(6, invoice.MinimumDesiredPrefixSize), publicKey.Length));
+        var prefix = publicKey.AsSpan(0, Math.Min(Math.Max(6, invoice.MinimumDesiredPrefixSize), publicKey.Length));
         invoice.AddSignature(KeyType.ECDSASecp256K1, prefix, encoded);
     }
     internal static (byte[] R, byte[] S, int RevoeryId) Sign(byte[] data, ECPrivateKeyParameters privateKey)

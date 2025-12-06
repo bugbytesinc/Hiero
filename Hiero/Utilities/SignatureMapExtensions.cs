@@ -2,6 +2,7 @@
 using Hiero.Implementation;
 using Proto;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace Hiero;
 
@@ -54,10 +55,10 @@ public static class SignatureMapExtensions
             _data = data;
         }
 
-        public void AddSignature(KeyType type, ReadOnlyMemory<byte> publicPrefix, ReadOnlyMemory<byte> signature)
+        public void AddSignature(KeyType type, ReadOnlySpan<byte> publicPrefix, ReadOnlySpan<byte> signature)
         {
-            var pair = new SignaturePair { PubKeyPrefix = ByteString.CopyFrom(publicPrefix.Span) };
-            var value = ByteString.CopyFrom(signature.Span);
+            var pair = new SignaturePair { PubKeyPrefix = ByteString.CopyFrom(publicPrefix) };
+            var value = ByteString.CopyFrom(signature);
             switch (type)
             {
                 case KeyType.Ed25519:
@@ -142,53 +143,37 @@ public static class SignatureMapExtensions
             return false;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         IEnumerable<ReadOnlyMemory<byte>> findCandidateSignatures(KeyType keyType, ReadOnlyMemory<byte> fullPublicKey)
         {
+            var pairs = signatureMap.SigPair;
+            if (pairs is null || pairs.Count == 0)
+            {
+                yield break;
+            }
             switch (keyType)
             {
                 case KeyType.Ed25519:
-                    return signatureMap
-                        .SigPair
-                        .Where(p =>
-                            p.SignatureCase == SignaturePair.SignatureOneofCase.Ed25519 &&
-                            partialKeyPrefixMatches(fullPublicKey.Span, p.PubKeyPrefix.Span))
-                        .Select(p => p.Ed25519.Memory);
-                case KeyType.ECDSASecp256K1:
-                    return signatureMap
-                        .SigPair
-                        .Where(p =>
-                            p.SignatureCase == SignaturePair.SignatureOneofCase.ECDSASecp256K1 &&
-                            partialKeyPrefixMatches(fullPublicKey.Span, p.PubKeyPrefix.Span))
-                        .Select(p => p.ECDSASecp256K1.Memory);
-                case KeyType.Contract:
-                    return signatureMap
-                        .SigPair
-                        .Where(p =>
-                            p.SignatureCase == SignaturePair.SignatureOneofCase.Contract &&
-                            partialKeyPrefixMatches(fullPublicKey.Span, p.PubKeyPrefix.Span))
-                        .Select(p => p.Contract.Memory);
-            }
-            return Array.Empty<ReadOnlyMemory<byte>>();
-        }
-
-        bool partialKeyPrefixMatches(ReadOnlySpan<byte> fullKey, ReadOnlySpan<byte> partialKeyPrefix)
-        {
-            // Have to try signatures with no partial key id.
-            if (partialKeyPrefix.Length > 0)
-            {
-                if (partialKeyPrefix.Length > fullKey.Length)
-                {
-                    return false;
-                }
-                for (var i = 0; i < partialKeyPrefix.Length; i++)
-                {
-                    if (fullKey[i] != partialKeyPrefix[i])
+                    foreach (var p in pairs)
                     {
-                        return false;
+                        if (p.SignatureCase == SignaturePair.SignatureOneofCase.Ed25519 && fullPublicKey.Span.StartsWith(p.PubKeyPrefix.Span))
+                        {
+                            yield return p.Ed25519.Memory;
+                        }
                     }
-                }
+                    yield break;
+                case KeyType.ECDSASecp256K1:
+                    foreach (var p in pairs)
+                    {
+                        if (p.SignatureCase == SignaturePair.SignatureOneofCase.ECDSASecp256K1 && fullPublicKey.Span.StartsWith(p.PubKeyPrefix.Span))
+                        {
+                            yield return p.ECDSASecp256K1.Memory;
+                        }
+                    }
+                    yield break;
+                default:
+                    yield break;
             }
-            return true;
         }
     }
 }

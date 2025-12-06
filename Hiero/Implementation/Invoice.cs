@@ -37,10 +37,10 @@ internal sealed class Invoice : IInvoice
         _prefixTrimLimit = prefixTrimLimit;
         _signatures = [];
     }
-    void IInvoice.AddSignature(KeyType type, ReadOnlyMemory<byte> publicPrefix, ReadOnlyMemory<byte> signature)
+    void IInvoice.AddSignature(KeyType type, ReadOnlySpan<byte> publicPrefix, ReadOnlySpan<byte> signature)
     {
-        var key = ByteString.CopyFrom(publicPrefix.Span);
-        var value = ByteString.CopyFrom(signature.Span);
+        var key = ByteString.CopyFrom(publicPrefix);
+        var value = ByteString.CopyFrom(signature);
         var pair = new SignaturePair();
         switch (type)
         {
