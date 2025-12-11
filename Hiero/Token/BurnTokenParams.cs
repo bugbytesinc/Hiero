@@ -1,12 +1,13 @@
 ﻿using Hiero.Implementation;
 using Proto;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace Hiero;
 /// <summary>
 /// Transaction Parameters for Burning Tokens from the treasury account.
 /// </summary>
-public sealed class BurnTokenParams : TransactionParams, INetworkParams
+public sealed class BurnTokenParams : TransactionParams<TokenReceipt>, INetworkParams<TokenReceipt>
 {
     /// <summary>
     /// The TransactionId of the fungible tokens to burn.
@@ -33,7 +34,7 @@ public sealed class BurnTokenParams : TransactionParams, INetworkParams
     /// submission process.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
-    INetworkTransaction INetworkParams.CreateNetworkTransaction()
+    INetworkTransaction INetworkParams<TokenReceipt>.CreateNetworkTransaction()
     {
         if (Amount < 1)
         {
@@ -45,11 +46,11 @@ public sealed class BurnTokenParams : TransactionParams, INetworkParams
             Amount = Amount
         };
     }
-    TransactionReceipt INetworkParams.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
+    TokenReceipt INetworkParams<TokenReceipt>.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
     {
         return new TokenReceipt(transactionId, receipt);
     }
-    string INetworkParams.OperationDescription => "Burn Tokens";
+    string INetworkParams<TokenReceipt>.OperationDescription => "Burn Tokens";
 }
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class BurnTokenExtensions
@@ -79,9 +80,10 @@ public static class BurnTokenExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission, for example of the token is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TokenReceipt> BurnTokensAsync(this ConsensusClient client, EntityId token, ulong amount, Action<IConsensusContext>? configure = null)
     {
-        return client.ExecuteNetworkParamsAsync<TokenReceipt>(new BurnTokenParams { Token = token, Amount = amount }, configure);
+        return client.ExecuteAsync(new BurnTokenParams { Token = token, Amount = amount }, configure);
     }
     /// <summary>
     /// Removes Fungible Token coins from the token's Treasury account.
@@ -105,8 +107,9 @@ public static class BurnTokenExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission, for example of the token is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TokenReceipt> BurnTokensAsync(this ConsensusClient client, BurnTokenParams burnParams, Action<IConsensusContext>? configure = null)
     {
-        return client.ExecuteNetworkParamsAsync<TokenReceipt>(burnParams, configure);
+        return client.ExecuteAsync(burnParams, configure);
     }
 }

@@ -1,12 +1,13 @@
 ﻿using Hiero.Implementation;
 using Proto;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace Hiero;
 /// <summary>
 /// Transaction Parameters for Signing a Pending/Schedled Transaction.
 /// </summary>
-public sealed class SignPendingTransactionParams : TransactionParams, INetworkParams
+public sealed class SignPendingTransactionParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
     /// The Entity Id of the pending transaction that is to be signed.
@@ -27,18 +28,18 @@ public sealed class SignPendingTransactionParams : TransactionParams, INetworkPa
     /// submission process.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
-    INetworkTransaction INetworkParams.CreateNetworkTransaction()
+    INetworkTransaction INetworkParams<TransactionReceipt>.CreateNetworkTransaction()
     {
         return new ScheduleSignTransactionBody
         {
             ScheduleID = new ScheduleID(Pending)
         };
     }
-    TransactionReceipt INetworkParams.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
+    TransactionReceipt INetworkParams<TransactionReceipt>.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
     {
         return TransactionReceiptExtensions.FromProtobuf(transactionId, receipt);
     }
-    string INetworkParams.OperationDescription => "Sign Pending Transaction";
+    string INetworkParams<TransactionReceipt>.OperationDescription => "Sign Pending Transaction";
 }
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class SignPendingTransactionExtensions
@@ -66,8 +67,9 @@ public static class SignPendingTransactionExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> SignPendingTransactionAsync(this ConsensusClient client, SignPendingTransactionParams signParams, Action<IConsensusContext>? configure = null)
     {
-        return client.ExecuteNetworkParamsAsync<TransactionReceipt>(signParams, configure);
+        return client.ExecuteAsync(signParams, configure);
     }
 }

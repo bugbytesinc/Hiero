@@ -2,6 +2,7 @@
 using Hiero.Implementation;
 using Proto;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace Hiero;
 
@@ -18,7 +19,7 @@ namespace Hiero;
 /// resulting mirror HCS stream for the
 /// related topic.
 /// </remarks>
-public sealed class SubmitMessageParams : TransactionParams, INetworkParams
+public sealed class SubmitMessageParams : TransactionParams<SubmitMessageReceipt>, INetworkParams<SubmitMessageReceipt>
 {
     /// <summary>
     /// The address of the topic for the message.
@@ -71,7 +72,7 @@ public sealed class SubmitMessageParams : TransactionParams, INetworkParams
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
 
-    INetworkTransaction INetworkParams.CreateNetworkTransaction()
+    INetworkTransaction INetworkParams<SubmitMessageReceipt>.CreateNetworkTransaction()
     {
         if (Message.IsEmpty)
         {
@@ -110,11 +111,11 @@ public sealed class SubmitMessageParams : TransactionParams, INetworkParams
             };
         }
     }
-    TransactionReceipt INetworkParams.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
+    SubmitMessageReceipt INetworkParams<SubmitMessageReceipt>.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
     {
         return new SubmitMessageReceipt(transactionId, receipt);
     }
-    string INetworkParams.OperationDescription => "Submit Message";
+    string INetworkParams<SubmitMessageReceipt>.OperationDescription => "Submit Message";
     internal SubmitMessageParams CloneWithTransactionId(TransactionId initialChunkTransactionId)
     {
         return new SubmitMessageParams
@@ -158,9 +159,10 @@ public static class SubmitMessageExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<SubmitMessageReceipt> SubmitMessageAsync(this ConsensusClient client, EntityId topic, ReadOnlyMemory<byte> message, Action<IConsensusContext>? configure = null)
     {
-        return client.ExecuteNetworkParamsAsync<SubmitMessageReceipt>(new SubmitMessageParams { Topic = topic, Message = message }, configure);
+        return client.ExecuteAsync(new SubmitMessageParams { Topic = topic, Message = message }, configure);
     }
     /// <summary>
     /// Sends a message or a segment of a message to the network for a given consensus topic.
@@ -203,11 +205,11 @@ public static class SubmitMessageExtensions
             //
             // First We need to apply the confgure command, to 
             // create the correct context
-            GossipContextStack configuredContext = default!;
+            ConsensusContextStack configuredContext = default!;
             await using var configuredClient = client.Clone(ctx =>
             {
                 configure?.Invoke(ctx);
-                configuredContext = (GossipContextStack)ctx;
+                configuredContext = (ConsensusContextStack)ctx;
             });
             var initialChunkTransactionId = Engine.GetOrCreateTransactionID(configuredContext).AsTxId();
             if (Engine.CoalesceSignatories(configuredContext.Signatory, submitParams.Signatory)?.GetSchedule() is null)
@@ -227,11 +229,11 @@ public static class SubmitMessageExtensions
             // We use our configured client, however we need to override the
             // configuration with one additional configuration rule that will
             // peg the transaction to our pre-computed value.
-            return await configuredClient.ExecuteNetworkParamsAsync<SubmitMessageReceipt>(submitParams, ctx => ctx.TransactionId = initialChunkTransactionId).ConfigureAwait(false);
+            return await configuredClient.ExecuteAsync(submitParams, ctx => ctx.TransactionId = initialChunkTransactionId).ConfigureAwait(false);
         }
         else
         {
-            return await client.ExecuteNetworkParamsAsync<SubmitMessageReceipt>(submitParams, configure).ConfigureAwait(false);
+            return await client.ExecuteAsync(submitParams, configure).ConfigureAwait(false);
         }
     }
 }

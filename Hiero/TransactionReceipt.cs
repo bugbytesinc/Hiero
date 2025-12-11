@@ -95,7 +95,7 @@ public static class TransactionReceiptExtensions
     /// <exception cref="TransactionException">If the network has no record of the transaction or request has invalid or had missing data.</exception>
     public static async Task<TransactionReceipt> GetReceiptAsync(this ConsensusClient client, TransactionId transaction, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
     {
-        await using var context = client.CreateChildContext(configure);
+        await using var context = client.BuildChildContext(configure);
         var transactionId = new TransactionID(transaction);
         var receipt = FromProtobuf(transactionId, await Engine.GetReceiptAsync(context, transactionId, cancellationToken).ConfigureAwait(false));
         if (receipt.Status != ResponseCode.Success && context.ThrowIfNotSuccess)
@@ -130,7 +130,7 @@ public static class TransactionReceiptExtensions
     /// respond.</exception>
     public static async Task<IReadOnlyList<TransactionReceipt>> GetAllReceiptsAsync(this ConsensusClient client, TransactionId transaction, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
     {
-        await using var context = client.CreateChildContext(configure);
+        await using var context = client.BuildChildContext(configure);
         var transactionId = new TransactionID(transaction);
         INetworkQuery query = new TransactionGetReceiptQuery
         {
@@ -138,7 +138,7 @@ public static class TransactionReceiptExtensions
             IncludeDuplicates = true,
             IncludeChildReceipts = true
         };
-        var response = await Engine.SubmitGrpcMessageWithRetry(context, query.CreateEnvelope(), query.InstantiateNetworkRequestMethod, shouldRetry, cancellationToken).ConfigureAwait(false);
+        var response = await Engine.SubmitMessageAsync(context, query.CreateEnvelope(), query.InstantiateNetworkRequestMethod, shouldRetry, cancellationToken).ConfigureAwait(false);
         var responseCode = response.TransactionGetReceipt.Header.NodeTransactionPrecheckCode;
         if (responseCode == ResponseCodeEnum.Busy)
         {

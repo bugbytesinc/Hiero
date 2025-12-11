@@ -3,12 +3,12 @@
 /// Represents a single transaction within a batch, identifying
 /// the transaction parameters, and other optional batch metadata.
 /// </summary>
-public sealed class BatchedTransactionMetadata : TransactionParams
+public sealed class BatchedTransactionMetadata : TransactionParams<TransactionReceipt>
 {
     /// <summary>
     /// The transaction parameters for this transaction within the batch.
     /// </summary>
-    public TransactionParams TransactionParams { get; set; } = default!;
+    public TransactionParams<TransactionReceipt> TransactionParams { get; set; } = default!;
     /// <summary>
     /// Optional payer entity for this individual batched transaction, 
     /// if not specified, it will be the main Payer identified by the 

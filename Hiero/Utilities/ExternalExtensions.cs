@@ -50,20 +50,20 @@ public static class ExternalExtensions
             {
                 throw new ArgumentException("The Query did not contain a request.", nameof(queryBytes));
             }
-            await using var context = client.CreateChildContext(configure);
+            await using var context = client.BuildChildContext(configure);
             query.SetHeader(new QueryHeader
             {
                 Payment = new Transaction { SignedTransactionBytes = ByteString.Empty },
                 ResponseType = ResponseType.CostAnswer
             });
             var response = envelope.QueryCase == Query.QueryOneofCase.TransactionGetReceipt ?
-                await Engine.SubmitGrpcMessageWithRetry(context, envelope, query.InstantiateNetworkRequestMethod, shouldRetryReceiptQuery, cancellationToken).ConfigureAwait(false) :
-                await Engine.SubmitGrpcMessageWithRetry(context, envelope, query.InstantiateNetworkRequestMethod, shouldRetryGenericQuery, cancellationToken).ConfigureAwait(false);
+                await Engine.SubmitMessageAsync(context, envelope, query.InstantiateNetworkRequestMethod, shouldRetryReceiptQuery, cancellationToken).ConfigureAwait(false) :
+                await Engine.SubmitMessageAsync(context, envelope, query.InstantiateNetworkRequestMethod, shouldRetryGenericQuery, cancellationToken).ConfigureAwait(false);
             if (response.ResponseHeader?.NodeTransactionPrecheckCode == ResponseCodeEnum.Ok && response.ResponseHeader?.Cost > 0)
             {
                 var transactionId = Engine.GetOrCreateTransactionID(context);
                 query.SetHeader(await Engine.CreateSignedQueryHeader(context, (long)response.ResponseHeader.Cost, transactionId, cancellationToken).ConfigureAwait(false));
-                response = await Engine.SubmitTimeBoxedGrpcMessageWithRetry(context, envelope, query.InstantiateNetworkRequestMethod, getResponseCode, cancellationToken);
+                response = await Engine.SubmitMessageAsync(context, envelope, query.InstantiateNetworkRequestMethod, cancellationToken);
             }
             return response.ToByteArray();
         }
@@ -80,10 +80,6 @@ public static class ExternalExtensions
         static bool shouldRetryGenericQuery(Response response)
         {
             return ResponseCodeEnum.Busy == response.ResponseHeader?.NodeTransactionPrecheckCode;
-        }
-        static ResponseCodeEnum getResponseCode(Response response)
-        {
-            return response.ResponseHeader?.NodeTransactionPrecheckCode ?? ResponseCodeEnum.Unknown;
         }
     }
     /// <summary>
@@ -107,19 +103,19 @@ public static class ExternalExtensions
     /// Binary serialized encoding of a SignedTransaction Protobuf primitive
     /// represenging the desired hedera transaction.
     /// </returns>
-    public static async Task<ReadOnlyMemory<byte>> PrepareExternalTransactionAsync(this ConsensusClient client, TransactionParams transactionParams, Action<IConsensusContext>? configure = null)
+    public static async Task<ReadOnlyMemory<byte>> PrepareExternalTransactionAsync<TReceipt>(this ConsensusClient client, TransactionParams<TReceipt> transactionParams, Action<IConsensusContext>? configure = null) where TReceipt : TransactionReceipt
     {
         if (transactionParams is BatchedTransactionMetadata batchMetadata)
         {
             await using var configuredClient = client.Clone(configure);
             var batchParams = new BatchedTransactionParams { TransactionParams = [batchMetadata] };
-            var outerNetworkParams = await BatchedParamsOrchestrator.CreateAsync(batchParams, configuredClient);
-            var atomicBatch = (AtomicBatchTransactionBody)outerNetworkParams.CreateNetworkTransaction();
+            var outerNetworkParams = (await BatchedParamsOrchestrator.CreateAsync(batchParams, configuredClient)) as INetworkParams<TransactionReceipt>;
+            var atomicBatch = (AtomicBatchTransactionBody)outerNetworkParams!.CreateNetworkTransaction();
             return atomicBatch.Transactions[0].Memory;
         }
-        await using var context = client.CreateChildContext(configure);
-        var networkParams = transactionParams as INetworkParams ?? throw new ArgumentNullException(nameof(transactionParams), "External Transaction Params can not be null.");
-        var (_, signedTransactionBytes, _, _) = await Engine.CreateSignedTransactionBytesAsync(context, networkParams, false);
+        await using var context = client.BuildChildContext(configure);
+        var networkParams = transactionParams as INetworkParams<TransactionReceipt> ?? throw new ArgumentNullException(nameof(transactionParams), "External Transaction Params can not be null.");
+        var (_, signedTransactionBytes, _, _) = await Engine.EncodeAndSignAsync(context, networkParams, false);
         return signedTransactionBytes.Memory;
     }
 }

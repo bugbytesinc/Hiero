@@ -1,12 +1,13 @@
 ﻿using Hiero.Implementation;
 using Proto;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace Hiero;
 /// <summary>
 /// Transaction Parameters for Token and NFT Association Requests.
 /// </summary>
-public sealed class AssociateTokenParams : TransactionParams, INetworkParams
+public sealed class AssociateTokenParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
     /// The Holder that will be associated with the Token or NFT class(es)
@@ -33,7 +34,7 @@ public sealed class AssociateTokenParams : TransactionParams, INetworkParams
     /// submission process.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
-    INetworkTransaction INetworkParams.CreateNetworkTransaction()
+    INetworkTransaction INetworkParams<TransactionReceipt>.CreateNetworkTransaction()
     {
         if (Tokens is null)
         {
@@ -57,11 +58,11 @@ public sealed class AssociateTokenParams : TransactionParams, INetworkParams
         }
         return result;
     }
-    TransactionReceipt INetworkParams.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
+    TransactionReceipt INetworkParams<TransactionReceipt>.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
     {
         return new TransactionReceipt(transactionId, receipt);
     }
-    string INetworkParams.OperationDescription => "Associate Token with Account";
+    string INetworkParams<TransactionReceipt>.OperationDescription => "Associate Token with Account";
 }
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class AssociateTokenExtensions
@@ -96,13 +97,14 @@ public static class AssociateTokenExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission, for example of the token has already been associated.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> AssociateTokenAsync(this ConsensusClient client, EntityId account, EntityId token, Action<IConsensusContext>? configure = null)
     {
         if (token.IsNullOrNone())
         {
             throw new ArgumentNullException(nameof(token), "Token is missing. Please check that it is not null or empty.");
         }
-        return client.ExecuteNetworkParamsAsync<TransactionReceipt>(new AssociateTokenParams { Account = account, Tokens = [token] }, configure);
+        return client.ExecuteAsync(new AssociateTokenParams { Account = account, Tokens = [token] }, configure);
     }
     /// <summary>
     /// Provisions Storage associated with the Holder
@@ -131,8 +133,9 @@ public static class AssociateTokenExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission, for example of the token has already been associated.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> AssociateTokensAsync(this ConsensusClient client, AssociateTokenParams associateParams, Action<IConsensusContext>? configure = null)
     {
-        return client.ExecuteNetworkParamsAsync<TransactionReceipt>(associateParams, configure);
+        return client.ExecuteAsync(associateParams, configure);
     }
 }

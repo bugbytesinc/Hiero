@@ -1,12 +1,13 @@
 ﻿using Hiero.Implementation;
 using Proto;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace Hiero;
 /// <summary>
 /// Allowance Creation and Adjustment Parameters
 /// </summary>
-public sealed class AllowanceParams : TransactionParams, INetworkParams
+public sealed class AllowanceParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
     /// A list of accounts and allocated allowances that 
@@ -41,7 +42,7 @@ public sealed class AllowanceParams : TransactionParams, INetworkParams
     /// update process.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
-    INetworkTransaction INetworkParams.CreateNetworkTransaction()
+    INetworkTransaction INetworkParams<TransactionReceipt>.CreateNetworkTransaction()
     {
         var result = new CryptoApproveAllowanceTransactionBody();
         if (CryptoAllowances is { Count: > 0 })
@@ -108,11 +109,11 @@ public sealed class AllowanceParams : TransactionParams, INetworkParams
         }
         return result;
     }
-    TransactionReceipt INetworkParams.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
+    TransactionReceipt INetworkParams<TransactionReceipt>.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
     {
         return new TransactionReceipt(transactionId, receipt);
     }
-    string INetworkParams.OperationDescription => "Create Allowance";
+    string INetworkParams<TransactionReceipt>.OperationDescription => "Create Allowance";
 }
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class AllowanceExtensions
@@ -143,8 +144,9 @@ public static class AllowanceExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> AllocateAllowanceAsync(this ConsensusClient client, AllowanceParams allowanceParams, Action<IConsensusContext>? configure = null)
     {
-        return client.ExecuteNetworkParamsAsync<TransactionReceipt>(allowanceParams, configure);
+        return client.ExecuteAsync(allowanceParams, configure);
     }
 }

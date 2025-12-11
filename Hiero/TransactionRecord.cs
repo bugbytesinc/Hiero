@@ -120,7 +120,7 @@ public static class TransactionRecordExtensions
     /// <exception cref="TransactionException">If the network has no records of the transaction or request has invalid or had missing data.</exception>
     public static async Task<TransactionRecord> GetTransactionRecordAsync(this ConsensusClient client, TransactionId transaction, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
     {
-        await using var context = client.CreateChildContext(configure);
+        await using var context = client.BuildChildContext(configure);
         var transactionId = new TransactionID(transaction);
         // For the public version of this method, we do not know
         // if the transaction in question has come to consensus so
@@ -154,7 +154,7 @@ public static class TransactionRecordExtensions
     /// </returns>
     public static async Task<ReadOnlyCollection<TransactionRecord>> GetAllTransactionRecordsAsync(this ConsensusClient client, TransactionId transaction, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
     {
-        await using var context = client.CreateChildContext(configure);
+        await using var context = client.BuildChildContext(configure);
         var transactionId = new TransactionID(transaction);
         // For the public version of this method, we do not know
         // if the transaction in question has come to consensus so
@@ -177,10 +177,10 @@ public static class TransactionRecordExtensions
     /// to consensus so we need to get the receipt first (and wait if necessary).
     /// The Receipt status returned does notmatter in this case.  
     /// We may be retrieving a failed records (the status would not equal OK).
-    private static async Task WaitForConsensusReceipt(GossipContextStack context, TransactionID transactionId, CancellationToken cancellationToken)
+    private static async Task WaitForConsensusReceipt(ConsensusContextStack context, TransactionID transactionId, CancellationToken cancellationToken)
     {
         INetworkQuery query = new TransactionGetReceiptQuery { TransactionID = transactionId };
-        await Engine.SubmitGrpcMessageWithRetry(context, query.CreateEnvelope(), query.InstantiateNetworkRequestMethod, shouldRetry, cancellationToken).ConfigureAwait(false);
+        await Engine.SubmitMessageAsync(context, query.CreateEnvelope(), query.InstantiateNetworkRequestMethod, shouldRetry, cancellationToken).ConfigureAwait(false);
 
         static bool shouldRetry(Response response)
         {

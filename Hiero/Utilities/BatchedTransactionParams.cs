@@ -9,7 +9,7 @@ namespace Hiero;
 /// </summary>
 public sealed class BatchedTransactionParams
 {
-    public IReadOnlyList<TransactionParams> TransactionParams { get; set; } = default!;
+    public IReadOnlyList<TransactionParams<TransactionReceipt>> TransactionParams { get; set; } = default!;
     /// <summary>
     /// Optional explicit endorsement to be applied to the batchParams of transactions if not specified
     /// individually by each <see cref="BatchedTransaction"/>. If not specified by either the batchParams 
@@ -27,7 +27,7 @@ public sealed class BatchedTransactionParams
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
 }
-internal sealed class BatchedParamsOrchestrator : INetworkParams
+internal sealed class BatchedParamsOrchestrator : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     private readonly Signatory? _signatory;
     private readonly CancellationToken? _cancellationToken;
@@ -35,7 +35,7 @@ internal sealed class BatchedParamsOrchestrator : INetworkParams
 
     public Signatory? Signatory => _signatory;
     public CancellationToken? CancellationToken => _cancellationToken;
-    INetworkTransaction INetworkParams.CreateNetworkTransaction() => _networkTransaction;
+    INetworkTransaction INetworkParams<TransactionReceipt>.CreateNetworkTransaction() => _networkTransaction;
 
     private BatchedParamsOrchestrator(Signatory? signatory, CancellationToken? cancellationToken, INetworkTransaction networkTransaction)
     {
@@ -44,14 +44,14 @@ internal sealed class BatchedParamsOrchestrator : INetworkParams
         _networkTransaction = networkTransaction;
     }
 
-    public static async Task<INetworkParams> CreateAsync(BatchedTransactionParams batchParams, ConsensusClient client)
+    internal static async Task<TransactionParams<TransactionReceipt>> CreateAsync(BatchedTransactionParams batchParams, ConsensusClient client)
     {
         var count = batchParams.TransactionParams?.Count ?? 0;
         if (count == 0)
         {
             throw new ArgumentException("The Transactions list must contain at least one batchable transaction.", nameof(batchParams.TransactionParams));
         }
-        await using var context = client.CreateChildContext(null);
+        await using var context = client.BuildChildContext(null);
         var defaultPayer = context.Payer ?? throw new InvalidOperationException("No Payer Account configured for this transaction.");
         var explicitTransactionId = context.TransactionId;
         Key? defaultBatchKey = null;
@@ -63,7 +63,7 @@ internal sealed class BatchedParamsOrchestrator : INetworkParams
         {
             var transactionParams = batchParams.TransactionParams![i] ?? throw new ArgumentNullException(nameof(batchParams.TransactionParams), $"The batch transaction at index {i} is null.");
             var batchMetadata = transactionParams as BatchedTransactionMetadata;
-            var networkParams = (batchMetadata?.TransactionParams ?? transactionParams) as INetworkParams;
+            var networkParams = (batchMetadata?.TransactionParams ?? transactionParams) as INetworkParams<TransactionReceipt>;
             if (networkParams is null)
             {
                 // TODO: This still leaves too many edge cases dangling
@@ -192,7 +192,7 @@ internal sealed class BatchedParamsOrchestrator : INetworkParams
             }
         }
 
-        Signatory coalesceSignatories(BatchedTransactionMetadata? batchMetadata, INetworkParams transactionParams, int i)
+        Signatory coalesceSignatories(BatchedTransactionMetadata? batchMetadata, INetworkParams<TransactionReceipt> transactionParams, int i)
         {
             var signatoryList = new List<Signatory>(3);
             if (transactionParams.Signatory is not null)
@@ -235,11 +235,11 @@ internal sealed class BatchedParamsOrchestrator : INetworkParams
             return invoice.GenerateSignedTransactionFromSignatures(true).ToByteString();
         }
     }
-    TransactionReceipt INetworkParams.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
+    TransactionReceipt INetworkParams<TransactionReceipt>.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
     {
         return new TransactionReceipt(transactionId, receipt);
     }
-    string INetworkParams.OperationDescription => "Atomic Batch Transaction";
+    string INetworkParams<TransactionReceipt>.OperationDescription => "Atomic Batch Transaction";
 }
 
 [EditorBrowsable(EditorBrowsableState.Never)]
@@ -268,6 +268,6 @@ public static class TransactionBatchParamsExtensions
     {
         await using var configuredClient = client.Clone(configure);
         var transactionParams = await BatchedParamsOrchestrator.CreateAsync(batchParams, configuredClient).ConfigureAwait(false);
-        return await configuredClient.ExecuteNetworkParamsAsync<TransactionReceipt>(transactionParams, null).ConfigureAwait(false);
+        return await configuredClient.ExecuteAsync(transactionParams, null).ConfigureAwait(false);
     }
 }

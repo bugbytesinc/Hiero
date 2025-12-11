@@ -2,13 +2,14 @@
 using Hiero.Implementation;
 using Proto;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace Hiero;
 /// <summary>
 /// Represents a transaction submitted to the hedera network thru the
 /// native HAPI Ethereum gateway feature.
 /// </summary>
-public class EvmTransactionParams : TransactionParams, INetworkParams
+public class EvmTransactionParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
     /// The complete raw Ethereum transaction (RLP encoded type 0, 1, and 2),
@@ -69,7 +70,7 @@ public class EvmTransactionParams : TransactionParams, INetworkParams
     /// Optional Cancellation token that interrupt the contract call.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
-    INetworkTransaction INetworkParams.CreateNetworkTransaction()
+    INetworkTransaction INetworkParams<TransactionReceipt>.CreateNetworkTransaction()
     {
         if (Transaction.IsEmpty)
         {
@@ -86,11 +87,11 @@ public class EvmTransactionParams : TransactionParams, INetworkParams
             MaxGasAllowance = AdditionalGasAllowance
         };
     }
-    TransactionReceipt INetworkParams.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
+    TransactionReceipt INetworkParams<TransactionReceipt>.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
     {
         return new TransactionReceipt(transactionId, receipt);
     }
-    string INetworkParams.OperationDescription => "Contract Call";
+    string INetworkParams<TransactionReceipt>.OperationDescription => "Contract Call";
 }
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class EvmTransactionExtensions
@@ -119,8 +120,9 @@ public static class EvmTransactionExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> ExecuteEvmTransactionAsync(this ConsensusClient client, EvmTransactionParams transactionParams, Action<IConsensusContext>? configure = null)
     {
-        return client.ExecuteNetworkParamsAsync<TransactionReceipt>(transactionParams, configure);
+        return client.ExecuteAsync(transactionParams, configure);
     }
 }

@@ -1,12 +1,13 @@
 ﻿using Hiero.Implementation;
 using Proto;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace Hiero;
 /// <summary>
 /// Transaction Parameters for Continuing (Un-Pausing) a Token.
 /// </summary>
-public sealed class ContinueTokenParams : TransactionParams, INetworkParams
+public sealed class ContinueTokenParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
     /// The TransactionId of the Fungible or NFT Token Class to continue (un-pause).
@@ -29,18 +30,18 @@ public sealed class ContinueTokenParams : TransactionParams, INetworkParams
     /// submission process.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
-    INetworkTransaction INetworkParams.CreateNetworkTransaction()
+    INetworkTransaction INetworkParams<TransactionReceipt>.CreateNetworkTransaction()
     {
         return new TokenUnpauseTransactionBody
         {
             Token = new TokenID(Token)
         };
     }
-    TransactionReceipt INetworkParams.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
+    TransactionReceipt INetworkParams<TransactionReceipt>.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
     {
         return new TransactionReceipt(transactionId, receipt);
     }
-    string INetworkParams.OperationDescription => "Continue Token";
+    string INetworkParams<TransactionReceipt>.OperationDescription => "Continue Token";
 }
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class ContinueTokenExtensions
@@ -70,9 +71,10 @@ public static class ContinueTokenExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission, for example of the token is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> ContinueTokenAsync(this ConsensusClient client, EntityId token, Action<IConsensusContext>? configure = null)
     {
-        return client.ExecuteNetworkParamsAsync<TransactionReceipt>(new ContinueTokenParams { Token = token }, configure);
+        return client.ExecuteAsync(new ContinueTokenParams { Token = token }, configure);
     }
     /// <summary>
     /// Continues/Un-Pauses all accounts' ability to send or
@@ -98,8 +100,9 @@ public static class ContinueTokenExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission, for example of the token is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> ContinueTokenAsync(this ConsensusClient client, ContinueTokenParams continueParams, Action<IConsensusContext>? configure = null)
     {
-        return client.ExecuteNetworkParamsAsync<TransactionReceipt>(continueParams, configure);
+        return client.ExecuteAsync(continueParams, configure);
     }
 }

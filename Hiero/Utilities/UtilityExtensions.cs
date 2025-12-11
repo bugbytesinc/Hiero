@@ -25,7 +25,7 @@ public static class UtilityExtensions
     /// </returns>
     public static TransactionId CreateNewTransactionId(this ConsensusClient client, Action<IConsensusContext>? configure = null)
     {
-        var context = client.CreateChildContext(configure);
+        var context = client.BuildChildContext(configure);
         try
         {
             return Engine.GetOrCreateTransactionID(context).AsTxId();
@@ -74,7 +74,7 @@ public static class UtilityExtensions
     /// </exception>
     public static async Task<long> PingAsync(this ConsensusClient client, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
     {
-        await using var context = client.CreateChildContext(configure);
+        await using var context = client.BuildChildContext(configure);
         var query = new CryptoGetInfoQuery { AccountID = new AccountID(new EntityId(0, 0, 98)) } as INetworkQuery;
         var envelope = query.CreateEnvelope();
         query.SetHeader(new QueryHeader
@@ -84,7 +84,7 @@ public static class UtilityExtensions
         });
         var stopwatch = new Stopwatch();
         stopwatch.Start();
-        var answer = await Engine.SubmitGrpcMessageWithRetry(context, envelope, query.InstantiateNetworkRequestMethod, shouldRetryRequest, cancellationToken).ConfigureAwait(false);
+        var answer = await Engine.SubmitMessageAsync(context, envelope, query.InstantiateNetworkRequestMethod, shouldRetryRequest, cancellationToken).ConfigureAwait(false);
         stopwatch.Stop();
         var code = answer.ResponseHeader?.NodeTransactionPrecheckCode ?? ResponseCodeEnum.Unknown;
         if (code != ResponseCodeEnum.Ok)

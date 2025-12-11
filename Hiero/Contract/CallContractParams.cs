@@ -2,12 +2,13 @@
 using Hiero.Implementation;
 using Proto;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace Hiero;
 /// <summary>
 /// Represents the parameters required to call a smart contract on the Hedera network.
 /// </summary>
-public class CallContractParams : TransactionParams, INetworkParams
+public class CallContractParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
     /// The address of the contract to call.
@@ -47,7 +48,7 @@ public class CallContractParams : TransactionParams, INetworkParams
     /// call.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
-    INetworkTransaction INetworkParams.CreateNetworkTransaction()
+    INetworkTransaction INetworkParams<TransactionReceipt>.CreateNetworkTransaction()
     {
         return new ContractCallTransactionBody()
         {
@@ -57,11 +58,11 @@ public class CallContractParams : TransactionParams, INetworkParams
             FunctionParameters = ByteString.CopyFrom(Abi.EncodeFunctionWithArguments(MethodName, MethodArgs).Span)
         };
     }
-    TransactionReceipt INetworkParams.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
+    TransactionReceipt INetworkParams<TransactionReceipt>.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
     {
         return new TransactionReceipt(transactionId, receipt);
     }
-    string INetworkParams.OperationDescription => "Contract Call";
+    string INetworkParams<TransactionReceipt>.OperationDescription => "Contract Call";
 }
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class CallContractExtensions
@@ -94,8 +95,9 @@ public static class CallContractExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> CallContractAsync(this ConsensusClient client, CallContractParams callParameters, Action<IConsensusContext>? configure = null)
     {
-        return client.ExecuteNetworkParamsAsync<TransactionReceipt>(callParameters, configure);
+        return client.ExecuteAsync(callParameters, configure);
     }
 }

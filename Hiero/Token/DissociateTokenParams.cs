@@ -1,12 +1,13 @@
 ﻿using Hiero.Implementation;
 using Proto;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace Hiero;
 /// <summary>
 /// Transaction Parameters for Token and NFT Dissociation Requests.
 /// </summary>
-public sealed class DissociateTokenParams : TransactionParams, INetworkParams
+public sealed class DissociateTokenParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
     /// The Holder that will be un-associated with the Token or NFT class(es)
@@ -33,7 +34,7 @@ public sealed class DissociateTokenParams : TransactionParams, INetworkParams
     /// submission process.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
-    INetworkTransaction INetworkParams.CreateNetworkTransaction()
+    INetworkTransaction INetworkParams<TransactionReceipt>.CreateNetworkTransaction()
     {
         if (Tokens is null)
         {
@@ -57,11 +58,11 @@ public sealed class DissociateTokenParams : TransactionParams, INetworkParams
         }
         return result;
     }
-    TransactionReceipt INetworkParams.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
+    TransactionReceipt INetworkParams<TransactionReceipt>.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
     {
         return new TransactionReceipt(transactionId, receipt);
     }
-    string INetworkParams.OperationDescription => "Dissociate Token from Account";
+    string INetworkParams<TransactionReceipt>.OperationDescription => "Dissociate Token from Account";
 }
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class DissociateTokenExtensions
@@ -96,13 +97,14 @@ public static class DissociateTokenExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission, for example of the token has already been dissociated.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> DissociateTokenAsync(this ConsensusClient client, EntityId token, EntityId account, Action<IConsensusContext>? configure = null)
     {
         if (token.IsNullOrNone())
         {
             throw new ArgumentNullException(nameof(token), "Token is missing. Please check that it is not null or empty.");
         }
-        return client.ExecuteNetworkParamsAsync<TransactionReceipt>(new DissociateTokenParams { Account = account, Tokens = [token] }, configure);
+        return client.ExecuteAsync(new DissociateTokenParams { Account = account, Tokens = [token] }, configure);
     }
     /// <summary>
     /// Removes Storage associated with the account for maintaining token balances 
@@ -131,8 +133,9 @@ public static class DissociateTokenExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission, for example of the token has already been dissociated.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> DissociateTokenAsync(this ConsensusClient client, DissociateTokenParams dissociateParams, Action<IConsensusContext>? configure = null)
     {
-        return client.ExecuteNetworkParamsAsync<TransactionReceipt>(dissociateParams, configure);
+        return client.ExecuteAsync(dissociateParams, configure);
     }
 }

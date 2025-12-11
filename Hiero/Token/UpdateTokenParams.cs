@@ -1,6 +1,7 @@
 ﻿using Hiero.Implementation;
 using Proto;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace Hiero;
 /// <summary>
@@ -13,7 +14,7 @@ namespace Hiero;
 /// to make changes.  If there is no administrator endorsement specified,
 /// the token is imutable and cannot be changed.
 /// </summary>
-public sealed class UpdateTokenParams : TransactionParams, INetworkParams
+public sealed class UpdateTokenParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
     /// The identifier of the token to update.
@@ -124,7 +125,7 @@ public sealed class UpdateTokenParams : TransactionParams, INetworkParams
     /// Optional Cancellation token that interrupt the update.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
-    INetworkTransaction INetworkParams.CreateNetworkTransaction()
+    INetworkTransaction INetworkParams<TransactionReceipt>.CreateNetworkTransaction()
     {
         if (Token.IsNullOrNone())
         {
@@ -238,11 +239,11 @@ public sealed class UpdateTokenParams : TransactionParams, INetworkParams
         }
         return result;
     }
-    TransactionReceipt INetworkParams.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
+    TransactionReceipt INetworkParams<TransactionReceipt>.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
     {
         return new TransactionReceipt(transactionId, receipt);
     }
-    string INetworkParams.OperationDescription => "Update Token";
+    string INetworkParams<TransactionReceipt>.OperationDescription => "Update Token";
 }
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class UpdateTokenExtensions
@@ -272,8 +273,9 @@ public static class UpdateTokenExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> UpdateTokenAsync(this ConsensusClient client, UpdateTokenParams updateParameters, Action<IConsensusContext>? configure = null)
     {
-        return client.ExecuteNetworkParamsAsync<TransactionReceipt>(updateParameters, configure);
+        return client.ExecuteAsync(updateParameters, configure);
     }
 }

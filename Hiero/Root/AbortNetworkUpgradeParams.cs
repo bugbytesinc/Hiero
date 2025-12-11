@@ -1,10 +1,11 @@
 ﻿using Hiero.Implementation;
 using Proto;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace Hiero;
 
-public sealed class AbortNetworkUpgradeParams : TransactionParams, INetworkParams
+public sealed class AbortNetworkUpgradeParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
     /// Optional additional signatories.
@@ -15,16 +16,16 @@ public sealed class AbortNetworkUpgradeParams : TransactionParams, INetworkParam
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
 
-    string INetworkParams.OperationDescription => "Network Upgrade Command";
+    string INetworkParams<TransactionReceipt>.OperationDescription => "Network Upgrade Command";
 
-    INetworkTransaction INetworkParams.CreateNetworkTransaction()
+    INetworkTransaction INetworkParams<TransactionReceipt>.CreateNetworkTransaction()
     {
         return new FreezeTransactionBody
         {
             FreezeType = FreezeType.FreezeAbort
         };
     }
-    TransactionReceipt INetworkParams.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
+    TransactionReceipt INetworkParams<TransactionReceipt>.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
     {
         return new TransactionReceipt(transactionId, receipt);
     }
@@ -55,8 +56,9 @@ public static class AbortNetworkUpgradeExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> AbortNetworkUpgradeAsync(this ConsensusClient client, AbortNetworkUpgradeParams abortParams, Action<IConsensusContext>? configure = null)
     {
-        return client.ExecuteNetworkParamsAsync<TransactionReceipt>(abortParams, configure);
+        return client.ExecuteAsync(abortParams, configure);
     }
 }

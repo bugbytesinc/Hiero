@@ -1,12 +1,13 @@
 ﻿using Hiero.Implementation;
 using Proto;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace Hiero;
 /// <summary>
 /// Represents the parameters required to delete a contract from the hedera network.
 /// </summary>
-public class DeleteContractParams : TransactionParams, INetworkParams
+public class DeleteContractParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
     /// The address of the contract to delete.
@@ -32,7 +33,7 @@ public class DeleteContractParams : TransactionParams, INetworkParams
     /// call.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
-    INetworkTransaction INetworkParams.CreateNetworkTransaction()
+    INetworkTransaction INetworkParams<TransactionReceipt>.CreateNetworkTransaction()
     {
         if (Contract.IsNullOrNone())
         {
@@ -48,11 +49,11 @@ public class DeleteContractParams : TransactionParams, INetworkParams
             TransferAccountID = new AccountID(FundsReceiver)
         };
     }
-    TransactionReceipt INetworkParams.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
+    TransactionReceipt INetworkParams<TransactionReceipt>.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
     {
         return new TransactionReceipt(transactionId, receipt);
     }
-    string INetworkParams.OperationDescription => "Delete Contract";
+    string INetworkParams<TransactionReceipt>.OperationDescription => "Delete Contract";
 }
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class DeleteContractExtensions
@@ -81,8 +82,9 @@ public static class DeleteContractExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission, for example of the contract is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> DeleteContractAsync(this ConsensusClient client, DeleteContractParams deleteParams, Action<IConsensusContext>? configure = null)
     {
-        return client.ExecuteNetworkParamsAsync<TransactionReceipt>(deleteParams, configure);
+        return client.ExecuteAsync(deleteParams, configure);
     }
 }

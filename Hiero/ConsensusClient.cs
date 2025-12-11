@@ -28,7 +28,7 @@ public sealed class ConsensusClient : IAsyncDisposable
     /// in the current context, the system falls back to the parent context 
     /// for the value, and to its parent until a value has been set.
     /// </summary>
-    private readonly GossipContextStack _context;
+    private readonly ConsensusContextStack _context;
     /// <summary>
     /// Creates a new instance of an Hedera Network ConsensusClient.
     /// </summary>
@@ -78,7 +78,7 @@ public sealed class ConsensusClient : IAsyncDisposable
         }
         // Create a Context with System Defaults 
         // that are unreachable and can't be "Reset".
-        _context = new GossipContextStack(new GossipContextStack(channelFactory)
+        _context = new ConsensusContextStack(channelFactory)
         {
             FeeLimit = 30_00_000_000,
             TransactionDuration = TimeSpan.FromSeconds(120),
@@ -88,8 +88,7 @@ public sealed class ConsensusClient : IAsyncDisposable
             SignaturePrefixTrimLimit = 0,
             AdjustForLocalClockDrift = false,
             ThrowIfNotSuccess = true
-        });
-        configure?.Invoke(_context);
+        }.GetConfigured(configure ?? (_ => { }));
     }
     /// <summary>
     /// Internal implementation of client creation.  Accounts for  newly created 
@@ -100,13 +99,12 @@ public sealed class ConsensusClient : IAsyncDisposable
     /// instantiation or a <see cref="ConsensusClient.Clone(Action{IConsensusContext})"/> method call.
     /// </param>
     /// <param name="parent">
-    /// The parent <see cref="GossipContextStack"/> if this creation is a result of a 
+    /// The parent <see cref="ConsensusContextStack"/> if this creation is a result of a 
     /// <see cref="ConsensusClient.Clone(Action{IConsensusContext})"/> method call.
     /// </param>
-    private ConsensusClient(GossipContextStack parent, Action<IConsensusContext>? configure)
+    private ConsensusClient(ConsensusContextStack parent, Action<IConsensusContext>? configure)
     {
-        _context = new GossipContextStack(parent);
-        configure?.Invoke(_context);
+        _context = parent.GetConfigured(configure ?? (_ => { }));
     }
     /// <summary>
     /// Updates the configuration of this instance of a client thru 
@@ -144,6 +142,77 @@ public sealed class ConsensusClient : IAsyncDisposable
         return new ConsensusClient(_context, configure);
     }
     /// <summary>
+    /// Creates, signs, submits a transaction and waits for a response from 
+    /// the target consensus node.  Returning the precheck response code.
+    /// A <see cref="PrecheckException"/> may be thrown under certain invalid
+    /// input scenarios.
+    /// </summary>
+    /// <remarks>
+    /// This method will wait for the target consensus node to respond with 
+    /// a code other than <see cref="ResponseCode.Busy"/> or 
+    /// <see cref="ResponseCode.InvalidTransactionStart"/> if applicable, 
+    /// until such time as the retry count is exhausted, in which case it 
+    /// is possible to receive a <see cref="ResponseCode.Busy"/> response.
+    /// </remarks>
+    /// <typeparam name="T">
+    /// The type of <see cref="TransactionReceipt"/> returned by the request.
+    /// </typeparam>
+    /// <param name="transactionParams">
+    /// Transaction input parameters.
+    /// </param>
+    /// <param name="configure">
+    /// Optional callback to configure the calling context immediately 
+    /// before assembling the transaction for submission.
+    /// </param>
+    /// <returns>
+    /// The precheck <see cref="ResponseCode"/> returned from the request
+    /// after waiting for submission retries if applicable.
+    /// </returns>
+    public async Task<ResponseCode> SubmitAsync<T>(TransactionParams<T> transactionParams, Action<IConsensusContext>? configure) where T : TransactionReceipt
+    {
+        await using var context = BuildChildContext(configure);
+        var networkParams = transactionParams.GetNetworkParams();
+        var (networkTransaction, signedTransactionBytes, transactionId, cancellationToken) = await Engine.EncodeAndSignAsync(context, networkParams, true).ConfigureAwait(false);
+        var transaction = new Proto.Transaction { SignedTransactionBytes = signedTransactionBytes };
+        var precheck = await Engine.SubmitMessageAsync(context, transaction, networkTransaction.InstantiateNetworkRequestMethod, cancellationToken).ConfigureAwait(false);
+        return (ResponseCode)precheck.NodeTransactionPrecheckCode;
+    }
+    /// <summary>
+    /// Creates, signs, submits a transaction and waits for a response from 
+    /// the target consensus node, returning a receipt.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The type of receipt to return.
+    /// </typeparam>
+    /// <param name="transactionParams">
+    /// The details of the transaction to create, sign and submit.
+    /// </param>
+    /// <param name="configure">
+    /// Optional callback to configure the calling context immediately 
+    /// before assembling the transaction for submission.
+    /// </param>
+    /// <returns>
+    /// A receipt object.
+    /// </returns>
+    /// <exception cref="PrecheckException">
+    /// If there was a problem submitting the request, including the consensus node
+    /// considering the request invalid.
+    /// </exception>
+    /// <exception cref="TransactionException">
+    /// If the consensus node returned a failure code and throw on failure is set to
+    /// <code>true</code> in the client context configuration.
+    /// </exception>
+    /// <exception cref="ConsensusException">
+    /// Under heavy load, the network may not process the transaction before it expires.
+    /// </exception>
+    public async Task<T> ExecuteAsync<T>(TransactionParams<T> transactionParams, Action<IConsensusContext>? configure) where T : TransactionReceipt
+    {
+        await using var context = BuildChildContext(configure);
+        var networkParams = transactionParams.GetNetworkParams();
+        var (networkTransaction, signedTransactionBytes, transactionId, cancellationToken) = await Engine.EncodeAndSignAsync(context, networkParams, true).ConfigureAwait(false);
+        return await Engine.ExecuteAsync(context, signedTransactionBytes, networkParams, networkTransaction, transactionId, cancellationToken).ConfigureAwait(false);
+    }
+    /// <summary>
     /// Returns a human-readable debug string describing this client instance.
     /// </summary>
     public override string ToString()
@@ -170,11 +239,9 @@ public sealed class ConsensusClient : IAsyncDisposable
     /// contexts for cloned clients and network method calls having custom 
     /// configuration callbacks.
     /// </summary>
-    internal GossipContextStack CreateChildContext(Action<IConsensusContext>? configure)
+    internal ConsensusContextStack BuildChildContext(Action<IConsensusContext>? configure)
     {
-        var context = new GossipContextStack(_context);
-        configure?.Invoke(context);
-        return context;
+        return configure is null ? _context.GetWithAddRef() : _context.GetConfigured(configure);
     }
     /// <summary>
     /// The default algorithm for creating channels for the client.

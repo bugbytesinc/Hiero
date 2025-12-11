@@ -1,6 +1,7 @@
 ﻿using Hiero.Implementation;
 using Proto;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace Hiero;
 /// <summary>
@@ -10,7 +11,7 @@ namespace Hiero;
 /// These parameters are used to create a new NFT token type on the Hedera network.
 /// To create instances of an NFT, use the mint functionality.
 /// </remarks>
-public sealed class CreateNftParams : TransactionParams, INetworkParams
+public sealed class CreateNftParams : TransactionParams<CreateTokenReceipt>, INetworkParams<CreateTokenReceipt>
 {
     /// <summary>
     /// Name of the NFT class of tokens.
@@ -135,7 +136,7 @@ public sealed class CreateNftParams : TransactionParams, INetworkParams
     /// <returns>
     /// CryptoTransferTransactionBody implementing INetworkTransaction
     /// </returns>
-    INetworkTransaction INetworkParams.CreateNetworkTransaction()
+    INetworkTransaction INetworkParams<CreateTokenReceipt>.CreateNetworkTransaction()
     {
         if (string.IsNullOrWhiteSpace(Name))
         {
@@ -248,11 +249,11 @@ public sealed class CreateNftParams : TransactionParams, INetworkParams
         }
         return result;
     }
-    TransactionReceipt INetworkParams.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
+    CreateTokenReceipt INetworkParams<CreateTokenReceipt>.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
     {
         return new CreateTokenReceipt(transactionId, receipt);
     }
-    string INetworkParams.OperationDescription => "Create NFT";
+    string INetworkParams<CreateTokenReceipt>.OperationDescription => "Create NFT";
 }
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class CreateNftExtensions
@@ -279,8 +280,9 @@ public static class CreateNftExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<CreateTokenReceipt> CreateNftAsync(this ConsensusClient client, CreateNftParams createParameters, Action<IConsensusContext>? configure = null)
     {
-        return client.ExecuteNetworkParamsAsync<CreateTokenReceipt>(createParameters, configure);
+        return client.ExecuteAsync(createParameters, configure);
     }
 }

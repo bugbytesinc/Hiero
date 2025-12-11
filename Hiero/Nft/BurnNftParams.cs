@@ -1,12 +1,13 @@
 ﻿using Hiero.Implementation;
 using Proto;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace Hiero;
 /// <summary>
 /// Transaction Parameters for Burning One or More NFT instances.
 /// </summary>
-public sealed class BurnNftParams : TransactionParams, INetworkParams
+public sealed class BurnNftParams : TransactionParams<TokenReceipt>, INetworkParams<TokenReceipt>
 {
     /// <summary>
     /// The Token ID of the NFT to burn.
@@ -39,7 +40,7 @@ public sealed class BurnNftParams : TransactionParams, INetworkParams
     /// <returns>
     /// CryptoTransferTransactionBody implementing INetworkTransaction
     /// </returns>
-    INetworkTransaction INetworkParams.CreateNetworkTransaction()
+    INetworkTransaction INetworkParams<TokenReceipt>.CreateNetworkTransaction()
     {
         if (SerialNumbers is null)
         {
@@ -56,11 +57,11 @@ public sealed class BurnNftParams : TransactionParams, INetworkParams
         }
         return result;
     }
-    TransactionReceipt INetworkParams.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
+    TokenReceipt INetworkParams<TokenReceipt>.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
     {
         return new TokenReceipt(transactionId, receipt);
     }
-    string INetworkParams.OperationDescription => "Burn NFT";
+    string INetworkParams<TokenReceipt>.OperationDescription => "Burn NFT";
 }
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class BurnNftExtensions
@@ -84,9 +85,10 @@ public static class BurnNftExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission, for example of the nft is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TokenReceipt> BurnNftAsync(this ConsensusClient client, Nft asset, Action<IConsensusContext>? configure = null)
     {
-        return client.ExecuteNetworkParamsAsync<TokenReceipt>(new BurnNftParams { Token = asset.Token, SerialNumbers = [asset.SerialNumber] }, configure);
+        return client.ExecuteAsync(new BurnNftParams { Token = asset.Token, SerialNumbers = [asset.SerialNumber] }, configure);
     }
     /// <summary>
     /// Destroys multiple nft (NFT) instances.
@@ -110,8 +112,9 @@ public static class BurnNftExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission, for example of the nft is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TokenReceipt> BurnNftsAsync(this ConsensusClient client, BurnNftParams burnParams, Action<IConsensusContext>? configure = null)
     {
-        return client.ExecuteNetworkParamsAsync<TokenReceipt>(burnParams, configure);
+        return client.ExecuteAsync(burnParams, configure);
     }
 }

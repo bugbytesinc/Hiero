@@ -1,12 +1,13 @@
 ﻿using Hiero.Implementation;
 using Proto;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace Hiero;
 /// <summary>
 /// Transaction Parameters for Deleteing a Pending/Schedled Transaction.
 /// </summary>
-public sealed class DeletePendingTransactionParams : TransactionParams, INetworkParams
+public sealed class DeletePendingTransactionParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
     /// The Entity Id of the pending transaction record (not the transaction id
@@ -30,18 +31,18 @@ public sealed class DeletePendingTransactionParams : TransactionParams, INetwork
     /// submission process.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
-    INetworkTransaction INetworkParams.CreateNetworkTransaction()
+    INetworkTransaction INetworkParams<TransactionReceipt>.CreateNetworkTransaction()
     {
         return new ScheduleDeleteTransactionBody
         {
             ScheduleID = new ScheduleID(Pending)
         };
     }
-    TransactionReceipt INetworkParams.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
+    TransactionReceipt INetworkParams<TransactionReceipt>.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
     {
         return new TransactionReceipt(transactionId, receipt);
     }
-    string INetworkParams.OperationDescription => "Delete Pending Transaction";
+    string INetworkParams<TransactionReceipt>.OperationDescription => "Delete Pending Transaction";
 }
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class DeletePendingTransactionExtensions
@@ -69,8 +70,9 @@ public static class DeletePendingTransactionExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission, for example of the token is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> DeletePendingTransactionAsync(this ConsensusClient client, DeletePendingTransactionParams deleteParams, Action<IConsensusContext>? configure = null)
     {
-        return client.ExecuteNetworkParamsAsync<TransactionReceipt>(deleteParams, configure);
+        return client.ExecuteAsync(deleteParams, configure);
     }
 }

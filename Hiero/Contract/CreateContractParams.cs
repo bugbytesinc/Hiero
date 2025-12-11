@@ -2,12 +2,13 @@
 using Hiero.Implementation;
 using Proto;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace Hiero;
 /// <summary>
 /// Smart Contract creation properties.
 /// </summary>
-public sealed class CreateContractParams : TransactionParams, INetworkParams
+public sealed class CreateContractParams : TransactionParams<CreateContractReceipt>, INetworkParams<CreateContractReceipt>
 {
     /// <summary>
     /// The address of the file containing the bytecode for the contract. 
@@ -122,7 +123,7 @@ public sealed class CreateContractParams : TransactionParams, INetworkParams
     /// Optional Cancellation token that interrupt the contract creation.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
-    INetworkTransaction INetworkParams.CreateNetworkTransaction()
+    INetworkTransaction INetworkParams<CreateContractReceipt>.CreateNetworkTransaction()
     {
         var result = new ContractCreateTransactionBody();
         if (AutoAssociationLimit < -1)
@@ -171,11 +172,11 @@ public sealed class CreateContractParams : TransactionParams, INetworkParams
         result.Memo = Memo ?? "";
         return result;
     }
-    TransactionReceipt INetworkParams.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
+    CreateContractReceipt INetworkParams<CreateContractReceipt>.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
     {
         return new CreateContractReceipt(transactionId, receipt);
     }
-    string INetworkParams.OperationDescription => "Create Contract";
+    string INetworkParams<CreateContractReceipt>.OperationDescription => "Create Contract";
 }
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class CreateContractExtensions
@@ -203,8 +204,9 @@ public static class CreateContractExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<CreateContractReceipt> CreateContractAsync(this ConsensusClient client, CreateContractParams createParameters, Action<IConsensusContext>? configure = null)
     {
-        return client.ExecuteNetworkParamsAsync<CreateContractReceipt>(createParameters, configure);
+        return client.ExecuteAsync(createParameters, configure);
     }
 }

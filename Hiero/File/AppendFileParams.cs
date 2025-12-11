@@ -2,12 +2,13 @@
 using Hiero.Implementation;
 using Proto;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace Hiero;
 /// <summary>
 /// File content append parameters.
 /// </summary>
-public sealed class AppendFileParams : TransactionParams, INetworkParams
+public sealed class AppendFileParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
     /// The file receiving the appended content.
@@ -32,7 +33,7 @@ public sealed class AppendFileParams : TransactionParams, INetworkParams
     /// Optional Cancellation token to interrupt the transaction submission process.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
-    INetworkTransaction INetworkParams.CreateNetworkTransaction()
+    INetworkTransaction INetworkParams<TransactionReceipt>.CreateNetworkTransaction()
     {
         if (File is null)
         {
@@ -44,11 +45,11 @@ public sealed class AppendFileParams : TransactionParams, INetworkParams
             Contents = ByteString.CopyFrom(Contents.ToArray())
         };
     }
-    TransactionReceipt INetworkParams.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
+    TransactionReceipt INetworkParams<TransactionReceipt>.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
     {
         return new TransactionReceipt(transactionId, receipt);
     }
-    string INetworkParams.OperationDescription => "Append File";
+    string INetworkParams<TransactionReceipt>.OperationDescription => "Append File";
 }
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class AppendFileExtensions
@@ -75,8 +76,9 @@ public static class AppendFileExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> AppendFileAsync(this ConsensusClient client, AppendFileParams appendParameters, Action<IConsensusContext>? configure = null)
     {
-        return client.ExecuteNetworkParamsAsync<TransactionReceipt>(appendParameters, configure);
+        return client.ExecuteAsync(appendParameters, configure);
     }
 }

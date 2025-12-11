@@ -3,7 +3,7 @@
 /// <summary>
 /// Defines the common properties required by all transaction parameter objects.
 /// </summary>
-internal interface INetworkParams
+internal interface INetworkParams<out TReceipt> where TReceipt : TransactionReceipt
 {
     /// <summary>
     /// Optional additional signatory (or signatories) required to authorize the transaction.
@@ -37,7 +37,7 @@ internal interface INetworkParams
     /// <returns>
     /// The specified type of receipt, if successful.
     /// </returns>
-    TransactionReceipt CreateReceipt(Proto.TransactionID transactionId, Proto.TransactionReceipt receipt);
+    TReceipt CreateReceipt(Proto.TransactionID transactionId, Proto.TransactionReceipt receipt);
     /// <summary>
     /// Description of the operation
     /// </summary>

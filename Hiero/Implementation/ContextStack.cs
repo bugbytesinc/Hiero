@@ -1,6 +1,6 @@
-﻿using Grpc.Net.Client;
+﻿using Google.Protobuf;
+using Grpc.Net.Client;
 using System.Collections.Concurrent;
-using System.Diagnostics.CodeAnalysis;
 
 namespace Hiero.Implementation;
 
@@ -11,50 +11,38 @@ namespace Hiero.Implementation;
 /// a stack of parent objects and coordinates values returned for 
 /// various contexts.  Not intended for public use.
 /// </summary>
-internal abstract class ContextStack<TContext, TChannelKey> : IAsyncDisposable where TContext : class where TChannelKey : notnull
+internal abstract class ContextStack<TContext, TChannelKey> : IAsyncDisposable where TContext : ContextStack<TContext, TChannelKey> where TChannelKey : notnull
 {
-    private readonly ContextStack<TContext, TChannelKey>? _parent;
-    private readonly Dictionary<string, object?> _map;
+    protected static readonly Action<IMessage> NoOpSendingHandler = static (_) => { };
+    protected static readonly Action<int, IMessage> NoOpResponseHandler = static (_, _) => { };
+    protected readonly TContext? _parent;
     private readonly ConcurrentDictionary<TChannelKey, GrpcChannel> _channels;
     private readonly Func<TChannelKey, GrpcChannel> _channelFactory;
     private int _refCount;
 
-    public ContextStack(Func<TChannelKey, GrpcChannel> channelFactory)
+    protected ContextStack(Func<TChannelKey, GrpcChannel> channelFactory)
     {
         // Root Context, holds the channels and is
         // only accessible via other contexts
         // so the ref count starts at 0
         _parent = null;
         _refCount = 0;
-        _map = new Dictionary<string, object?>();
         _channels = new ConcurrentDictionary<TChannelKey, GrpcChannel>();
         _channelFactory = channelFactory;
     }
-    public ContextStack(ContextStack<TContext, TChannelKey> parent)
+    protected ContextStack(ContextStack<TContext, TChannelKey> parent)
     {
         // Not the root context, will be held
         // by a client or call context. Ref count
         // starts at 1 for convenience
-        _parent = parent;
-        _map = new Dictionary<string, object?>();
+        _parent = (TContext)parent;
         _refCount = 1;
         _channels = parent._channels;
         _channelFactory = parent._channelFactory;
         parent.addRef();
     }
-    protected abstract bool IsValidPropertyName(string name);
     protected abstract TChannelKey GetChannelKey();
-    public void Reset(string name)
-    {
-        if (IsValidPropertyName(name))
-        {
-            _map.Remove(name);
-        }
-        else
-        {
-            throw new ArgumentOutOfRangeException($"'{name}' is not a valid property to reset.");
-        }
-    }
+    public abstract void Reset(string name);
     public GrpcChannel GetChannel()
     {
         var key = GetChannelKey();
@@ -76,48 +64,7 @@ internal abstract class ContextStack<TContext, TChannelKey> : IAsyncDisposable w
         // map is shared thru the whole entire tree of child contexts.
         return removeRef();
     }
-    // Value is forced to be set, but shouldn't be used
-    // if method returns false, ignore nullable warnings
-    private bool TryGet<T>(string name, [NotNullWhen(true)] out T? value)
-    {
-        for (var ctx = this; ctx is not null; ctx = ctx._parent)
-        {
-            if (ctx._map.TryGetValue(name, out object? asObject))
-            {
-                value = asObject is T t ? t : default!;
-                return true;
-            }
-        }
-        value = default!;
-        return false;
-    }
-    public IEnumerable<T> GetAll<T>(string name)
-    {
-        for (var ctx = this; ctx is not null; ctx = ctx._parent)
-        {
-            if (ctx._map.TryGetValue(name, out object? asObject) && asObject is T t)
-            {
-                yield return t;
-            }
-        }
-    }
-
-    // Value should default to value type default (0)
-    // if it is not found, or Null for Reference Types
-    protected T get<T>(string name)
-    {
-        if (TryGet(name, out T? value))
-        {
-            return value;
-        }
-        return default!;
-    }
-
-    protected void set<T>(string name, T value)
-    {
-        _map[name] = value;
-    }
-    private void addRef()
+    protected void addRef()
     {
         _parent?.addRef();
         Interlocked.Increment(ref _refCount);
@@ -129,7 +76,12 @@ internal abstract class ContextStack<TContext, TChannelKey> : IAsyncDisposable w
         {
             if (count == 0)
             {
-                await Task.WhenAll(_channels.Values.Select(channel => channel.ShutdownAsync()).ToArray()).ConfigureAwait(false);
+                var tasks = new List<Task>(_channels.Count);
+                foreach (var channel in _channels.Values)
+                {
+                    tasks.Add(channel.ShutdownAsync());
+                }
+                await Task.WhenAll(tasks).ConfigureAwait(false);
                 _channels.Clear();
             }
         }

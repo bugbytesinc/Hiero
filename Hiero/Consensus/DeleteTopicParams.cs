@@ -1,12 +1,13 @@
 ﻿using Hiero.Implementation;
 using Proto;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace Hiero;
 /// <summary>
 /// Transaction Parameters for Deleteing a Consensus Topics.
 /// </summary>
-public sealed class DeleteTopicParams : TransactionParams, INetworkParams
+public sealed class DeleteTopicParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
     /// The Id of the topic.
@@ -29,18 +30,18 @@ public sealed class DeleteTopicParams : TransactionParams, INetworkParams
     /// submission process.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
-    INetworkTransaction INetworkParams.CreateNetworkTransaction()
+    INetworkTransaction INetworkParams<TransactionReceipt>.CreateNetworkTransaction()
     {
         return new ConsensusDeleteTopicTransactionBody()
         {
             TopicID = new TopicID(Topic)
         };
     }
-    TransactionReceipt INetworkParams.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
+    TransactionReceipt INetworkParams<TransactionReceipt>.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
     {
         return new TransactionReceipt(transactionId, receipt);
     }
-    string INetworkParams.OperationDescription => "Delete Topic";
+    string INetworkParams<TransactionReceipt>.OperationDescription => "Delete Topic";
 }
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class DeleteTopicExtensions
@@ -68,9 +69,10 @@ public static class DeleteTopicExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission, for example of the topic is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> DeleteTopicAsync(this ConsensusClient client, EntityId topic, Action<IConsensusContext>? configure = null)
     {
-        return client.ExecuteNetworkParamsAsync<TransactionReceipt>(new DeleteTopicParams { Topic = topic }, configure);
+        return client.ExecuteAsync(new DeleteTopicParams { Topic = topic }, configure);
     }
     /// <summary>
     /// Deletes a topic instance from the network. Must be signed 
@@ -95,8 +97,9 @@ public static class DeleteTopicExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission, for example of the topic is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> DeleteTopicAsync(this ConsensusClient client, DeleteTopicParams deleteParams, Action<IConsensusContext>? configure = null)
     {
-        return client.ExecuteNetworkParamsAsync<TransactionReceipt>(deleteParams, configure);
+        return client.ExecuteAsync(deleteParams, configure);
     }
 }

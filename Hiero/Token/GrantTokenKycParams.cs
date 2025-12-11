@@ -1,13 +1,14 @@
 ﻿using Hiero.Implementation;
 using Proto;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace Hiero;
 /// <summary>
 /// Transaction Parameters for Granting KYC status to an account 
 /// associated with a Token.
 /// </summary>
-public sealed class GrantTokenKycParams : TransactionParams, INetworkParams
+public sealed class GrantTokenKycParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
     /// The TransactionId of the Fungible or NFT Token Class to grant KYC.
@@ -34,7 +35,7 @@ public sealed class GrantTokenKycParams : TransactionParams, INetworkParams
     /// submission process.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
-    INetworkTransaction INetworkParams.CreateNetworkTransaction()
+    INetworkTransaction INetworkParams<TransactionReceipt>.CreateNetworkTransaction()
     {
         return new TokenGrantKycTransactionBody
         {
@@ -42,11 +43,11 @@ public sealed class GrantTokenKycParams : TransactionParams, INetworkParams
             Account = new AccountID(Holder)
         };
     }
-    TransactionReceipt INetworkParams.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
+    TransactionReceipt INetworkParams<TransactionReceipt>.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
     {
         return new TransactionReceipt(transactionId, receipt);
     }
-    string INetworkParams.OperationDescription => "Grant Token KYC";
+    string INetworkParams<TransactionReceipt>.OperationDescription => "Grant Token KYC";
 }
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class GrantTokenKycExtensions
@@ -76,9 +77,10 @@ public static class GrantTokenKycExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission, for example of the token is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> GrantTokenKycAsync(this ConsensusClient client, EntityId token, EntityId holder, Action<IConsensusContext>? configure = null)
     {
-        return client.ExecuteNetworkParamsAsync<TransactionReceipt>(new GrantTokenKycParams { Token = token, Holder = holder }, configure);
+        return client.ExecuteAsync(new GrantTokenKycParams { Token = token, Holder = holder }, configure);
     }
     /// <summary>
     /// Grants KYC status to the associated account's relating to the specified token.
@@ -102,8 +104,9 @@ public static class GrantTokenKycExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission, for example of the token is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> GrantTokenKycAsync(this ConsensusClient client, GrantTokenKycParams grantTokenKycParams, Action<IConsensusContext>? configure = null)
     {
-        return client.ExecuteNetworkParamsAsync<TransactionReceipt>(grantTokenKycParams, configure);
+        return client.ExecuteAsync(grantTokenKycParams, configure);
     }
 }

@@ -1,12 +1,13 @@
 ﻿using Hiero.Implementation;
 using Proto;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace Hiero;
 /// <summary>
 /// Creates a Psudo Random Number request from the Hedera Network.
 /// </summary>
-public sealed class PsudoRandomNumberParams : TransactionParams, INetworkParams
+public sealed class PsudoRandomNumberParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
     /// If specified, the maximum value for the psudo random number generated.
@@ -21,7 +22,7 @@ public sealed class PsudoRandomNumberParams : TransactionParams, INetworkParams
     /// submission process.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
-    INetworkTransaction INetworkParams.CreateNetworkTransaction()
+    INetworkTransaction INetworkParams<TransactionReceipt>.CreateNetworkTransaction()
     {
         var result = new UtilPrngTransactionBody();
         if (MaxValue.HasValue)
@@ -34,11 +35,11 @@ public sealed class PsudoRandomNumberParams : TransactionParams, INetworkParams
         }
         return result;
     }
-    TransactionReceipt INetworkParams.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
+    TransactionReceipt INetworkParams<TransactionReceipt>.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
     {
         return new TransactionReceipt(transactionId, receipt);
     }
-    string INetworkParams.OperationDescription => "Generate Random Number";
+    string INetworkParams<TransactionReceipt>.OperationDescription => "Generate Random Number";
 }
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class PsudoRandomNumberExtensions
@@ -62,8 +63,9 @@ public static class PsudoRandomNumberExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> GeneratePsudoRandomNumberAsync(this ConsensusClient client, PsudoRandomNumberParams randomParams, Action<IConsensusContext>? configure = null)
     {
-        return client.ExecuteNetworkParamsAsync<TransactionReceipt>(randomParams, configure);
+        return client.ExecuteAsync(randomParams, configure);
     }
 }

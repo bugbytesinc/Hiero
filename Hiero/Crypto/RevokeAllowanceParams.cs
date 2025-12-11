@@ -1,12 +1,13 @@
 ﻿using Hiero.Implementation;
 using Proto;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace Hiero;
 /// <summary>
 /// Removes approved spending allowance(s) for specific NFTs.
 /// </summary>
-public sealed class RevokeNftAllowanceParams : TransactionParams, INetworkParams
+public sealed class RevokeNftAllowanceParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
     /// The ID of the owner of the NFTs 
@@ -35,7 +36,7 @@ public sealed class RevokeNftAllowanceParams : TransactionParams, INetworkParams
     /// update process.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
-    INetworkTransaction INetworkParams.CreateNetworkTransaction()
+    INetworkTransaction INetworkParams<TransactionReceipt>.CreateNetworkTransaction()
     {
         if (Token is null)
         {
@@ -63,11 +64,11 @@ public sealed class RevokeNftAllowanceParams : TransactionParams, INetworkParams
         }
         return result;
     }
-    TransactionReceipt INetworkParams.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
+    TransactionReceipt INetworkParams<TransactionReceipt>.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
     {
         return new TransactionReceipt(transactionId, receipt);
     }
-    string INetworkParams.OperationDescription => "Delete Allowance";
+    string INetworkParams<TransactionReceipt>.OperationDescription => "Delete Allowance";
 }
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class RevokeNftAllowanceExtensions
@@ -94,8 +95,9 @@ public static class RevokeNftAllowanceExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> RevokeNftAllowancesAsync(this ConsensusClient client, RevokeNftAllowanceParams revokeParams, Action<IConsensusContext>? configure = null)
     {
-        return client.ExecuteNetworkParamsAsync<TransactionReceipt>(revokeParams, configure);
+        return client.ExecuteAsync(revokeParams, configure);
     }
 }

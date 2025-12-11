@@ -1,10 +1,11 @@
 ﻿using Hiero.Implementation;
 using Proto;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace Hiero;
 
-public sealed class ScheduleTelemetryUpgradeParams : TransactionParams, INetworkParams
+public sealed class ScheduleTelemetryUpgradeParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
     /// Optional additional signatories.
@@ -14,18 +15,18 @@ public sealed class ScheduleTelemetryUpgradeParams : TransactionParams, INetwork
     /// An optional cancellation token that can be used to interrupt the transaction.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
-    INetworkTransaction INetworkParams.CreateNetworkTransaction()
+    INetworkTransaction INetworkParams<TransactionReceipt>.CreateNetworkTransaction()
     {
         return new FreezeTransactionBody
         {
             FreezeType = FreezeType.TelemetryUpgrade
         };
     }
-    TransactionReceipt INetworkParams.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
+    TransactionReceipt INetworkParams<TransactionReceipt>.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
     {
         return new TransactionReceipt(transactionId, receipt);
     }
-    string INetworkParams.OperationDescription => "Schedule Telemetry Upgrade Command";
+    string INetworkParams<TransactionReceipt>.OperationDescription => "Schedule Telemetry Upgrade Command";
 }
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class ScheduleTelemetryUpgradeExtensions
@@ -58,8 +59,9 @@ public static class ScheduleTelemetryUpgradeExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> ScheduleTelemetryUpgradeAsync(this ConsensusClient client, ScheduleTelemetryUpgradeParams scheduleParams, Action<IConsensusContext>? configure = null)
     {
-        return client.ExecuteNetworkParamsAsync<TransactionReceipt>(scheduleParams, configure);
+        return client.ExecuteAsync(scheduleParams, configure);
     }
 }

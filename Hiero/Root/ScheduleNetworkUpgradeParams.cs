@@ -1,10 +1,11 @@
 ﻿using Hiero.Implementation;
 using Proto;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace Hiero;
 
-public sealed class ScheduleNetworkUpgradeParams : TransactionParams, INetworkParams
+public sealed class ScheduleNetworkUpgradeParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
     /// The time of consensus that nodes will stop services, this
@@ -20,7 +21,7 @@ public sealed class ScheduleNetworkUpgradeParams : TransactionParams, INetworkPa
     /// An optional cancellation token that can be used to interrupt the transaction.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
-    INetworkTransaction INetworkParams.CreateNetworkTransaction()
+    INetworkTransaction INetworkParams<TransactionReceipt>.CreateNetworkTransaction()
     {
         return new FreezeTransactionBody
         {
@@ -28,11 +29,11 @@ public sealed class ScheduleNetworkUpgradeParams : TransactionParams, INetworkPa
             FreezeType = FreezeType.FreezeUpgrade
         };
     }
-    TransactionReceipt INetworkParams.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
+    TransactionReceipt INetworkParams<TransactionReceipt>.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
     {
         return new TransactionReceipt(transactionId, receipt);
     }
-    string INetworkParams.OperationDescription => "Schedule Network Upgrade Command";
+    string INetworkParams<TransactionReceipt>.OperationDescription => "Schedule Network Upgrade Command";
 }
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class ScheduleNetworkUpgradeExtensions
@@ -66,8 +67,9 @@ public static class ScheduleNetworkUpgradeExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> ScheduleNetworkUpgradeAsync(this ConsensusClient client, ScheduleNetworkUpgradeParams scheduleParams, Action<IConsensusContext>? configure = null)
     {
-        return client.ExecuteNetworkParamsAsync<TransactionReceipt>(scheduleParams, configure);
+        return client.ExecuteAsync(scheduleParams, configure);
     }
 }

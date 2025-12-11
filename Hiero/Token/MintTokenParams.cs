@@ -1,12 +1,13 @@
 ﻿using Hiero.Implementation;
 using Proto;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace Hiero;
 /// <summary>
 /// Transaction Parameters for Minting Tokens to the treasury account.
 /// </summary>
-public sealed class MintTokenParams : TransactionParams, INetworkParams
+public sealed class MintTokenParams : TransactionParams<TokenReceipt>, INetworkParams<TokenReceipt>
 {
     /// <summary>
     /// The TransactionId of the fungible tokens to mint.
@@ -33,7 +34,7 @@ public sealed class MintTokenParams : TransactionParams, INetworkParams
     /// submission process.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
-    INetworkTransaction INetworkParams.CreateNetworkTransaction()
+    INetworkTransaction INetworkParams<TokenReceipt>.CreateNetworkTransaction()
     {
         if (Amount < 1)
         {
@@ -45,11 +46,11 @@ public sealed class MintTokenParams : TransactionParams, INetworkParams
             Amount = Amount
         };
     }
-    TransactionReceipt INetworkParams.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
+    TokenReceipt INetworkParams<TokenReceipt>.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
     {
         return new TokenReceipt(transactionId, receipt);
     }
-    string INetworkParams.OperationDescription => "Mint Tokens";
+    string INetworkParams<TokenReceipt>.OperationDescription => "Mint Tokens";
 }
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class MintTokenExtensions
@@ -79,9 +80,10 @@ public static class MintTokenExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission, for example of the token is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TokenReceipt> MintTokenAsync(this ConsensusClient client, EntityId token, ulong amount, Action<IConsensusContext>? configure = null)
     {
-        return client.ExecuteNetworkParamsAsync<TokenReceipt>(new MintTokenParams { Token = token, Amount = amount }, configure);
+        return client.ExecuteAsync(new MintTokenParams { Token = token, Amount = amount }, configure);
     }
     /// <summary>
     /// Adds token coins to the treasury.
@@ -105,8 +107,9 @@ public static class MintTokenExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission, for example of the token is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TokenReceipt> MintTokenAsync(this ConsensusClient client, MintTokenParams mintParams, Action<IConsensusContext>? configure = null)
     {
-        return client.ExecuteNetworkParamsAsync<TokenReceipt>(mintParams, configure);
+        return client.ExecuteAsync(mintParams, configure);
     }
 }

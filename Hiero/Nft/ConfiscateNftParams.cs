@@ -1,6 +1,7 @@
 ﻿using Hiero.Implementation;
 using Proto;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace Hiero;
 /// <summary>
@@ -8,7 +9,7 @@ namespace Hiero;
 /// account and destorys them. Must be signed by 
 /// the confiscate/wipe admin key.
 /// </summary>
-public sealed class ConfiscateNftParams : TransactionParams, INetworkParams
+public sealed class ConfiscateNftParams : TransactionParams<TokenReceipt>, INetworkParams<TokenReceipt>
 {
     /// <summary>
     /// The Token ID of the NFT(s) to confiscate and destroy.
@@ -39,7 +40,7 @@ public sealed class ConfiscateNftParams : TransactionParams, INetworkParams
     /// <returns>
     /// TokenWipeAccountTransactionBody implementing INetworkTransaction
     /// </returns>
-    INetworkTransaction INetworkParams.CreateNetworkTransaction()
+    INetworkTransaction INetworkParams<TokenReceipt>.CreateNetworkTransaction()
     {
         if (Token.IsNullOrNone())
         {
@@ -57,11 +58,11 @@ public sealed class ConfiscateNftParams : TransactionParams, INetworkParams
         result.SerialNumbers.AddRange(SerialNumbers);
         return result;
     }
-    TransactionReceipt INetworkParams.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
+    TokenReceipt INetworkParams<TokenReceipt>.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
     {
         return new TokenReceipt(transactionId, receipt);
     }
-    string INetworkParams.OperationDescription => "Confiscate NFT";
+    string INetworkParams<TokenReceipt>.OperationDescription => "Confiscate NFT";
 }
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class ConfiscateNftExtensions
@@ -93,9 +94,10 @@ public static class ConfiscateNftExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission, for example of the nft is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TokenReceipt> ConfiscateNftAsync(this ConsensusClient client, Nft nft, EntityId account, Action<IConsensusContext>? configure = null)
     {
-        return client.ExecuteNetworkParamsAsync<TokenReceipt>(new ConfiscateNftParams { Token = nft.Token, Account = account, SerialNumbers = [nft.SerialNumber] }, configure);
+        return client.ExecuteAsync(new ConfiscateNftParams { Token = nft.Token, Account = account, SerialNumbers = [nft.SerialNumber] }, configure);
     }
     /// <summary>
     /// Confiscates and Destroys multiple nft (NFT) instances.
@@ -120,8 +122,9 @@ public static class ConfiscateNftExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission, for example of the nft is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TokenReceipt> ConfiscateNftsAsync(this ConsensusClient client, ConfiscateNftParams confiscateParams, Action<IConsensusContext>? configure = null)
     {
-        return client.ExecuteNetworkParamsAsync<TokenReceipt>(confiscateParams, configure);
+        return client.ExecuteAsync(confiscateParams, configure);
     }
 }

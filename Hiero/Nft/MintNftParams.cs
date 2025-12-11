@@ -2,13 +2,14 @@
 using Hiero.Implementation;
 using Proto;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace Hiero;
 /// <summary>
 /// Transaction Parameters for Minting (Creating) a new NFT for
 /// a given class of NFTs.
 /// </summary>
-public sealed class MintNftParams : TransactionParams, INetworkParams
+public sealed class MintNftParams : TransactionParams<NftMintReceipt>, INetworkParams<NftMintReceipt>
 {
     /// <summary>
     /// The Token ID of the NFT class to create.
@@ -43,7 +44,7 @@ public sealed class MintNftParams : TransactionParams, INetworkParams
     /// <returns>
     /// TokenMintTransactionBody implementing INetworkTransaction
     /// </returns>
-    INetworkTransaction INetworkParams.CreateNetworkTransaction()
+    INetworkTransaction INetworkParams<NftMintReceipt>.CreateNetworkTransaction()
     {
         var result = new TokenMintTransactionBody
         {
@@ -52,11 +53,11 @@ public sealed class MintNftParams : TransactionParams, INetworkParams
         result.Metadata.AddRange(Metadata.Select(m => ByteString.CopyFrom(m.Span)));
         return result;
     }
-    TransactionReceipt INetworkParams.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
+    NftMintReceipt INetworkParams<NftMintReceipt>.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
     {
         return new NftMintReceipt(transactionId, receipt);
     }
-    string INetworkParams.OperationDescription => "Mint NFT";
+    string INetworkParams<NftMintReceipt>.OperationDescription => "Mint NFT";
 }
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class MintNftExtensions
@@ -86,9 +87,10 @@ public static class MintNftExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission, for example of the token is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<NftMintReceipt> MintNftAsync(this ConsensusClient client, EntityId token, ReadOnlyMemory<byte> metadata, Action<IConsensusContext>? configure = null)
     {
-        return client.ExecuteNetworkParamsAsync<NftMintReceipt>(new MintNftParams { Token = token, Metadata = [metadata] }, configure);
+        return client.ExecuteAsync(new MintNftParams { Token = token, Metadata = [metadata] }, configure);
     }
     /// <summary>
     /// Creates (Mints) new Non-Fungible Tokens (NFTs) under the specified token definition.
@@ -113,8 +115,9 @@ public static class MintNftExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission, for example of the token is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<NftMintReceipt> MintNftsAsync(this ConsensusClient client, MintNftParams mintParams, Action<IConsensusContext>? configure = null)
     {
-        return client.ExecuteNetworkParamsAsync<NftMintReceipt>(mintParams, configure);
+        return client.ExecuteAsync(mintParams, configure);
     }
 }

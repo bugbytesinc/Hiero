@@ -1,4 +1,5 @@
-﻿using Google.Protobuf;
+﻿#pragma warning disable CS8766
+using Google.Protobuf;
 using Grpc.Net.Client;
 
 namespace Hiero.Implementation;
@@ -9,23 +10,25 @@ namespace Hiero.Implementation;
 /// and coordinates values returned for various contexts.  Not intended for
 /// public use.
 /// </summary>
-internal class MirrorContextStack : ContextStack<GossipContextStack, Uri>, IMirrorGrpcContext
+internal class MirrorContextStack : ContextStack<MirrorContextStack, Uri>, IMirrorGrpcContext
 {
-    public Uri Uri { get => get<Uri>(nameof(Uri)); set => set(nameof(Uri), value); }
-    public Action<IMessage>? OnSendingRequest { get => get<Action<IMessage>>(nameof(OnSendingRequest)); set => set(nameof(OnSendingRequest), value); }
+    private ContextValue<Uri?> _uri;
+    private ContextValue<Action<IMessage>?> _onSendingRequest;
+
+    // Nullability of reference types in return type doesn't match implicitly implemented member (possibly because of nullability attributes).
+    public Uri? Uri { get => _uri.HasValue ? _uri.Value : _parent?.Uri; set => _uri.Set(value); }
+    public Action<IMessage>? OnSendingRequest { get => _onSendingRequest.HasValue ? _onSendingRequest.Value : _parent?.OnSendingRequest; set => _onSendingRequest.Set(value); }
 
     public MirrorContextStack(MirrorContextStack parent) : base(parent) { }
     public MirrorContextStack(Func<Uri, GrpcChannel> channelFactory) : base(channelFactory) { }
 
-    protected override bool IsValidPropertyName(string name)
+    public override void Reset(string name)
     {
         switch (name)
         {
-            case nameof(Uri):
-            case nameof(OnSendingRequest):
-                return true;
-            default:
-                return false;
+            case nameof(Uri): _uri.Reset(); break;
+            case nameof(OnSendingRequest): _onSendingRequest.Reset(); break;
+            default: throw new ArgumentOutOfRangeException($"'{name}' is not a valid property to reset.");
         }
     }
     protected override Uri GetChannelKey()
@@ -35,25 +38,33 @@ internal class MirrorContextStack : ContextStack<GossipContextStack, Uri>, IMirr
 
     public Action<IMessage> InstantiateOnSendingRequestHandler()
     {
-        var handlers = GetAll<Action<IMessage>>(nameof(OnSendingRequest)).Where(h => h != null).ToArray();
-        if (handlers.Length > 0)
+        List<Action<IMessage>>? list = null;
+        for (var ctx = this; ctx is not null; ctx = ctx._parent)
         {
-            return (IMessage request) => ExecuteHandlers(handlers, request);
-        }
-        else
-        {
-            return NoOp;
-        }
-        static void ExecuteHandlers(Action<IMessage>[] handlers, IMessage request)
-        {
-            var data = new ReadOnlyMemory<byte>(request.ToByteArray());
-            foreach (var handler in handlers)
+            if (ctx._onSendingRequest.HasValue)
             {
-                handler(request);
+                var handler = ctx._onSendingRequest.Value;
+                if (handler is not null)
+                {
+                    (list ??= []).Add(handler);
+                }
             }
         }
-        static void NoOp(IMessage request)
+        if (list is null || list.Count == 0)
         {
+            return NoOpSendingHandler;
         }
+        if (list.Count == 1)
+        {
+            return list[0];
+        }
+        var handlers = list.ToArray();
+        return request =>
+        {
+            for (var i = 0; i < handlers.Length; i++)
+            {
+                handlers[i](request);
+            }
+        };
     }
 }

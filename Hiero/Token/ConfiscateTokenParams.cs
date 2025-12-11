@@ -1,12 +1,13 @@
 ﻿using Hiero.Implementation;
 using Proto;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace Hiero;
 /// <summary>
 /// Transaction Parameters for Confiscating/Wiping Tokens from an arbitrary account.
 /// </summary>
-public sealed class ConfiscateTokenParams : TransactionParams, INetworkParams
+public sealed class ConfiscateTokenParams : TransactionParams<TokenReceipt>, INetworkParams<TokenReceipt>
 {
     /// <summary>
     /// The TransactionId of the fungible tokens to confiscate (wipe) and
@@ -39,7 +40,7 @@ public sealed class ConfiscateTokenParams : TransactionParams, INetworkParams
     /// submission process.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
-    INetworkTransaction INetworkParams.CreateNetworkTransaction()
+    INetworkTransaction INetworkParams<TokenReceipt>.CreateNetworkTransaction()
     {
         if (Amount == 0)
         {
@@ -52,11 +53,11 @@ public sealed class ConfiscateTokenParams : TransactionParams, INetworkParams
             Amount = Amount
         };
     }
-    TransactionReceipt INetworkParams.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
+    TokenReceipt INetworkParams<TokenReceipt>.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
     {
         return new TokenReceipt(transactionId, receipt);
     }
-    string INetworkParams.OperationDescription => "Confiscate Tokens";
+    string INetworkParams<TokenReceipt>.OperationDescription => "Confiscate Tokens";
 }
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class ConfiscateTokenExtensions
@@ -92,9 +93,10 @@ public static class ConfiscateTokenExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission, for example of the token is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TokenReceipt> ConfiscateTokensAsync(this ConsensusClient client, EntityId token, EntityId holder, ulong amount, Action<IConsensusContext>? configure = null)
     {
-        return client.ExecuteNetworkParamsAsync<TokenReceipt>(new ConfiscateTokenParams { Token = token, Holder = holder, Amount = amount }, configure);
+        return client.ExecuteAsync(new ConfiscateTokenParams { Token = token, Holder = holder, Amount = amount }, configure);
     }
     /// <summary>
     /// Removes the holdings of given token from the associated 
@@ -120,8 +122,9 @@ public static class ConfiscateTokenExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission, for example of the token is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TokenReceipt> ConfiscateTokensAsync(this ConsensusClient client, ConfiscateTokenParams confiscateParams, Action<IConsensusContext>? configure = null)
     {
-        return client.ExecuteNetworkParamsAsync<TokenReceipt>(confiscateParams, configure);
+        return client.ExecuteAsync(confiscateParams, configure);
     }
 }

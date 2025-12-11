@@ -8,7 +8,7 @@ namespace Hiero;
 /// Transaction Parameters for Sending an Externally Created Transaction 
 /// to the network for processing and optionally waiting for a receipt.
 /// </summary>
-public sealed class ExternalTransactionParams : TransactionParams
+public sealed class ExternalTransactionParams : TransactionParams<TransactionReceipt>
 {
     /// <summary>
     /// The serialized protobuf encoded bytes of a <code>SignedTransaction</code>
@@ -28,21 +28,21 @@ public sealed class ExternalTransactionParams : TransactionParams
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
 }
-internal sealed class ExternalTransactionParamsOrchestrator : INetworkParams
+internal sealed class ExternalTransactionParamsOrchestrator : INetworkParams<TransactionReceipt>
 {
     private readonly CancellationToken? _cancellationToken;
     private readonly INetworkTransaction _networkTransaction;
     public Signatory? Signatory => null;
     public CancellationToken? CancellationToken => _cancellationToken;
-    INetworkTransaction INetworkParams.CreateNetworkTransaction() => _networkTransaction;
-    string INetworkParams.OperationDescription => "External Transaction Submission";
-    TransactionReceipt INetworkParams.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt) => new(transactionId, receipt);
+    INetworkTransaction INetworkParams<TransactionReceipt>.CreateNetworkTransaction() => _networkTransaction;
+    string INetworkParams<TransactionReceipt>.OperationDescription => "External Transaction Submission";
+    TransactionReceipt INetworkParams<TransactionReceipt>.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt) => new(transactionId, receipt);
     private ExternalTransactionParamsOrchestrator(CancellationToken? cancellationToken, INetworkTransaction networkTransaction)
     {
         _cancellationToken = cancellationToken;
         _networkTransaction = networkTransaction;
     }
-    internal async static Task<(INetworkParams, INetworkTransaction, ByteString, TransactionID, CancellationToken)> CreateSignedTransactionBytesAsync(GossipContextStack context, ExternalTransactionParams externalParams)
+    internal async static Task<(INetworkParams<TransactionReceipt>, INetworkTransaction, ByteString, TransactionID, CancellationToken)> CreateSignedTransactionBytesAsync(ConsensusContextStack context, ExternalTransactionParams externalParams)
     {
         try
         {
@@ -208,16 +208,11 @@ public static class ExternalTransactionParamsExtensions
     /// code to return and the method should divulge some information as to the nature of the network error.</exception>
     public static async Task<ResponseCode> SendExternalTransactionAsync(this ConsensusClient client, ExternalTransactionParams externalParams, Action<IConsensusContext>? configure = null)
     {
-        await using var context = client.CreateChildContext(configure);
+        await using var context = client.BuildChildContext(configure);
         var (transactionParams, networkTransaction, signedTransactionBytes, transactionId, cancellationToken) = await ExternalTransactionParamsOrchestrator.CreateSignedTransactionBytesAsync(context, externalParams);
         var transaction = new Transaction { SignedTransactionBytes = signedTransactionBytes };
-        var precheck = await Engine.SubmitTimeBoxedGrpcMessageWithRetry(context, transaction, networkTransaction.InstantiateNetworkRequestMethod, getResponseCode, cancellationToken).ConfigureAwait(false);
+        var precheck = await Engine.SubmitMessageAsync(context, transaction, networkTransaction.InstantiateNetworkRequestMethod, cancellationToken).ConfigureAwait(false);
         return (ResponseCode)precheck.NodeTransactionPrecheckCode;
-
-        static ResponseCodeEnum getResponseCode(TransactionResponse response)
-        {
-            return response.NodeTransactionPrecheckCode;
-        }
     }
     /// <summary>
     /// Submits an arbitrary externally Hedera Transaction to the network.  
@@ -307,8 +302,8 @@ public static class ExternalTransactionParamsExtensions
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
     public static async Task<TransactionReceipt> SubmitExternalTransactionAsync(this ConsensusClient client, ExternalTransactionParams externalParams, Action<IConsensusContext>? configure = null)
     {
-        await using var context = client.CreateChildContext(configure);
+        await using var context = client.BuildChildContext(configure);
         var (transactionParams, networkTransaction, signedTransactionBytes, transactionId, cancellationToken) = await ExternalTransactionParamsOrchestrator.CreateSignedTransactionBytesAsync(context, externalParams);
-        return await Engine.ExecuteSignedTransactionBytesAsync<TransactionReceipt>(context, signedTransactionBytes, transactionParams, networkTransaction, transactionId, cancellationToken).ConfigureAwait(false);
+        return await Engine.ExecuteAsync(context, signedTransactionBytes, transactionParams, networkTransaction, transactionId, cancellationToken).ConfigureAwait(false);
     }
 }

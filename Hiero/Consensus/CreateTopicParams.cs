@@ -1,12 +1,13 @@
 ﻿using Hiero.Implementation;
 using Proto;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace Hiero;
 /// <summary>
 /// Consensus Topics Creation Parameters.
 /// </summary>
-public sealed class CreateTopicParams : TransactionParams, INetworkParams
+public sealed class CreateTopicParams : TransactionParams<CreateTopicReceipt>, INetworkParams<CreateTopicReceipt>
 {
     /// <summary>
     /// Short description of the topic, not checked for uniqueness.
@@ -62,7 +63,7 @@ public sealed class CreateTopicParams : TransactionParams, INetworkParams
     /// submission process.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
-    INetworkTransaction INetworkParams.CreateNetworkTransaction()
+    INetworkTransaction INetworkParams<CreateTopicReceipt>.CreateNetworkTransaction()
     {
         if (Memo is null)
         {
@@ -85,11 +86,11 @@ public sealed class CreateTopicParams : TransactionParams, INetworkParams
             AutoRenewAccount = RenewAccount is null ? null : new AccountID(RenewAccount)
         };
     }
-    TransactionReceipt INetworkParams.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
+    CreateTopicReceipt INetworkParams<CreateTopicReceipt>.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
     {
         return new CreateTopicReceipt(transactionId, receipt);
     }
-    string INetworkParams.OperationDescription => "Create Topic";
+    string INetworkParams<CreateTopicReceipt>.OperationDescription => "Create Topic";
 }
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class CreateTopicExtensions
@@ -116,8 +117,9 @@ public static class CreateTopicExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<CreateTopicReceipt> CreateTopicAsync(this ConsensusClient client, CreateTopicParams createParameters, Action<IConsensusContext>? configure = null)
     {
-        return client.ExecuteNetworkParamsAsync<CreateTopicReceipt>(createParameters, configure);
+        return client.ExecuteAsync(createParameters, configure);
     }
 }

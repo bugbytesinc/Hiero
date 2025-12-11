@@ -1,7 +1,9 @@
 ﻿#pragma warning disable CS0612 // Type or member is obsolete
+using Hiero.Implementation;
+
 namespace Proto;
 
-public sealed partial class Response
+public sealed partial class Response : IPrecheckResult
 {
     public ResponseHeader? ResponseHeader
     {
@@ -32,4 +34,6 @@ public sealed partial class Response
             };
         }
     }
+
+    ResponseCodeEnum IPrecheckResult.PrecheckCode => ResponseHeader?.NodeTransactionPrecheckCode ?? ResponseCodeEnum.Unknown;
 }

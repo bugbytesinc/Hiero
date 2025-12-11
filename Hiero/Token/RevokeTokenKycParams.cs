@@ -1,13 +1,14 @@
 ﻿using Hiero.Implementation;
 using Proto;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace Hiero;
 /// <summary>
 /// Transaction Parameters for Revoking KYC status from an account 
 /// associated with a Token.
 /// </summary>
-public sealed class RevokeTokenKycParams : TransactionParams, INetworkParams
+public sealed class RevokeTokenKycParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
     /// The TransactionId of the Fungible or NFT Token Class to revoke the KYC.
@@ -34,7 +35,7 @@ public sealed class RevokeTokenKycParams : TransactionParams, INetworkParams
     /// submission process.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
-    INetworkTransaction INetworkParams.CreateNetworkTransaction()
+    INetworkTransaction INetworkParams<TransactionReceipt>.CreateNetworkTransaction()
     {
         return new TokenRevokeKycTransactionBody
         {
@@ -42,11 +43,11 @@ public sealed class RevokeTokenKycParams : TransactionParams, INetworkParams
             Account = new AccountID(Holder)
         };
     }
-    TransactionReceipt INetworkParams.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
+    TransactionReceipt INetworkParams<TransactionReceipt>.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
     {
         return new TransactionReceipt(transactionId, receipt);
     }
-    string INetworkParams.OperationDescription => "Revoke Token KYC";
+    string INetworkParams<TransactionReceipt>.OperationDescription => "Revoke Token KYC";
 }
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class RevokeTokenKycExtensions
@@ -76,9 +77,10 @@ public static class RevokeTokenKycExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission, for example of the token is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> RevokeTokenKycAsync(this ConsensusClient client, EntityId token, EntityId holder, Action<IConsensusContext>? configure = null)
     {
-        return client.ExecuteNetworkParamsAsync<TransactionReceipt>(new RevokeTokenKycParams { Token = token, Holder = holder }, configure);
+        return client.ExecuteAsync(new RevokeTokenKycParams { Token = token, Holder = holder }, configure);
     }
     /// <summary>
     /// Revokes KYC status from the holding account's relating to the specified token.
@@ -102,8 +104,9 @@ public static class RevokeTokenKycExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission, for example of the token is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> RevokeTokenKycAsync(this ConsensusClient client, RevokeTokenKycParams revokeKycParams, Action<IConsensusContext>? configure = null)
     {
-        return client.ExecuteNetworkParamsAsync<TransactionReceipt>(revokeKycParams, configure);
+        return client.ExecuteAsync(revokeKycParams, configure);
     }
 }

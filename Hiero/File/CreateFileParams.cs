@@ -2,12 +2,13 @@
 using Hiero.Implementation;
 using Proto;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace Hiero;
 /// <summary>
 /// File creation parameters.
 /// </summary>
-public sealed class CreateFileParams : TransactionParams, INetworkParams
+public sealed class CreateFileParams : TransactionParams<FileReceipt>, INetworkParams<FileReceipt>
 {
     /// <summary>
     /// Original expiration date for the file, fees will be charged as appropriate.
@@ -42,7 +43,7 @@ public sealed class CreateFileParams : TransactionParams, INetworkParams
     /// Optional Cancellation token to interrupt the file creation.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
-    INetworkTransaction INetworkParams.CreateNetworkTransaction()
+    INetworkTransaction INetworkParams<FileReceipt>.CreateNetworkTransaction()
     {
         if (Endorsements is null)
         {
@@ -56,11 +57,11 @@ public sealed class CreateFileParams : TransactionParams, INetworkParams
             Memo = Memo ?? ""
         };
     }
-    TransactionReceipt INetworkParams.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
+    FileReceipt INetworkParams<FileReceipt>.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
     {
         return new FileReceipt(transactionId, receipt);
     }
-    string INetworkParams.OperationDescription => "Create File";
+    string INetworkParams<FileReceipt>.OperationDescription => "Create File";
 }
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class CreateFileExtensions
@@ -88,8 +89,9 @@ public static class CreateFileExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<FileReceipt> CreateFileAsync(this ConsensusClient client, CreateFileParams createParameters, Action<IConsensusContext>? configure = null)
     {
-        return client.ExecuteNetworkParamsAsync<FileReceipt>(createParameters, configure);
+        return client.ExecuteAsync(createParameters, configure);
     }
 }

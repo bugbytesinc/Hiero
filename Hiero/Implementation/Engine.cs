@@ -11,41 +11,9 @@ namespace Hiero.Implementation;
 internal static class Engine
 {
     /// <summary>
-    /// Creates, signs, submits a transaction and waits for a response from 
-    /// the target consensus node, returning a receipt.
-    /// </summary>
-    /// <typeparam name="T">
-    /// The type of receipt to return.
-    /// </typeparam>
-    /// <param name="client">
-    /// The consensus client holding the configuration for endpoint, and other parameters.
-    /// </param>
-    /// <param name="networkParams">
-    /// The details of the transaction to create, sign and submit.
-    /// </param>
-    /// <param name="configure">
-    /// Optional callback to configure the calling context immediately 
-    /// before assembling the transaction for submission.
-    /// </param>
-    /// <returns>
-    /// A receipt object.
-    /// </returns>
-    /// <exception cref="PrecheckException">
-    /// If there was a problem submitting the request, including the consensus node
-    /// considering the request invalid.
-    /// </exception>
-    /// <exception cref="TransactionException">
-    /// If the consensus node returned a failure code and throw on failure is set to
-    /// <code>true</code> in the client context configuration.
-    /// </exception>
-    internal static async Task<T> ExecuteNetworkParamsAsync<T>(this ConsensusClient client, INetworkParams networkParams, Action<IConsensusContext>? configure) where T : TransactionReceipt
-    {
-        await using var context = client.CreateChildContext(configure);
-        var (networkTransaction, signedTransactionBytes, transactionId, cancellationToken) = await CreateSignedTransactionBytesAsync(context, networkParams, true).ConfigureAwait(false);
-        return await ExecuteSignedTransactionBytesAsync<T>(context, signedTransactionBytes, networkParams, networkTransaction, transactionId, cancellationToken).ConfigureAwait(false);
-    }
-    /// <summary>
-    /// Creates the signed transaction bytes and other metadata associated with a request.
+    /// Converts the transaction parameters into a protobuf transaction and 
+    /// invokes the identified Signatories to sign the transaction bytes, returning 
+    /// the signed transaction bytes and other metadata associated with the request.
     /// </summary>
     /// <param name="context">
     /// The Calling Request Context, contains endpoint and other configuration parameters.
@@ -65,7 +33,7 @@ internal static class Engine
     /// <exception cref="InvalidOperationException">
     /// If there is a misconfiguration or missing data in the calling context.
     /// </exception>
-    internal async static Task<(INetworkTransaction, ByteString, TransactionID, CancellationToken)> CreateSignedTransactionBytesAsync(GossipContextStack context, INetworkParams networkParams, bool failIfNoSignatures)
+    internal async static Task<(INetworkTransaction, ByteString, TransactionID, CancellationToken)> EncodeAndSignAsync<T>(ConsensusContextStack context, INetworkParams<T> networkParams, bool failIfNoSignatures) where T : TransactionReceipt
     {
         var gateway = context.Endpoint;
         if (gateway is null)
@@ -142,10 +110,10 @@ internal static class Engine
     /// If the consensus node returned a failure code and throw on failure is set to
     /// <code>true</code> in the client context configuration.
     /// </exception>
-    internal static async Task<T> ExecuteSignedTransactionBytesAsync<T>(GossipContextStack context, ByteString signedTransactionBytes, INetworkParams networkParams, INetworkTransaction networkTransaction, TransactionID transactionId, CancellationToken cancellationToken) where T : TransactionReceipt
+    internal static async Task<T> ExecuteAsync<T>(ConsensusContextStack context, ByteString signedTransactionBytes, INetworkParams<T> networkParams, INetworkTransaction networkTransaction, TransactionID transactionId, CancellationToken cancellationToken) where T : TransactionReceipt
     {
         var transaction = new Transaction { SignedTransactionBytes = signedTransactionBytes };
-        var precheck = await SubmitTimeBoxedGrpcMessageWithRetry(context, transaction, networkTransaction.InstantiateNetworkRequestMethod, getResponseCode, cancellationToken).ConfigureAwait(false);
+        var precheck = await SubmitMessageAsync(context, transaction, networkTransaction.InstantiateNetworkRequestMethod, cancellationToken).ConfigureAwait(false);
         if (precheck.NodeTransactionPrecheckCode != ResponseCodeEnum.Ok)
         {
             var responseCode = (ResponseCode)precheck.NodeTransactionPrecheckCode;
@@ -162,11 +130,6 @@ internal static class Engine
             throw new TransactionException($"{networkParams.OperationDescription} failed with status: {receipt.Status}", receipt);
         }
         return (T)receipt;
-
-        static ResponseCodeEnum getResponseCode(TransactionResponse response)
-        {
-            return response.NodeTransactionPrecheckCode;
-        }
     }
     /// <summary>
     /// Submits a Query to a conesnsus endpoint and waits for the results.
@@ -188,7 +151,7 @@ internal static class Engine
     /// </exception>
     internal static async Task<Response> QueryAsync(ConsensusClient client, INetworkQuery networkQuery, CancellationToken cancellationToken, Action<IConsensusContext>? configure)
     {
-        await using var context = client.CreateChildContext(configure);
+        await using var context = client.BuildChildContext(configure);
         return await QueryAsync(context, networkQuery, cancellationToken).ConfigureAwait(false);
     }
     /// <summary>
@@ -209,7 +172,7 @@ internal static class Engine
     /// <exception cref="PrecheckException">
     /// If there is a problem with the request, configuration or reachability of the consensus node.
     /// </exception>
-    internal static async Task<Response> QueryAsync(GossipContextStack context, INetworkQuery networkQuery, CancellationToken cancellationToken)
+    internal static async Task<Response> QueryAsync(ConsensusContextStack context, INetworkQuery networkQuery, CancellationToken cancellationToken)
     {
         var envelope = networkQuery.CreateEnvelope();
         networkQuery.SetHeader(new QueryHeader
@@ -223,14 +186,14 @@ internal static class Engine
         {
             var transactionId = GetOrCreateTransactionID(context);
             networkQuery.SetHeader(await CreateSignedQueryHeader(context, (long)cost, transactionId, cancellationToken).ConfigureAwait(false));
-            response = await executeSignedQuery().ConfigureAwait(false);
+            response = await SubmitMessageAsync(context, envelope, networkQuery.InstantiateNetworkRequestMethod, cancellationToken).ConfigureAwait(false);
             networkQuery.CheckResponse(transactionId, response);
         }
         return response;
 
         async Task<Response> executeAskQuery()
         {
-            var answer = await SubmitGrpcMessageWithRetry(context, envelope, networkQuery.InstantiateNetworkRequestMethod, shouldRetryRequest, cancellationToken).ConfigureAwait(false);
+            var answer = await SubmitMessageAsync(context, envelope, networkQuery.InstantiateNetworkRequestMethod, shouldRetryRequest, cancellationToken).ConfigureAwait(false);
             var code = answer.ResponseHeader?.NodeTransactionPrecheckCode ?? ResponseCodeEnum.Unknown;
             if (code != ResponseCodeEnum.Ok)
             {
@@ -242,7 +205,7 @@ internal static class Engine
                     // in a failure mode and performance is already broken.
                     var transactionId = GetOrCreateTransactionID(context);
                     networkQuery.SetHeader(await CreateSignedQueryHeader(context, 0, transactionId, cancellationToken).ConfigureAwait(false));
-                    answer = await executeSignedQuery().ConfigureAwait(false);
+                    answer = await SubmitMessageAsync(context, envelope, networkQuery.InstantiateNetworkRequestMethod, cancellationToken).ConfigureAwait(false);
                     // If we get a valid repsonse back, it turns out that we needed to identify
                     // ourselves with the signature, the rest of the process can proceed as normal.
                     // If it was a failure then we fall back to the original NOT_SUPPORTED error
@@ -259,16 +222,6 @@ internal static class Engine
             static bool shouldRetryRequest(Response response)
             {
                 return ResponseCodeEnum.Busy == response.ResponseHeader?.NodeTransactionPrecheckCode;
-            }
-        }
-
-        Task<Response> executeSignedQuery()
-        {
-            return SubmitTimeBoxedGrpcMessageWithRetry(context, envelope, networkQuery.InstantiateNetworkRequestMethod, getResponseCode, cancellationToken);
-
-            static ResponseCodeEnum getResponseCode(Response response)
-            {
-                return response.ResponseHeader?.NodeTransactionPrecheckCode ?? ResponseCodeEnum.Unknown;
             }
         }
     }
@@ -320,7 +273,7 @@ internal static class Engine
     /// not enough information to generate a transaction ID and this exception
     /// will be thrown.
     /// </exception>
-    internal static TransactionID GetOrCreateTransactionID(GossipContextStack context)
+    internal static TransactionID GetOrCreateTransactionID(ConsensusContextStack context)
     {
         var preExistingTransaction = context.TransactionId;
         if (preExistingTransaction is null)
@@ -384,19 +337,21 @@ internal static class Engine
     /// generally beleives that the transaction or query has NOT been sucessfully submitted
     /// or accepted by the network, and should not have charged the payer account.
     /// </exception>
-    internal static Task<TResponse> SubmitTimeBoxedGrpcMessageWithRetry<TRequest, TResponse>(GossipContextStack context, TRequest request, Func<GrpcChannel, Func<TRequest, Metadata?, DateTime?, CancellationToken, AsyncUnaryCall<TResponse>>> instantiateRequestMethod, Func<TResponse, ResponseCodeEnum> getResponseCode, CancellationToken cancellationToken) where TRequest : IMessage where TResponse : IMessage
+    internal static Task<TResponse> SubmitMessageAsync<TRequest, TResponse>(ConsensusContextStack context, TRequest request, Func<GrpcChannel, Func<TRequest, Metadata?, DateTime?, CancellationToken, AsyncUnaryCall<TResponse>>> instantiateRequestMethod, CancellationToken cancellationToken) where TRequest : IMessage where TResponse : IPrecheckResult, IMessage
     {
         var trackTimeDrift = context.AdjustForLocalClockDrift && context.TransactionId is null;
         var startingInstant = trackTimeDrift ? Epoch.UniqueClockNanos() : 0;
 
-        return SubmitGrpcMessageWithRetry(context, request, instantiateRequestMethod, shouldRetryRequest, cancellationToken);
+        return SubmitMessageAsync(context, request, instantiateRequestMethod, shouldRetryRequest, cancellationToken);
 
         bool shouldRetryRequest(TResponse response)
         {
-            var code = getResponseCode(response);
+            var code = response.PrecheckCode;
             if (trackTimeDrift && code == ResponseCodeEnum.InvalidTransactionStart)
             {
-                Epoch.AddToClockDrift(Epoch.UniqueClockNanos() - startingInstant);
+                var currentInstant = Epoch.UniqueClockNanos();
+                Epoch.AddToClockDrift(currentInstant - startingInstant);
+                startingInstant = currentInstant;
             }
             return
                 code == ResponseCodeEnum.Busy ||
@@ -440,32 +395,32 @@ internal static class Engine
     /// generally beleives that the transaction or query has NOT been sucessfully submitted
     /// or accepted by the network, and should not have charged the payer account.
     /// </exception>
-    internal static async Task<TResponse> SubmitGrpcMessageWithRetry<TRequest, TResponse>(GossipContextStack context, TRequest request, Func<GrpcChannel, Func<TRequest, Metadata?, DateTime?, CancellationToken, AsyncUnaryCall<TResponse>>> instantiateRequestMethod, Func<TResponse, bool> shouldRetryRequest, CancellationToken cancellationToken) where TRequest : IMessage where TResponse : IMessage
+    internal static async Task<TResponse> SubmitMessageAsync<TRequest, TResponse>(ConsensusContextStack context, TRequest request, Func<GrpcChannel, Func<TRequest, Metadata?, DateTime?, CancellationToken, AsyncUnaryCall<TResponse>>> instantiateRequestMethod, Func<TResponse, bool> shouldRetryRequest, CancellationToken cancellationToken) where TRequest : IMessage where TResponse : IPrecheckResult, IMessage
     {
         try
         {
             var retryCount = 0;
             var maxRetries = context.RetryCount;
             var retryDelay = context.RetryDelay;
-            var callOnSendingHandlers = InstantiateOnSendingRequestHandler(context);
-            var callOnResponseReceivedHandlers = InstantiateOnResponseReceivedHandler(context);
-            var sendRequest = instantiateRequestMethod(context.GetChannel());
+            var callOnSendingHandlers = context.InstantiateOnSendingRequestHandler();
+            var callOnResponseReceivedHandlers = context.InstantiateOnResponseReceivedHandler();
+            var channel = context.GetChannel();
+            var sendRequest = instantiateRequestMethod(channel);
             callOnSendingHandlers(request);
             cancellationToken.ThrowIfCancellationRequested();
             for (; retryCount < maxRetries; retryCount++)
             {
                 try
                 {
-                    var tenativeResponse = await sendRequest(request, null, null, cancellationToken);
-                    callOnResponseReceivedHandlers(retryCount, tenativeResponse);
-                    if (!shouldRetryRequest(tenativeResponse))
+                    var tentativeResponse = await sendRequest(request, null, null, cancellationToken).ConfigureAwait(false);
+                    callOnResponseReceivedHandlers(retryCount, tentativeResponse);
+                    if (!shouldRetryRequest(tentativeResponse))
                     {
-                        return tenativeResponse;
+                        return tentativeResponse;
                     }
                 }
                 catch (RpcException rpcex) when (request is Query query && query.QueryCase == Proto.Query.QueryOneofCase.TransactionGetReceipt)
                 {
-                    var channel = context.GetChannel();
                     var message = channel.State == ConnectivityState.Connecting ?
                         $"Unable to communicate with network node {channel.Target} while retrieving receipt, it may be down or not reachable." :
                         $"Unable to communicate with network node {channel.Target} while retrieving receipt: {rpcex.Status}";
@@ -473,7 +428,6 @@ internal static class Engine
                 }
                 catch (RpcException rpcex) when (rpcex.StatusCode == StatusCode.Unavailable || rpcex.StatusCode == StatusCode.Unknown || rpcex.StatusCode == StatusCode.Cancelled)
                 {
-                    var channel = context.GetChannel();
                     var message = channel.State == ConnectivityState.Connecting ?
                         $"Unable to communicate with network node {channel.Target}, it may be down or not reachable." :
                         $"Unable to communicate with network node {channel.Target}: {rpcex.Status}";
@@ -500,7 +454,7 @@ internal static class Engine
                         // and terminated the connection before returning results, in which case funds are lost.
                         // For that scenario, re-throw the original exception and it will be caught and translated
                         // into a PrecheckException with the appropriate error message.
-                        var retryQueryResponse = await RetryQuery();
+                        var retryQueryResponse = await RetryQuery().ConfigureAwait(false);
                         if ((retryQueryResponse as Response)?.ResponseHeader?.NodeTransactionPrecheckCode == ResponseCodeEnum.DuplicateTransaction)
                         {
                             throw;
@@ -513,7 +467,7 @@ internal static class Engine
                 }
                 await Task.Delay(retryDelay * (retryCount + 1), cancellationToken).ConfigureAwait(false);
             }
-            var finalResponse = await sendRequest(request, null, null, cancellationToken);
+            var finalResponse = await sendRequest(request, null, null, cancellationToken).ConfigureAwait(false);
             callOnResponseReceivedHandlers(maxRetries, finalResponse);
             return finalResponse;
 
@@ -525,7 +479,8 @@ internal static class Engine
                 // performance or grpc connection issues already.
                 if (transaction != null)
                 {
-                    var transactionId = ExtractTransactionID(transaction);
+                    var transactionId = transaction.ExtractTransactionID();
+                    var client = new CryptoService.CryptoServiceClient(channel);
                     var query = new Query
                     {
                         TransactionGetReceipt = new TransactionGetReceiptQuery
@@ -538,8 +493,7 @@ internal static class Engine
                         cancellationToken.ThrowIfCancellationRequested();
                         try
                         {
-                            var client = new CryptoService.CryptoServiceClient(context.GetChannel());
-                            var receipt = await client.getTransactionReceiptsAsync(query, null, null, cancellationToken);
+                            var receipt = await client.getTransactionReceiptsAsync(query, null, null, cancellationToken).ConfigureAwait(false);
                             return new TransactionResponse { NodeTransactionPrecheckCode = receipt.TransactionGetReceipt.Header.NodeTransactionPrecheckCode };
                         }
                         catch (RpcException rpcex) when (rpcex.StatusCode == StatusCode.Unavailable || rpcex.StatusCode == StatusCode.Unknown || rpcex.StatusCode == StatusCode.Cancelled)
@@ -564,7 +518,7 @@ internal static class Engine
                     try
                     {
                         await Task.Delay(retryDelay * retryCount, cancellationToken).ConfigureAwait(false);
-                        return await sendRequest(request, null, null, cancellationToken);
+                        return await sendRequest(request, null, null, cancellationToken).ConfigureAwait(false);
                     }
                     catch (RpcException rpcex) when ((rpcex.StatusCode == StatusCode.Unavailable || rpcex.StatusCode == StatusCode.Unknown || rpcex.StatusCode == StatusCode.Cancelled) && retryCount < maxRetries - 1)
                     {
@@ -588,7 +542,7 @@ internal static class Engine
         }
         catch (RpcException rpcex)
         {
-            var transactionId = (request is Transaction transaction) ? ExtractTransactionID(transaction) : null;
+            var transactionId = (request is Transaction transaction) ? transaction.ExtractTransactionID() : null;
             var channel = context.GetChannel();
             var message = rpcex.StatusCode == StatusCode.Unavailable && channel.State == ConnectivityState.Connecting ?
                 $"Unable to communicate with network node {channel.Target}, it may be down or not reachable." :
@@ -616,7 +570,7 @@ internal static class Engine
     /// <exception cref="InvalidOperationException">
     /// If the configuration is missing payment information or the target gossip node endpoint.
     /// </exception>
-    internal static async Task<QueryHeader> CreateSignedQueryHeader(GossipContextStack context, long queryFee, TransactionID transactionId, CancellationToken cancellationToken)
+    internal static async Task<QueryHeader> CreateSignedQueryHeader(ConsensusContextStack context, long queryFee, TransactionID transactionId, CancellationToken cancellationToken)
     {
         var payer = context.Payer;
         if (payer is null)
@@ -694,10 +648,10 @@ internal static class Engine
     /// The conesnsus node queried for this transaction is unaware of the 
     /// transactions existence.
     /// </exception>
-    internal static async Task<Proto.TransactionReceipt> GetReceiptAsync(GossipContextStack context, TransactionID transactionId, CancellationToken cancellationToken)
+    internal static async Task<Proto.TransactionReceipt> GetReceiptAsync(ConsensusContextStack context, TransactionID transactionId, CancellationToken cancellationToken)
     {
         INetworkQuery query = new TransactionGetReceiptQuery { TransactionID = transactionId };
-        var response = await SubmitGrpcMessageWithRetry(context, query.CreateEnvelope(), query.InstantiateNetworkRequestMethod, shouldRetry, cancellationToken).ConfigureAwait(false);
+        var response = await SubmitMessageAsync(context, query.CreateEnvelope(), query.InstantiateNetworkRequestMethod, shouldRetry, cancellationToken).ConfigureAwait(false);
         if (!context.ThrowIfNotSuccess)
         {
             return response.TransactionGetReceipt.Receipt;
@@ -731,96 +685,6 @@ internal static class Engine
             return
                 response.TransactionGetReceipt?.Header?.NodeTransactionPrecheckCode == ResponseCodeEnum.Busy ||
                 response.TransactionGetReceipt?.Receipt?.Status == ResponseCodeEnum.Unknown;
-        }
-    }
-    /// <summary>
-    /// Extracts a Transaction ID from the Protobuf Transaction structure
-    /// </summary>
-    /// <param name="transaction">
-    /// Protobuf Transaction Structure
-    /// </param>
-    /// <returns>
-    /// Protobuf Transaction ID from the Protobuf Transaction structure
-    /// </returns>
-    private static TransactionID ExtractTransactionID(Transaction transaction)
-    {
-        var signedTransaction = SignedTransaction.Parser.ParseFrom(transaction.SignedTransactionBytes);
-        var transactionBody = TransactionBody.Parser.ParseFrom(signedTransaction.BodyBytes);
-        return transactionBody.TransactionID;
-    }
-    /// <summary>
-    /// Generates the optional sending request hook method, if configured in the context.
-    /// </summary>
-    /// <remarks>
-    /// Unlike other context methods and properties, ALL the configured handlers in all
-    /// of the parent contexts are included in the return value, request handlers can 
-    /// be stacked thru contexts.
-    /// </remarks>
-    /// <param name="context">
-    /// Context that may be configured with a sending request callback.
-    /// </param>
-    /// <returns>
-    /// An Action that may or may not delegate to multiple handlers that are called just
-    /// before a message is sent to the gossip node grpc endpoint.
-    /// </returns>
-    private static Action<IMessage> InstantiateOnSendingRequestHandler(GossipContextStack context)
-    {
-        var handlers = context.GetAll<Action<IMessage>>(nameof(context.OnSendingRequest)).Where(h => h != null).ToArray();
-        if (handlers.Length > 0)
-        {
-            return (IMessage request) => ExecuteHandlers(handlers, request);
-        }
-        else
-        {
-            return NoOp;
-        }
-        static void ExecuteHandlers(Action<IMessage>[] handlers, IMessage request)
-        {
-            var data = new ReadOnlyMemory<byte>(request.ToByteArray());
-            foreach (var handler in handlers)
-            {
-                handler(request);
-            }
-        }
-        static void NoOp(IMessage request)
-        {
-        }
-    }
-    /// <summary>
-    /// Generates the optional receiving request hook method, if configured in the context.
-    /// </summary>
-    /// <remarks>
-    /// Unlike other context methods and properties, ALL the configured handlers in all
-    /// of the parent contexts are included in the return value, request handlers can 
-    /// be stacked thru contexts.
-    /// </remarks>
-    /// <param name="context">
-    /// Context that may be configured with a receiving request callback.
-    /// </param>
-    /// <returns>
-    /// An Action that may or may not delegate to multiple handlers that are called just
-    /// after a message is received from the gossip node grpc endpoint.
-    /// </returns>
-    private static Action<int, IMessage> InstantiateOnResponseReceivedHandler(GossipContextStack context)
-    {
-        var handlers = context.GetAll<Action<int, IMessage>>(nameof(context.OnResponseReceived)).Where(h => h != null).ToArray();
-        if (handlers.Length > 0)
-        {
-            return (int tryNumber, IMessage response) => ExecuteHandlers(handlers, tryNumber, response);
-        }
-        else
-        {
-            return NoOp;
-        }
-        static void ExecuteHandlers(Action<int, IMessage>[] handlers, int tryNumber, IMessage response)
-        {
-            foreach (var handler in handlers)
-            {
-                handler(tryNumber, response);
-            }
-        }
-        static void NoOp(int tryNumber, IMessage response)
-        {
         }
     }
 }

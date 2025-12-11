@@ -2,12 +2,13 @@
 using Hiero.Implementation;
 using Proto;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace Hiero;
 /// <summary>
 /// Address creation parameters.
 /// </summary>
-public sealed class CreateAccountParams : TransactionParams, INetworkParams
+public sealed class CreateAccountParams : TransactionParams<CreateAccountReceipt>, INetworkParams<CreateAccountReceipt>
 {
     /// <summary>
     /// The public key structure representing the signature or signatures
@@ -92,7 +93,7 @@ public sealed class CreateAccountParams : TransactionParams, INetworkParams
     /// Optional Cancellation token that interrupt the creation proces.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
-    INetworkTransaction INetworkParams.CreateNetworkTransaction()
+    INetworkTransaction INetworkParams<CreateAccountReceipt>.CreateNetworkTransaction()
     {
         if (Endorsement.IsNullOrNone())
         {
@@ -131,11 +132,11 @@ public sealed class CreateAccountParams : TransactionParams, INetworkParams
         result.MaxAutomaticTokenAssociations = AutoAssociationLimit;
         return result;
     }
-    TransactionReceipt INetworkParams.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
+    CreateAccountReceipt INetworkParams<CreateAccountReceipt>.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
     {
         return new CreateAccountReceipt(transactionId, receipt);
     }
-    string INetworkParams.OperationDescription => "Create Account";
+    string INetworkParams<CreateAccountReceipt>.OperationDescription => "Create Account";
 }
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class CreateAccountExtensions
@@ -164,8 +165,9 @@ public static class CreateAccountExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<CreateAccountReceipt> CreateAccountAsync(this ConsensusClient client, CreateAccountParams createParameters, Action<IConsensusContext>? configure = null)
     {
-        return client.ExecuteNetworkParamsAsync<CreateAccountReceipt>(createParameters, configure);
+        return client.ExecuteAsync(createParameters, configure);
     }
 }

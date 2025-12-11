@@ -1,12 +1,13 @@
 ﻿using Hiero.Implementation;
 using Proto;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace Hiero;
 /// <summary>
 /// Transaction Parameters for updating the royalties (custom fees) associated with a token.
 /// </summary>
-public sealed class UpdateRoyaltiesParams : TransactionParams, INetworkParams
+public sealed class UpdateRoyaltiesParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
     /// The ID of the token definition to update.
@@ -35,7 +36,7 @@ public sealed class UpdateRoyaltiesParams : TransactionParams, INetworkParams
     /// submission process.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
-    INetworkTransaction INetworkParams.CreateNetworkTransaction()
+    INetworkTransaction INetworkParams<TransactionReceipt>.CreateNetworkTransaction()
     {
         var result = new TokenFeeScheduleUpdateTransactionBody
         {
@@ -51,11 +52,11 @@ public sealed class UpdateRoyaltiesParams : TransactionParams, INetworkParams
         }
         return result;
     }
-    TransactionReceipt INetworkParams.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
+    TransactionReceipt INetworkParams<TransactionReceipt>.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
     {
         return new TransactionReceipt(transactionId, receipt);
     }
-    string INetworkParams.OperationDescription => "Royalties Update";
+    string INetworkParams<TransactionReceipt>.OperationDescription => "Royalties Update";
 }
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class UpdateRoyaltiesExtensions
@@ -88,9 +89,10 @@ public static class UpdateRoyaltiesExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission, for example of the token is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> UpdateRoyaltiesAsync(this ConsensusClient client, EntityId token, IReadOnlyList<IRoyalty>? royalties, Action<IConsensusContext>? configure = null)
     {
-        return client.ExecuteNetworkParamsAsync<TransactionReceipt>(new UpdateRoyaltiesParams { Token = token, Royalties = royalties }, configure);
+        return client.ExecuteAsync(new UpdateRoyaltiesParams { Token = token, Royalties = royalties }, configure);
     }
     /// <summary>
     /// Updates (replaces) the royalties (custom fees) associated with 
@@ -115,8 +117,9 @@ public static class UpdateRoyaltiesExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission, for example of the token is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> UpdateRoyaltiesAsync(this ConsensusClient client, UpdateRoyaltiesParams updateRoyaltiesParams, Action<IConsensusContext>? configure = null)
     {
-        return client.ExecuteNetworkParamsAsync<TransactionReceipt>(updateRoyaltiesParams, configure);
+        return client.ExecuteAsync(updateRoyaltiesParams, configure);
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Hiero.Implementation;
 using Proto;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace Hiero;
@@ -11,7 +12,7 @@ namespace Hiero;
 /// be null if not used, however at least one transfer of some type must be defined 
 /// to be valid.  
 /// </summary>
-public sealed class TransferParams : TransactionParams, INetworkParams
+public sealed class TransferParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
     /// Transfer tinybars from an arbitray set of accounts to
@@ -51,7 +52,7 @@ public sealed class TransferParams : TransactionParams, INetworkParams
     /// <returns>
     /// CryptoTransferTransactionBody implementing INetworkTransaction
     /// </returns>
-    INetworkTransaction INetworkParams.CreateNetworkTransaction()
+    INetworkTransaction INetworkParams<TransactionReceipt>.CreateNetworkTransaction()
     {
         var result = new CryptoTransferTransactionBody();
         if (CryptoTransfers is not null)
@@ -179,11 +180,11 @@ public sealed class TransferParams : TransactionParams, INetworkParams
         }
         return result;
     }
-    TransactionReceipt INetworkParams.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
+    TransactionReceipt INetworkParams<TransactionReceipt>.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
     {
         return new TransactionReceipt(transactionId, receipt);
     }
-    string INetworkParams.OperationDescription => "Transfer";
+    string INetworkParams<TransactionReceipt>.OperationDescription => "Transfer";
 }
 /// <summary>
 /// Shortcut Internal Transfer Params for transferring tinybars only.
@@ -191,7 +192,7 @@ public sealed class TransferParams : TransactionParams, INetworkParams
 /// <remarks>
 /// Bypasses most of the checks for the gneric CryptoTransferTransactionBody construction.
 /// </remarks>
-internal sealed class TransferOnlyCryptoParams : INetworkParams
+internal sealed class TransferOnlyCryptoParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     private readonly EntityId _fromAddress;
     private readonly EntityId _toAddress;
@@ -205,7 +206,7 @@ internal sealed class TransferOnlyCryptoParams : INetworkParams
     }
     public Signatory? Signatory => null;
     public CancellationToken? CancellationToken => null;
-    INetworkTransaction INetworkParams.CreateNetworkTransaction()
+    INetworkTransaction INetworkParams<TransactionReceipt>.CreateNetworkTransaction()
     {
         if (_fromAddress.IsNullOrNone())
         {
@@ -227,11 +228,11 @@ internal sealed class TransferOnlyCryptoParams : INetworkParams
             Transfers = xferList
         };
     }
-    TransactionReceipt INetworkParams.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
+    TransactionReceipt INetworkParams<TransactionReceipt>.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
     {
         return new TransactionReceipt(transactionId, receipt);
     }
-    string INetworkParams.OperationDescription => "Transfer";
+    string INetworkParams<TransactionReceipt>.OperationDescription => "Transfer";
 }
 /// <summary>
 /// Shortcut Internal Transfer Params for transferring NFTs only.
@@ -239,7 +240,7 @@ internal sealed class TransferOnlyCryptoParams : INetworkParams
 /// <remarks>
 /// Bypasses most of the checks for the gneric CryptoTransferTransactionBody construction.
 /// </remarks>
-internal sealed class TransferOnlyNftParams : INetworkParams
+internal sealed class TransferOnlyNftParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     private readonly Nft _nft;
     private readonly EntityId _fromAddress;
@@ -253,7 +254,7 @@ internal sealed class TransferOnlyNftParams : INetworkParams
     }
     public Signatory? Signatory => null;
     public CancellationToken? CancellationToken => null;
-    INetworkTransaction INetworkParams.CreateNetworkTransaction()
+    INetworkTransaction INetworkParams<TransactionReceipt>.CreateNetworkTransaction()
     {
         if (_nft is null)
         {
@@ -281,11 +282,11 @@ internal sealed class TransferOnlyNftParams : INetworkParams
         result.TokenTransfers.Add(transfers);
         return result;
     }
-    TransactionReceipt INetworkParams.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
+    TransactionReceipt INetworkParams<TransactionReceipt>.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
     {
         return new TransactionReceipt(transactionId, receipt);
     }
-    string INetworkParams.OperationDescription => "NFT Transfer";
+    string INetworkParams<TransactionReceipt>.OperationDescription => "NFT Transfer";
 }
 /// <summary>
 /// Shortcut Internal Transfer Params for transferring Tokens only.
@@ -293,7 +294,7 @@ internal sealed class TransferOnlyNftParams : INetworkParams
 /// <remarks>
 /// Bypasses most of the checks for the gneric CryptoTransferTransactionBody construction.
 /// </remarks>
-internal sealed class TransferOnlyTokenParams : INetworkParams
+internal sealed class TransferOnlyTokenParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     private readonly EntityId _token;
     private readonly EntityId _fromAddress;
@@ -309,7 +310,7 @@ internal sealed class TransferOnlyTokenParams : INetworkParams
     }
     public Signatory? Signatory => null;
     public CancellationToken? CancellationToken => null;
-    INetworkTransaction INetworkParams.CreateNetworkTransaction()
+    INetworkTransaction INetworkParams<TransactionReceipt>.CreateNetworkTransaction()
     {
         if (_fromAddress is null)
         {
@@ -333,11 +334,11 @@ internal sealed class TransferOnlyTokenParams : INetworkParams
         result.TokenTransfers.Add(transfers);
         return result;
     }
-    TransactionReceipt INetworkParams.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
+    TransactionReceipt INetworkParams<TransactionReceipt>.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
     {
         return new TransactionReceipt(transactionId, receipt);
     }
-    string INetworkParams.OperationDescription => "Token Transfer";
+    string INetworkParams<TransactionReceipt>.OperationDescription => "Token Transfer";
 }
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class TransferExtensions
@@ -373,9 +374,10 @@ public static class TransferExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> TransferAsync(this ConsensusClient client, EntityId fromAddress, EntityId toAddress, long amount, Action<IConsensusContext>? configure = null)
     {
-        return client.ExecuteNetworkParamsAsync<TransactionReceipt>(new TransferOnlyCryptoParams(fromAddress, toAddress, amount), configure);
+        return client.ExecuteAsync(new TransferOnlyCryptoParams(fromAddress, toAddress, amount), configure);
     }
     /// <summary>
     /// Transfer assets (NFTs) from one account to another.
@@ -414,9 +416,10 @@ public static class TransferExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> TransferNftAsync(this ConsensusClient client, Nft nft, EntityId fromAddress, EntityId toAddress, Action<IConsensusContext>? configure = null)
     {
-        return client.ExecuteNetworkParamsAsync<TransactionReceipt>(new TransferOnlyNftParams(nft, fromAddress, toAddress), configure);
+        return client.ExecuteAsync(new TransferOnlyNftParams(nft, fromAddress, toAddress), configure);
     }
     /// <summary>
     /// Transfer cryptocurrency and tokens in the same transaction atomically among multiple Hedera accounts and contracts.
@@ -440,13 +443,14 @@ public static class TransferExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> TransferAsync(this ConsensusClient client, TransferParams transfers, Action<IConsensusContext>? configure = null)
     {
         if (transfers is null)
         {
             throw new ArgumentNullException(nameof(transfers), "The transfer parameters cannot not be null.");
         }
-        return client.ExecuteNetworkParamsAsync<TransactionReceipt>(transfers, configure);
+        return client.ExecuteAsync(transfers, configure);
     }
     /// <summary>
     /// Transfer Fungible tokens from one account to another.
@@ -487,8 +491,9 @@ public static class TransferExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> TransferTokensAsync(this ConsensusClient client, EntityId token, EntityId fromAddress, EntityId toAddress, long amount, Action<IConsensusContext>? configure = null)
     {
-        return client.ExecuteNetworkParamsAsync<TransactionReceipt>(new TransferOnlyTokenParams(token, fromAddress, toAddress, amount), configure);
+        return client.ExecuteAsync(new TransferOnlyTokenParams(token, fromAddress, toAddress, amount), configure);
     }
 }
