@@ -36,7 +36,7 @@ public sealed record Nft
     /// Public Constructor, an <code>Nft</code> is immutable after creation.
     /// </summary>
     /// <param name="token">
-    /// Main Network Node Payer
+    /// The NFT Token Type Address
     /// </param>
     /// <param name="serialNum">
     /// The serial number of this specific NFT instance (as assigned on mint).
@@ -75,7 +75,7 @@ public sealed record Nft
     /// </summary>
     /// <param name="value">String Value to Parse</param>
     /// <param name="nft">Output variable containing a NFT if parsing was successful.</param>
-    /// <returns>True if parsing was sucessfull, false if not.</returns>
+    /// <returns>True if parsing was successful, false if not.</returns>
     public static bool TryParse(string? value, [NotNullWhen(true)] out Nft? nft)
     {
         if (value != null && TryParse(value.AsSpan(), out nft))
@@ -88,9 +88,9 @@ public sealed record Nft
     /// <summary>
     /// Attempts to parse a string representation of an NFT
     /// </summary>
-    /// <param name="value">Sequence of Cahrs (string value) to Parse</param>
+    /// <param name="value">Sequence of Chars (string value) to Parse</param>
     /// <param name="nft">Output variable containing a NFT if parsing was successful.</param>
-    /// <returns>True if parsing was sucessfull, false if not.</returns>
+    /// <returns>True if parsing was successful, false if not.</returns>
     public static bool TryParse(ReadOnlySpan<char> value, [NotNullWhen(true)] out Nft? nft)
     {
         nft = null;

@@ -17,22 +17,22 @@ public sealed record NftRoyalty : IRoyalty
     /// </summary>
     public EntityId Receiver { get; private init; }
     /// <summary>
-    /// The numerator portion of the assement fraction
+    /// The numerator portion of the assessment fraction
     /// of the value exchanged in return for the NFT.
     /// </summary>
     /// <remarks>
     /// This is not expressed as a floating point number
-    /// in order to avoid rounding fees inheret in 
+    /// in order to avoid rounding fees inherent in 
     /// computing platforms.
     /// </remarks>
     public long Numerator { get; private init; }
     /// <summary>
-    /// The denominator portion of the assement fraction
+    /// The denominator portion of the assessment fraction
     /// of the value exchanged in return for the NFT.
     /// </summary>
     /// <remarks>
     /// This is not expressed as a floating point number
-    /// in order to avoid rounding fees inheret in 
+    /// in order to avoid rounding fees inherent in 
     /// computing platforms.
     /// </remarks>
     public long Denominator { get; private init; }
@@ -40,8 +40,8 @@ public sealed record NftRoyalty : IRoyalty
     /// The fixed amount of token or cryptocurrency
     /// that will be assessed from the receiver
     /// receiving the associated token(s) if the 
-    /// transaction transfering the token provides
-    /// no other discernable exchange of value in
+    /// transaction transferring the token provides
+    /// no other discernible exchange of value in
     /// payment.
     /// </summary>
     /// <remarks>Set to <code>0</code> if no
@@ -50,7 +50,7 @@ public sealed record NftRoyalty : IRoyalty
     /// <summary>
     /// The address id of the token type used to pay
     /// the royalty if no other transfer value exists
-    /// in payment for the tranfer of the associated token
+    /// in payment for the transfer of the associated token
     /// or asset, if set to <code>None</code> then
     /// native hBar crypto is assumed.
     /// </summary>
@@ -62,25 +62,25 @@ public sealed record NftRoyalty : IRoyalty
     /// Address receiving the royalty assessment.
     /// </param>
     /// <param name="numerator">
-    /// The denominator portion of the assement fraction
+    /// The denominator portion of the assessment fraction
     /// of the value exchanged in return for the NFT.
     /// </param>
     /// <param name="denominator">
-    /// The denominator portion of the assement fraction
+    /// The denominator portion of the assessment fraction
     /// of the value exchanged in return for the NFT.
     /// </param>
     /// <param name="fallbackAmount">
     /// The fixed amount of token or cryptocurrency
     /// that will be assessed from the receiver
     /// receiving the associated token(s) if the 
-    /// transaction transfering the token provides
-    /// no other discernable exchange of value in
+    /// transaction transferring the token provides
+    /// no other discernible exchange of value in
     /// payment.
     /// </param>
     /// <param name="fallbackToken">
     /// The address id of the token type used to pay
     /// the royalty if no other transfer value exists
-    /// in payment for the tranfer of the associated token
+    /// in payment for the transfer of the associated token
     /// or asset, if set to <code>None</code> then
     /// native hBar crypto is assumed.
     /// </param>

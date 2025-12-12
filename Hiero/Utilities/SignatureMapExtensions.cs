@@ -15,7 +15,7 @@ public static class SignatureMapExtensions
     /// </summary>
     /// <remarks>
     /// This method does not examine the message being signed nor provide any
-    /// validation of the results or de-duplication of identicial signatures.
+    /// validation of the results or de-duplication of identical signatures.
     /// It is meant to support edge cases outside the normal usage patterns of 
     /// this SDK, therefore use sparingly and with care.
     /// </remarks>
@@ -35,7 +35,7 @@ public static class SignatureMapExtensions
         await ((ISignatory)signatory).SignAsync(new UncheckedSignatureMapInvoice(signatureMap, data));
     }
     /// <summary>
-    /// Lightweight <see cref="IInvoice"/> implemenation over an existing
+    /// Lightweight <see cref="IInvoice"/> implementation over an existing
     /// protobuf <see cref="SignatureMap"/> object, performs no validation
     /// checking, use with care.
     /// </summary>

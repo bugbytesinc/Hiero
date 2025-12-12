@@ -21,7 +21,7 @@ public class NftData
     [JsonPropertyName("created_timestamp")]
     public ConsensusTimeStamp Created { get; set; }
     /// <summary>
-    /// An account that is permitted to creat allowances for this
+    /// An account that is permitted to create allowances for this
     /// Nft on the owner's behalf.
     /// </summary>
     [JsonPropertyName("delegating_spender")]

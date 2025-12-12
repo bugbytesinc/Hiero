@@ -7,7 +7,7 @@ namespace Hiero;
 /// </summary>
 /// <remarks>
 /// This interface exposes the current configuration context for a 
-/// <see cref="MirrorGrpcClient"/> instance.  When accessed thru a 
+/// <see cref="MirrorGrpcClient"/> instance.  When accessed through a 
 /// <see cref="MirrorGrpcClient.Configure(Action{IMirrorGrpcContext})"/>, 
 /// <see cref="MirrorGrpcClient.Clone(Action{IMirrorGrpcContext}?)"/> or one of the 
 /// network request methods, calling code can interrogate the 
@@ -21,7 +21,7 @@ namespace Hiero;
 public interface IMirrorGrpcContext
 {
     /// <summary>
-    /// gRPC Payer identifying a mirror node for
+    /// gRPC URI identifying a mirror node for
     /// access to the Hedera Mirror Network.
     /// </summary>
     Uri Uri { get; set; }
@@ -44,7 +44,7 @@ public interface IMirrorGrpcContext
     /// </summary>
     /// <param name="name">
     /// The name of the property to reset, must be one of the public 
-    /// properties of the <code>IConsensusContext</code>.  We suggest using 
+    /// properties of the <code>IMirrorGrpcContext</code>.  We suggest using 
     /// the <code>nameof()</code> operator to ensure type safety.
     /// </param>
     /// <exception cref="ArgumentOutOfRangeException">

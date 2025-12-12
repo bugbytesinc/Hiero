@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 namespace Hiero.Converters;
 
 /// <summary>
-/// Structured TxID JSON Converter (for mirror node chunk information)
+/// Structured Transaction ID JSON Converter (for mirror node chunk information)
 /// </summary>
 public sealed class TransactionIdStructuredConverter : JsonConverter<TransactionId>
 {

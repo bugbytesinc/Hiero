@@ -20,7 +20,7 @@ public sealed class DissociateTokenParams : TransactionParams<TransactionReceipt
     /// <summary>
     /// Additional private key, keys or signing callback method 
     /// required to authorize the un-associations.  Typically matches the
-    /// Endorsement assigned to assocated account if it is not already
+    /// Endorsement assigned to associated account if it is not already
     /// the payer for the transaction.
     /// </summary>
     /// <remarks>
@@ -30,8 +30,8 @@ public sealed class DissociateTokenParams : TransactionParams<TransactionReceipt
     /// </remarks>
     public Signatory? Signatory { get; set; }
     /// <summary>
-    /// Optional Cancellation token that interrupt the token
-    /// submission process.
+    /// Optional cancellation token to interrupt the token
+    /// dissociation submission process.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
     INetworkTransaction INetworkParams<TransactionReceipt>.CreateNetworkTransaction()
@@ -94,7 +94,7 @@ public static class DissociateTokenExtensions
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission, for example of the token has already been dissociated.</exception>
+    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission, for example, if the token has already been dissociated.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -130,7 +130,7 @@ public static class DissociateTokenExtensions
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission, for example of the token has already been dissociated.</exception>
+    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission, for example, if the token has already been dissociated.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

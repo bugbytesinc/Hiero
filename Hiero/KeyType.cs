@@ -3,12 +3,12 @@
 /// <summary>
 /// Identifies the type of <see cref="Signatory"/> or
 /// <see cref="Endorsement"/>.  Typically these objects
-/// a represent a public key or a list of child keys.
+/// represent a public key or a list of child keys.
 /// For endorsements a list type can represent an n of m
-/// number of child keys that must sign to validat a
+/// number of child keys that must sign to validate a
 /// transaction.  For signatories, the list 
 /// type represents simply a collection of keys, all of
-/// which sill sign a given transaction.
+/// which will sign a given transaction.
 /// Presently this library natively supports individual
 /// key types of Ed25519, for signing with other
 /// keys, the <see cref="Signatory" /> should use 
@@ -31,7 +31,7 @@ public enum KeyType
     Contract = 4,
     /// <summary>
     /// A list of keys, for endorsements it may represent an n-to-m list, 
-    /// for signatores its simply a bag of keys that will sign the transaction.
+    /// for signatories its simply a bag of keys that will sign the transaction.
     /// </summary>
     List = 5
 }

@@ -14,7 +14,7 @@ public sealed class ExternalTransactionParams : TransactionParams<TransactionRec
     /// The serialized protobuf encoded bytes of a <code>SignedTransaction</code>
     /// object to be submitted to a Hedera Gossip Network Node. These bytes must be 
     /// manually created from calling code having a knowledge of how to construct a
-    /// proper Hedera networkTransaction, or by using the 
+    /// proper Hedera network transaction, or by using the 
     /// <code>PrepareExternalTransactionAsync</code> method.
     /// </summary>
     public ReadOnlyMemory<byte> SignedTransactionBytes { get; set; } = default!;
@@ -24,7 +24,7 @@ public sealed class ExternalTransactionParams : TransactionParams<TransactionRec
     /// </summary>
     public Signatory? Signatory { get; set; }
     /// <summary>
-    /// Optional Cancellation token that interrupt the networkTransaction submission process.
+    /// Optional Cancellation token that interrupts the network transaction submission process.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
 }
@@ -115,7 +115,7 @@ public static class ExternalTransactionParamsExtensions
     /// <code>sigMap</code> field.  Any Signatories held in the client context 
     /// (or method call) will add signatures to this transaction prior to submitting.  
     /// It is not necessary to include a <code>Payer</code> in the context as the 
-    /// transaction itself defines the payer, however a mataching (via Node Account ID)
+    /// transaction itself defines the payer, however a matching (via Node Account ID)
     /// <code>ConsensusNodeEndpoint</code> must be contained in the client's context as it 
     /// provides the necessary gRPC routing to the Hedera Network’s node, which is 
     /// not encoded in the signed transaction structure.
@@ -123,7 +123,7 @@ public static class ExternalTransactionParamsExtensions
     /// <remarks>
     /// Note: this method accepts protobuf encoded as a <code>SignedTransaction</code>,
     /// not a <code>Transaction</code> object as the transaction object contains 
-    /// depricated protobuf fields not supported by this SDK.  The method will perform
+    /// deprecated protobuf fields not supported by this SDK.  The method will perform
     /// the necessary final wrapping of the transaction for final submission.
     /// </remarks>
     /// <param name="client">
@@ -167,7 +167,7 @@ public static class ExternalTransactionParamsExtensions
     /// <code>sigMap</code> field.  Any Signatories held in the client context 
     /// (or method call) will add signatures to this transaction prior to submitting.  
     /// It is not necessary to include a <code>Payer</code> in the context as the 
-    /// transaction itself defines the payer, however a mataching (via Node Account ID)
+    /// transaction itself defines the payer, however a matching (via Node Account ID)
     /// <code>ConsensusNodeEndpoint</code> must be contained in the client's context as it 
     /// provides the necessary gRPC routing to the Hedera Network’s node, which is 
     /// not encoded in the signed transaction structure.
@@ -175,7 +175,7 @@ public static class ExternalTransactionParamsExtensions
     /// <remarks>
     /// Note: this method accepts protobuf encoded as a <code>SignedTransaction</code>,
     /// not a <code>Transaction</code> object as the transaction object contains 
-    /// depricated protobuf fields not supported by this SDK.  The method will perform
+    /// deprecated protobuf fields not supported by this SDK.  The method will perform
     /// the necessary final wrapping of the transaction for final submission.
     /// </remarks>
     /// <param name="client">
@@ -247,7 +247,7 @@ public static class ExternalTransactionParamsExtensions
     /// It is executed prior to submitting the request to the network.
     /// </param>
     /// <returns>
-    /// A receipt for the submitted transaction, if successfull, 
+    /// A receipt for the submitted transaction, if successful, 
     /// otherwise an exception is thrown.
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
@@ -264,18 +264,18 @@ public static class ExternalTransactionParamsExtensions
     /// The Transaction is submitted as a <code>SignedTransaction</code> object, 
     /// protobuf encoded, and may include signatures in the associated 
     /// <code>sigMap</code> field.  Any Signatories held in the client context 
-    /// (or method call) will add signatures to this networkTransaction prior to submitting.  
+    /// (or method call) will add signatures to this network transaction prior to submitting.  
     /// It is not necessary to include a <code>Payer</code> in the context as the 
-    /// Transaction itself defines the payer, however a mataching (via Node Account ID)
+    /// Transaction itself defines the payer, however a matching (via Node Account ID)
     /// <code>ConsensusNodeEndpoint</code> must be contained in context as it
     /// provides the necessary gRPC routing to the Hedera Network’s node, which is 
-    /// not encoded in the signed networkTransaction structure.
+    /// not encoded in the signed network transaction structure.
     /// </summary>
     /// <remarks>
     /// Note: this method accepts protobuf encoded as a <code>SignedTransaction</code>,
-    /// not a <code>Transaction</code> object as the networkTransaction object contains 
-    /// depricated protobuf fields not supported by this SDK.  The method will peform
-    /// the necessary final wrapping of the networkTransaction for final submission.
+    /// not a <code>Transaction</code> object as the network transaction object contains 
+    /// deprecated protobuf fields not supported by this SDK.  The method will perform
+    /// the necessary final wrapping of the network transaction for final submission.
     /// </remarks>
     /// <param name="client">
     /// The Consensus Node Client submitting the raw networkTransaction to the network.
@@ -292,7 +292,7 @@ public static class ExternalTransactionParamsExtensions
     /// It is executed prior to submitting the request to the network.
     /// </param>
     /// <returns>
-    /// A receipt for the submitted networkTransaction, if successfull, 
+    /// A receipt for the submitted network transaction, if successful, 
     /// otherwise an exception is thrown.
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>

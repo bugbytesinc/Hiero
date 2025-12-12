@@ -60,7 +60,7 @@ public sealed class RevokeNftAllowanceParams : TransactionParams<TransactionRece
         result.NftAllowances.Add(nftRemoveAllowance);
         if (result.NftAllowances.Count == 0)
         {
-            throw new ArgumentOutOfRangeException(nameof(SerialNumbers), "The list of serial must contain at least one serial number to remove.");
+            throw new ArgumentOutOfRangeException(nameof(SerialNumbers), "The list of serial numbers must contain at least one serial number to remove.");
         }
         return result;
     }

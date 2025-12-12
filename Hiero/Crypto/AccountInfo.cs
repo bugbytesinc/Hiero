@@ -75,13 +75,13 @@ public sealed record AccountInfo
     public long NftCount { get; private init; }
     /// <summary>
     /// The maximum number of token or NFTs that this account may
-    /// be implicitly assoicated with (by means of being made a treasury
+    /// be implicitly associated with (by means of being made a treasury
     /// or other related actions).
     /// </summary>
     public int AutoAssociationLimit { get; private init; }
     /// <summary>
     /// The alternate identifier associated with this account that is
-    /// in the form of a public key.  If an alternate identifer for this
+    /// in the form of a public key.  If an alternate identifier for this
     /// account does not exist, this value will be <code>None</code>.
     /// </summary>
     public Endorsement KeyAlias { get; private init; }

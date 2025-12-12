@@ -2,8 +2,7 @@
 
 /// <summary>
 /// Exchange rate information as known by the 
-/// hedera network.  Values returned in receipts.
-/// denominator.
+/// Hedera network.  Values returned in receipts.
 /// </summary>
 /// <remarks>
 /// The rate is expressed as parts of a numerator 
@@ -12,7 +11,7 @@
 /// $cent/hbar one would compute that as 
 /// <code>USDCentEquivalent/HBarEquivalent</code>.
 /// to get hbar/$cent one would compute that as
-/// <code>HbarEquivalent/USDEquivalent</code>
+/// <code>HbarEquivalent/USDCentEquivalent</code>
 /// This representation allows for fractions that might
 /// otherwise be lost by floating point representations.
 /// </remarks>

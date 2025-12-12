@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 
 namespace Hiero;
 /// <summary>
-/// Represents a transaction submitted to the hedera network thru the
+/// Represents a transaction submitted to the hedera network through the
 /// native HAPI Ethereum gateway feature.
 /// </summary>
 public class EvmTransactionParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
@@ -33,7 +33,7 @@ public class EvmTransactionParams : TransactionParams<TransactionReceipt>, INetw
     /// callData of the ethereumData. The hedera node will re-write the 
     /// ethereumData inserting the contents into the existing empty callData 
     /// element with the contents in the referenced file at time of execution. 
-    /// The reconstructed etherumData will then be checked against signatures
+    /// The reconstructed ethereumData will then be checked against signatures
     /// for validation.
     /// </summary>
     public EntityId ExtraCallData { get; set; } = default!;

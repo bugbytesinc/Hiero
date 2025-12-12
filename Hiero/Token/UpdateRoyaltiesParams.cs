@@ -32,8 +32,8 @@ public sealed class UpdateRoyaltiesParams : TransactionParams<TransactionReceipt
     /// </remarks>
     public Signatory? Signatory { get; set; }
     /// <summary>
-    /// Optional Cancellation token that interrupt the token
-    /// submission process.
+    /// Optional cancellation token to interrupt the token
+    /// royalties update submission process.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
     INetworkTransaction INetworkParams<TransactionReceipt>.CreateNetworkTransaction()

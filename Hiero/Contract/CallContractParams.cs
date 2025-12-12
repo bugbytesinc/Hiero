@@ -72,7 +72,7 @@ public static class CallContractExtensions
     /// This call does not return the data emitted from the contract, to
     /// obtain that data, use a mirror node to fetch the results by transaction
     /// id or retrieve the transaction record from the mirror node
-    /// via and cast the result ot a <see cref="CallContractRecord"/>.
+    /// via and cast the result to a <see cref="CallContractRecord"/>.
     /// </summary>
     /// <param name="client">
     /// The Consensus Node Client executing the contract call.

@@ -21,7 +21,7 @@ public sealed record TokenTransfer
     public long Amount { get; init; }
     /// <summary>
     /// Indicates the parties involved in the transaction
-    /// are acting as delegates thru a granted allowance.
+    /// are acting as delegates through a granted allowance.
     /// </summary>
     public bool Delegated { get; private init; }
     /// <summary>
@@ -40,7 +40,7 @@ public sealed record TokenTransfer
     /// </param>
     /// <param name="delegated">
     /// Indicates the parties involved in the transaction
-    /// are acting as delegates thru a granted allowance.
+    /// are acting as delegates through a granted allowance.
     /// </param>
     public TokenTransfer(EntityId token, EntityId address, long amount, bool delegated = false)
     {

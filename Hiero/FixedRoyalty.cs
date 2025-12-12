@@ -40,7 +40,7 @@ public sealed record FixedRoyalty : IRoyalty
         Amount = 0;
     }
     /// <summary>
-    /// Public Constructor, an <code>FixedRoyalty</code> is immutable after creation.
+    /// Public Constructor, a <code>FixedRoyalty</code> is immutable after creation.
     /// </summary>
     /// <param name="receiver">
     /// Address receiving the royalty assessment.

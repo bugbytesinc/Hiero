@@ -16,7 +16,7 @@ public class HcsTopicData
     [JsonPropertyName("topic_id")]
     public EntityId Topic { get; set; } = default!;
     /// <summary>
-    /// The public administrator endorsments required for controlling this topic.
+    /// The public administrator endorsements required for controlling this topic.
     /// </summary>
     [JsonPropertyName("admin_key")]
     public Endorsement Administrator { get; set; } = default!;
@@ -48,7 +48,7 @@ public class HcsTopicData
     [JsonPropertyName("memo")]
     public string Memo { get; set; } = default!;
     /// <summary>
-    /// The public submit endorsments required for 
+    /// The public submit endorsements required for 
     /// submitting messages to this topic
     /// </summary>
     [JsonPropertyName("submit_key")]

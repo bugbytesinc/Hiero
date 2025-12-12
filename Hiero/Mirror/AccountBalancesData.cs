@@ -10,7 +10,7 @@ namespace Hiero.Mirror;
 /// </summary>
 /// <remarks>
 /// NOTE this structure may not provide the entire
-/// listing of tokens held by the associated acocunt.
+/// listing of tokens held by the associated account.
 /// </remarks>
 public class AccountBalancesData
 {

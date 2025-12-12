@@ -11,7 +11,7 @@ public class SlotIsFilter : IMirrorQueryFilter
     /// </summary>
     private readonly BigInteger _slot;
     /// <summary>
-    /// Constructor requres the account to filter the request by.
+    /// Constructor requires the account to filter the request by.
     /// </summary>
     /// <param name="slot">
     /// TransactionId of the slot to filter the response by.

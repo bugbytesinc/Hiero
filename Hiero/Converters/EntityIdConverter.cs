@@ -8,7 +8,7 @@ using System.Text.Json.Serialization;
 namespace Hiero.Converters;
 
 /// <summary>
-/// EntityIdConverter is a JSON _hexStringToBytesConverter for the EntityId type.
+/// Entity ID JSON Converter, can handle both hapi ids and evm addresses.
 /// </summary>
 public sealed class EntityIdConverter : JsonConverter<EntityId>
 {
@@ -58,8 +58,8 @@ public sealed class EntityIdConverter : JsonConverter<EntityId>
                 }
                 catch
                 {
-                    // Unappy case, can't figure out what this actually
-                    // represnets, fall thru and let it return None
+                    // Unhappy case, can't figure out what this actually
+                    // represents, fall thru and let it return None
                 }
             }
             else if (EntityId.TryParseShardRealmNum(value.AsSpan(), out EntityId? entityId))

@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 namespace Hiero.Mirror
 {
     /// <summary>
-    /// Represents a staking award attachted
+    /// Represents a staking award attached
     /// to a transaction.
     /// </summary>
     public class StakingRewardData

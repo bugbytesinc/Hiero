@@ -3,7 +3,7 @@
 /// Information identifying a pending transaction, includes the
 /// address of the pending transaction record, plus the transaction
 /// id that will exist representing the executed transaction if it
-/// is ultimately executed (and not timed out or delted).
+/// is ultimately executed (and not timed out or deleted).
 /// </summary>
 public record PendingTransaction
 {

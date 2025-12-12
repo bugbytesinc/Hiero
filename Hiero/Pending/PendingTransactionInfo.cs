@@ -31,8 +31,8 @@ public sealed record PendingTransactionInfo : PendingTransaction
     public Endorsement[] Endorsements { get; private init; }
     /// <summary>
     /// The endorsement key that can cancel this pending transaction.
-    /// It may be null, in wich case it can not be canceled and will
-    /// exit until signed or expired by the network.
+    /// It may be null, in which case it can not be canceled and will
+    /// exist until signed or expired by the network.
     /// </summary>
     public Endorsement? Administrator { get; private init; }
     /// <summary>

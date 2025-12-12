@@ -60,7 +60,7 @@ public sealed record TokenInfo
     /// </summary>
     public Endorsement? SuspendEndorsement { get; private init; }
     /// <summary>
-    /// Administrator key for signing transactions that can pasue or continue
+    /// Administrator key for signing transactions that can pause or continue
     /// the exchange of all assets across all accounts on the network.
     /// </summary>
     public Endorsement? PauseEndorsement { get; set; }
@@ -107,16 +107,16 @@ public sealed record TokenInfo
     /// </summary>
     public ConsensusTimeStamp Expiration { get; private init; }
     /// <summary>
-    /// Interval of the topic and auto-renewal period. If
+    /// Interval of the token and auto-renewal period. If
     /// the associated renewal account does not have sufficient funds to 
     /// renew at the expiration time, it will be renewed for a period 
     /// of time the remaining funds can support.  If no funds remain, the
-    /// topic instance will be deleted.
+    /// token instance will be deleted.
     /// </summary>
     public TimeSpan? RenewPeriod { get; private init; }
     /// <summary>
     /// Optional address of the account supporting the auto renewal of 
-    /// the token at expiration time.  The topic lifetime will be
+    /// the token at expiration time.  The token lifetime will be
     /// extended by the RenewPeriod at expiration time if this account
     /// contains sufficient funds.  The private key associated with
     /// this account must sign the transaction if RenewAccount is
@@ -204,7 +204,7 @@ public static class TokenInfoExtensions
     /// It is executed prior to submitting the request to the network.
     /// </param>
     /// <returns>
-    /// A detailed description of the contract instance.
+    /// A detailed description of the token instance.
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>

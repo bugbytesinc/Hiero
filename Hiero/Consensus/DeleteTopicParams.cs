@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 
 namespace Hiero;
 /// <summary>
-/// Transaction Parameters for Deleteing a Consensus Topics.
+/// Transaction Parameters for Deleting a Consensus Topic.
 /// </summary>
 public sealed class DeleteTopicParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {

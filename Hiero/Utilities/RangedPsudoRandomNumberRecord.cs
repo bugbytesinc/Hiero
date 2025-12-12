@@ -2,17 +2,18 @@
 
 /// <summary>
 /// A transaction record containing information concerning the 
-/// newly created ranged psudo random number.
+/// newly created ranged pseudo random number.
 /// </summary>
-public sealed record RangedPsudoRandomNumberRecord : TransactionRecord
+public sealed record RangedPseudoRandomNumberRecord : TransactionRecord
 {
     /// <summary>
     /// The 32 bit generated number from a ranged PRNG transaction.
+    /// </summary>
     public int Number { get; internal init; }
     /// <summary>
     /// Internal Constructor of the record.
     /// </summary>
-    internal RangedPsudoRandomNumberRecord(Proto.TransactionRecord record) : base(record)
+    internal RangedPseudoRandomNumberRecord(Proto.TransactionRecord record) : base(record)
     {
         Number = record.PrngNumber;
     }

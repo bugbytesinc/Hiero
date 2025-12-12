@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 
 namespace Hiero;
 /// <summary>
-/// Transaction Parameters for Signing a Pending/Schedled Transaction.
+/// Transaction Parameters for Signing a Pending/Scheduled Transaction.
 /// </summary>
 public sealed class SignPendingTransactionParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
@@ -24,8 +24,8 @@ public sealed class SignPendingTransactionParams : TransactionParams<Transaction
     /// </remarks>
     public Signatory? Signatory { get; set; }
     /// <summary>
-    /// Optional Cancellation token that interrupt the token
-    /// submission process.
+    /// Optional cancellation token to interrupt the pending transaction
+    /// signing submission process.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
     INetworkTransaction INetworkParams<TransactionReceipt>.CreateNetworkTransaction()

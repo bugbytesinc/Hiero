@@ -8,8 +8,8 @@ namespace Hiero;
 /// Represents the properties on an account that can be changed.
 /// Any property set to <code>null</code> on this object when submitted to the 
 /// <see cref="ConsensusClient.UpdateAccountAsync(UpdateAccountParams, Action{IConsensusContext})"/>
-/// method will be left unchanged by the system.  Certain additional condidions
-/// apply to certain propertites such as the signing key are described below.
+/// method will be left unchanged by the system.  Certain additional conditions
+/// apply to certain properties such as the signing key are described below.
 /// </summary>
 public sealed class UpdateAccountParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
@@ -18,7 +18,7 @@ public sealed class UpdateAccountParams : TransactionParams<TransactionReceipt>,
     /// </summary>
     public EntityId Address { get; set; } = default!;
     /// <summary>
-    /// Replace this Address's current key signing rquirements with new signing
+    /// Replace this Address's current key signing requirements with new signing
     /// requirements.</summary>
     /// <remarks>
     /// For this request to be accepted by the network, both the current private
@@ -55,7 +55,7 @@ public sealed class UpdateAccountParams : TransactionParams<TransactionReceipt>,
     public string? Memo { get; set; }
     /// <summary>
     /// If set, updates the maximum number of token or NFTs that this account may
-    /// be implicitly assoicated with (by means of being made a treasury
+    /// be implicitly associated with (by means of being made a treasury
     /// or other related actions).
     /// </summary>
     public int? AutoAssociationLimit { get; set; }
@@ -95,7 +95,7 @@ public sealed class UpdateAccountParams : TransactionParams<TransactionReceipt>,
     /// </remarks>
     public Signatory? Signatory { get; set; }
     /// <summary>
-    /// Optional Cancellation token that interrupt the creation proces.
+    /// Optional Cancellation token that interrupt the creation process.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
     INetworkTransaction INetworkParams<TransactionReceipt>.CreateNetworkTransaction()
@@ -147,7 +147,7 @@ public sealed class UpdateAccountParams : TransactionParams<TransactionReceipt>,
             var limit = AutoAssociationLimit.Value;
             if (limit < -1)
             {
-                throw new ArgumentOutOfRangeException(nameof(AutoAssociationLimit), "The number of auto-associaitons must be greater than or equal to -1.");
+                throw new ArgumentOutOfRangeException(nameof(AutoAssociationLimit), "The number of auto-associations must be greater than or equal to -1.");
             }
             result.MaxAutomaticTokenAssociations = limit;
         }
@@ -182,7 +182,7 @@ public static class UpdateAccountExtensions
     /// Updates the changeable properties of a hedera network account.
     /// </summary>
     /// <param name="client">
-    /// The Consensus Node Client occhestrating the update.
+    /// The Consensus Node Client orchestrating the update.
     /// </param>
     /// <param name="updateParameters">
     /// The account update parameters, includes a required 

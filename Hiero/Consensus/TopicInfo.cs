@@ -7,7 +7,7 @@ namespace Hiero;
 /// <summary>
 /// The information returned from the GetTopicInfo ConsensusClient 
 /// method call.  It represents the details concerning a 
-/// Hedera Network Consensus Topics.
+/// Hedera Network Consensus Topic.
 /// </summary>
 public sealed record TopicInfo
 {
@@ -22,7 +22,7 @@ public sealed record TopicInfo
     public ReadOnlyMemory<byte> RunningHash { get; private init; }
     /// <summary>
     /// The number of Messages submitted to this topic at the
-    /// time of the call to Get Topics Info.
+    /// time of the call to Get Topic Info.
     /// </summary>
     public ulong SequenceNumber { get; private init; }
     /// <summary>
@@ -85,13 +85,13 @@ public sealed record TopicInfo
 public static class TopicInfoExtensions
 {
     /// <summary>
-    /// Retrieves detailed information regarding a Topics Instance.
+    /// Retrieves detailed information regarding a Topic Instance.
     /// </summary>
     /// <param name="client">
     /// The Consensus Node Client to query.
     /// </param>
     /// <param name="topic">
-    /// The Hedera Network Payer of the Topics instance to retrieve.
+    /// The Hedera Network Payer of the Topic instance to retrieve.
     /// </param>
     /// <param name="configure">
     /// Optional callback method providing an opportunity to modify 

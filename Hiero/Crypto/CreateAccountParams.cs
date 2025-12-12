@@ -31,7 +31,7 @@ public sealed class CreateAccountParams : TransactionParams<CreateAccountReceipt
     public bool RequireReceiveSignature { get; set; } = false;
     /// <summary>
     /// The maximum number of token or NFTs that this account may
-    /// be implicitly assoicated with (by means of being made a treasury
+    /// be implicitly associated with (by means of being made a treasury
     /// or other related actions).
     /// </summary>
     /// <remarks>
@@ -90,7 +90,7 @@ public sealed class CreateAccountParams : TransactionParams<CreateAccountReceipt
     /// </remarks>
     public Signatory? Signatory { get; set; }
     /// <summary>
-    /// Optional Cancellation token that interrupt the creation proces.
+    /// Optional Cancellation token that interrupt the creation process.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
     INetworkTransaction INetworkParams<CreateAccountReceipt>.CreateNetworkTransaction()
@@ -158,7 +158,7 @@ public static class CreateAccountExtensions
     /// It is executed prior to submitting the request to the network.
     /// </param>
     /// <returns>
-    /// A transaction recipt with a description of the newly created account.
+    /// A transaction receipt with a description of the newly created account.
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>

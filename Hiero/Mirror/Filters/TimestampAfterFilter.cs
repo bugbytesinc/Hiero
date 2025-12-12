@@ -1,6 +1,6 @@
 ﻿namespace Hiero.Mirror.Filters;
 /// <summary>
-/// Retrieve data after the given conensus time value.
+/// Retrieve data after the given consensus time value.
 /// </summary>
 public class TimestampAfterFilter : IMirrorQueryFilter
 {

@@ -2,7 +2,7 @@
 
 namespace Hiero;
 /// <summary>
-/// Pre-Check and Receipt Response Codes - 1to1 mapping with protobuf ResponseCodeEnum
+/// Pre-Check and Receipt Response Codes - 1:1 mapping with protobuf ResponseCodeEnum
 /// </summary>
 public enum MirrorGrpcExceptionCode
 {

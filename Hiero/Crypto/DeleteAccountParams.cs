@@ -67,7 +67,7 @@ public static class DeleteAccountExtensions
     /// The Consensus Node Client orchestrating the delete.
     /// </param>
     /// <param name="deleteAccountParams">
-    /// The account deletion parameters, includes a required
+    /// The account deletion parameters.
     /// </param>
     /// <param name="configure">
     /// Optional callback method providing an opportunity to modify 

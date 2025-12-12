@@ -11,7 +11,7 @@ public class TransactionData
     [JsonConverter(typeof(TransactionIdMirrorConverter))]
     public TransactionId TransactionId { get; set; } = default!;
     /// <summary>
-    /// Sum of network transction fees.
+    /// Sum of network transaction fees.
     /// </summary>
     [JsonPropertyName("charged_tx_fee")]
     [JsonConverter(typeof(LongMirrorConverter))]
@@ -41,7 +41,7 @@ public class TransactionData
     [JsonConverter(typeof(Base64StringToBytesConverter))]
     public ReadOnlyMemory<byte> Memo { get; set; }
     /// <summary>
-    /// The identifited type of the transaction.
+    /// The identified type of the transaction.
     /// </summary>
     [JsonPropertyName("name")]
     public string? TransactionType { get; set; }

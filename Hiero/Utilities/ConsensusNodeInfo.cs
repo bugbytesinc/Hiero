@@ -46,7 +46,7 @@ public static class ConsensusNodeInfoExtensions
     /// Retrieves the current USD to hBar exchange rate information from the network.
     /// </summary>
     /// <remarks>
-    /// NOTE: this method incours a charge to retrieve the file from the network.
+    /// NOTE: this method incurs a charge to retrieve the file from the network.
     /// </remarks>
     /// <param name="client">ConsensusClient Object</param>
     /// <param name="configure">

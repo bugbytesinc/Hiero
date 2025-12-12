@@ -11,10 +11,10 @@ public sealed class FeeSchedules
 {
     /// <summary>
     /// Internal constructor, used by the library to create an
-    /// initialized exchange rates object.
+    /// initialized fee schedules object.
     /// </summary>
-    /// <param name="current">Current Exchange Rate</param>
-    /// <param name="next">Next Exchange Rate</param>
+    /// <param name="current">Current Fee Schedule</param>
+    /// <param name="next">Next Fee Schedule</param>
     internal FeeSchedules(FeeSchedule? current, FeeSchedule? next)
     {
         Current = current;
@@ -25,7 +25,7 @@ public sealed class FeeSchedules
     /// </summary>
     public FeeSchedule? Current { get; }
     /// <summary>
-    /// Exchange rate that is in effect after 
+    /// Fee schedule that is in effect after 
     /// the current fee schedule expires.
     /// </summary>
     public FeeSchedule? Next { get; }
@@ -54,7 +54,7 @@ public static class FeeSchedulesExtensions
     /// network.
     /// </summary>
     /// <remarks>
-    /// NOTE: this method incours a charge to retrieve the file from the network.
+    /// NOTE: this method incurs a charge to retrieve the file from the network.
     /// </remarks>
     /// <param name="client">
     /// Consensus Client to QueryAsync

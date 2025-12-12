@@ -19,7 +19,7 @@ public class QueryContractParams
     public long Gas { get; set; }
     /// <summary>
     /// The amount of GAS required to pay for returning the output 
-    /// data from the contract.  This is an additional fee is 
+    /// data from the contract.  This is an additional fee that is 
     /// incorporated into the max gas fee under the hood.  Gas can
     /// be set at what a mirror node would estimate as the necessary
     /// charge, and this accounts for the bytes returned.  Honestly,
@@ -83,8 +83,8 @@ public static class QueryContractExtensions
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
-    /// <exception cref="ContractException">If the request was accepted by the network but the cotnract failed for
-    /// some reason.  Contains additional information returned from the contract virual machine.  Only thrown if
+    /// <exception cref="ContractException">If the request was accepted by the network but the contract failed for
+    /// some reason.  Contains additional information returned from the contract virtual machine.  Only thrown if
     /// the <see cref="QueryContractParams.ThrowOnFail"/> is set to <code>true</code>, the default, otherwise
     /// the method returns a <see cref="ContractCallResult"/> with the same information.</exception>
     public static async Task<ContractCallResult> QueryContractAsync(this ConsensusClient client, QueryContractParams queryContractParams, Action<IConsensusContext>? configure = null)

@@ -11,7 +11,7 @@ public sealed record CreateTopicRecord : TransactionRecord
     /// The newly created topic instance address.
     /// </summary>
     /// <remarks>
-    /// The value will be <code>None</code> if the create acocunt
+    /// The value will be <code>None</code> if the create account
     /// method was scheduled as a pending transaction.
     /// </remarks>
     public EntityId Topic { get; internal init; }

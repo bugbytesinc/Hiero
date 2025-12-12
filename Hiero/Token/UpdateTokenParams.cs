@@ -12,7 +12,7 @@ namespace Hiero;
 /// appropriately signed as described by the original
 /// <see cref="CreateTokenParams.Administrator"/> endorsement in order
 /// to make changes.  If there is no administrator endorsement specified,
-/// the token is imutable and cannot be changed.
+/// the token is immutable and cannot be changed.
 /// </summary>
 public sealed class UpdateTokenParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
@@ -26,7 +26,7 @@ public sealed class UpdateTokenParams : TransactionParams<TransactionReceipt>, I
     /// </summary>
     public EntityId? Treasury { get; set; }
     /// <summary>
-    /// Replace this Tokens's current administrative key signing rquirements 
+    /// Replace this Tokens's current administrative key signing requirements 
     /// with new signing requirements.  
     /// </summary>
     /// <remarks>
@@ -48,13 +48,13 @@ public sealed class UpdateTokenParams : TransactionParams<TransactionReceipt>, I
     public Endorsement? SuspendEndorsement { get; set; }
     /// <summary>
     /// Changes the administrator key for signing transactions that can 
-    /// pasue or continue the exchange of all assets across all accounts 
+    /// pause or continue the exchange of all assets across all accounts 
     /// on the network.
     /// </summary>
     public Endorsement? PauseEndorsement { get; set; }
     /// <summary>
     /// Changes the administrator key for signing transaction that completely 
-    /// remove tokens from an crypto address.
+    /// remove tokens from a crypto address.
     /// </summary>
     public Endorsement? ConfiscateEndorsement { get; set; }
     /// <summary>
@@ -87,16 +87,16 @@ public sealed class UpdateTokenParams : TransactionParams<TransactionReceipt>, I
     /// </summary>
     public ConsensusTimeStamp? Expiration { get; set; }
     /// <summary>
-    /// If specified, update the interval of the topic and auto-renewal period. 
+    /// If specified, update the interval of the token and auto-renewal period. 
     /// If the associated renewal account does not have sufficient funds to 
     /// renew at the expiration time, it will be renewed for a period 
     /// of time the remaining funds can support.  If no funds remain, the
-    /// topic instance will be deleted.
+    /// token instance will be deleted.
     /// </summary>
     public TimeSpan? RenewPeriod { get; set; }
     /// <summary>
     /// If specified updates the address of the account supporting the auto 
-    /// renewal of the token at expiration time.  The topic lifetime will be
+    /// renewal of the token at expiration time.  The token lifetime will be
     /// extended by the RenewPeriod at expiration time if this account
     /// contains sufficient funds.  The private key associated with
     /// this account must sign the transaction if RenewAccount is
@@ -122,7 +122,8 @@ public sealed class UpdateTokenParams : TransactionParams<TransactionReceipt>, I
     /// </remarks>
     public Signatory? Signatory { get; set; }
     /// <summary>
-    /// Optional Cancellation token that interrupt the update.
+    /// Optional cancellation token to interrupt the token
+    /// update submission process.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
     INetworkTransaction INetworkParams<TransactionReceipt>.CreateNetworkTransaction()
@@ -249,7 +250,7 @@ public sealed class UpdateTokenParams : TransactionParams<TransactionReceipt>, I
 public static class UpdateTokenExtensions
 {
     /// <summary>
-    /// Updates the changeable properties of a Hedera Fungable Token.
+    /// Updates the changeable properties of a Hedera Fungible Token.
     /// </summary>
     /// <param name="client">
     /// The Consensus Node Client orchestrating the update.

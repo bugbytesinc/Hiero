@@ -4,9 +4,9 @@ namespace Proto;
 
 public sealed partial class AccountAmount
 {
-    internal AccountAmount(EntityId psudoAddress, long amount, bool delegated) : this()
+    internal AccountAmount(EntityId pseudoAddress, long amount, bool delegated) : this()
     {
-        AccountID = new AccountID(psudoAddress);
+        AccountID = new AccountID(pseudoAddress);
         Amount = amount;
         IsApproval = delegated;
     }

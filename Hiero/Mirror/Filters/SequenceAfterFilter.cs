@@ -11,7 +11,7 @@ public class SequenceAfterFilter : IMirrorQueryFilter
     /// </summary>
     private readonly ulong _sequenceNumber;
     /// <summary>
-    /// Constructor requres the sequence number to filter by.
+    /// Constructor requires the sequence number to filter by.
     /// </summary>
     /// <param name="sequenceNumber">
     /// Return only hcs messages with sequence numbers larger

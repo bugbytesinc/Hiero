@@ -26,7 +26,7 @@ public class SubscribeTopicParams
     /// </summary>
     public ulong MaxCount { get; set; } = 0;
     /// <summary>
-    /// .NET system threadding channel writer receiving messages 
+    /// .NET system threading channel writer receiving messages 
     /// streamed from the server.  Messages can be read from the 
     /// stream by calling code without blocking the incoming 
     /// stream of messages from the mirror node.  Completing 
@@ -43,7 +43,7 @@ public class SubscribeTopicParams
     /// </summary>
     public bool CompleteChannelWhenFinished { get; set; } = true;
     /// <summary>
-    /// Optional cancelation token, that when set, closes the mirror node
+    /// Optional cancellation token, that when set, closes the mirror node
     /// connection and optionally the .net channel (if configured to do so),
     /// and causes the SubscribeTopic method to return without error.
     /// Default is "none", the method can be completed by signaling the receiving

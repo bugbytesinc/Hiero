@@ -61,7 +61,7 @@ internal abstract class ContextStack<TContext, TChannelKey> : IAsyncDisposable w
         // object, it does not actually release resources unless it is root.
         // This all comes down to maintaining a map of uris to open grpc
         // channels.  Opening a chanel is an expensive operation.  The
-        // map is shared thru the whole entire tree of child contexts.
+        // map is shared through the whole entire tree of child contexts.
         return removeRef();
     }
     protected void addRef()

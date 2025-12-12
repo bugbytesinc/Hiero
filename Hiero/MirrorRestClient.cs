@@ -40,7 +40,7 @@ public sealed class MirrorRestClient
         return _client.BaseAddress?.ToString() ?? "unconfigured";
     }
     /// <summary>
-    /// Internal helper function to create to post a payload to the mirror node REST API.
+    /// Internal helper function to post a payload to the mirror node REST API.
     /// </summary>
     /// <typeparam name="TValue">
     /// The type of payload to post, it should be serializable as JSON.
@@ -91,7 +91,7 @@ public sealed class MirrorRestClient
         while (!string.IsNullOrWhiteSpace(fullPath));
     }
     /// <summary>
-    /// Helper function to retreive a single item from the rest api call.
+    /// Helper function to retrieve a single item from the rest api call.
     /// </summary>
     internal async Task<TItem?> GetSingleItemAsync<TItem>(string path)
     {

@@ -2,7 +2,9 @@
 using System.Text.Json.Serialization;
 
 namespace Hiero.Converters;
-
+/// <summary>
+/// Fee Limit JSON Converter (from string value)
+/// </summary>
 public sealed class FeeLimitFromStringConverter : JsonConverter<long>
 {
     /// <inheritdoc />

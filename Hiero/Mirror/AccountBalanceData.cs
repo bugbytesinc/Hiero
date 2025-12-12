@@ -29,7 +29,7 @@ public class AccountBalanceData
 public static class AccountBalanceDataExtensions
 {
     /// <summary>
-    /// Retreives the balances for a given token and filtering criteria.
+    /// Retrieves the balances for a given token and filtering criteria.
     /// </summary>
     /// <param name="client">
     /// Mirror Rest Client to use for the request.

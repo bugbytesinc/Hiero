@@ -4,7 +4,7 @@ namespace Hiero;
 
 /// <summary>
 /// Represents a token or hBar transfer 
-/// (Token, Payer, Amount, Address) fufilling a royalty 
+/// (Token, Payer, Amount, Address) fulfilling a royalty 
 /// payment for the transfer of a token or asset.
 /// </summary>
 public sealed record RoyaltyTransfer

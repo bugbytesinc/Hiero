@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace Hiero.Converters;
 /// <summary>
-/// Unsigned Long Converter that tollerates null values.
+/// Unsigned Long Converter that tolerates null values.
 /// </summary>
 public sealed class UnsignedLongMirrorConverter : JsonConverter<ulong>
 {

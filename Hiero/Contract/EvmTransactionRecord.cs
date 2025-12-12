@@ -1,6 +1,6 @@
 ﻿namespace Hiero;
 /// <summary>
-/// Record produced from an Ethereum TransactionId call.
+/// Record produced from an Ethereum transaction call.
 /// </summary>
 public sealed record EvmTransactionRecord : TransactionRecord
 {

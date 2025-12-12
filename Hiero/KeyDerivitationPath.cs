@@ -1,33 +1,33 @@
 ﻿namespace Hiero;
 /// <summary>
-/// Enumerates known HD Key Derivitation paths for
-/// various Key formats and Wallets in the Hedera eccosystem.
+/// Enumerates known HD Key Derivation paths for
+/// various Key formats and Wallets in the Hedera ecosystem.
 /// </summary>
-public class KeyDerivitationPath
+public class KeyDerivationPath
 {
     /// <summary>
-    /// The Ed25519 Key Derivitation matching the 24 word seed
+    /// The Ed25519 Key Derivation matching the 24 word seed
     /// phrase as implemented by HashPack.
     /// </summary>
-    public static readonly KeyDerivitationPath HashPack = new KeyDerivitationPath(KeyType.Ed25519, 44 | 0x80000000, 3030 | 0x80000000, 0 | 0x80000000, 0 | 0x80000000, 0 | 0x80000000);
+    public static readonly KeyDerivationPath HashPack = new KeyDerivationPath(KeyType.Ed25519, 44 | 0x80000000, 3030 | 0x80000000, 0 | 0x80000000, 0 | 0x80000000, 0 | 0x80000000);
     /// <summary>
-    /// The Ed25519 Key Derivitation matching the 12 word seed
+    /// The Ed25519 Key Derivation matching the 12 word seed
     /// phrase as implemented by HashPack.
     /// </summary>
-    public static readonly KeyDerivitationPath Calaxy = new KeyDerivitationPath(KeyType.Ed25519, 44 | 0x80000000, 3030 | 0x80000000, 0 | 0x80000000, 0 | 0x80000000, 0 | 0x80000000);
+    public static readonly KeyDerivationPath Calaxy = new KeyDerivationPath(KeyType.Ed25519, 44 | 0x80000000, 3030 | 0x80000000, 0 | 0x80000000, 0 | 0x80000000, 0 | 0x80000000);
     /// <summary>
-    /// The Ed25519 Key Derivitation matching the 12 or 24 word seed
+    /// The Ed25519 Key Derivation matching the 12 or 24 word seed
     /// phrase as implemented by Walla Wallet.
     /// </summary>
-    public static readonly KeyDerivitationPath WallaWallet = new KeyDerivitationPath(KeyType.Ed25519, 44 | 0x80000000, 3030 | 0x80000000, 0 | 0x80000000, 0 | 0x80000000, 0 | 0x80000000);
+    public static readonly KeyDerivationPath WallaWallet = new KeyDerivationPath(KeyType.Ed25519, 44 | 0x80000000, 3030 | 0x80000000, 0 | 0x80000000, 0 | 0x80000000, 0 | 0x80000000);
     /// <summary>
-    /// The ECDSA Secp256k1 Key Derivitation matching the 12 word seed
+    /// The ECDSA Secp256k1 Key Derivation matching the 12 word seed
     /// phrase as implemented by the Blade Wallet as of May 2023.
     /// </summary>
-    public static readonly KeyDerivitationPath Blade = new KeyDerivitationPath(KeyType.ECDSASecp256K1, 44, 3030, 0, 0);
+    public static readonly KeyDerivationPath Blade = new KeyDerivationPath(KeyType.ECDSASecp256K1, 44, 3030, 0, 0);
     /// <summary>
-    /// The individual steps in the key derivitation path 
-    /// requried to recreate keys from a mnemonic seed.
+    /// The individual steps in the key derivation path 
+    /// required to recreate keys from a mnemonic seed.
     /// </summary>
     public ReadOnlyMemory<uint> Path { get; private init; }
     /// <summary>
@@ -36,18 +36,18 @@ public class KeyDerivitationPath
     /// </summary>
     public KeyType KeyType { get; private init; }
     /// <summary>
-    /// Constructor taking the various expeced key deriviation
+    /// Constructor taking the various expected key derivation
     /// path components as input.
     /// </summary>
     /// <param name="keyType">
-    /// The type of key that this deriviation path is designed
+    /// The type of key that this derivation path is designed
     /// to generate.
     /// </param>
     /// <param name="path">
-    /// The unsigned int values comprising of the derivitation path, 
+    /// The unsigned int values comprising of the derivation path, 
     /// for example m/44'/3030'/0'/0'/0'
     /// </param>
-    private KeyDerivitationPath(KeyType keyType, params uint[] path)
+    private KeyDerivationPath(KeyType keyType, params uint[] path)
     {
         if (keyType != KeyType.Ed25519 && keyType != KeyType.ECDSASecp256K1)
         {

@@ -1,6 +1,6 @@
 ﻿namespace Hiero.Mirror.Filters;
 /// <summary>
-/// Retrieve data before or on the given conensus time value.
+/// Retrieve data before or on the given consensus time value.
 /// </summary>
 public class TimestampOnOrBeforeFilter : IMirrorQueryFilter
 {

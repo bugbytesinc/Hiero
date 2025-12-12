@@ -46,13 +46,13 @@ public sealed class CreateNftParams : TransactionParams<CreateTokenReceipt>, INe
     /// </summary>
     public Endorsement? SuspendEndorsement { get; set; }
     /// <summary>
-    /// Administrator key for signing transactions that can pasue or continue
+    /// Administrator key for signing transactions that can pause or continue
     /// the exchange of all assets across all accounts on the network.
     /// </summary>
     public Endorsement? PauseEndorsement { get; set; }
     /// <summary>
     /// Administrator key for signing transaction that confiscate and destroy
-    /// (wipe) NFTs from an aribrary crypto address.
+    /// (wipe) NFTs from an arbitrary crypto address.
     /// </summary>
     public Endorsement? ConfiscateEndorsement { get; set; }
     /// <summary>
@@ -73,7 +73,7 @@ public sealed class CreateNftParams : TransactionParams<CreateTokenReceipt>, INe
     /// <summary>
     /// The list of royalties applied to transactions when
     /// transferring this asset.  If a royalty endorsement is not
-    /// supplied upon creation, the royalties are imutable after
+    /// supplied upon creation, the royalties are immutable after
     /// creation.
     /// </summary>
     public IReadOnlyList<IRoyalty>? Royalties { get; set; }
@@ -85,7 +85,7 @@ public sealed class CreateNftParams : TransactionParams<CreateTokenReceipt>, INe
     /// </summary>
     public bool InitializeSuspended { get; set; }
     /// <summary>
-    /// Original expiration date for the NTF, fees will be charged as appropriate.
+    /// Original expiration date for the NFT, fees will be charged as appropriate.
     /// </summary>
     public ConsensusTimeStamp Expiration { get; set; }
     /// <summary>
@@ -114,7 +114,7 @@ public sealed class CreateNftParams : TransactionParams<CreateTokenReceipt>, INe
     public string Memo { get; set; } = default!;
     /// <summary>
     /// Additional private key, keys or signing callback method 
-    /// required to create to this asset.  Typically matches the
+    /// required to create this asset.  Typically matches the
     /// Administrator, KycEndorsement, FreezeEndorsement and other
     /// listed endorsements associated with this asset.
     /// </summary>
@@ -125,7 +125,7 @@ public sealed class CreateNftParams : TransactionParams<CreateTokenReceipt>, INe
     /// </remarks>
     public Signatory? Signatory { get; set; }
     /// <summary>
-    /// Optional Cancellation token that interrupt the token
+    /// Optional Cancellation token that interrupts the token
     /// creation process.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
@@ -210,10 +210,6 @@ public sealed class CreateNftParams : TransactionParams<CreateTokenReceipt>, INe
         {
             result.PauseKey = new Key(PauseEndorsement);
         }
-        if (!PauseEndorsement.IsNullOrNone())
-        {
-            result.PauseKey = new Key(PauseEndorsement);
-        }
         if (!ConfiscateEndorsement.IsNullOrNone())
         {
             result.WipeKey = new Key(ConfiscateEndorsement);
@@ -260,10 +256,10 @@ public static class CreateNftExtensions
 {
     /// <summary>
     /// Creates a new Non-Fungible token definition with the given create parameters.
-    /// <param name="client">
-    /// The Consensus Node Client orchestrating the confiscation.
-    /// </param>
     /// </summary>
+    /// <param name="client">
+    /// The Consensus Node Client orchestrating the creation.
+    /// </param>
     /// <param name="createParameters">
     /// Details regarding the NFT definition to instantiate.
     /// </param>
@@ -277,7 +273,7 @@ public static class CreateNftExtensions
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
+    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

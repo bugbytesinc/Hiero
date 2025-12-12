@@ -29,7 +29,7 @@ public static class TransactionDetailDataExtensions
 {
     /// <summary>
     /// Retrieves the entire list of parent and child transactions
-    /// having the givin root transaction ID.
+    /// having the given root transaction ID.
     /// </summary>
     /// <param name="client">
     /// Mirror Rest Client to use for the request.

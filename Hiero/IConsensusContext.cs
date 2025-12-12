@@ -6,7 +6,7 @@ namespace Hiero;
 /// </summary>
 /// <remarks>
 /// This interface exposes the current configuration context for a 
-/// <see cref="ConsensusClient"/> instance.  When accessed thru a 
+/// <see cref="ConsensusClient"/> instance.  When accessed through a 
 /// <see cref="ConsensusClient.Configure(Action{IConsensusContext})"/>, 
 /// <see cref="ConsensusClient.Clone(Action{IConsensusContext})"/> or one of the 
 /// network request methods, calling code can interrogate the 
@@ -50,10 +50,10 @@ public interface IConsensusContext
     /// for say, a key rotation on an account; especially if the
     /// "WithRecord" form is invoked.  It is recommended to place
     /// only the keys associated with the Payer account in this
-    /// property.  Not doing so may result in extraneous unecessary
+    /// property.  Not doing so may result in extraneous unnecessary
     /// signatures being sent with transactions.  If this happens
     /// the transaction cost goes up due to the larger transaction
-    /// size, waisting crypto due to unecessary signature processing
+    /// size, wasting crypto due to unnecessary signature processing
     /// fees.
     /// </remarks>
     Signatory? Signatory { get; set; }
@@ -80,7 +80,7 @@ public interface IConsensusContext
     /// acceptance of transactions if the local clock deviates from the
     /// network time by too wide a margin.  It is only recommended to 
     /// enable this setting if you are having performance problems related
-    /// to clock drift an are unable to resolve at the environment level.
+    /// to clock drift and are unable to resolve at the environment level.
     /// The default for this value is <code>false</code>.
     /// </summary>
     bool AdjustForLocalClockDrift { get; set; }
@@ -88,11 +88,11 @@ public interface IConsensusContext
     /// If set to <code>true</code> (default) the library client will 
     /// throw a <see cref="PrecheckException"/> or <see cref="TransactionException"/> 
     /// if the response code returned from a transaction accepted by the network 
-    /// returns a response of anything other than Sucess.  Queries will
+    /// returns a response of anything other than Success.  Queries will
     /// still throw exceptions if the operation cannot be executed without error.
     /// </summary>
     /// <remarks>
-    /// For backwards compatability, this value defaults to <code>true</code>.
+    /// For backwards compatibility, this value defaults to <code>true</code>.
     /// </remarks>
     bool ThrowIfNotSuccess { get; set; }
     /// <summary>

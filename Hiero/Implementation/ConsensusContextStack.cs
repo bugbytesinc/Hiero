@@ -77,7 +77,7 @@ namespace Hiero.Implementation
         /// <remarks>
         /// Unlike other context methods and properties, ALL the configured handlers in all
         /// of the parent contexts are included in the return value, request handlers can 
-        /// be stacked thru contexts.
+        /// be stacked through contexts.
         /// </remarks>
         /// <param name="context">
         /// Context that may be configured with a sending request callback.
@@ -123,7 +123,7 @@ namespace Hiero.Implementation
         /// <remarks>
         /// Unlike other context methods and properties, ALL the configured handlers in all
         /// of the parent contexts are included in the return value, request handlers can 
-        /// be stacked thru contexts.
+        /// be stacked through contexts.
         /// </remarks>
         /// <param name="context">
         /// Context that may be configured with a receiving request callback.

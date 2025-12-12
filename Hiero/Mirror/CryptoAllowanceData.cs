@@ -7,7 +7,7 @@ using static Hiero.Mirror.Implementation.MirrorRestClientUtils;
 
 namespace Hiero.Mirror;
 /// <summary>
-/// Allowance information retreived from a mirror node.
+/// Allowance information retrieved from a mirror node.
 /// </summary>
 public class CryptoAllowanceData
 {

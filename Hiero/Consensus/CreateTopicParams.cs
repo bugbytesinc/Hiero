@@ -49,7 +49,7 @@ public sealed class CreateTopicParams : TransactionParams<CreateTopicReceipt>, I
     /// <summary>
     /// Additional private key, keys or signing callback method 
     /// required to create to this topic.  Typically matches the
-    /// Administrator, Submitter and RenwAccount key(s)
+    /// Administrator, Submitter and RenewAccount key(s)
     /// associated with this topic.
     /// </summary>
     /// <remarks>
@@ -71,7 +71,7 @@ public sealed class CreateTopicParams : TransactionParams<CreateTopicReceipt>, I
         }
         if (!(RenewAccount is null) && Administrator is null)
         {
-            throw new ArgumentNullException(nameof(Administrator), "The Administrator endorssement must not be null if RenewAccount is specified.");
+            throw new ArgumentNullException(nameof(Administrator), "The Administrator endorsement must not be null if RenewAccount is specified.");
         }
         if (RenewPeriod.Ticks < 0)
         {

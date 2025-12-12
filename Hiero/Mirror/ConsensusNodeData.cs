@@ -15,7 +15,7 @@ public class ConsensusNodeData
     [JsonPropertyName("node_account_id")]
     public EntityId Account { get; set; } = default!;
     /// <summary>
-    /// A list of gRPC endpoints this gossip node can reached through.
+    /// A list of gRPC endpoints this gossip node can be reached through.
     /// </summary>
     [JsonPropertyName("service_endpoints")]
     public GrpcEndpointData[] Endpoints { get; set; } = default!;
@@ -127,14 +127,14 @@ public static class ConsensusNodeDataExtensions
     /// <param name="client">
     /// The Mirror Node REST ConsensusClient
     /// </param>
-    /// <param name="maxTimeoutInMiliseconds">
+    /// <param name="maxTimeoutInMilliseconds">
     /// The time value threshold, that if exceeded, will result
     /// in the node not being considered active and included
     /// on this list.
     /// </param>
     /// <returns>
     /// A dictionary of gateways and the corresponding response
-    /// time (in miliseconds).
+    /// time (in milliseconds).
     /// </returns>
     public static async Task<IReadOnlyDictionary<ConsensusNodeEndpoint, long>> GetActiveConsensusNodesAsync(this MirrorRestClient client, int maxTimeoutInMiliseconds)
     {
@@ -161,7 +161,7 @@ public static class ConsensusNodeDataExtensions
                             }
                             catch
                             {
-                                // fall thru with -1
+                                // fall through with -1
                             }
                         }
                         return (gateway, response);

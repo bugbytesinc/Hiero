@@ -10,7 +10,7 @@ public enum TokenTradableStatus
     /// </summary>
     NotApplicable = 0,
     /// <summary>
-    /// Token is a suspended/frozen state.
+    /// Token is in a suspended/frozen state.
     /// </summary>
     Suspended = 1,
     /// <summary>

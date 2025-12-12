@@ -23,7 +23,7 @@ public class OrderByFilter : IMirrorQueryFilter
     /// of ascending or not.
     /// </summary>
     /// <param name="ascending">
-    /// true of the desired order is ascending
+    /// true if the desired order is ascending
     /// </param>
     private OrderByFilter(bool ascending)
     {

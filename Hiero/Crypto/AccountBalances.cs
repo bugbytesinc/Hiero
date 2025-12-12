@@ -18,7 +18,7 @@ public sealed record AccountBalances
     /// </summary>
     public ulong Crypto { get; private init; }
     /// <summary>
-    /// [DEPRICATED] Balances of tokens associated with this account.
+    /// [DEPRECATED] Balances of tokens associated with this account.
     /// </summary>
     /// <remarks>
     /// This field is not guaranteed to be populated in the response
@@ -65,7 +65,7 @@ public sealed record AccountBalances
 public static class ContractBalancesExtensions
 {
     /// <summary>
-    /// Retrieves the crypto and token blances from the network for a given contract.
+    /// Retrieves the crypto and token balances from the network for a given contract.
     /// </summary>
     /// <param name="client">
     /// The Consensus Node Client to query.
@@ -112,7 +112,7 @@ public static class ContractBalancesExtensions
         return new AccountBalances(await Engine.QueryAsync(client, new CryptoGetAccountBalanceQuery { ContractID = new ContractID(contract) }, cancellationToken, configure).ConfigureAwait(false)).Crypto;
     }
     /// <summary>
-    /// Retrieves the crypto and token blances from the network for a given address.
+    /// Retrieves the crypto and token balances from the network for a given address.
     /// </summary>
     /// <param name="client">
     /// The Consensus Node Client to query.

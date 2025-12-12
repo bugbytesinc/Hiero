@@ -12,11 +12,11 @@ namespace Hiero;
 /// <remarks>
 /// A <code>Signatory</code> is presently created with a pre-existing
 /// Ed25519 private key or a callback action having the
-/// information necessary to sucessfully sign the transaction
+/// information necessary to successfully sign the transaction
 /// as described by its matching <see cref="Endorsement" />
-/// requrements.  RSA-3072, ECDSA and <code>Contract</code> signatures
-/// are not natively supported thru the <code>Signatory</code> at this 
-/// time but can be achieved thru the callback functionality.
+/// requirements.  RSA-3072, ECDSA and <code>Contract</code> signatures
+/// are not natively supported through the <code>Signatory</code> at this 
+/// time but can be achieved through the callback functionality.
 /// </remarks>
 public sealed class Signatory : ISignatory, IEquatable<Signatory>
 {
@@ -42,7 +42,7 @@ public sealed class Signatory : ISignatory, IEquatable<Signatory>
         Callback = 4,
         /// <summary>
         /// This signatory holds a list of a number of other signatories that can
-        /// in turn sign transactions.  This supports the sceneario where multiple
+        /// in turn sign transactions.  This supports the scenario where multiple
         /// keys must sign a transaction.
         /// </summary>
         List = 5,
@@ -92,7 +92,7 @@ public sealed class Signatory : ISignatory, IEquatable<Signatory>
     /// it will in turn ask all the child signatories in turn to sign the 
     /// given transaction.
     /// </summary>
-    /// <param name="Signatories">
+    /// <param name="signatories">
     /// One or more signatories that when combined can form a
     /// multi key signature for the transaction.
     /// </param>
@@ -128,10 +128,10 @@ public sealed class Signatory : ISignatory, IEquatable<Signatory>
     /// </param>
     /// <remarks>
     /// At this time, the library only supports Ed25519 and 
-    /// ECDSA Secp2516k key types.
+    /// ECDSA Secp256k1 key types.
     /// </remarks>
     /// <exception cref="ArgumentOutOfRangeException">
-    /// If any key type other than Ed25519 or ECDSA Secp2516k is used.
+    /// If any key type other than Ed25519 or ECDSA Secp256k1 is used.
     /// </exception>
     public Signatory(KeyType type, ReadOnlyMemory<byte> privateKey)
     {
@@ -200,7 +200,7 @@ public sealed class Signatory : ISignatory, IEquatable<Signatory>
         _data = pendingParams;
     }
     /// <summary>
-    /// Convenience implict cast for creating a <code>Signatory</code> 
+    /// Convenience implicit cast for creating a <code>Signatory</code> 
     /// directly from an Ed25519 private key.
     /// </summary>
     /// <param name="privateKey">
@@ -336,14 +336,14 @@ public sealed class Signatory : ISignatory, IEquatable<Signatory>
         };
     }
     /// <summary>
-    /// Retrieves a list of Endorsment (Public Keys) held internally
+    /// Retrieves a list of Endorsement (Public Keys) held internally
     /// by this Signatory (and/or its child signatories). At this time
     /// only Endorsements backed by Ed25519 and ECDSA keys are
-    /// exported.  If this signatory representes a Scheduled marker
+    /// exported.  If this signatory represents a Scheduled marker
     /// or Contract, the list returned will be empty.
     /// </summary>
     /// <returns>
-    /// A collection of Ed25519 and/or ECDSA Endorsments, can
+    /// A collection of Ed25519 and/or ECDSA Endorsements, can
     /// be an empty list if none exist.
     /// </returns>
     public IReadOnlyList<Endorsement> GetEndorsements()
@@ -475,7 +475,7 @@ public sealed class Signatory : ISignatory, IEquatable<Signatory>
                 return null;
         }
     }
-    (byte[] R, byte[] S, int RevoeryId) ISignatory.SignEvm(byte[] data)
+    (byte[] R, byte[] S, int RecoveryId) ISignatory.SignEvm(byte[] data)
     {
         if (_type != Type.ECDSASecp256K1)
         {

@@ -67,7 +67,7 @@ public sealed record ContractInfo
     /// </summary>
     public ulong Balance { get; private init; }
     /// <summary>
-    /// [DPRICATED] Balances of tokens associated with this account.
+    /// [DEPRECATED] Balances of tokens associated with this account.
     /// </summary>
     [Obsolete("This field is deprecated by HIP-367")]
     public IReadOnlyList<TokenBalance> Tokens { get; private init; }
@@ -77,7 +77,7 @@ public sealed record ContractInfo
     public bool Deleted { get; private init; }
     /// <summary>
     /// The maximum number of token or NFTs that this contract may
-    /// be implicitly assoicated with (by means of being made a treasury
+    /// be implicitly associated with (by means of being made a treasury
     /// or other related actions).
     /// </summary>
     public int AutoAssociationLimit { get; private init; }

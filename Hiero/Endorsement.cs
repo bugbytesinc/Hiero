@@ -45,7 +45,7 @@ public sealed class Endorsement : IEquatable<Endorsement>
     /// <summary>
     /// The type of endorsement this object is.  It either contains
     /// a representation of a public key or a list of child endorsements
-    /// with a not of how many are requrired to be fullfilled for this
+    /// with a note of how many are required to be fulfilled for this
     /// endorsement to be fulfilled.
     /// </summary>
     public KeyType Type { get; private set; }
@@ -105,19 +105,19 @@ public sealed class Endorsement : IEquatable<Endorsement>
     /// <summary>
     /// A special designation of an endorsement key that can't be created.
     /// It represents an "empty" list of keys, which the network will 
-    /// intrepret as "clear all keys" from this setting (typically the value
-    /// null is intepreted as "make no change").  In this way, it is possible
+    /// interpret as "clear all keys" from this setting (typically the value
+    /// null is interpreted as "make no change").  In this way, it is possible
     /// to change a topic from mutable (which has an Administrator endorsement)
-    /// to imutable (having no Administrator endorsement).
+    /// to immutable (having no Administrator endorsement).
     /// </summary>
     public static Endorsement None { get; } = new Endorsement();
     /// <summary>
     /// Internal Constructor representing the "Empty List" version of an
     /// endorsement.  This is a special construct that is used by the network
     /// to represent "removing" keys from an "Administrator" key list.  For
-    /// example, turning a mutable endorsement into an imutable endorsement.  One
+    /// example, turning a mutable endorsement into an immutable endorsement.  One
     /// should never create an empty key list so this is why the constructor
-    /// for this type is set to private and exposed on the Imutable property.
+    /// for this type is set to private and exposed on the None property.
     /// </summary>
     private Endorsement()
     {
@@ -126,7 +126,7 @@ public sealed class Endorsement : IEquatable<Endorsement>
         RequiredCount = 0;
     }
     /// <summary>
-    /// Convenience constructor converting an public key represented 
+    /// Convenience constructor converting a public key represented 
     /// in bytes into an <code>Endorsement</code>.  Ed25519 and 
     /// ECDSA Secp256K1 keys.  If the bytes entered are not recognizable 
     /// as either of these formats, an exception is thrown.
@@ -137,7 +137,7 @@ public sealed class Endorsement : IEquatable<Endorsement>
     /// </param>
     /// <exception cref="ArgumentOutOfRangeException">
     /// If <code>publicKey</code> is not recognizable as an Ed25519 
-    /// ECDSA Secp256K1 public key or encoded endorsement id.
+    /// ECDSA Secp256K1 public key or encoded contract id.
     /// </exception>
     public Endorsement(ReadOnlyMemory<byte> publicKey)
     {
@@ -154,11 +154,11 @@ public sealed class Endorsement : IEquatable<Endorsement>
         }
     }
     /// <summary>
-    /// Create a M of M requied list of endorsements.  All listed endorsements
+    /// Create a M of M required list of endorsements.  All listed endorsements
     /// must be fulfilled to fulfill this endorsement.
     /// </summary>
     /// <param name="endorsements">
-    /// A list of endorsements that must be fullfilled, may be a mix of individual
+    /// A list of endorsements that must be fulfilled, may be a mix of individual
     /// public keys or additional sub-lists of individual keys.
     /// </param>
     /// <exception cref="ArgumentNullException">if endorsements is null</exception>
@@ -178,7 +178,7 @@ public sealed class Endorsement : IEquatable<Endorsement>
     /// </param>
     /// <exception cref="ArgumentNullException">if endorsements is null</exception>
     /// <exception cref="ArgumentOutOfRangeException">if the required amount is negative
-    /// greater than tne number of endorsements</exception>
+    /// greater than the number of endorsements</exception>
     public Endorsement(uint requiredCount, params Endorsement[] endorsements)
     {
         if (endorsements is null)
@@ -231,7 +231,7 @@ public sealed class Endorsement : IEquatable<Endorsement>
         };
     }
     /// <summary>
-    /// Creates an endorsement representing a endorsement instance.
+    /// Creates an endorsement representing an endorsement instance.
     /// </summary>
     /// <param name="contract">The address of the endorsement instance.</param>
     public Endorsement(EntityId contract)
@@ -240,7 +240,7 @@ public sealed class Endorsement : IEquatable<Endorsement>
         _data = contract;
     }
     /// <summary>
-    /// Implicit constructor converting an public key represented 
+    /// Implicit constructor converting a public key represented 
     /// in bytes into an <code>Endorsement</code>.  Ed25519 and 
     /// ECDSA Secp256K1 keys are supported.  If the bytes entered
     /// are not recognizable as either of these two types of keys
@@ -268,7 +268,7 @@ public sealed class Endorsement : IEquatable<Endorsement>
     }
     /// <summary>
     /// Determines if the given signature was generated by the private key
-    /// that this Endorsement represents.  Only works for key type endorsments.
+    /// that this Endorsement represents.  Only works for key type endorsements.
     /// </summary>
     /// <param name="data">The data bytes that were signed.</param>
     /// <param name="signature">The signature generated for the given data bytes.</param>
@@ -371,7 +371,7 @@ public sealed class Endorsement : IEquatable<Endorsement>
         return false;
     }
     /// <summary>
-    /// Outputs a string representation of the endorsment.
+    /// Outputs a string representation of the endorsement.
     /// </summary>
     /// <returns>
     /// The Hex encoding of the "Hedera" byte format for the endorsement.

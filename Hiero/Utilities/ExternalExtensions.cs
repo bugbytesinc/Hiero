@@ -9,7 +9,7 @@ namespace Hiero;
 public static class ExternalExtensions
 {
     /// <summary>
-    /// Submits the given query represented in the protbuf encoded byte message to
+    /// Submits the given query represented in the protobuf encoded byte message to
     /// the network, returning the <see cref="Proto.Response"/> protobuf encoded as bytes.
     /// </summary>
     /// <remarks>
@@ -92,7 +92,7 @@ public static class ExternalExtensions
     /// </param>
     /// <param name="transactionParams">
     /// One of the supported transaction parameters objects, typically each network function
-    /// has a corresponding set of parameters necessary to define the details of each requst.
+    /// has a corresponding set of parameters necessary to define the details of each request.
     /// </param>
     /// <param name="configure">
     /// Optional callback method providing an opportunity to modify 
@@ -101,7 +101,7 @@ public static class ExternalExtensions
     /// </param>
     /// <returns>
     /// Binary serialized encoding of a SignedTransaction Protobuf primitive
-    /// represenging the desired hedera transaction.
+    /// representing the desired hedera transaction.
     /// </returns>
     public static async Task<ReadOnlyMemory<byte>> PrepareExternalTransactionAsync<TReceipt>(this ConsensusClient client, TransactionParams<TReceipt> transactionParams, Action<IConsensusContext>? configure = null) where TReceipt : TransactionReceipt
     {

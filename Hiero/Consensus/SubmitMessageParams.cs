@@ -35,14 +35,14 @@ public sealed class SubmitMessageParams : TransactionParams<SubmitMessageReceipt
     /// the transaction that created the first segment
     /// of the message.  This acts as a correlation
     /// identifier to coalesce the segments of the
-    /// message int one.
+    /// message into one.
     /// </summary>
     /// <remarks>
     /// This must be left to be null when sending
     /// the first segment of a message.  The 
     /// value of the transaction ID returned from
     /// the receipt or record will contain the value
-    /// assocated with this parameter for the first
+    /// associated with this parameter for the first
     /// segment.  This value must be included in 
     /// subsequent segments for this message.
     /// </remarks>
@@ -198,12 +198,12 @@ public static class SubmitMessageExtensions
             {
                 throw new ArgumentOutOfRangeException(nameof(SubmitMessageParams.ParentTransactionId), "The Parent Transaction cannot be specified (must be null) when the segment index is one.");
             }
-            // Smelly Workaround due to necesity to embed the
+            // Smelly Workaround due to necessity to embed the
             // same transaction ID in the middle of the message
             // as the envelope for the case of the first segment
             // of a segmented message.
             //
-            // First We need to apply the confgure command, to 
+            // First We need to apply the configure command, to 
             // create the correct context
             ConsensusContextStack configuredContext = default!;
             await using var configuredClient = client.Clone(ctx =>

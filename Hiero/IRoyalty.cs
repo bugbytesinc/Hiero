@@ -6,7 +6,7 @@
 public interface IRoyalty
 {
     /// <summary>
-    /// The account receiving the commision fee.
+    /// The account receiving the commission fee.
     /// </summary>
     public EntityId Receiver { get; }
     /// <summary>

@@ -5,7 +5,7 @@ namespace Hiero.Converters;
 
 /// <summary>
 /// Consensus Timestamp JSON Converter (from long value) that is special
-/// for the EXCHANGE RATE data, becaue it is a different format from the other 
+/// for the EXCHANGE RATE data, because it is a different format from the other 
 /// timestamp formats.
 /// </summary>
 public sealed class ConsensusTimeStampForExchangeRateConverter : JsonConverter<ConsensusTimeStamp>

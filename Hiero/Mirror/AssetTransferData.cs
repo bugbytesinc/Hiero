@@ -30,7 +30,7 @@ public class AssetTransferData
     [JsonPropertyName("receiver_account_id")]
     public EntityId Receiver { get; set; } = default!;
     /// <summary>
-    /// Flag indiciating this transfer was performed
+    /// Flag indicating this transfer was performed
     /// as an allowed transfer by a third party account.
     /// </summary>
     [JsonPropertyName("is_approval")]

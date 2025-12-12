@@ -6,7 +6,7 @@ using System.Text.Json.Serialization;
 namespace Hiero.Converters;
 
 /// <summary>
-/// Endorsment JSON Converter
+/// Endorsement JSON Converter
 /// </summary>
 public sealed class EndorsementConverter : JsonConverter<Endorsement>
 {

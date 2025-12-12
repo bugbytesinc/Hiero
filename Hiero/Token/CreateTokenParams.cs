@@ -34,7 +34,7 @@ public sealed class CreateTokenParams : TransactionParams<CreateTokenReceipt>, I
     /// <summary>
     /// The initial number of tokens to placed into the token treasury
     /// account upon creation of the token (specified in the smallest 
-    /// unit). The Treasury receivie the initial circulation.
+    /// unit). The Treasury receive the initial circulation.
     /// </summary>
     public ulong Circulation { get; set; }
     /// <summary>
@@ -43,8 +43,8 @@ public sealed class CreateTokenParams : TransactionParams<CreateTokenReceipt>, I
     public uint Decimals { get; set; }
     /// <summary>
     /// The maximum number of tokens allowed to be in circulation at any
-    /// given time. If set to a value of zero or less, the toal circulation
-    /// will be allowed to grow to the maxumin amount allowed by the network.
+    /// given time. If set to a value of zero or less, the total circulation
+    /// will be allowed to grow to the maximum amount allowed by the network.
     /// </summary>
     public long Ceiling { get; set; }
     /// <summary>
@@ -66,7 +66,7 @@ public sealed class CreateTokenParams : TransactionParams<CreateTokenReceipt>, I
     /// </summary>
     public Endorsement? SuspendEndorsement { get; set; }
     /// <summary>
-    /// Administrator key for signing transactions that can pasue or continue
+    /// Administrator key for signing transactions that can pause or continue
     /// the exchange of all tokens across all accounts on the network.
     /// </summary>
     public Endorsement? PauseEndorsement { get; set; }
@@ -93,7 +93,7 @@ public sealed class CreateTokenParams : TransactionParams<CreateTokenReceipt>, I
     /// <summary>
     /// The list of royalties applied to transactions
     /// transferring this token.  If a royalty endorsement is not
-    /// supplied upon creation, the royalties are imutable after
+    /// supplied upon creation, the royalties are immutable after
     /// creation.
     /// </summary>
     public IReadOnlyList<IRoyalty>? Royalties { get; set; }
@@ -109,16 +109,16 @@ public sealed class CreateTokenParams : TransactionParams<CreateTokenReceipt>, I
     /// </summary>
     public ConsensusTimeStamp Expiration { get; set; }
     /// <summary>
-    /// Interval of the topic and auto-renewal period. If
+    /// Interval of the token and auto-renewal period. If
     /// the associated renewal account does not have sufficient funds to 
     /// renew at the expiration time, it will be renewed for a period 
     /// of time the remaining funds can support.  If no funds remain, the
-    /// topic instance will be deleted.
+    /// token instance will be deleted.
     /// </summary>
     public TimeSpan? RenewPeriod { get; set; }
     /// <summary>
     /// Optional address of the account supporting the auto renewal of 
-    /// the token at expiration time.  The topic lifetime will be
+    /// the token at expiration time.  The token lifetime will be
     /// extended by the RenewPeriod at expiration time if this account
     /// contains sufficient funds.  The private key associated with
     /// this account must sign the transaction if RenewAccount is
@@ -145,8 +145,8 @@ public sealed class CreateTokenParams : TransactionParams<CreateTokenReceipt>, I
     /// </summary>
     public string Memo { get; set; } = default!;
     /// <summary>
-    /// Optional Cancellation token that interrupt the token
-    /// submission process.
+    /// Optional cancellation token to interrupt the token
+    /// creation submission process.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
 
@@ -170,7 +170,7 @@ public sealed class CreateTokenParams : TransactionParams<CreateTokenReceipt>, I
         }
         if (Symbol.Length > 100)
         {
-            throw new ArgumentOutOfRangeException(nameof(Symbol), "The token symbol cannot exceed 32 characters in length.");
+            throw new ArgumentOutOfRangeException(nameof(Symbol), "The token symbol cannot exceed 100 characters in length.");
         }
         if (Circulation < 1)
         {
@@ -282,7 +282,7 @@ public static class CreateTokenExtensions
     /// Creates a new token with the given create parameters.
     /// </summary>
     /// <param name="client">
-    /// The Consensus Node Client orchestrating the continuation.
+    /// The Consensus Node Client orchestrating the creation.
     /// </param>
     /// <param name="createParameters">
     /// Details regarding the token to instantiate.

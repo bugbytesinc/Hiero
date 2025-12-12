@@ -115,7 +115,7 @@ public class TokenData
     [JsonPropertyName("kyc_key")]
     public Endorsement? GrantKycEndorsement { get; set; }
     /// <summary>
-    /// Administrator key for signing transactions that can pasue or continue
+    /// Administrator key for signing transactions that can pause or continue
     /// the exchange of all assets across all accounts on the network.
     /// </summary>
     [JsonPropertyName("pause_key")]
@@ -130,7 +130,7 @@ public class TokenData
     /// The current default suspended/frozen status of the token.
     /// </summary>
     [JsonPropertyName("freeze_default")]
-    public bool SuspenedByDefault { get; set; }
+    public bool SuspendedByDefault { get; set; }
     /// <summary>
     /// The current paused/frozen status of the token for all accounts.
     /// </summary>

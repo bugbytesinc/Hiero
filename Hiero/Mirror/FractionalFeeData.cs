@@ -4,12 +4,12 @@ using System.Text.Json.Serialization;
 namespace Hiero.Mirror;
 
 /// <summary>
-/// Represents a fracional royalty fee.
+/// Represents a fractional royalty fee.
 /// </summary>
 public class FractionalFeeData
 {
     /// <summary>
-    /// Are collecor accounts exempt from paying fees.
+    /// Are collector accounts exempt from paying fees.
     /// </summary>
     [JsonPropertyName("all_collectors_are_exempt")]
     [JsonConverter(typeof(BooleanMirrorConverter))]

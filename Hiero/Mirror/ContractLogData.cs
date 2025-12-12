@@ -12,7 +12,7 @@ public class ContractLogData
     /// this is not necessarily the contract that externally called.
     /// </summary>
     [JsonPropertyName("address")]
-    public EvmAddress ContractAddresss { get; set; } = default!;
+    public EvmAddress ContractAddress { get; set; } = default!;
     /// <summary>
     /// Bloom filter for record
     /// </summary>

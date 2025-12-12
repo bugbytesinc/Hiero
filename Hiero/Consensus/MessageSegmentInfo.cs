@@ -10,10 +10,10 @@ namespace Hiero;
 public sealed record MessageSegmentInfo
 {
     /// <summary>
-    /// The transaction the created the first segment
+    /// The transaction that created the first segment
     /// of the message.  This acts as a correlation
     /// identifier to coalesce the segments of the
-    /// message int one.
+    /// message into one.
     /// </summary>
     public TransactionId ParentTransactionId { get; internal init; }
     /// <summary>
@@ -26,7 +26,7 @@ public sealed record MessageSegmentInfo
     /// </summary>
     public int TotalSegmentCount { get; internal init; }
     /// <summary>
-    /// Internal Constructor from Raw Datat
+    /// Internal Constructor from Raw Data
     /// </summary>
     internal MessageSegmentInfo(ConsensusMessageChunkInfo info)
     {

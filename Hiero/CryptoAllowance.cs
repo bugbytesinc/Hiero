@@ -4,7 +4,7 @@ namespace Hiero;
 
 /// <summary>
 /// Represents an allowance allocation permitting a
-/// spender account privleges of spending the specified
+/// spender account privileges of spending the specified
 /// amount of hBars from the owning account.
 /// </summary>
 public sealed record CryptoAllowance
@@ -26,7 +26,7 @@ public sealed record CryptoAllowance
     public long Amount { get; private init; }
     /// <summary>
     /// Represents an allowance allocation permitting a
-    /// delegate account privleges of spending the specified
+    /// delegate account privileges of spending the specified
     /// amount of hBars from the owning account.
     /// </summary>
     /// <param name="owner">
@@ -51,11 +51,11 @@ public sealed record CryptoAllowance
     {
         if (owner.IsNullOrNone())
         {
-            throw new ArgumentException(nameof(owner), "The allowance owner account cannot be null or empty.");
+            throw new ArgumentException("The allowance owner account cannot be null or empty.", nameof(owner));
         }
         if (spender.IsNullOrNone())
         {
-            throw new ArgumentException(nameof(spender), "The allowance spender account cannot be null or empty.");
+            throw new ArgumentException("The allowance spender account cannot be null or empty.", nameof(spender));
         }
         else if (amount < 0)
         {

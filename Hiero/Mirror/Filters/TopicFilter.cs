@@ -19,7 +19,7 @@ public class TopicFilter : IMirrorQueryFilter
     /// </summary>
     private readonly BigInteger _topic;
     /// <summary>
-    /// Constructor requres the token to filter the request by.
+    /// Constructor requires the token to filter the request by.
     /// </summary>
     /// <param name="index">
     /// The topic index this query applies to.

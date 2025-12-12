@@ -63,7 +63,7 @@ public static class ContractStateDataExtensions
     /// Additional filters to apply.
     /// </param>
     /// <returns>
-    /// The contract data (slot information) fullfilling the search criteria, or null if not found.
+    /// The contract data (slot information) fulfilling the search criteria, or null if not found.
     /// </returns>
     public static async Task<ContractStateData?> GetContractState(this MirrorRestClient client, EntityId contract, BigInteger position, IMirrorQueryFilter[] filters)
     {

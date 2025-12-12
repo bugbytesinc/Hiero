@@ -12,7 +12,7 @@ namespace Hiero;
 /// appropriately signed as described by the original
 /// <see cref="CreateContractParams.Administrator"/> endorsement in order
 /// to make changes.  If there is no administrator endorsement specified,
-/// the contract is imutable and cannot be changed.
+/// the contract is immutable and cannot be changed.
 /// </summary>
 public sealed class UpdateContractParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
@@ -27,13 +27,13 @@ public sealed class UpdateContractParams : TransactionParams<TransactionReceipt>
     /// </summary>
     /// <remarks>
     /// NOTE: Presently this functionality is not correctly implemented
-    /// by the network.  Therefore this property is makred internal so
+    /// by the network.  Therefore this property is marked internal so
     /// it can not be mistakenly used.  When properly implemented by
     /// the network, this property will be made public again.
     /// </remarks>
     internal ConsensusTimeStamp? Expiration { get; set; }
     /// <summary>
-    /// Replace this Contract's current administrative key signing rquirements 
+    /// Replace this Contract's current administrative key signing requirements 
     /// with new signing requirements.</summary>
     /// <remarks>
     /// For this request to be accepted by the network, both the current private
@@ -69,7 +69,7 @@ public sealed class UpdateContractParams : TransactionParams<TransactionReceipt>
     public string? Memo { get; set; }
     /// <summary>
     /// If set, updates the maximum number of token or NFTs that this contract may
-    /// be implicitly assoicated with (by means of being made a treasury
+    /// be implicitly associated with (by means of being made a treasury
     /// or other related actions).
     /// </summary>
     public int? AutoAssociationLimit { get; set; }

@@ -3,7 +3,7 @@
 namespace Hiero;
 /// <summary>
 /// Extends the client functionality to include the 
-/// orcestration of sending a large segmented
+/// orchestration of sending a large segmented
 /// consensus message.
 /// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
@@ -16,7 +16,7 @@ public static class SubmitLargeMessageExtension
     /// in sequence.  Manages the segment metadata
     /// internally, returning an array of receipts
     /// representing the transactions required to
-    /// upload the entier message.
+    /// upload the entire message.
     /// </summary>
     /// <param name="client">
     /// A Hashgraph ConsensusClient instance.

@@ -82,7 +82,7 @@ internal static class Engine
     /// The Calling Request Context, contains endpoint and other configuration parameters.
     /// </param>
     /// <param name="signedTransactionBytes">
-    /// A serizlized Protobuf Signed Transaction ready for submission to the network.
+    /// A serialized Protobuf Signed Transaction ready for submission to the network.
     /// </param>
     /// <param name="networkParams">
     /// Additional metadata surrounding the request, includes a method knowing how to
@@ -132,7 +132,7 @@ internal static class Engine
         return (T)receipt;
     }
     /// <summary>
-    /// Submits a Query to a conesnsus endpoint and waits for the results.
+    /// Submits a Query to a consensus endpoint and waits for the results.
     /// </summary>
     /// <param name="client">
     /// The consensus client holding the configuration for endpoint, and other parameters.
@@ -155,7 +155,7 @@ internal static class Engine
         return await QueryAsync(context, networkQuery, cancellationToken).ConfigureAwait(false);
     }
     /// <summary>
-    /// Submits a Query to a conesnsus endpoint and waits for the results.
+    /// Submits a Query to a consensus endpoint and waits for the results.
     /// </summary>
     /// <param name="context">
     /// The Calling Request Context, contains endpoint and other configuration parameters.
@@ -206,7 +206,7 @@ internal static class Engine
                     var transactionId = GetOrCreateTransactionID(context);
                     networkQuery.SetHeader(await CreateSignedQueryHeader(context, 0, transactionId, cancellationToken).ConfigureAwait(false));
                     answer = await SubmitMessageAsync(context, envelope, networkQuery.InstantiateNetworkRequestMethod, cancellationToken).ConfigureAwait(false);
-                    // If we get a valid repsonse back, it turns out that we needed to identify
+                    // If we get a valid response back, it turns out that we needed to identify
                     // ourselves with the signature, the rest of the process can proceed as normal.
                     // If it was a failure then we fall back to the original NOT_SUPPORTED error
                     // we received on the first attempt.
@@ -226,7 +226,7 @@ internal static class Engine
         }
     }
     /// <summary>
-    /// Coaleses zero or more Signatories into a single ISignatory (which 
+    /// Coalesces zero or more Signatories into a single ISignatory (which 
     /// may include child signatories).
     /// </summary>
     /// <param name="signatories">
@@ -256,7 +256,7 @@ internal static class Engine
     /// <summary>
     /// Returns a transaction ID for the given calling context, it is either
     /// a configured ID from the context, or a newly generated transaction
-    /// ID guranteed to be uniquie within the application service process.
+    /// ID guaranteed to be unique within the application service process.
     /// </summary>
     /// <param name="context">
     /// The Calling Request Context
@@ -265,7 +265,7 @@ internal static class Engine
     /// A newly generated transaction ID for the configured payer and time
     /// to live properties specified within the context, or a specific
     /// transaction ID that was specified in the context overriding the
-    /// automatic genration of the ID.
+    /// automatic generation of the ID.
     /// </returns>
     /// <exception cref="InvalidOperationException"></exception>
     /// <exception cref="ArgumentException">
@@ -322,7 +322,7 @@ internal static class Engine
     /// </param>
     /// <param name="getResponseCode">
     /// A method knowing how to extract the gossip node's embedded response
-    /// code from the specific resonse type.
+    /// code from the specific response type.
     /// </param>
     /// <param name="cancellationToken">
     /// Optional cancellation token that, when triggered, causes a cancellation exception
@@ -333,8 +333,8 @@ internal static class Engine
     /// </returns>
     /// <exception cref="PrecheckException">
     /// Certain conditions indicate immediate failure when submitting a message, the details
-    /// are populated thru this exception object when thrown.  When thrown, the algorithim
-    /// generally beleives that the transaction or query has NOT been sucessfully submitted
+    /// are populated through this exception object when thrown.  When thrown, the algorithm
+    /// generally believes that the transaction or query has NOT been successfully submitted
     /// or accepted by the network, and should not have charged the payer account.
     /// </exception>
     internal static Task<TResponse> SubmitMessageAsync<TRequest, TResponse>(ConsensusContextStack context, TRequest request, Func<GrpcChannel, Func<TRequest, Metadata?, DateTime?, CancellationToken, AsyncUnaryCall<TResponse>>> instantiateRequestMethod, CancellationToken cancellationToken) where TRequest : IMessage where TResponse : IPrecheckResult, IMessage
@@ -391,8 +391,8 @@ internal static class Engine
     /// </returns>
     /// <exception cref="PrecheckException">
     /// Certain conditions indicate immediate failure when submitting a message, the details
-    /// are populated thru this exception object when thrown.  When thrown, the algorithim
-    /// generally beleives that the transaction or query has NOT been sucessfully submitted
+    /// are populated through this exception object when thrown.  When thrown, the algorithm
+    /// generally believes that the transaction or query has NOT been successfully submitted
     /// or accepted by the network, and should not have charged the payer account.
     /// </exception>
     internal static async Task<TResponse> SubmitMessageAsync<TRequest, TResponse>(ConsensusContextStack context, TRequest request, Func<GrpcChannel, Func<TRequest, Metadata?, DateTime?, CancellationToken, AsyncUnaryCall<TResponse>>> instantiateRequestMethod, Func<TResponse, bool> shouldRetryRequest, CancellationToken cancellationToken) where TRequest : IMessage where TResponse : IPrecheckResult, IMessage
@@ -435,7 +435,7 @@ internal static class Engine
 
                     if (request is Transaction transaction)
                     {
-                        // If this was a networkTransaction, it may have actully successfully been processed, in which case 
+                        // If this was a networkTransaction, it may have actually successfully been processed, in which case 
                         // the receipt will already be in the system.  Check to see if it is there.
                         await Task.Delay(retryDelay * retryCount, cancellationToken).ConfigureAwait(false);
                         var receiptResponse = await CheckForReceipt(transaction).ConfigureAwait(false);
@@ -551,7 +551,7 @@ internal static class Engine
         }
     }
     /// <summary>
-    /// Creates a Protobuf QueryAsync Header structure containing a signed transaction
+    /// Creates a Protobuf Query Header structure containing a signed transaction
     /// payment to pay for the corresponding query.
     /// </summary>
     /// <param name="context">
@@ -565,7 +565,7 @@ internal static class Engine
     /// </param>
     /// <param name="cancellationToken"></param>
     /// <returns>
-    /// A Protobuf QueryAsync Header Structure to be attached to the corresponding QueryAsync
+    /// A Protobuf Query Header Structure to be attached to the corresponding Query
     /// </returns>
     /// <exception cref="InvalidOperationException">
     /// If the configuration is missing payment information or the target gossip node endpoint.
@@ -580,7 +580,7 @@ internal static class Engine
         var signatory = context.Signatory as ISignatory;
         if (signatory is null)
         {
-            throw new InvalidOperationException("The Payer's signatory (signing key/callback) has not been configured. This is required for retreiving records and other general network Queries. Please check that 'Signatory' is set in the Client context.");
+            throw new InvalidOperationException("The Payer's signatory (signing key/callback) has not been configured. This is required for retrieving records and other general network Queries. Please check that 'Signatory' is set in the Client context.");
         }
         var gateway = context.Endpoint;
         if (gateway is null)
@@ -645,8 +645,8 @@ internal static class Engine
     /// (rare) reason, the network never came to consensus regarding the transaction.
     /// </exception>
     /// <exception cref="TransactionException">
-    /// The conesnsus node queried for this transaction is unaware of the 
-    /// transactions existence.
+    /// The consensus node queried for this transaction is unaware of the 
+    /// transaction's existence.
     /// </exception>
     internal static async Task<Proto.TransactionReceipt> GetReceiptAsync(ConsensusContextStack context, TransactionID transactionId, CancellationToken cancellationToken)
     {
@@ -662,7 +662,7 @@ internal static class Engine
             case ResponseCodeEnum.Ok:
                 break;
             case ResponseCodeEnum.Busy:
-                throw new ConsensusException("Network failed to respond to request for a transaction receipt, it is too busy. It is possible the network may still reach concensus for this transaction.", transactionId.AsTxId(), (ResponseCode)responseCode);
+                throw new ConsensusException("Network failed to respond to request for a transaction receipt, it is too busy. It is possible the network may still reach consensus for this transaction.", transactionId.AsTxId(), (ResponseCode)responseCode);
             case ResponseCodeEnum.Unknown:
             case ResponseCodeEnum.ReceiptNotFound:
                 throw new TransactionException($"Network failed to return a transaction receipt, Status Code Returned: {responseCode}", new TransactionReceipt(transactionId, new() { Status = responseCode }));
@@ -671,9 +671,9 @@ internal static class Engine
         switch (status)
         {
             case ResponseCodeEnum.Unknown:
-                throw new ConsensusException("Network failed to reach concensus within the configured retry time window, It is possible the network may still reach concensus for this transaction.", transactionId.AsTxId(), (ResponseCode)status);
+                throw new ConsensusException("Network failed to reach consensus within the configured retry time window, It is possible the network may still reach consensus for this transaction.", transactionId.AsTxId(), (ResponseCode)status);
             case ResponseCodeEnum.TransactionExpired:
-                throw new ConsensusException("Network failed to reach concensus before transaction request expired.", transactionId.AsTxId(), (ResponseCode)status);
+                throw new ConsensusException("Network failed to reach consensus before transaction request expired.", transactionId.AsTxId(), (ResponseCode)status);
             case ResponseCodeEnum.ReceiptNotFound:
                 throw new ConsensusException("Network failed to find a receipt for given transaction.", transactionId.AsTxId(), (ResponseCode)status);
             default:

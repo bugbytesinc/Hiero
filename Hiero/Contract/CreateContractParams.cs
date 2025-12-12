@@ -14,7 +14,7 @@ public sealed class CreateContractParams : TransactionParams<CreateContractRecei
     /// The address of the file containing the bytecode for the contract. 
     /// The bytecode in the file must be encoded as a hexadecimal string 
     /// representation of the bytecode in the file (not directly as the 
-    /// bytes of the bytescode).
+    /// bytes of the bytecode).
     /// 
     /// Typically this field is used for contracts that are so large
     /// that they can not be represented in the transaction size
@@ -71,7 +71,7 @@ public sealed class CreateContractParams : TransactionParams<CreateContractRecei
     public object[] ConstructorArgs { get; set; } = default!;
     /// <summary>
     /// The maximum number of token or NFTs that this contract may
-    /// be implicitly assoicated with (by means of being made a treasury
+    /// be implicitly associated with (by means of being made a treasury
     /// or other related actions).
     /// </summary>
     /// <remarks>
@@ -128,7 +128,7 @@ public sealed class CreateContractParams : TransactionParams<CreateContractRecei
         var result = new ContractCreateTransactionBody();
         if (AutoAssociationLimit < -1)
         {
-            throw new ArgumentOutOfRangeException(nameof(AutoAssociationLimit), "The maximum number of auto-associaitons must greater than or equal to -1");
+            throw new ArgumentOutOfRangeException(nameof(AutoAssociationLimit), "The maximum number of auto-associations must greater than or equal to -1");
         }
         if (File.IsNullOrNone())
         {

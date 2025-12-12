@@ -9,7 +9,7 @@ public class LimitFilter : IMirrorQueryFilter
     /// </summary>
     private readonly int _limit;
     /// <summary>
-    /// Constructor requres the page size limit.
+    /// Constructor requires the page size limit.
     /// </summary>
     /// <param name="limit">
     /// The number of records to return in a page.

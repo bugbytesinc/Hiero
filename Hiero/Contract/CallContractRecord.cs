@@ -1,6 +1,6 @@
 ﻿namespace Hiero;
 /// <summary>
-/// Record produced from creating a calling a contract.
+/// Record produced from calling a contract.
 /// </summary>
 public sealed record CallContractRecord : TransactionRecord
 {

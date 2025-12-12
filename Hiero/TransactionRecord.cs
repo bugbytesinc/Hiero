@@ -19,7 +19,7 @@ public record TransactionRecord : TransactionReceipt
     /// <summary>
     /// The consensus timestamp.
     /// </summary>
-    public ConsensusTimeStamp? Concensus { get; internal init; }
+    public ConsensusTimeStamp? Consensus { get; internal init; }
     /// <summary>
     /// The memo that was submitted with the transaction request.
     /// </summary>
@@ -48,7 +48,7 @@ public record TransactionRecord : TransactionReceipt
     /// <summary>
     /// A list of token transfers applied by the network as royalties
     /// for executing the original transaction.  Typically in the form
-    /// of royalties for transfering custom tokens and assets as defined
+    /// of royalties for transferring custom tokens and assets as defined
     /// by the respective token definition's fees.
     /// </summary>
     public IReadOnlyList<RoyaltyTransfer> Royalties { get; internal init; }
@@ -63,7 +63,7 @@ public record TransactionRecord : TransactionReceipt
     /// of the parent transaction to this transaction, otherwise null.
     /// transaction 
     /// </summary>
-    public ConsensusTimeStamp? ParentTransactionConcensus { get; internal init; }
+    public ConsensusTimeStamp? ParentTransactionConsensus { get; internal init; }
     /// <summary>
     /// A List of account staking rewards paid  as a result of this transaction.
     /// </summary>
@@ -75,7 +75,7 @@ public record TransactionRecord : TransactionReceipt
     {
         var (tokenTransfers, assetTransfers) = record.TokenTransferLists.AsTokenAndAssetTransferLists();
         Hash = record.TransactionHash.Memory;
-        Concensus = record.ConsensusTimestamp?.ToConsensusTimeStamp();
+        Consensus = record.ConsensusTimestamp?.ToConsensusTimeStamp();
         Memo = record.Memo;
         Fee = record.TransactionFee;
         Transfers = record.TransferList?.ToTransfers() ?? new ReadOnlyDictionary<EntityId, long>(new Dictionary<EntityId, long>());
@@ -83,7 +83,7 @@ public record TransactionRecord : TransactionReceipt
         NftTransfers = assetTransfers;
         Royalties = record.AssessedCustomFees.AsRoyaltyTransferList();
         Associations = record.AutomaticTokenAssociations.AsAssociationList();
-        ParentTransactionConcensus = record.ParentConsensusTimestamp?.ToConsensusTimeStamp();
+        ParentTransactionConsensus = record.ParentConsensusTimestamp?.ToConsensusTimeStamp();
         StakingRewards = record.PaidStakingRewards.AsStakingRewards();
     }
 }
@@ -112,7 +112,7 @@ public static class TransactionRecordExtensions
     /// Generally there is only one records per transaction, but in certain cases
     /// where there is a transaction ID collision (deliberate or accidental) there
     /// may be more, the <see cref="GetAllTransactionRecordsAsync(TransactionId, Action{IConsensusContext}?)"/>
-    /// method may be used to retreive all records.
+    /// method may be used to retrieve all records.
     /// </remarks>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
@@ -125,8 +125,6 @@ public static class TransactionRecordExtensions
         // For the public version of this method, we do not know
         // if the transaction in question has come to consensus so
         // we need to get the receipt first (and wait if necessary).
-        // The Receipt status returned does notmatter in this case.  
-        // We may be retrieving a failed records (the status would not equal OK).
         await WaitForConsensusReceipt(context, transactionId, cancellationToken).ConfigureAwait(false);
         var record = (await Engine.QueryAsync(context, new TransactionGetRecordQuery { TransactionID = transactionId }, cancellationToken).ConfigureAwait(false)).TransactionGetRecord.TransactionRecord;
         return FromProtobuf(record);
@@ -159,8 +157,6 @@ public static class TransactionRecordExtensions
         // For the public version of this method, we do not know
         // if the transaction in question has come to consensus so
         // we need to get the receipt first (and wait if necessary).
-        // The Receipt status returned does notmatter in this case.  
-        // We may be retrieving a failed records (the status would not equal OK).
         await WaitForConsensusReceipt(context, transactionId, cancellationToken).ConfigureAwait(false);
         var response = await Engine.QueryAsync(context, new TransactionGetRecordQuery
         {
@@ -175,7 +171,7 @@ public static class TransactionRecordExtensions
     /// Internal Helper function used to wait for consensus regardless of the reported
     /// transaction outcome. We do not know if the transaction in question has come 
     /// to consensus so we need to get the receipt first (and wait if necessary).
-    /// The Receipt status returned does notmatter in this case.  
+    /// The Receipt status returned does not matter in this case.  
     /// We may be retrieving a failed records (the status would not equal OK).
     private static async Task WaitForConsensusReceipt(ConsensusContextStack context, TransactionID transactionId, CancellationToken cancellationToken)
     {
@@ -326,11 +322,11 @@ public static class TransactionRecordExtensions
         }
         else if (record?.EntropyCase == Proto.TransactionRecord.EntropyOneofCase.PrngNumber)
         {
-            return new RangedPsudoRandomNumberRecord(record);
+            return new RangedPseudoRandomNumberRecord(record);
         }
         else if (record?.EntropyCase == Proto.TransactionRecord.EntropyOneofCase.PrngBytes)
         {
-            return new BytesPsudoRandomNumberRecord(record);
+            return new BytesPseudoRandomNumberRecord(record);
         }
         else
         {

@@ -27,7 +27,7 @@ public enum RoyaltyType
     /// <summary>
     /// A Royalty computed from the amount of Fungible token
     /// exchanged, can be in the form as a deduction of the
-    /// token echanged, or an exise amount taken from the 
+    /// token exchanged, or an excise amount taken from the 
     /// sender of the fungible token.
     /// </summary>
     /// <remarks>

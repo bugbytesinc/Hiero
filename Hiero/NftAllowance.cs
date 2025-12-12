@@ -3,7 +3,7 @@
 namespace Hiero;
 /// <summary>
 /// Represents an allowance allocation permitting a
-/// spender account privleges of spending the specified
+/// spender account privileges of spending the specified
 /// NFT(s) from the owning account.
 /// </summary>
 public sealed record NftAllowance
@@ -24,7 +24,7 @@ public sealed record NftAllowance
     /// </summary>
     public EntityId Spender { get; private init; }
     /// <summary>
-    /// An acount, approved by the owner, that 
+    /// An account, approved by the owner, that 
     /// is given access to all of the Owner's 
     /// NFTs of this class, and can therefore
     /// in turn allocate a specific NFT instance
@@ -36,7 +36,7 @@ public sealed record NftAllowance
     /// The explicit list of serial numbers that
     /// can be spent by the delegate.  If the value
     /// is <code>null</code> then all assets of the
-    /// token class may be spend.  If the list is 
+    /// token class may be spent.  If the list is 
     /// empty, it means all of the identified assets
     /// with specific serial numbers have already been
     /// removed from the account.
@@ -44,7 +44,7 @@ public sealed record NftAllowance
     public IReadOnlyList<long>? SerialNumbers { get; private init; }
     /// <summary>
     /// Represents an allowance allocation permitting a
-    /// spender account privleges of spending the specified
+    /// spender account privileges of spending the specified
     /// amount assets from the owning account.
     /// </summary>
     /// <param name="token">
@@ -63,7 +63,7 @@ public sealed record NftAllowance
     /// The explicit list of serial numbers that
     /// can be spent by the spender.  If the value
     /// is <code>null</code> then all NFTs of the
-    /// token class may be spend.
+    /// token class may be spent.
     /// </param>
     /// <exception cref="ArgumentException">
     /// If any of the addresses are null or empty.
@@ -72,19 +72,19 @@ public sealed record NftAllowance
     {
         if (token.IsNullOrNone())
         {
-            throw new ArgumentException(nameof(token), "The allowance token cannot be null or empty.");
+            throw new ArgumentException("The allowance token cannot be null or empty.", nameof(token));
         }
         if (owner.IsNullOrNone())
         {
-            throw new ArgumentException(nameof(owner), "The allowance owner account cannot be null or empty.");
+            throw new ArgumentException("The allowance owner account cannot be null or empty.", nameof(owner));
         }
         if (spender.IsNullOrNone())
         {
-            throw new ArgumentException(nameof(spender), "The allowance spender account cannot be null or empty.");
+            throw new ArgumentException("The allowance spender account cannot be null or empty.", nameof(spender));
         }
         if (serialNumbers == null && !ownersDelegate.IsNullOrNone())
         {
-            throw new ArgumentException(nameof(spender), "When specifying a delegating account controlling NFTs for an owner, the serial numbers must be specified.");
+            throw new ArgumentException("When specifying a delegating account controlling NFTs for an owner, the serial numbers must be specified.", nameof(ownersDelegate));
         }
         Token = token;
         Owner = owner;
@@ -94,7 +94,7 @@ public sealed record NftAllowance
     }
     /// <summary>
     /// Represents an allowance allocation permitting a
-    /// spender account privleges of spending the specified
+    /// spender account privileges of spending the specified
     /// NFT instance from the owning account.
     /// </summary>
     /// <remarks>
@@ -118,15 +118,15 @@ public sealed record NftAllowance
     {
         if (asset is null || Nft.None.Equals(asset))
         {
-            throw new ArgumentException(nameof(asset), "The allowance token cannot be null or empty.");
+            throw new ArgumentException("The allowance token cannot be null or empty.", nameof(asset));
         }
         if (owner.IsNullOrNone())
         {
-            throw new ArgumentException(nameof(owner), "The allowance owner account cannot be null or empty.");
+            throw new ArgumentException("The allowance owner account cannot be null or empty.", nameof(owner));
         }
         if (spender.IsNullOrNone())
         {
-            throw new ArgumentException(nameof(spender), "The allowance spender account cannot be null or empty.");
+            throw new ArgumentException("The allowance spender account cannot be null or empty.", nameof(spender));
         }
         Token = asset;
         Owner = owner;

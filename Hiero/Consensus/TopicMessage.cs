@@ -1,22 +1,22 @@
 ﻿#pragma warning disable CS8618
 namespace Hiero;
 /// <summary>
-/// Represents a Topics Message retrieved from a mirror node.
+/// Represents a Topic Message retrieved from a mirror node.
 /// </summary>
 public sealed record TopicMessage
 {
     /// <summary>
-    /// The Message's Topics.
+    /// The Message's Topic.
     /// </summary>
     public EntityId Topic { get; internal init; }
     /// <summary>
     /// The consensus timestamp.
     /// </summary>
-    public ConsensusTimeStamp Concensus { get; internal init; }
+    public ConsensusTimeStamp Consensus { get; internal init; }
     /// <summary>
     /// The content of the message.
     /// </summary>
-    public ReadOnlyMemory<byte> Messsage { get; internal init; }
+    public ReadOnlyMemory<byte> Message { get; internal init; }
     /// <summary>
     /// A SHA-384 Running Hash of the following: Previous RunningHash,
     /// TopicId, ConsensusTimestamp, SequenceNumber and this Message

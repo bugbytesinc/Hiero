@@ -24,14 +24,14 @@ public sealed class MirrorGrpcClient : IAsyncDisposable
     /// </summary>
     private readonly MirrorContextStack _context;
     /// <summary>
-    /// Creates a new instance of an Hedera Mirror Network ConsensusClient.
+    /// Creates a new instance of a Hedera Mirror Network MirrorGrpcClient.
     /// </summary>
     /// <remarks>
     /// Creating a new instance of a <code>Mirror</code> initializes a new instance 
     /// of a client.  It will have a separate cache of GRPC channels to the network 
     /// and will maintain a separate configuration from other clients.  The constructor 
     /// takes an optional callback method that configures the details on how the 
-    /// client should connect to the network configuraable details.  See the 
+    /// client should connect to the network configurable details.  See the 
     /// <see cref="IMirrorGrpcContext"/> documentation for configuration details.
     /// </remarks>
     /// <param name="configure">
@@ -42,7 +42,7 @@ public sealed class MirrorGrpcClient : IAsyncDisposable
     {
     }
     /// <summary>
-    /// Creates a new instance of an Hedera Mirror Network ConsensusClient with a 
+    /// Creates a new instance of a Hedera Mirror Network MirrorGrpcClient with a 
     /// custom gRPC channel factory.
     /// </summary>
     /// <remarks>
@@ -50,7 +50,7 @@ public sealed class MirrorGrpcClient : IAsyncDisposable
     /// of a client.  It will have a separate cache of GRPC channels to the network 
     /// and will maintain a separate configuration from other clients.  The constructor 
     /// takes an optional callback method that configures the details on how the 
-    /// client should connect to the network configuraable details.  See the 
+    /// client should connect to the network configurable details.  See the 
     /// <see cref="IMirrorGrpcContext"/> documentation for configuration details.
     /// </remarks>
     /// <param name="channelFactory">
@@ -80,12 +80,12 @@ public sealed class MirrorGrpcClient : IAsyncDisposable
     /// The channel factory method to use when a new gRPC client channel is needed.
     /// </param>
     /// <param name="configure">
-    /// The optional <see cref="IConsensusContext"/> callback method, passed in from public 
+    /// The optional <see cref="IMirrorGrpcContext"/> callback method, passed in from public 
     /// instantiation or a <see cref="MirrorGrpcClient.Clone(Action{IMirrorGrpcContext})"/> method call.
     /// </param>
     /// <param name="parent">
     /// The parent <see cref="MirrorContextStack"/> if this creation is a result of a 
-    /// <see cref="ConsensusClient.Clone(Action{IConsensusContext})"/> method call.
+    /// <see cref="MirrorGrpcClient.Clone(Action{IMirrorGrpcContext})"/> method call.
     /// </param>
     private MirrorGrpcClient(MirrorContextStack parent, Action<IMirrorGrpcContext>? configure)
     {
@@ -93,7 +93,7 @@ public sealed class MirrorGrpcClient : IAsyncDisposable
         configure?.Invoke(_context);
     }
     /// <summary>
-    /// Updates the configuration of this instance of a mirror client thru 
+    /// Updates the configuration of this instance of a mirror client through 
     /// implementation of the supplied <see cref="IMirrorGrpcContext"/> callback method.
     /// </summary>
     /// <param name="configure">
@@ -169,7 +169,7 @@ public sealed class MirrorGrpcClient : IAsyncDisposable
     /// prior to submitting the request to the mirror node.
     /// </param>
     /// <returns>
-    /// Returns only after one of the four conditions ocurr: the output channel is 
+    /// Returns only after one of the four conditions occur: the output channel is 
     /// completed by calling code; the cancelation token provided in the params is 
     /// signaled; the maximum number of topic messages was returned as configured in
     /// the params; or if the mirror stream faults during streaming, in which case a 
@@ -202,7 +202,7 @@ public sealed class MirrorGrpcClient : IAsyncDisposable
         await using var context = CreateChildContext(configure);
         if (context.Uri is null)
         {
-            throw new InvalidOperationException("The Mirror Node Urul has not been configured. Please check that 'Url' is set in the Mirror context.");
+            throw new InvalidOperationException("The Mirror Node URL has not been configured. Please check that 'Url' is set in the Mirror context.");
         }
         var query = new Com.Hedera.Mirror.Api.Proto.ConsensusTopicQuery()
         {
@@ -242,7 +242,7 @@ public sealed class MirrorGrpcClient : IAsyncDisposable
         }
         catch (RpcException ex) when (ex.StatusCode == StatusCode.Unavailable)
         {
-            throw new MirrorGrpcException($"The Mirror node is not avaliable at this time.", MirrorGrpcExceptionCode.Unavailable, ex);
+            throw new MirrorGrpcException($"The Mirror node is not available at this time.", MirrorGrpcExceptionCode.Unavailable, ex);
         }
         catch (RpcException ex)
         {
@@ -264,8 +264,8 @@ public sealed class MirrorGrpcClient : IAsyncDisposable
                 var message = new TopicMessage
                 {
                     Topic = topic,
-                    Concensus = data.ConsensusTimestamp.ToConsensusTimeStamp(),
-                    Messsage = data.Message.Memory,
+                    Consensus = data.ConsensusTimestamp.ToConsensusTimeStamp(),
+                    Message = data.Message.Memory,
                     RunningHash = data.RunningHash.Memory,
                     SequenceNumber = data.SequenceNumber,
                     SegmentInfo = data.ChunkInfo is not null ? new MessageSegmentInfo(data.ChunkInfo) : null
@@ -285,18 +285,18 @@ public sealed class MirrorGrpcClient : IAsyncDisposable
         }
     }
     /// <summary>
-    /// The default algorithm for creatting channels for the
+    /// The default algorithm for creating channels for the
     /// gRPC mirror streaming client.  This implementation sets
     /// the keep alive timeout of 30s, ping delay 60s and
     /// keep alive policy of always.  Testing has shown this is
-    /// the best method for keepign the HCS streaming service alive
+    /// the best method for keeping the HCS streaming service alive
     /// for monitoring an HCS stream.
     /// </summary>
     /// <param name="uri">
     /// The URI endpoint of the gRPC mirror node HCS stream.
     /// </param>
     /// <returns>
-    /// A GrpcChannel pointing to the URI of the mirror node endpoing.
+    /// A GrpcChannel pointing to the URI of the mirror node endpoint.
     /// </returns>
     private static GrpcChannel DefaultChannelFactory(Uri uri)
     {

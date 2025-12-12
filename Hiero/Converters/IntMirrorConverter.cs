@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace Hiero.Converters;
 /// <summary>
-/// Integer Converter that tollerates null values.
+/// Integer Converter that tolerates null values.
 /// </summary>
 public sealed class IntMirrorConverter : JsonConverter<int>
 {

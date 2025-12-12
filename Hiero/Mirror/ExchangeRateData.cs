@@ -6,7 +6,7 @@ using static Hiero.Mirror.Implementation.MirrorRestClientUtils;
 namespace Hiero.Mirror;
 /// <summary>
 /// Represents the current and next exchange
-/// rate as reporte by the hedera network.
+/// rate as reported by the hedera network.
 /// </summary>
 public class ExchangeRateData
 {
@@ -35,7 +35,7 @@ public class ExchangeRateData
 public static class ExchangeRateDataExtensions
 {
     /// <summary>
-    /// Retreives the current and next exchange rate from
+    /// Retrieves the current and next exchange rate from
     /// the mirror node.
     /// </summary>
     /// <param name="client">

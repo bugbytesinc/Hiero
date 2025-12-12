@@ -4,7 +4,7 @@ namespace Hiero;
 
 /// <summary>
 /// Represents an allowance allocation permitting a
-/// delegate account privleges of spending the specified
+/// delegate account privileges of spending the specified
 /// amount of tokens from the owning account.
 /// </summary>
 public sealed record TokenAllowance
@@ -31,7 +31,7 @@ public sealed record TokenAllowance
     public long Amount { get; private init; }
     /// <summary>
     /// Represents an allowance allocation permitting a
-    /// agent account privleges of spending the specified
+    /// agent account privileges of spending the specified
     /// amount of tokens from the owning account.
     /// </summary>
     /// <param name="token">

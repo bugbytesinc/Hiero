@@ -33,7 +33,7 @@ public class EvmTransactionInput
     /// or another Hedera account.
     /// </summary>
     /// <remarks>
-    /// Going forward, this should be the EVM address of the the
+    /// Going forward, this should be the EVM address of the
     /// account as identified by the mirror node.  It may be a 
     /// long zero EVM address or an ECDSA alias address. To avoid
     /// potential compatibility issues, it is recommended to use
@@ -53,7 +53,7 @@ public class EvmTransactionInput
     /// </summary>
     public string? MethodName { get; set; } = null;
     /// <summary>
-    /// Opational method parameters to pass to the contract, if this is a contract call.
+    /// Optional method parameters to pass to the contract, if this is a contract call.
     /// </summary>
     public object[]? MethodParameters { get; set; } = null;
     /// <summary>
@@ -75,7 +75,7 @@ public class EvmTransactionInput
     /// </returns>
     public ReadOnlyMemory<byte> RlpEncode(Signatory signatory)
     {
-        var toAddres = ToEvmAddress.Bytes.ToArray();
+        var toAddress = ToEvmAddress.Bytes.ToArray();
         var valueInWei = ValueInTinybars * TinyBarsToWei;
         byte[]? data = null;
         if (!string.IsNullOrEmpty(MethodName))
@@ -90,9 +90,9 @@ public class EvmTransactionInput
         {
             throw new ArgumentNullException(nameof(signatory), "A Signatory is Required to RLP encode an EVM transaction.");
         }
-        var dataToSign = Rlp.Encode(EvmNonce, GasPrice, GasLimit, toAddres, valueInWei, data, ChainId, null, null);
+        var dataToSign = Rlp.Encode(EvmNonce, GasPrice, GasLimit, toAddress, valueInWei, data, ChainId, null, null);
         var (r, s, rid) = ((ISignatory)signatory).SignEvm(dataToSign);
         var v = (ChainId * 2) + 35 + rid;
-        return Rlp.Encode(EvmNonce, GasPrice, GasLimit, toAddres, valueInWei, data, v, r, s);
+        return Rlp.Encode(EvmNonce, GasPrice, GasLimit, toAddress, valueInWei, data, v, r, s);
     }
 }

@@ -23,7 +23,7 @@ public sealed record ConsensusNodeEndpoint
     /// </summary>
     public Uri Uri { get; private init; }
     /// <summary>
-    /// The Network gRPC Consensus Node's Address Address, may
+    /// The Network gRPC Consensus Node's Address, may
     /// only be [shard.realm.num] form.
     /// </summary>
     public EntityId Node { get; private init; }
@@ -31,12 +31,12 @@ public sealed record ConsensusNodeEndpoint
     /// Public Constructor, a <code>ConsensusEndpoint</code> is immutable after creation.
     /// </summary>
     /// <param name="node">
-    /// Main Network Consensus Nodes's Address Address.
+    /// Main Network Consensus Node's Address.
     /// </param>
     /// <param name="uri">
     /// The URL and port of the public Hedera Network Consensus Node's gRPC access point.
     /// A consensus node may actually have multiple gRPC endpoints mapped to the same
-    /// wallet addresss (shard.realm.num).
+    /// wallet address (shard.realm.num).
     /// </param>
     public ConsensusNodeEndpoint(EntityId node, Uri uri)
     {
@@ -60,11 +60,11 @@ public sealed record ConsensusNodeEndpoint
         Node = node;
     }
     /// <summary>
-    /// Implicit operator for converting a Consensus ConsensusNodeEndpoint to an Payer Entity ID
+    /// Implicit operator for converting a Consensus ConsensusNodeEndpoint to a Payer Entity ID
     /// </summary>
     /// <param name="endpoint">
     /// The ConsensusNodeEndpoint object containing the realm, shard and node 
-    /// number node information to convert into an node object.
+    /// number node information to convert into an address object.
     /// </param>
     public static implicit operator EntityId(ConsensusNodeEndpoint endpoint)
     {
@@ -73,7 +73,7 @@ public sealed record ConsensusNodeEndpoint
     /// <summary>
     /// Returns a string representation of the Consensus Node ConsensusNodeEndpoint,
     /// </summary>
-    /// <returns>String Represntation of the Consensus Node ConsensusNodeEndpoint</returns>
+    /// <returns>String Representation of the Consensus Node ConsensusNodeEndpoint</returns>
     public override string ToString()
     {
         return $"{Node}@{Uri}";

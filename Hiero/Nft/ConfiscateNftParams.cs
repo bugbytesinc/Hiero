@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 namespace Hiero;
 /// <summary>
 /// Removes the holdings of given asset from the associated 
-/// account and destorys them. Must be signed by 
+/// account and destroys them. Must be signed by 
 /// the confiscate/wipe admin key.
 /// </summary>
 public sealed class ConfiscateNftParams : TransactionParams<TokenReceipt>, INetworkParams<TokenReceipt>
@@ -25,7 +25,7 @@ public sealed class ConfiscateNftParams : TransactionParams<TokenReceipt>, INetw
     public IReadOnlyList<long> SerialNumbers { get; set; } = default!;
     /// <summary>
     /// Optional Additional private key, keys or signing callback method 
-    /// required to authorize the confiscation/wipe. Usefull when
+    /// required to authorize the confiscation/wipe. Useful when
     /// the wipe key is not the same as the payer key.
     /// </summary>
     public Signatory? Signatory { get; set; }
@@ -35,7 +35,7 @@ public sealed class ConfiscateNftParams : TransactionParams<TokenReceipt>, INetw
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
     /// <summary>
-    /// Creates the appropriate Hedera tansaction Body from these parameters.
+    /// Creates the appropriate Hedera transaction Body from these parameters.
     /// </summary>
     /// <returns>
     /// TokenWipeAccountTransactionBody implementing INetworkTransaction
@@ -48,7 +48,7 @@ public sealed class ConfiscateNftParams : TransactionParams<TokenReceipt>, INetw
         }
         if (Account.IsNullOrNone())
         {
-            throw new ArgumentOutOfRangeException(nameof(Account), "The account Addresss can not be empty or None.  Please provide a valid value.");
+            throw new ArgumentOutOfRangeException(nameof(Account), "The account Address can not be empty or None.  Please provide a valid value.");
         }
         var result = new TokenWipeAccountTransactionBody
         {
@@ -69,7 +69,7 @@ public static class ConfiscateNftExtensions
 {
     /// <summary>
     /// Removes given NFT from the holding
-    /// account and destorys it. Must be signed by 
+    /// account and destroys it. Must be signed by 
     /// the confiscate/wipe admin key.
     /// </summary>
     /// <param name="client">
@@ -91,7 +91,7 @@ public static class ConfiscateNftExtensions
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission, for example of the nft is already deleted.</exception>
+    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission, for example if the nft is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -119,7 +119,7 @@ public static class ConfiscateNftExtensions
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission, for example of the nft is already deleted.</exception>
+    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission, for example if the nft is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

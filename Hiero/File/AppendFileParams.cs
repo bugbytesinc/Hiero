@@ -24,13 +24,13 @@ public sealed class AppendFileParams : TransactionParams<TransactionReceipt>, IN
     /// Endorsement associated with this file.
     /// </summary>
     /// <remarks>
-    /// Keys/callbacks added here will be combined with those already
+    /// Keys or callbacks added here will be combined with those already
     /// identified in the client object's context when signing this 
     /// transaction to change the state of this account.
     /// </remarks>
     public Signatory? Signatory { get; set; }
     /// <summary>
-    /// Optional Cancellation token to interrupt the transaction submission process.
+    /// Optional cancellation token to interrupt the transaction submission process.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
     INetworkTransaction INetworkParams<TransactionReceipt>.CreateNetworkTransaction()

@@ -9,7 +9,7 @@ public class ContractIsFilter : IMirrorQueryFilter
     /// </summary>
     private readonly EvmAddress _moniker;
     /// <summary>
-    /// Constructor requres the addresss to filter the request by.
+    /// Constructor requires the address to filter the request by.
     /// </summary>
     /// <param name="moniker">
     /// Payer of the account to filter the response by.

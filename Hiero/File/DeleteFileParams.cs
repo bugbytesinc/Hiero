@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 
 namespace Hiero;
 /// <summary>
-/// Represents the parameters required to delete a file from the hedera network.
+/// Represents the parameters required to delete a file from the Hedera network.
 /// </summary>
 public class DeleteFileParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
@@ -18,13 +18,13 @@ public class DeleteFileParams : TransactionParams<TransactionReceipt>, INetworkP
     /// required to delete this file.
     /// </summary>
     /// <remarks>
-    /// Keys/callbacks added here will be combined with those already
+    /// Keys or callbacks added here will be combined with those already
     /// identified in the client object's context when signing this 
     /// transaction.
     /// </remarks>
     public Signatory? Signatory { get; set; }
     /// <summary>
-    /// Optional Cancellation token that interrupt the delete attempt.
+    /// Optional cancellation token to interrupt the delete attempt.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
     INetworkTransaction INetworkParams<TransactionReceipt>.CreateNetworkTransaction()

@@ -15,7 +15,7 @@ public enum KeyFormat
     /// </summary>
     Raw = 1,
     /// <summary>
-    /// The public ANS.1 DER encoded value. Only applies
+    /// The public ASN.1 DER encoded value. Only applies
     /// to single key types.
     /// </summary>
     Der = 2,

@@ -164,7 +164,7 @@ public class EncodedParams
     /// Type of the fifth argument, must be known to the caller.
     /// </typeparam>
     /// <returns>
-    /// A tuple of the first four arguments decoded from the contract function ABI results.
+    /// A tuple of the first five arguments decoded from the contract function ABI results.
     /// </returns>
     public (T1, T2, T3, T4, T5) As<T1, T2, T3, T4, T5>(int bytesToSkip = 0)
     {

@@ -38,17 +38,17 @@ public sealed class UpdateFileParams : TransactionParams<TransactionReceipt>, IN
     /// <summary>
     /// Additional private key, keys or signing callback method 
     /// required to replace the contents of this file.  Typically
-    /// matchs all the Endorsements in the Endorsement array
+    /// matches all the Endorsements in the Endorsement array
     /// associated with this file.
     /// </summary>
     /// <remarks>
-    /// Keys/callbacks added here will be combined with those already
+    /// Keys or callbacks added here will be combined with those already
     /// identified in the client object's context when signing this 
     /// transaction to change the state of this account.
     /// </remarks>
     public Signatory? Signatory { get; set; }
     /// <summary>
-    /// Optional Cancellation token to interrupt the transaction submission process.
+    /// Optional cancellation token to interrupt the transaction submission process.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
     INetworkTransaction INetworkParams<TransactionReceipt>.CreateNetworkTransaction()

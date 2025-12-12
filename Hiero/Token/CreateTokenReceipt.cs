@@ -10,7 +10,7 @@ public sealed record CreateTokenReceipt : TransactionReceipt
     /// The newly created token address.
     /// </summary>
     /// <remarks>
-    /// The value will be <code>None</code> if the create topic
+    /// The value will be <code>None</code> if the create token
     /// method was scheduled as a pending transaction.
     /// </remarks>
     public EntityId Token { get; internal init; }

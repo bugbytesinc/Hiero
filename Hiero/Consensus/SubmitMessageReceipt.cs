@@ -2,7 +2,7 @@
 
 namespace Hiero;
 /// <summary>
-/// Receipt produced from creating a new contract.
+/// Receipt produced from submitting a new message.
 /// </summary>
 public record SubmitMessageReceipt : TransactionReceipt
 {

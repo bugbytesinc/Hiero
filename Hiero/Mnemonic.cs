@@ -16,7 +16,7 @@ namespace Hiero;
 /// Warning: this class has not been hardened against external attacks,
 /// it keeps the root seed in memory.
 /// </remarks>
-public class Mnenmonic
+public class Mnemonic
 {
     /// <summary>
     /// The Ed25519 DER Encoding prefix, for just the PRIVATE key.
@@ -24,12 +24,12 @@ public class Mnenmonic
     private readonly ReadOnlyMemory<byte> _edd25519PrivateKeyDerPrefix = Hex.ToBytes("302e020100300506032b657004220420");
     /// <summary>
     /// The root seed key phrase for generating Ed25519 keys
-    /// from a mnenmonic seed phrase.
+    /// from a mnemonic seed phrase.
     /// </summary>
     private readonly ReadOnlyMemory<byte> _ed25519SeedKey = Encoding.UTF8.GetBytes("ed25519 seed");
     /// <summary>
     /// The root seed key phrase for generating ECDSA Secp256k1 keys
-    /// from a mnenmonic seed phrase.
+    /// from a mnemonic seed phrase.
     /// </summary>
     private readonly ReadOnlyMemory<byte> _ecdsaSecp256k1 = Encoding.UTF8.GetBytes("Bitcoin seed");
     /// <summary>
@@ -49,7 +49,7 @@ public class Mnenmonic
     /// Optional password (empty string or null is allowed 
     /// for no password).
     /// </param>
-    public Mnenmonic(string[] words, string passphrase)
+    public Mnemonic(string[] words, string passphrase)
     {
         var mnemonicBytes = Encoding.UTF8.GetBytes(string.Join(' ', words));
         var saltBytes = Encoding.UTF8.GetBytes("mnemonic" + (passphrase ?? ""));
@@ -62,16 +62,16 @@ public class Mnenmonic
         );
     }
     /// <summary>
-    /// Computes the HD key pair for this mnenmonic.
+    /// Computes the HD key pair for this Mnemonic.
     /// </summary>
     /// <param name="path">
-    /// The key derivitation path that should be used to
+    /// The key derivation path that should be used to
     /// generate the private and public key values.
     /// </param>
     /// <returns>
     /// DER Encoded public and private key values.
     /// </returns>
-    public (ReadOnlyMemory<byte> publicKey, ReadOnlyMemory<byte> privateKey) GenerateKeyPair(KeyDerivitationPath path)
+    public (ReadOnlyMemory<byte> publicKey, ReadOnlyMemory<byte> privateKey) GenerateKeyPair(KeyDerivationPath path)
     {
         if (path.KeyType == KeyType.Ed25519)
         {
@@ -87,7 +87,7 @@ public class Mnenmonic
                 // TODO - Review the spec for any path that is
                 // not fully "hardened" to make sure this is the
                 // correct key value to put here. Presently all
-                // Ed25519 paths in the eccosystem are comletely
+                // Ed25519 paths in the ecosystem are completely
                 // "hardened".
                 Array.Copy(keyDataAndChainCode, 0, data, 1, 32);
                 Array.Copy(indexBytes, 0, data, 33, 4);

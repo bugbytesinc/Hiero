@@ -15,17 +15,17 @@ namespace Hiero;
 public sealed class TransferParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
-    /// Transfer tinybars from an arbitray set of accounts to
+    /// Transfer tinybars from an arbitrary set of accounts to
     /// another arbitrary set of accounts.
     /// </summary>
     public IEnumerable<CryptoTransfer>? CryptoTransfers { get; set; }
     /// <summary>
-    /// A list of tokens transfered from an arbitray set of accounts to
+    /// A list of tokens transferred from an arbitrary set of accounts to
     /// another arbitrary set of accounts.
     /// </summary>
     public IEnumerable<TokenTransfer>? TokenTransfers { get; set; }
     /// <summary>
-    /// A list of NFTs transfered from an arbitray set of accounts to
+    /// A list of NFTs transferred from an arbitrary set of accounts to
     /// another arbitrary set of accounts.
     /// </summary>
     public IEnumerable<NftTransfer>? NftTransfers { get; set; }
@@ -41,7 +41,7 @@ public sealed class TransferParams : TransactionParams<TransactionReceipt>, INet
     /// </remarks>
     public Signatory? Signatory { get; set; }
     /// <summary>
-    /// Optional Cancellation token that interrupt the token
+    /// Optional Cancellation token that interrupts the token
     /// submission process.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
@@ -238,7 +238,7 @@ internal sealed class TransferOnlyCryptoParams : TransactionParams<TransactionRe
 /// Shortcut Internal Transfer Params for transferring NFTs only.
 /// </summary>
 /// <remarks>
-/// Bypasses most of the checks for the gneric CryptoTransferTransactionBody construction.
+/// Bypasses most of the checks for the generic CryptoTransferTransactionBody construction.
 /// </remarks>
 internal sealed class TransferOnlyNftParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
@@ -292,7 +292,7 @@ internal sealed class TransferOnlyNftParams : TransactionParams<TransactionRecei
 /// Shortcut Internal Transfer Params for transferring Tokens only.
 /// </summary>
 /// <remarks>
-/// Bypasses most of the checks for the gneric CryptoTransferTransactionBody construction.
+/// Bypasses most of the checks for the generic CryptoTransferTransactionBody construction.
 /// </remarks>
 internal sealed class TransferOnlyTokenParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
@@ -352,7 +352,7 @@ public static class TransferExtensions
     /// <param name="fromAddress">
     /// The address to transfer the tinybars from.  Ensure that
     /// a signatory either in the context or passed with this
-    /// call can fulfill the signing requrements to transfer 
+    /// call can fulfill the signing requirements to transfer 
     /// crypto out of the account identified by this address.
     /// </param>
     /// <param name="toAddress">
@@ -383,7 +383,7 @@ public static class TransferExtensions
     /// Transfer assets (NFTs) from one account to another.
     /// </summary>
     /// <remarks>
-    /// This conveience method does not support alloawnces, to
+    /// This convenience method does not support allowances, to
     /// perform transfers with allowances, use the long of this method,
     /// <see cref="CryptoExtensions.TransferAsync(ConsensusClient, TransferParams, Action{IConsensusContext}?)"/>,
     /// instead.
@@ -397,7 +397,7 @@ public static class TransferExtensions
     /// <param name="fromAddress">
     /// The account to transfer the assets from.  Ensure that
     /// a signatory either in the context or passed with this
-    /// call can fulfill the signing requrements to transfer 
+    /// call can fulfill the signing requirements to transfer 
     /// assets out of the account identified by this account.
     /// </param>
     /// <param name="toAddress">
@@ -469,7 +469,7 @@ public static class TransferExtensions
     /// <param name="fromAddress">
     /// The address to transfer the tokens from.  Ensure that
     /// a signatory either in the context or passed with this
-    /// call can fulfill the signing requrements to transfer 
+    /// call can fulfill the signing requirements to transfer 
     /// tokens out of the account identified by this address.
     /// </param>
     /// <param name="toAddress">

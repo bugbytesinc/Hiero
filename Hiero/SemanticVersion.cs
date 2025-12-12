@@ -11,7 +11,7 @@ public sealed record SemanticVersion
     /// </summary>
     public int Major { get; private init; }
     /// <summary>
-    /// Minor verion number. Changes between minor version numbers
+    /// Minor version number. Changes between minor version numbers
     /// indicate additions to the API and other backwards compatible
     /// changes.
     /// </summary>
@@ -22,7 +22,7 @@ public sealed record SemanticVersion
     /// </summary>
     public int Patch { get; private init; }
     /// <summary>
-    /// A special designation of an semantic version that can't be created.
+    /// A special designation of a semantic version that can't be created.
     /// It represents the absence of a information.  It will resolve to 
     /// the values of 0, 0, 0.
     /// </summary>

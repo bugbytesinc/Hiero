@@ -8,22 +8,22 @@ using System.Text.Json.Serialization;
 
 namespace Hiero;
 /// <summary>
-/// Represents 20-byte EVM Payer Hedera Virtual Machine Payer.
+/// Represents 20-byte EVM Address for Hedera Virtual Machine.
 /// </summary>
 [DebuggerDisplay("{ToString(),nq}")]
 [JsonConverter(typeof(EvmAddressConverter))]
 public sealed record EvmAddress : IEquatable<EvmAddress>
 {
     /// <summary>
-    /// Internal storage for the 20-byte EVM Payer.
+    /// Internal storage for the 20-byte EVM Address.
     /// </summary>
     private readonly byte[] _bytes = new byte[20];
     /// <summary>
-    /// The 20-byte EVM Payer of the contract.
+    /// The 20-byte EVM Address of the contract.
     /// 
-    /// Every contract has an VM Payer determined by its<code>shard.realm.num</code> id.
+    /// Every contract has an EVM Address determined by its<code>shard.realm.num</code> id.
     /// 
-    /// This Payer is as follows:
+    /// This Address is as follows:
     /// 
     ///     The first 4 bytes are the big-endian representation of the shard.
     ///     The next 8 bytes are the big-endian representation of the realm.
@@ -40,8 +40,8 @@ public sealed record EvmAddress : IEquatable<EvmAddress>
     /// <summary>
     /// A special designation of an alias that can't be created.
     /// It represents the absence of a valid alias.  The network will
-    /// intrepret as "no account/file/topic/token/contract" when applied 
-    /// to change parameters. (typically the value null is intepreted 
+    /// interpret as "no account/file/topic/token/contract" when applied 
+    /// to change parameters. (typically the value null is interpreted 
     /// as "make no change"). In this way, it is possible to remove a 
     /// auto-renew account from a topic.
     /// </summary>
@@ -50,14 +50,14 @@ public sealed record EvmAddress : IEquatable<EvmAddress>
     /// Constructor from ECDSASecp256K1 Endorsement, converts the public
     /// key into the appropriate 20-byte public key hash.
     /// <param name="endorsement">
-    /// An ECDSASecp256K1 public key.  The evmAddress will automatically 
+    /// An ECDSASecp256K1 public key.  The EvmAddress will automatically 
     /// convert the public key into the matching 20-byte eth hash.
     /// </param>
     public EvmAddress(Endorsement endorsement)
     {
         if (endorsement.Type != KeyType.ECDSASecp256K1)
         {
-            throw new ArgumentException("Can only compute a EvmAddress from an Endorsment of type ECDSASecp256K1.");
+            throw new ArgumentException("Can only compute a EvmAddress from an Endorsement of type ECDSASecp256K1.");
         }
         var publicKey = KeyUtils.ParsePublicEcdsaSecp256k1Key(endorsement.ToBytes(KeyFormat.Raw)).Q.GetEncoded(false);
         var digest = new KeccakDigest(256);
@@ -67,12 +67,12 @@ public sealed record EvmAddress : IEquatable<EvmAddress>
         hash.AsSpan(12, 20).CopyTo(_bytes);
     }
     /// <summary>
-    /// Public Constructor, a <code>EvmAddress</code> is imutable after
+    /// Public Constructor, a <code>EvmAddress</code> is immutable after
     /// construction.
     /// </summary>
     /// <param name="bytes">
     /// The bytes representing the address, if originates from
-    /// a long-zero address (shard.realm.num) form the encoding is follows: 
+    /// a long-zero address (shard.realm.num) form the encoding follows: 
     /// 
     ///     The first 4 bytes are the big-endian representation of the shard.
     ///     The next 8 bytes are the big-endian representation of the realm.
@@ -86,12 +86,12 @@ public sealed record EvmAddress : IEquatable<EvmAddress>
     {
     }
     /// <summary>
-    /// Public Constructor, a <code>EvmAddress</code> is imutable after
+    /// Public Constructor, a <code>EvmAddress</code> is immutable after
     /// construction.
     /// </summary>
     /// <param name="bytes">
     /// The bytes representing the address, if originates from
-    /// a long-zero address (shard.realm.num) form the encoding is follows: 
+    /// a long-zero address (shard.realm.num) form the encoding follows: 
     /// 
     ///     The first 4 bytes are the big-endian representation of the shard.
     ///     The next 8 bytes are the big-endian representation of the realm.
@@ -140,10 +140,10 @@ public sealed record EvmAddress : IEquatable<EvmAddress>
         );
     }
     /// <summary>
-    /// Outputs aan EIP-55 Checksum Encoding of EvmAddress 
+    /// Outputs an EIP-55 Checksum Encoding of EvmAddress 
     /// </summary>
     /// <returns>
-    /// String representation of this EVM Payer
+    /// String representation of this EVM Address
     /// </returns>
     public override string ToString()
     {
@@ -168,8 +168,8 @@ public sealed record EvmAddress : IEquatable<EvmAddress>
     /// Tries to parse a string value into an EVM Payer address.
     /// </summary>
     /// <param name="value">The string representation of the EVM address, may start with '0x'</param>
-    /// <param name="evmAddress">Contains the EVM Address if parsing is successfull</param>
-    /// <returns>True if parsing was sucessfull, false if not.</returns>
+    /// <param name="evmAddress">Contains the EVM Address if parsing is successful</param>
+    /// <returns>True if parsing was successful, false if not.</returns>
     public static bool TryParse(string? value, [NotNullWhen(true)] out EvmAddress? evmAddress)
     {
         if (value != null && TryParse(value.AsSpan(), out evmAddress))
@@ -183,8 +183,8 @@ public sealed record EvmAddress : IEquatable<EvmAddress>
     /// Tries to parse a string value into an EVM Payer address.
     /// </summary>
     /// <param name="value">The string representation of the EVM address, may start with '0x'</param>
-    /// <param name="evmAddress">Contains the EVM Address if parsing is successfull</param>
-    /// <returns>True if parsing was sucessfull, false if not.</returns>
+    /// <param name="evmAddress">Contains the EVM Address if parsing is successful</param>
+    /// <returns>True if parsing was successful, false if not.</returns>
     public static bool TryParse(ReadOnlySpan<char> value, [NotNullWhen(true)] out EvmAddress? evmAddress)
     {
         evmAddress = null;

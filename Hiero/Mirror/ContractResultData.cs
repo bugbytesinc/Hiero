@@ -16,7 +16,7 @@ public class ContractResultData
     /// Payer of the contract that was called
     /// </summary>
     [JsonPropertyName("address")]
-    public EvmAddress ContractAddresss { get; set; } = default!;
+    public EvmAddress ContractAddress { get; set; } = default!;
     /// <summary>
     /// Number of tinybars sent into this contract transaction call
     /// (the function must be payable if this is nonzero).

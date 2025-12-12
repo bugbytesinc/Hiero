@@ -6,7 +6,7 @@ namespace Hiero.Converters;
 /// <summary>
 /// Response Code Converter
 /// </summary>
-public sealed class RepsponseCodeConverter : JsonConverter<ResponseCode>
+public sealed class ResponseCodeConverter : JsonConverter<ResponseCode>
 {
     /// <summary>
     /// Map of the response code text value to enum value.
@@ -41,7 +41,7 @@ public sealed class RepsponseCodeConverter : JsonConverter<ResponseCode>
     /// Static setup helper function that creates the mappings
     /// between text values and enum values.
     /// </summary>
-    static RepsponseCodeConverter()
+    static ResponseCodeConverter()
     {
         _mapDesc = new Dictionary<string, ResponseCode>();
         _mapCode = new Dictionary<ResponseCode, string>();

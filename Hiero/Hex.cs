@@ -12,7 +12,7 @@ public static class Hex
     /// <param name="hex">The Hex Value</param>
     /// <param name="buffer">Span receiving the decoded bytes</param>
     /// <param name="bytesWritten">Number of bytes written into the span</param>
-    /// <returns>true if successfull, false if the hex string is invalid or buffer is too small.</returns>
+    /// <returns>true if successful, false if the hex string is invalid or buffer is too small.</returns>
     public static bool TryDecode(ReadOnlySpan<char> hex, Span<byte> buffer, out int bytesWritten)
     {
         bytesWritten = 0;
@@ -137,9 +137,9 @@ public static class Hex
     /// <summary>
     /// Computes the hex representation of a byte array and writes it to a destination span.
     /// </summary>
-    /// <param name="bytes">Incomming Bytes</param>
+    /// <param name="bytes">Incoming Bytes</param>
     /// <param name="destination">Span that will Receive the lower case encoded hex char values</param>
-    /// <param name="charsWritten">Number of characters written (in case the buffer is largeer than needed)</param>
+    /// <param name="charsWritten">Number of characters written (in case the buffer is larger than needed)</param>
     public static bool TryEncode(ReadOnlySpan<byte> bytes, Span<char> destination, out int charsWritten)
     {
         const string hexAlphabet = "0123456789abcdef";

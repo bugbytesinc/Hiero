@@ -4,10 +4,10 @@
 /// This structure is passed to each configured 
 /// <see cref="Signatory"/> and signatory callback
 /// method to be given the opportunity to sign the
-/// request before submitting it to the netwwork.
+/// request before submitting it to the network.
 /// Typically, the signatory will use its private
 /// key to sign the <see cref="TransactionBytes"/> serialized
-/// representation of the transaciton request.  
+/// representation of the transaction request.  
 /// This is the same series of bytes that are sent 
 /// to the network along with the signatures 
 /// collected from the signatories.
@@ -20,7 +20,7 @@ public interface IInvoice
     /// Any callback methods must return from signing this
     /// transaction with enough time for the transaction to
     /// be submitted to the network with sufficient time to
-    /// process before becomming invalid.
+    /// process before becoming invalid.
     /// </summary>
     public TransactionId TransactionId { get; }
     /// <summary>
@@ -32,7 +32,7 @@ public interface IInvoice
     /// The bytes created by serializing the request, including
     /// necessary cryptocurrency transfers, into the underlying
     /// network's protobuf format.  This is the exact sequence
-    /// of bytes that will be submitted to the network along side
+    /// of bytes that will be submitted to the network alongside
     /// the signatures created authorizing the request.
     /// </summary>
     public ReadOnlyMemory<byte> TransactionBytes { get; }
@@ -49,14 +49,14 @@ public interface IInvoice
     /// <remarks>
     /// Providing a prefix that is longer or shorter than the 
     /// desired length will not immediately raise an error
-    /// unless it results in a prefix maping conflict (two or
+    /// unless it results in a prefix mapping conflict (two or
     /// more identical public prefixes producing different signature
     /// values).  However, if too small of a prefix is sent to
     /// the network, the network may reject the transaction under
     /// certain circumstances.  It is recommended to return at 
     /// least the first 6 bytes of the raw public key value when
     /// the prefix size is zero, so that the sdk can orchestrate 
-    /// mutiple signatures with reasonable probability of not
+    /// multiple signatures with reasonable probability of not
     /// producing a conflict as described above.
     /// </remarks>
     public int MinimumDesiredPrefixSize { get; }
@@ -76,7 +76,7 @@ public interface IInvoice
     /// <param name="publicPrefix">
     /// The first few bytes of the public key associated
     /// with this signature.  This helps the system match
-    /// signing requrements held internally in the form of
+    /// signing requirements held internally in the form of
     /// public keys with the signatures provided.
     /// </param>
     /// <param name="signature">

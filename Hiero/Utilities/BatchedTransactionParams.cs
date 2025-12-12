@@ -5,14 +5,14 @@ using System.ComponentModel;
 
 namespace Hiero;
 /// <summary>
-/// Submits a batchParams of transactions to the network for processing.
+/// Submits a batch of transactions to the network for processing.
 /// </summary>
 public sealed class BatchedTransactionParams
 {
     public IReadOnlyList<TransactionParams<TransactionReceipt>> TransactionParams { get; set; } = default!;
     /// <summary>
-    /// Optional explicit endorsement to be applied to the batchParams of transactions if not specified
-    /// individually by each <see cref="BatchedTransaction"/>. If not specified by either the batchParams 
+    /// Optional explicit endorsement to be applied to the batch of transactions if not specified
+    /// individually by each <see cref="BatchedTransaction"/>. If not specified by either the batch 
     /// transaction entry or this property, the default endorsement will be used, which match the 
     /// signatories of the client's context.
     /// </summary>
@@ -23,7 +23,7 @@ public sealed class BatchedTransactionParams
     /// </summary>
     public Signatory? Signatory { get; set; }
     /// <summary>
-    /// Optional Cancellation token that interrupt the transaction submission process.
+    /// Optional Cancellation token that interrupts the transaction submission process.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
 }
@@ -246,7 +246,7 @@ internal sealed class BatchedParamsOrchestrator : TransactionParams<TransactionR
 public static class TransactionBatchParamsExtensions
 {
     /// <summary>
-    /// Generates a psudo random number, which can be retrieved via the
+    /// Generates a pseudo random number, which can be retrieved via the
     /// transaction's record.
     /// </summary>
     /// <param name="maxValue">The maximum allowed value for

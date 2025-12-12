@@ -12,7 +12,7 @@ namespace Hiero;
 /// appropriately signed as described by the original
 /// <see cref="CreateTopicParams.Administrator"/> endorsement in order
 /// to make changes.  If there is no administrator endorsement specified,
-/// the topic is imutable and cannot be changed.
+/// the topic is immutable and cannot be changed.
 /// </summary>
 public sealed class UpdateTopicParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
@@ -25,9 +25,9 @@ public sealed class UpdateTopicParams : TransactionParams<TransactionReceipt>, I
     /// </summary>
     public string? Memo { get; set; }
     /// <summary>
-    /// Replace this Topics's current administrative key signing rquirements 
+    /// Replace this Topic's current administrative key signing requirements 
     /// with new signing requirements.  To completely remove the administrator
-    /// key and make the Topics imutable, use the <see cref="Endorsement.None"/>
+    /// key and make the Topic immutable, use the <see cref="Endorsement.None"/>
     /// endorsement value.
     /// </summary>
     /// <remarks>
@@ -40,7 +40,7 @@ public sealed class UpdateTopicParams : TransactionParams<TransactionReceipt>, I
     /// <summary>
     /// Identify any key requirements for submitting messages to this topic.
     /// If left blank, no changes will be made. To completely remove the 
-    /// key requirements and make the Topics open for all to submit, use
+    /// key requirements and make the Topic open for all to submit, use
     /// the <see cref="Endorsement.None"/> endorsement value.
     /// </summary>
     public Endorsement? Submitter { get; set; }
@@ -140,15 +140,15 @@ public sealed class UpdateTopicParams : TransactionParams<TransactionReceipt>, I
 public static class UpdateTopicExtensions
 {
     /// <summary>
-    /// Updates the changeable properties of a Hedera Network Topics.
+    /// Updates the changeable properties of a Hedera Network Topic.
     /// </summary>
     /// <param name="client">
     /// The Consensus Node Client receiving the update transaction.
     /// </param>
     /// <param name="updateParameters">
-    /// The Topics update parameters, includes a required 
-    /// <see cref="EntityId"/> reference to the Topics to update plus
-    /// a number of changeable properties of the Topics.
+    /// The Topic update parameters, includes a required 
+    /// <see cref="EntityId"/> reference to the Topic to update plus
+    /// a number of changeable properties of the Topic.
     /// </param>
     /// <param name="configure">
     /// Optional callback method providing an opportunity to modify 

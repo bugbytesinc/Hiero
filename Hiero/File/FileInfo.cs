@@ -23,11 +23,11 @@ public sealed record FileInfo
     public long Size { get; private init; }
     /// <summary>
     /// The file expiration date at which it will be removed from 
-    /// the network.  The date can be extended thru updates.
+    /// the network.  The date can be extended through updates.
     /// </summary>
     public ConsensusTimeStamp Expiration { get; private init; }
     /// <summary>
-    /// A descriptor of the all the keys required to sign transactions 
+    /// A descriptor of all the keys required to sign transactions 
     /// editing and otherwise manipulating the contents of this file.
     /// </summary>
     public Endorsement[] Endorsements { get; private init; }
@@ -40,6 +40,8 @@ public sealed record FileInfo
     /// account information was retrieved from.
     /// </summary>
     public BigInteger Ledger { get; private init; }
+    /// <summary>
+    /// Internal Constructor from Raw Response
     /// </summary>
     internal FileInfo(Response response)
     {

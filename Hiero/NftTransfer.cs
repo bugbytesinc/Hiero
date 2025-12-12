@@ -18,7 +18,7 @@ public sealed record NftTransfer
     /// </summary>
     public EntityId To { get; private init; }
     /// <summary>
-    /// Indicates the transfer was authorize thru the
+    /// Indicates the transfer was authorized through the
     /// allowance mechanism and the sending account
     /// may not have signed this transaction.
     /// </summary>
@@ -37,7 +37,7 @@ public sealed record NftTransfer
     /// </param>
     /// <param name="delegated">
     /// Indicates the parties involved in the transaction
-    /// are acting as delegates thru a granted allowance.
+    /// are acting as delegates through a granted allowance.
     /// </param>
     public NftTransfer(Nft nft, EntityId fromAddress, EntityId toAddress, bool delegated = false)
     {

@@ -18,9 +18,9 @@ public class AccountData
     public EntityId Account { get; set; } = default!;
     /// <summary>
     /// RFC4648 no-padding base32 encoded account alias,
-    /// this appars to be inconsistent in how the mirror
-    /// node reports this value, somtimes it is 33 bytes long,
-    /// sometimes it is 20 bytes long, user beware.
+    /// this appears to be inconsistent in how the mirror
+    /// node reports this value, sometimes it is 33 bytes long,
+    /// sometimes it is 20 bytes long, user, beware.
     /// </summary>
     [JsonPropertyName("alias")]
     public string Alias { get; set; } = default!;
@@ -75,7 +75,7 @@ public class AccountData
     [JsonPropertyName("expiry_timestamp")]
     public ConsensusTimeStamp Expiration { get; set; }
     /// <summary>
-    /// The public endorsments requied by this account.
+    /// The public endorsements required by this account.
     /// </summary>
     [JsonPropertyName("key")]
     public Endorsement Endorsement { get; set; } = default!;
@@ -158,7 +158,7 @@ public static class AccountDataExtensions
     /// The endorsement to match against.
     /// </param>
     /// <returns>
-    /// Array of contract information objects with public keys matching the endorsment,
+    /// Array of contract information objects with public keys matching the endorsement,
     /// or empty if no matches are found.
     /// </returns>
     public static IAsyncEnumerable<AccountData> GetAccountsFromEndorsementAsync(this MirrorRestClient client, Endorsement endorsement)

@@ -7,12 +7,12 @@ namespace Hiero;
 /// <summary>
 /// The information returned from the GetNftInfo ConsensusClient 
 /// method call.  It represents the details concerning an 
-/// Hedera Non-Fungable Token (NFT).
+/// Hedera Non-Fungible Token (NFT).
 /// </summary>
 public sealed record NftInfo
 {
     /// <summary>
-    /// The identifer of the NFT Instance.
+    /// The identifier of the NFT Instance.
     /// </summary>
     public Nft Nft { get; private init; }
     /// <summary>

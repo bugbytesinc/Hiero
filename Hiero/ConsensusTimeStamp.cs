@@ -75,14 +75,14 @@ public readonly record struct ConsensusTimeStamp : IComparable<ConsensusTimeStam
     }
     /// <summary>
     /// Compares the current consensus time instance with another
-    /// conensus time instance.
+    /// consensus time instance.
     /// </summary>
     /// <param name="other">
     /// The other consensus time stamp to compare against.
     /// </param>
     /// <returns>
     /// Less than zero if this instance represents an earlier
-    /// time than the other timestamp, zero of the same and
+    /// time than the other timestamp, zero if the same and
     /// greater than zero if it is later.
     /// </returns>
     public int CompareTo(ConsensusTimeStamp other)
@@ -91,14 +91,14 @@ public readonly record struct ConsensusTimeStamp : IComparable<ConsensusTimeStam
     }
     /// <summary>
     /// Compares the current consensus time instance with another
-    /// object that may be conensus time instance.
+    /// object that may be a consensus time instance.
     /// </summary>
     /// <param name="obj">
-    /// The other object compare against.
+    /// The other object to compare against.
     /// </param>
     /// <returns>
     /// Less than zero if this instance represents an earlier
-    /// time than the other timestamp, zero of the same and
+    /// time than the other timestamp, zero if the same and
     /// greater than zero if it is later.
     /// </returns>
     public int CompareTo(object? obj)
@@ -145,7 +145,7 @@ public readonly record struct ConsensusTimeStamp : IComparable<ConsensusTimeStam
     /// The Consensus Time Stamp Right hand side of the operator.
     /// </param>
     /// <returns>
-    /// True if the lhs value represnts an earlier
+    /// True if the lhs value represents an earlier
     /// time than the rhs value.
     /// </returns>
     public static bool operator <(ConsensusTimeStamp lhs, ConsensusTimeStamp rhs) => lhs.Seconds < rhs.Seconds;
@@ -175,7 +175,7 @@ public readonly record struct ConsensusTimeStamp : IComparable<ConsensusTimeStam
     /// The Consensus Time Stamp Right hand side of the operator.
     /// </param>
     /// <returns>
-    /// True if if the lhs value comes after the rhs value,
+    /// True if the lhs value comes after the rhs value,
     /// otherwise false.
     /// </returns>
     public static bool operator >(ConsensusTimeStamp lhs, ConsensusTimeStamp rhs) => lhs.Seconds > rhs.Seconds;
@@ -190,7 +190,7 @@ public readonly record struct ConsensusTimeStamp : IComparable<ConsensusTimeStam
     /// The Consensus Time Stamp Right hand side of the operator.
     /// </param>
     /// <returns>
-    /// True if if the lhs value equals or comes after the rhs 
+    /// True if the lhs value equals or comes after the rhs 
     /// value, otherwise false.
     /// </returns>
     public static bool operator >=(ConsensusTimeStamp t1, ConsensusTimeStamp t2) => t1.Seconds >= t2.Seconds;

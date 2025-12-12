@@ -89,7 +89,7 @@ public static class TransactionReceiptExtensions
     /// </param>
     /// <returns>
     /// The receipt matching the transaction id, if found and marked
-    /// sucessfull, otherwise a <see cref="TransactionException"/> is 
+    /// successful, otherwise a <see cref="TransactionException"/> is 
     /// not found or returns an error status.
     /// </returns>
     /// <exception cref="TransactionException">If the network has no record of the transaction or request has invalid or had missing data.</exception>
@@ -100,12 +100,12 @@ public static class TransactionReceiptExtensions
         var receipt = FromProtobuf(transactionId, await Engine.GetReceiptAsync(context, transactionId, cancellationToken).ConfigureAwait(false));
         if (receipt.Status != ResponseCode.Success && context.ThrowIfNotSuccess)
         {
-            throw new TransactionException($"Unable to retreive receipt, status: {receipt.Status}", receipt);
+            throw new TransactionException($"Unable to retrieve receipt, status: {receipt.Status}", receipt);
         }
         return receipt;
     }
     /// <summary>
-    /// Retreives all known receipts from the network having the given
+    /// Retrieves all known receipts from the network having the given
     /// transaction ID.  The method will wait for the disposition of at
     /// least one receipt to be known.  Receipts with failure codes do
     /// not cause an exception to be raised.
@@ -142,7 +142,7 @@ public static class TransactionReceiptExtensions
         var responseCode = response.TransactionGetReceipt.Header.NodeTransactionPrecheckCode;
         if (responseCode == ResponseCodeEnum.Busy)
         {
-            throw new ConsensusException("Network failed to respond to request for a transaction receipt, it is too busy. It is possible the network may still reach concensus for this transaction.", transactionId.AsTxId(), (ResponseCode)responseCode);
+            throw new ConsensusException("Network failed to respond to request for a transaction receipt, it is too busy. It is possible the network may still reach consensus for this transaction.", transactionId.AsTxId(), (ResponseCode)responseCode);
         }
         return createList(transactionId, response.TransactionGetReceipt.Receipt, response.TransactionGetReceipt.ChildTransactionReceipts, response.TransactionGetReceipt.DuplicateTransactionReceipts);
 

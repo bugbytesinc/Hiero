@@ -5,18 +5,18 @@ namespace Hiero.Mirror;
 
 /// <summary>
 /// Represents royalty fees charged for
-/// transfering assets (nfts).
+/// transferring assets (nfts).
 /// </summary>
 public class RoyaltyFeeData
 {
     /// <summary>
-    /// Are collecor accounts exempt from paying fees.
+    /// Are collector accounts exempt from paying fees.
     /// </summary>
     [JsonPropertyName("all_collectors_are_exempt")]
     [JsonConverter(typeof(BooleanMirrorConverter))]
     public bool CollectorsExempt { get; set; }
     /// <summary>
-    /// Amount of fracitonal fee to collect.
+    /// Amount of fractional fee to collect.
     /// </summary>
     [JsonPropertyName("amount")]
     public FractionData Amount { get; set; } = default!;

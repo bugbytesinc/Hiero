@@ -24,7 +24,6 @@ internal sealed class Invoice : IInvoice
         _memo = transactionBody.Memo;
         _txBytes = transactionBody.ToByteArray();
         _prefixTrimLimit = prefixTrimLimit;
-        _memo = transactionBody.Memo;
         _cancellationToken = cancellationToken;
         _signatures = [];
     }

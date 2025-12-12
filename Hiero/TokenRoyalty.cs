@@ -5,7 +5,7 @@ namespace Hiero;
 /// <summary>
 /// The definition of a Royalty computed from the amount of 
 /// Fungible token exchanged, can be in the form as a deduction 
-/// of the token echanged, or an exise amount taken from the 
+/// of the token exchanged, or an excise amount taken from the 
 /// sender of the fungible token.
 /// </summary>
 public sealed record TokenRoyalty : IRoyalty
@@ -29,7 +29,7 @@ public sealed record TokenRoyalty : IRoyalty
     /// </summary>
     /// <remarks>
     /// This is not expressed as a floating point number
-    /// in order to avoid rounding fees inheret in 
+    /// in order to avoid rounding fees inherent in 
     /// computing platforms.
     /// </remarks>
     public long Numerator { get; private init; }
@@ -39,7 +39,7 @@ public sealed record TokenRoyalty : IRoyalty
     /// </summary>
     /// <remarks>
     /// This is not expressed as a floating point number
-    /// in order to avoid rounding fees inheret in 
+    /// in order to avoid rounding fees inherent in 
     /// computing platforms.
     /// </remarks>
     public long Denominator { get; private init; }
@@ -54,7 +54,7 @@ public sealed record TokenRoyalty : IRoyalty
     /// surcharge paid by the sender of the associated token.
     /// If <code>false</code> (the default) the amount of token 
     /// received by the receiving account is reduced by the 
-    /// assement computed from the total amount of the associated
+    /// assessment computed from the total amount of the associated
     /// fungible token sent by the sender.
     /// </summary>
     public bool AssessAsSurcharge { get; private init; }
@@ -80,23 +80,23 @@ public sealed record TokenRoyalty : IRoyalty
     /// The maximum allowed fee value, in terms of
     /// the smallest denomination of the associated token.
     /// </param>
-    /// <param name="assesAsSurcharge">
+    /// <param name="assessAsSurcharge">
     /// Determines how the royalty assessment is applied, 
     /// if <code>true</code> the amount is added as an extra 
     /// surcharge paid by the sender of the associated token.
     /// If <code>false</code> (the default) the amount of token 
     /// received by the receiving account is reduced by the 
-    /// assement computed from the total amount of the associated
+    /// assessment computed from the total amount of the associated
     /// fungible token sent by the sender.
     /// </param>
-    public TokenRoyalty(EntityId account, long numerator, long denominator, long minimum, long maximum, bool assesAsSurcharge = false)
+    public TokenRoyalty(EntityId account, long numerator, long denominator, long minimum, long maximum, bool assessAsSurcharge = false)
     {
         Receiver = account;
         Numerator = numerator;
         Denominator = denominator;
         Minimum = minimum;
         Maximum = maximum;
-        AssessAsSurcharge = assesAsSurcharge;
+        AssessAsSurcharge = assessAsSurcharge;
     }
     /// <summary>
     /// Internal Helper Constructor converting raw protobuf 

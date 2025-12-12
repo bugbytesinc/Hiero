@@ -22,7 +22,7 @@ public sealed record EntityId : IEquatable<EntityId>
     private readonly EvmAddress? _evmAddress;
     /// <summary>
     /// Internal field to hold a Key Alias if this entity id
-    /// was originally created froma Key Alias, or null if
+    /// was originally created from a Key Alias, or null if
     /// it was not.
     /// </summary>
     private readonly Endorsement? _keyAlias;
@@ -53,8 +53,8 @@ public sealed record EntityId : IEquatable<EntityId>
     /// <summary>
     /// A special designation of an Entity TransactionId that can't be created.
     /// It represents the absence of a valid Entity TransactionId.  The network will
-    /// intrepret as "no account/file/topic/token/contract" when applied 
-    /// to change parameters. (typically the value null is intepreted 
+    /// interpret as "no account/file/topic/token/contract" when applied 
+    /// to change parameters. (typically the value null is interpreted 
     /// as "make no change"). In this way, it is possible to remove a 
     /// auto-renew account from a topic for example.
     /// </summary>
@@ -92,8 +92,9 @@ public sealed record EntityId : IEquatable<EntityId>
 
     /// <summary>
     /// Constructor creating a form of Entity TransactionId that represents a Key Alias.
+    /// </summary>
     /// <param name="keyAlias">
-    /// The Ed25509 or ECDSA Secp 256K1 Endorsment this Entity TransactionId will encapsulate.
+    /// The Ed25519 or ECDSA Secp 256K1 Endorsement this Entity TransactionId will encapsulate.
     /// </param>
     public EntityId(long shardNum, long realmNum, Endorsement keyAlias)
     {
@@ -111,7 +112,7 @@ public sealed record EntityId : IEquatable<EntityId>
         }
         if (keyAlias.Type != KeyType.Ed25519 && keyAlias.Type != KeyType.ECDSASecp256K1)
         {
-            throw new ArgumentOutOfRangeException(nameof(keyAlias), "Unsupported key type, Endorsment must be a simple Ed25519 or ECDSA Secp 256K1 key type.");
+            throw new ArgumentOutOfRangeException(nameof(keyAlias), "Unsupported key type, Endorsement must be a simple Ed25519 or ECDSA Secp 256K1 key type.");
         }
         ShardNum = shardNum;
         RealmNum = realmNum;
@@ -119,11 +120,11 @@ public sealed record EntityId : IEquatable<EntityId>
         _keyAlias = keyAlias;
     }
     /// <summary>
-    /// Constructor creating a form of Entity TransactionId that represents an EVM Payer.
-    /// <param name="keyAlias">
-    /// The EVM Payer this Entity TransactionId will encapsulate.
+    /// Constructor creating a form of Entity TransactionId that represents an EVM Address.
+    /// </summary>
+    /// <param name="evmAddress">
+    /// The EVM Address this Entity TransactionId will encapsulate.
     /// </param>
-    /// <param name="evmAddress"></param>
     public EntityId(long shardNum, long realmNum, EvmAddress evmAddress)
     {
         if (shardNum < 0)
@@ -149,7 +150,7 @@ public sealed record EntityId : IEquatable<EntityId>
     /// operation is successful, otherwise <code>null</code>.
     /// </param>
     /// <returns>
-    /// <code>True</code> if the entityId hold a Evm Payer,
+    /// <code>True</code> if the entityId holds an Evm Address,
     /// otherwise false.
     /// </returns>
     public bool TryGetEvmAddress([MaybeNullWhen(false)] out EvmAddress evmAddress)
@@ -159,14 +160,14 @@ public sealed record EntityId : IEquatable<EntityId>
     /// <summary>
     /// Attempts to retrieve the Key Alias Endorsement wrapped by 
     /// this Entity TransactionId instance.  Will return false if this Entity TransactionId
-    /// does not hold an Key Alias.
+    /// does not hold a Key Alias.
     /// </summary>
     /// <param name="alias">
     /// Variable receiving the Key Alias instance if the 
     /// operation is successful, otherwise <code>null</code>.
     /// </param>
     /// <returns>
-    /// <code>True</code> if the entityId holds a evmAddress,
+    /// <code>True</code> if the entityId holds a Key Alias,
     /// otherwise false.
     /// </returns>
     public bool TryGetKeyAlias([MaybeNullWhen(false)] out Endorsement keyAlias)

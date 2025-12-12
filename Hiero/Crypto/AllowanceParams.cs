@@ -119,7 +119,7 @@ public sealed class AllowanceParams : TransactionParams<TransactionReceipt>, INe
 public static class AllowanceExtensions
 {
     /// <summary>
-    /// Creates approved allowance(s) alowing the designated
+    /// Creates approved allowance(s) allowing the designated
     /// agent to spend crypto and tokens from the originating
     /// account.  Presently the owning account must be the 
     /// Payer (operator) paying for this transaction when 

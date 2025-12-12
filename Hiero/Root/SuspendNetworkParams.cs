@@ -10,7 +10,7 @@ public sealed class SuspendNetworkParams : TransactionParams<TransactionReceipt>
     /// <summary>
     /// The time of consensus that nodes will stop services, this
     /// date must be in the future relative to the submission of
-    /// this transaciton.
+    /// this transaction.
     /// </summary>
     public ConsensusTimeStamp Consensus { get; set; }
     /// <summary>
@@ -49,7 +49,7 @@ public static class SuspendNetworkExtensions
     /// <param name="suspendParams">
     /// The time of consensus that nodes will stop services, this
     /// date must be in the future relative to the submission of
-    /// this transaciton.
+    /// this transaction.
     /// </param>
     /// <param name="configure">
     /// Optional callback method providing an opportunity to modify 

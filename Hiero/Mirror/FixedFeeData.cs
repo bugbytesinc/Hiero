@@ -9,7 +9,7 @@ namespace Hiero.Mirror;
 public class FixedFeeData
 {
     /// <summary>
-    /// Are collecor accounts exempt from paying fees.
+    /// Are collector accounts exempt from paying fees.
     /// </summary>
     [JsonPropertyName("all_collectors_are_exempt")]
     [JsonConverter(typeof(BooleanMirrorConverter))]

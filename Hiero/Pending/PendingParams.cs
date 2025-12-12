@@ -1,10 +1,10 @@
 ﻿namespace Hiero;
 
 /// <summary>
-/// Scheduled (Scheduled) TransactionId Parameters.  Used for creating
+/// Pending (Scheduled) transaction parameters.  Used for creating
 /// a <see cref="Signatory"/> signaling that the transaction should 
 /// be accepted but not immediately executed.  It includes optional 
-/// details descrbing the details of how the transaction is to be 
+/// details describing how the transaction is to be 
 /// scheduled for execution.
 /// </summary>
 public sealed record PendingParams

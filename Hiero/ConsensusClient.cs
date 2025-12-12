@@ -107,7 +107,7 @@ public sealed class ConsensusClient : IAsyncDisposable
         _context = parent.GetConfigured(configure ?? (_ => { }));
     }
     /// <summary>
-    /// Updates the configuration of this instance of a client thru 
+    /// Updates the configuration of this instance of a client through 
     /// implementation of the supplied <see cref="IConsensusContext"/> callback method.
     /// </summary>
     /// <param name="configure">

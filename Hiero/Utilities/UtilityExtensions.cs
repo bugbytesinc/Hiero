@@ -52,7 +52,7 @@ public static class UtilityExtensions
         }
     }
     /// <summary>
-    /// Contacts the the configured gateway with a COST_ASK request
+    /// Contacts the configured gateway with a COST_ASK request
     /// to exercise the communications pipeline from this process thru
     /// to the execution engine on the gossip node.
     /// </summary>

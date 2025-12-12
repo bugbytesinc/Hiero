@@ -9,7 +9,7 @@ internal static class MirrorRestClientUtils
 {
     /// <summary>
     /// Helper function to generate the root path to a mirror node query
-    /// with potentail filter options.
+    /// with potential filter options.
     /// </summary>
     /// <param name="rootPath">
     /// Basic root path of the rest query.

@@ -43,7 +43,7 @@ public class NetworkFeeData
 public static class NetworkFeeExtensions
 {
     /// <summary>
-    /// Retreives the network fee data for the given timestamp.
+    /// Retrieves the network fee data for the given timestamp.
     /// </summary>
     /// <param name="client">
     /// Mirror Rest Client to use for the request.

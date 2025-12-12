@@ -9,7 +9,7 @@ namespace Hiero;
 public sealed class PrepareNetworkUpgradeParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
-    /// Address the upgrade file (previously uploaded).
+    /// Address of the upgrade file (previously uploaded).
     /// </summary>
     public EntityId File { get; set; } = default!;
     /// <summary>

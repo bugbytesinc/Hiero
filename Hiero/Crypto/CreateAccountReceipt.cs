@@ -10,7 +10,7 @@ public sealed record CreateAccountReceipt : TransactionReceipt
     /// The address of the newly created account.
     /// </summary>
     /// <remarks>
-    /// The value will be <code>None</code> if the create acocunt
+    /// The value will be <code>None</code> if the create account
     /// method was scheduled as a pending transaction.
     /// </remarks>
     public EntityId Address { get; internal init; }

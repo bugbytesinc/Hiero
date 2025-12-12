@@ -34,13 +34,13 @@ public sealed class CreateFileParams : TransactionParams<FileReceipt>, INetworkP
     /// Endorsements associated with this file.
     /// </summary>
     /// <remarks>
-    /// Keys/callbacks added here will be combined with those already
+    /// Keys or callbacks added here will be combined with those already
     /// identified in the client object's context when signing this 
     /// transaction to change the state of this account.
     /// </remarks>
     public Signatory? Signatory { get; set; }
     /// <summary>
-    /// Optional Cancellation token to interrupt the file creation.
+    /// Optional cancellation token to interrupt the file creation.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
     INetworkTransaction INetworkParams<FileReceipt>.CreateNetworkTransaction()
@@ -70,7 +70,7 @@ public static class CreateFileExtensions
     /// Creates a new file with the given content.
     /// </summary>
     /// <param name="client">
-    /// The Consensus Node Client executing the file ceate.
+    /// The Consensus Node Client executing the file create.
     /// </param>
     /// <param name="createParameters">
     /// File creation parameters specifying contents and ownership of the file.
