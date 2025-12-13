@@ -2,7 +2,7 @@
 
 namespace Hiero;
 
-public class SubscribeTopicParams
+public sealed class SubscribeTopicParams
 {
     /// <summary>
     /// The Message's Topics.

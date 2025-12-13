@@ -9,7 +9,7 @@ namespace Hiero;
 /// Represents a transaction submitted to the hedera network through the
 /// native HAPI Ethereum gateway feature.
 /// </summary>
-public class EvmTransactionParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
+public sealed class EvmTransactionParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
     /// The complete raw Ethereum transaction (RLP encoded type 0, 1, and 2),

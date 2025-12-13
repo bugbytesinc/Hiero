@@ -7,7 +7,7 @@ namespace Hiero;
 /// <summary>
 /// Represents the parameters required to delete a contract from the hedera network.
 /// </summary>
-public class DeleteContractParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
+public sealed class DeleteContractParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
     /// The address of the contract to delete.

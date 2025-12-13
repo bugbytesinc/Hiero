@@ -8,7 +8,7 @@ namespace Hiero;
 /// Typically represents data returned from a smart contract invocation.
 /// </summary>
 [JsonConverter(typeof(EncodedParamsConverter))]
-public class EncodedParams
+public sealed class EncodedParams
 {
     /// <summary>
     /// The raw bytes returned from a function call (in ABI format).

@@ -2,7 +2,7 @@
 /// <summary>
 /// Represents a tuple of values that can be used in smart contract calls.
 /// </summary>
-public class AbiTuple
+public sealed class AbiTuple
 {
     /// <summary>
     /// The values contained in the tuple.

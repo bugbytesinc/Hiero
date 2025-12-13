@@ -16,7 +16,7 @@ namespace Hiero;
 /// Warning: this class has not been hardened against external attacks,
 /// it keeps the root seed in memory.
 /// </remarks>
-public class Mnemonic
+public sealed class Mnemonic
 {
     /// <summary>
     /// The Ed25519 DER Encoding prefix, for just the PRIVATE key.

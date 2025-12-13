@@ -7,7 +7,7 @@ namespace Hiero;
 /// <summary>
 /// Represents the parameters required to delete a file from the Hedera network.
 /// </summary>
-public class DeleteFileParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
+public sealed class DeleteFileParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
     /// The address of the file to delete.

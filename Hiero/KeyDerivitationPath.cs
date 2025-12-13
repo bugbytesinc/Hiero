@@ -3,7 +3,7 @@
 /// Enumerates known HD Key Derivation paths for
 /// various Key formats and Wallets in the Hedera ecosystem.
 /// </summary>
-public class KeyDerivationPath
+public sealed class KeyDerivationPath
 {
     /// <summary>
     /// The Ed25519 Key Derivation matching the 24 word seed

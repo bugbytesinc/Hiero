@@ -4,7 +4,7 @@ namespace Hiero;
 /// <summary>
 /// Receipt produced from submitting a new message.
 /// </summary>
-public record SubmitMessageReceipt : TransactionReceipt
+public sealed record SubmitMessageReceipt : TransactionReceipt
 {
     /// <summary>
     /// A SHA-384 Running Hash of the following: Previous RunningHash,

@@ -7,7 +7,7 @@ namespace Hiero;
 /// <summary>
 /// Provides the details of the request to the client when invoking a contract local query function.
 /// </summary>
-public class QueryContractParams
+public sealed class QueryContractParams
 {
     /// <summary>
     /// The address of the contract to call.

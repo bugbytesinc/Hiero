@@ -10,7 +10,7 @@ namespace Hiero.Implementation;
 /// and coordinates values returned for various contexts.  Not intended for
 /// public use.
 /// </summary>
-internal class MirrorContextStack : ContextStack<MirrorContextStack, Uri>, IMirrorGrpcContext
+internal sealed class MirrorContextStack : ContextStack<MirrorContextStack, Uri>, IMirrorGrpcContext
 {
     private ContextValue<Uri?> _uri;
     private ContextValue<Action<IMessage>?> _onSendingRequest;

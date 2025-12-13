@@ -7,7 +7,7 @@ namespace Hiero;
 /// encoded Ethereum transaction to be submitted to the
 /// network using the Hedera Ethereum Transaction HAPI endpoint.
 /// </summary>
-public class EvmTransactionInput
+public sealed class EvmTransactionInput
 {
     /// <summary>
     /// Conversion from Tinybars to Wei (10^(18-8))

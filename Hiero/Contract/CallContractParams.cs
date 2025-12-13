@@ -8,7 +8,7 @@ namespace Hiero;
 /// <summary>
 /// Represents the parameters required to call a smart contract on the Hedera network.
 /// </summary>
-public class CallContractParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
+public sealed class CallContractParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
     /// The address of the contract to call.
