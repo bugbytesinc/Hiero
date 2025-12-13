@@ -2,9 +2,20 @@
 
 namespace Hiero;
 /// <summary>
-/// A Marker abstract class for transactions parameters.
+/// A General Marker abstract class for transactions parameters.
 /// </summary>
-public abstract class TransactionParams<TReceipt> where TReceipt : TransactionReceipt
+public abstract class TransactionParams
+{
+    /// <remarks>
+    /// Only classes from the Hashgraph assembly 
+    /// may derive from this class.
+    /// </remarks>
+    internal TransactionParams() { }
+}
+/// <summary>
+/// A Transaction Receipt Specific Marker abstract class for transactions parameters.
+/// </summary>
+public abstract class TransactionParams<TReceipt> : TransactionParams where TReceipt : TransactionReceipt
 {
     /// <remarks>
     /// Only classes from the Hashgraph assembly 

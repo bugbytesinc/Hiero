@@ -9,7 +9,7 @@ namespace Hiero;
 /// </summary>
 public sealed class BatchedTransactionParams
 {
-    public IReadOnlyList<TransactionParams<TransactionReceipt>> TransactionParams { get; set; } = default!;
+    public IReadOnlyList<TransactionParams> TransactionParams { get; set; } = default!;
     /// <summary>
     /// Optional explicit endorsement to be applied to the batch of transactions if not specified
     /// individually by each <see cref="BatchedTransaction"/>. If not specified by either the batch 
@@ -246,28 +246,70 @@ internal sealed class BatchedParamsOrchestrator : TransactionParams<TransactionR
 public static class TransactionBatchParamsExtensions
 {
     /// <summary>
-    /// Generates a pseudo random number, which can be retrieved via the
-    /// transaction's record.
+    /// Creates, signs, submits a batch of transactions and waits for a response from 
+    /// the target consensus node, returning a receipt.
     /// </summary>
-    /// <param name="maxValue">The maximum allowed value for
-    /// the generated number.</param>
+    /// <typeparam name="T">
+    /// The type of receipt to return.
+    /// </typeparam>
+    /// <param name="transactionParams">
+    /// The details of the transaction to create, sign and submit.
+    /// </param>
     /// <param name="configure">
-    /// Optional callback method providing an opportunity to modify 
-    /// the execution configuration for just this method call. 
-    /// It is executed prior to submitting the request to the network.
+    /// Optional callback to configure the calling context immediately 
+    /// before assembling the transaction for submission.
     /// </param>
     /// <returns>
-    /// A transaction receipt indicating the success of the operation.
+    /// A receipt object.
     /// </returns>
-    /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
-    /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
-    /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
-    /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
-    public static async Task<TransactionReceipt> SubmitTransactionBatchAsync(this ConsensusClient client, BatchedTransactionParams batchParams, Action<IConsensusContext>? configure = null)
+    /// <exception cref="PrecheckException">
+    /// If there was a problem submitting the request, including the consensus node
+    /// considering the request invalid.
+    /// </exception>
+    /// <exception cref="TransactionException">
+    /// If the consensus node returned a failure code and throw on failure is set to
+    /// <code>true</code> in the client context configuration.
+    /// </exception>
+    /// <exception cref="ConsensusException">
+    /// Under heavy load, the network may not process the transaction before it expires.
+    /// </exception>
+    public async static Task<TransactionReceipt> ExecuteAsync(this ConsensusClient client, BatchedTransactionParams batchParams, Action<IConsensusContext>? configure = null)
     {
         await using var configuredClient = client.Clone(configure);
         var transactionParams = await BatchedParamsOrchestrator.CreateAsync(batchParams, configuredClient).ConfigureAwait(false);
         return await configuredClient.ExecuteAsync(transactionParams, null).ConfigureAwait(false);
+    }
+    /// <summary>
+    /// Creates, signs, submits a batch of transactions and waits for a response from 
+    /// the target consensus node.  Returning the precheck response code.
+    /// A <see cref="PrecheckException"/> may be thrown under certain invalid
+    /// input scenarios.
+    /// </summary>
+    /// <remarks>
+    /// This method will wait for the target consensus node to respond with 
+    /// a code other than <see cref="ResponseCode.Busy"/> or 
+    /// <see cref="ResponseCode.InvalidTransactionStart"/> if applicable, 
+    /// until such time as the retry count is exhausted, in which case it 
+    /// is possible to receive a <see cref="ResponseCode.Busy"/> response.
+    /// </remarks>
+    /// <typeparam name="T">
+    /// The type of <see cref="TransactionReceipt"/> returned by the request.
+    /// </typeparam>
+    /// <param name="transactionParams">
+    /// Transaction input parameters.
+    /// </param>
+    /// <param name="configure">
+    /// Optional callback to configure the calling context immediately 
+    /// before assembling the transaction for submission.
+    /// </param>
+    /// <returns>
+    /// The precheck <see cref="ResponseCode"/> returned from the request
+    /// after waiting for submission retries if applicable.
+    /// </returns>
+    public async static Task<ResponseCode> SubmitAsync(this ConsensusClient client, BatchedTransactionParams batchParams, Action<IConsensusContext>? configure = null)
+    {
+        await using var configuredClient = client.Clone(configure);
+        var transactionParams = await BatchedParamsOrchestrator.CreateAsync(batchParams, configuredClient).ConfigureAwait(false);
+        return await configuredClient.SubmitAsync(transactionParams, null).ConfigureAwait(false);
     }
 }

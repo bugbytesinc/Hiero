@@ -38,12 +38,12 @@ namespace Hiero.Implementation
 
         private ConsensusContextStack(ConsensusContextStack parent) : base(parent) { }
         public ConsensusContextStack(Func<ConsensusNodeEndpoint, GrpcChannel> channelFactory) : base(channelFactory) { }
-        public ConsensusContextStack GetWithAddRef()
+        public ConsensusContextStack CopyWithAddRef()
         {
             addRef();
             return this;
         }
-        public ConsensusContextStack GetConfigured(Action<IConsensusContext> configure)
+        public ConsensusContextStack CloneAndConfigure(Action<IConsensusContext> configure)
         {
             var context = new ConsensusContextStack(this);
             configure.Invoke(context);

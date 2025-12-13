@@ -88,7 +88,7 @@ public sealed class ConsensusClient : IAsyncDisposable
             SignaturePrefixTrimLimit = 0,
             AdjustForLocalClockDrift = false,
             ThrowIfNotSuccess = true
-        }.GetConfigured(configure ?? (_ => { }));
+        }.CloneAndConfigure(configure ?? (_ => { }));
     }
     /// <summary>
     /// Internal implementation of client creation.  Accounts for  newly created 
@@ -104,7 +104,7 @@ public sealed class ConsensusClient : IAsyncDisposable
     /// </param>
     private ConsensusClient(ConsensusContextStack parent, Action<IConsensusContext>? configure)
     {
-        _context = parent.GetConfigured(configure ?? (_ => { }));
+        _context = parent.CloneAndConfigure(configure ?? (_ => { }));
     }
     /// <summary>
     /// Updates the configuration of this instance of a client through 
@@ -168,7 +168,7 @@ public sealed class ConsensusClient : IAsyncDisposable
     /// The precheck <see cref="ResponseCode"/> returned from the request
     /// after waiting for submission retries if applicable.
     /// </returns>
-    public async Task<ResponseCode> SubmitAsync<T>(TransactionParams<T> transactionParams, Action<IConsensusContext>? configure) where T : TransactionReceipt
+    public async Task<ResponseCode> SubmitAsync<T>(TransactionParams<T> transactionParams, Action<IConsensusContext>? configure = null) where T : TransactionReceipt
     {
         await using var context = BuildChildContext(configure);
         var networkParams = transactionParams.GetNetworkParams();
@@ -205,7 +205,7 @@ public sealed class ConsensusClient : IAsyncDisposable
     /// <exception cref="ConsensusException">
     /// Under heavy load, the network may not process the transaction before it expires.
     /// </exception>
-    public async Task<T> ExecuteAsync<T>(TransactionParams<T> transactionParams, Action<IConsensusContext>? configure) where T : TransactionReceipt
+    public async Task<T> ExecuteAsync<T>(TransactionParams<T> transactionParams, Action<IConsensusContext>? configure = null) where T : TransactionReceipt
     {
         await using var context = BuildChildContext(configure);
         var networkParams = transactionParams.GetNetworkParams();
@@ -241,7 +241,7 @@ public sealed class ConsensusClient : IAsyncDisposable
     /// </summary>
     internal ConsensusContextStack BuildChildContext(Action<IConsensusContext>? configure)
     {
-        return configure is null ? _context.GetWithAddRef() : _context.GetConfigured(configure);
+        return configure is null ? _context.CopyWithAddRef() : _context.CloneAndConfigure(configure);
     }
     /// <summary>
     /// The default algorithm for creating channels for the client.
