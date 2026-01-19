@@ -42,10 +42,10 @@ jobs:
         build-mode: manual
 
     - name: Restore Hiero SDK
-      run: dotnet restore ./Hiero.sln
+      run: dotnet restore ./Hiero.slnx
 
     - name: Build Hiero SDK
-      run: dotnet build ./Hiero.sln -c Release -v minimal /p:ContinuousIntegrationBuild=true
+      run: dotnet build ./Hiero.slnx -c Release -v minimal /p:ContinuousIntegrationBuild=true
      
     - name: Perform Hiero SDK CodeQL Analysis
       uses: github/codeql-action/analyze@v3
