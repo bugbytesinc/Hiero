@@ -308,8 +308,16 @@ public static class ContractResultDataExtensions
     /// </returns>
     public static async Task<BigInteger> GetChainIdAsync(this MirrorRestClient client)
     {
-        var path = GenerateInitialPath($"contracts/results", [new LimitFilter(1)]);
-        var data = (await client.GetSingleItemAsync<ContractResultDataPage>(path).ConfigureAwait(false))?.Results?.FirstOrDefault();
-        return data?.ChainId ?? throw new MirrorException("Chain ID not found in contract results.", [], System.Net.HttpStatusCode.NotFound);
+        var path = GenerateInitialPath($"contracts/results", [new LimitFilter(10), OrderByFilter.Descending]);
+        var data = (await client.GetSingleItemAsync<ContractResultDataPage>(path).ConfigureAwait(false))?.Results ?? throw new MirrorException("Contract results are empty, unable to find Chain ID.", [], System.Net.HttpStatusCode.NotFound);
+        for (int i = 0; i < data.Length; i++)
+        {
+            var result = data[i];
+            if (result.ChainId != BigInteger.Zero)
+            {
+                return result.ChainId;
+            }
+        }
+        throw new MirrorException("Chain ID not found in contract results.", [], System.Net.HttpStatusCode.NotFound);
     }
 }
