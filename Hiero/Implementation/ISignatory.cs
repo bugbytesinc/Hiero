@@ -7,6 +7,5 @@
 internal interface ISignatory
 {
     ValueTask SignAsync(IInvoice invoice);
-    PendingParams? GetSchedule();
     (byte[] R, byte[] S, int RecoveryId) SignEvm(byte[] data);
 }

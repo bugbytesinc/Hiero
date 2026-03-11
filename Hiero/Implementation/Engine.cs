@@ -35,29 +35,10 @@ internal static class Engine
     /// </exception>
     internal async static Task<(INetworkTransaction, ByteString, TransactionID, CancellationToken)> EncodeAndSignAsync<T>(ConsensusContextStack context, INetworkParams<T> networkParams, bool failIfNoSignatures) where T : TransactionReceipt
     {
-        var gateway = context.Endpoint;
-        if (gateway is null)
-        {
-            throw new InvalidOperationException("The Network Gateway Node has not been configured. Please check that 'Gateway' is set in the Client context.");
-        }
+        var gateway = context.Endpoint ?? throw new InvalidOperationException("The Network Gateway Node has not been configured. Please check that 'Gateway' is set in the Client context.");
         var networkTransaction = networkParams.CreateNetworkTransaction();
         var cancellationToken = networkParams.CancellationToken ?? default;
         var signatory = CoalesceSignatories(context.Signatory, networkParams.Signatory);
-        var schedule = signatory?.GetSchedule();
-        if (schedule is not null)
-        {
-            var scheduledTransactionBody = networkTransaction.CreateSchedulableTransactionBody();
-            scheduledTransactionBody.TransactionFee = (ulong)context.FeeLimit;
-            networkTransaction = new ScheduleCreateTransactionBody
-            {
-                ScheduledTransactionBody = scheduledTransactionBody,
-                AdminKey = schedule.Administrator is null ? null : new Key(schedule.Administrator),
-                PayerAccountID = schedule.PendingPayer is null ? null : new AccountID(schedule.PendingPayer),
-                ExpirationTime = schedule.Expiration is null ? null : new Proto.Timestamp(schedule.Expiration.Value),
-                WaitForExpiry = schedule.DelayExecution,
-                Memo = schedule.Memo ?? ""
-            };
-        }
         var transactionBody = networkTransaction.CreateTransactionBody();
         transactionBody.TransactionFee = (ulong)context.FeeLimit;
         transactionBody.NodeAccountID = new AccountID(gateway);

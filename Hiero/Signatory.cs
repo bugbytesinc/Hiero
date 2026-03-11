@@ -46,12 +46,6 @@ public sealed class Signatory : ISignatory, IEquatable<Signatory>
         /// keys must sign a transaction.
         /// </summary>
         List = 5,
-        /// <summary>
-        /// This signatory holds information delaying the immediate execution of
-        /// the transaction upon submission and instead causing the transaction 
-        /// to be scheduled instead.
-        /// </summary>
-        Pending = 6,
     }
     /// <summary>
     /// Internal type of this Signatory.
@@ -183,23 +177,6 @@ public sealed class Signatory : ISignatory, IEquatable<Signatory>
         _data = signingCallback;
     }
     /// <summary>
-    /// Creates a signatory that indicates the transaction should be 
-    /// scheduled and not immediately executed.  The params include
-    /// optional details on how to schedule the transaction.
-    /// </summary> 
-    /// <param name="pendingParams">
-    /// The scheduling details of the pending transaction.
-    /// </param>
-    public Signatory(PendingParams pendingParams)
-    {
-        if (pendingParams is null)
-        {
-            throw new ArgumentNullException(nameof(pendingParams), "Pending Parameters object cannot be null.");
-        }
-        _type = Type.Pending;
-        _data = pendingParams;
-    }
-    /// <summary>
     /// Convenience implicit cast for creating a <code>Signatory</code> 
     /// directly from an Ed25519 private key.
     /// </summary>
@@ -225,17 +202,6 @@ public sealed class Signatory : ISignatory, IEquatable<Signatory>
     public static implicit operator Signatory(Func<IInvoice, Task> signingCallback)
     {
         return new Signatory(signingCallback);
-    }
-    /// <summary>
-    /// Convenience implicit cast for creating a <code>Signatory</code>
-    /// directly from a <see cref="PendingParams"/> object.
-    /// </summary>
-    /// <param name="pendingParams">
-    /// The scheduling details of the pending transaction.
-    /// </param>
-    public static implicit operator Signatory(PendingParams pendingParams)
-    {
-        return new Signatory(pendingParams);
     }
     /// <summary>
     /// Equality implementation.
@@ -280,10 +246,6 @@ public sealed class Signatory : ISignatory, IEquatable<Signatory>
                 break;
             case Type.Callback:
                 return ReferenceEquals(_data, other._data);
-            case Type.Pending:
-                var thisPending = (PendingParams)_data;
-                var otherPending = (PendingParams)other._data;
-                return thisPending.Equals(otherPending);
         }
         return false;
     }
@@ -438,43 +400,27 @@ public sealed class Signatory : ISignatory, IEquatable<Signatory>
             case Type.Callback:
                 await ((Func<IInvoice, Task>)_data)(invoice).ConfigureAwait(false);
                 break;
-            case Type.Pending:
-                // This will be called to sign the to-be-scheduled
-                // transaction. In this context, we do nothing.
-                break;
             default:
                 throw new InvalidOperationException("Not a presently supported Signatory key type, please consider the callback signatory as an alternative.");
         }
     }
-
-    PendingParams? ISignatory.GetSchedule()
-    {
-        switch (_type)
-        {
-            case Type.Pending:
-                return (PendingParams)_data;
-            case Type.List:
-                PendingParams? result = null;
-                foreach (ISignatory signer in (Signatory[])_data)
-                {
-                    var schedule = signer.GetSchedule();
-                    if (schedule is not null)
-                    {
-                        if (result is null)
-                        {
-                            result = schedule;
-                        }
-                        else if (!result.Equals(schedule))
-                        {
-                            throw new InvalidOperationException("Found Multiple Pending Signatories, do not know which one to choose.");
-                        }
-                    }
-                }
-                return result;
-            default:
-                return null;
-        }
-    }
+    /// <summary>
+    /// Signs the specified data using the ECDSA Secp256K1 key and returns the signature 
+    /// components required for EVM-compatible signatures.
+    /// </summary>
+    /// <remarks>This method is specifically designed for EVM-compatible signatures and 
+    /// requires the signatory to be of type ECDSASecp256K1.</remarks>
+    /// <param name="data">
+    /// The data to be signed, represented as a byte array.
+    /// </param>
+    /// <returns>
+    /// A tuple containing the signature components R and S as byte arrays, and the 
+    /// recovery ID as an integer suitable for RLP encoding of EVM contract calls.
+    /// </returns>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown if the current signatory does not support EVM signing, indicating that 
+    /// it is not an ECDSA Secp256K1 key.
+    /// </exception>
     (byte[] R, byte[] S, int RecoveryId) ISignatory.SignEvm(byte[] data)
     {
         if (_type != Type.ECDSASecp256K1)

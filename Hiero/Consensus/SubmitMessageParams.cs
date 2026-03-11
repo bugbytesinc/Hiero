@@ -192,8 +192,17 @@ public static class SubmitMessageExtensions
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
     public static async Task<SubmitMessageReceipt> SubmitMessageAsync(this ConsensusClient client, SubmitMessageParams submitParams, Action<IConsensusContext>? configure = null)
     {
+        // We have a special case when the segment index
+        // is one (the first chunk of a series of message chunks).
+        // If we're not using chunks, it is easy, and for other 
+        // chunks we will have the receipt from this call to set
+        // the "parent" transction id.
         if (submitParams.SegmentIndex == 1)
         {
+            // For the first chunk, it is not valid to set the
+            // ParentTransactionId value, it can be set in the
+            // client context if the caller whishes to micromange
+            // the value of the transaction id.
             if (submitParams.ParentTransactionId is not null)
             {
                 throw new ArgumentOutOfRangeException(nameof(SubmitMessageParams.ParentTransactionId), "The Parent Transaction cannot be specified (must be null) when the segment index is one.");
@@ -204,28 +213,24 @@ public static class SubmitMessageExtensions
             // of a segmented message.
             //
             // First We need to apply the configure command, to 
-            // create the correct context
+            // create the correct context, and we need to temporarily
+            // capture that context so we can generate a TxId.
             ConsensusContextStack configuredContext = default!;
             await using var configuredClient = client.Clone(ctx =>
             {
                 configure?.Invoke(ctx);
                 configuredContext = (ConsensusContextStack)ctx;
             });
+            // Generate the TxId manually (or extract it because
+            // it was set by the caller), since we need it as
+            // a part of the chunk payload and can't let things
+            // just work automatically.
             var initialChunkTransactionId = Engine.GetOrCreateTransactionID(configuredContext).AsTxId();
-            if (Engine.CoalesceSignatories(configuredContext.Signatory, submitParams.Signatory)?.GetSchedule() is null)
-            {
-                // The easy path, this is not a scheduled transaction.
-                submitParams = submitParams.CloneWithTransactionId(initialChunkTransactionId);
-            }
-            else
-            {
-                // Even more smell, we need to check to see if this is a
-                // scheduled transaction.  If this is, the initial chunk 
-                // transaction should have the "scheduled" flag set.
-                var scheduledChunkTransactionId = new TransactionID(initialChunkTransactionId);
-                scheduledChunkTransactionId.Scheduled = true;
-                submitParams = submitParams.CloneWithTransactionId(scheduledChunkTransactionId.AsTxId());
-            }
+            // This is smelly too, but we don't want to alter the original
+            // submit params since we don't control how it was created or
+            // how it might be re-used, so we work with a clone with the
+            // embedded iniital transaction id for the message chunk.
+            submitParams = submitParams.CloneWithTransactionId(initialChunkTransactionId);
             // We use our configured client, however we need to override the
             // configuration with one additional configuration rule that will
             // peg the transaction to our pre-computed value.

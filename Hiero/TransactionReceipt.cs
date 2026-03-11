@@ -38,15 +38,6 @@ public record TransactionReceipt
     /// </remarks>
     public ExchangeRate? NextExchangeRate { get; internal init; }
     /// <summary>
-    /// If this transaction resulted in the pending (to be scheduled)
-    /// transaction retained by the network, this property will contain
-    /// the identifier of the pending transaction record.  This includes 
-    /// the identifier of the pending transaction as well as the bytes
-    /// representing the transaction which must be signed by the 
-    /// remaining parties.
-    /// </summary>
-    public PendingTransaction? Pending { get; internal init; }
-    /// <summary>
     /// Internal Constructor of the record.
     /// </summary>
     /// <param name="receipt">Network Receipt Containing Info</param>
@@ -58,14 +49,6 @@ public record TransactionReceipt
         {
             CurrentExchangeRate = receipt.ExchangeRate.CurrentRate?.ToExchangeRate();
             NextExchangeRate = receipt.ExchangeRate.NextRate?.ToExchangeRate();
-        }
-        if (receipt.ScheduledTransactionID is not null || receipt.ScheduleID is not null)
-        {
-            Pending = new PendingTransaction
-            {
-                Id = receipt.ScheduleID?.ToAddress() ?? EntityId.None,
-                TxId = receipt.ScheduledTransactionID.AsTxId()
-            };
         }
     }
 }

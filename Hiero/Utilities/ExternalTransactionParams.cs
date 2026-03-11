@@ -60,11 +60,7 @@ internal sealed class ExternalTransactionParamsOrchestrator : INetworkParams<Tra
             {
                 throw new ArgumentOutOfRangeException(nameof(externalParams.SignedTransactionBytes), "Unrecognized Transaction Type, unable to determine which Hedera Network Service Type should process transaction.");
             }
-            var gateway = context.Endpoint;
-            if (gateway is null)
-            {
-                throw new InvalidOperationException("The Network Gateway Node has not been configured. Please check that 'Gateway' is set in the Client context and is compatible with this external transaction.");
-            }
+            var gateway = context.Endpoint ?? throw new InvalidOperationException("The Network Gateway Node has not been configured. Please check that 'Gateway' is set in the Client context and is compatible with this external transaction.");
             var nodeAddress = transactionBody.NodeAccountID.AsAddress();
             var gatewayAddress = (EntityId)gateway;
             if (nodeAddress != gatewayAddress)
@@ -86,10 +82,6 @@ internal sealed class ExternalTransactionParamsOrchestrator : INetworkParams<Tra
                 signedTransaction.SigMap?.AddSignaturesToInvoice(invoice);
                 foreach (var signatory in signatories)
                 {
-                    if (signatory.GetSchedule() is not null)
-                    {
-                        throw new ArgumentException("Scheduling the submission of an external transaction is not supported (one or more signatories in the context were created as pending signatories).  However, the external transaction itself can be a scheduled transaction.", nameof(externalParams.SignedTransactionBytes));
-                    }
                     await signatory.SignAsync(invoice).ConfigureAwait(false);
                 }
                 signedTransaction.SigMap = invoice.GenerateSignedTransactionFromSignatures(true).SigMap;
