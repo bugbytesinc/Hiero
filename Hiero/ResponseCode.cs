@@ -1364,15 +1364,15 @@ public enum ResponseCode
     /// </summary>
     [Description("TOKEN_HAS_NO_METADATA_OR_SUPPLY_KEY")] TokenHasNoMetadataOrSupplyKey = 360,
     /// <summary>
-    /// The list of `PendingAirdropId`s is empty and MUST NOT be empty.
+    /// The list of `Airdrop`s is empty and MUST NOT be empty.
     /// </summary>
     [Description("EMPTY_PENDING_AIRDROP_ID_LIST")] EmptyPendingAirdropIdList = 361,
     /// <summary>
-    /// A `PendingAirdropId` is repeated in a `claim` or `cancel` transaction.
+    /// A `Airdrop` is repeated in a `claim` or `cancel` transaction.
     /// </summary>
     [Description("PENDING_AIRDROP_ID_REPEATED")] PendingAirdropIdRepeated = 362,
     /// <summary>
-    /// The number of `PendingAirdropId` values in the list exceeds the maximum
+    /// The number of `Airdrop` values in the list exceeds the maximum
     /// allowable number.
     /// </summary>
     [Description("PENDING_AIRDROP_ID_LIST_TOO_LONG")] PendingAirdropIdListTooLong = 363,

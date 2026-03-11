@@ -28,7 +28,7 @@ jobs:
           
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
 
     - name: Setup .NET SDK
       uses: actions/setup-dotnet@v5
@@ -36,18 +36,18 @@ jobs:
         dotnet-version: '10.0.x'
 
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@v3
+      uses: github/codeql-action/init@v4
       with:
         languages: csharp
         build-mode: manual
 
     - name: Restore Hiero SDK
-      run: dotnet restore ./Hiero.sln
+      run: dotnet restore ./Hiero.slnx
 
     - name: Build Hiero SDK
-      run: dotnet build ./Hiero.sln -c Release -v minimal /p:ContinuousIntegrationBuild=true
+      run: dotnet build ./Hiero.slnx -c Release -v minimal /p:ContinuousIntegrationBuild=true
      
     - name: Perform Hiero SDK CodeQL Analysis
-      uses: github/codeql-action/analyze@v3
+      uses: github/codeql-action/analyze@v4
       with:
         category: "/language:csharp"

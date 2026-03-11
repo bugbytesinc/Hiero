@@ -308,29 +308,37 @@ public static class TransactionRecordExtensions
         {
             return new TokenRecord(record);
         }
-        else if (record?.ContractCreateResult != null)
+        else if (receipt.NodeId > 0)
+        {
+            return new ConsensusNodeRecord(record);
+        }
+        else if (record.ContractCreateResult != null)
         {
             return new CreateContractRecord(record);
         }
-        else if (record?.ContractCallResult != null)
+        else if (record.ContractCallResult != null)
         {
             return new CallContractRecord(record);
         }
-        else if (record is not null && !record.EthereumHash.IsEmpty)
+        else if (record.NewPendingAirdrops.Count > 0)
+        {
+            return new AirdropRecord(record);
+        }
+        else if (!record.EthereumHash.IsEmpty)
         {
             return new EvmTransactionRecord(record);
         }
-        else if (record?.EntropyCase == Proto.TransactionRecord.EntropyOneofCase.PrngNumber)
+        else if (record.EntropyCase == Proto.TransactionRecord.EntropyOneofCase.PrngNumber)
         {
             return new RangedPseudoRandomNumberRecord(record);
         }
-        else if (record?.EntropyCase == Proto.TransactionRecord.EntropyOneofCase.PrngBytes)
+        else if (record.EntropyCase == Proto.TransactionRecord.EntropyOneofCase.PrngBytes)
         {
             return new BytesPseudoRandomNumberRecord(record);
         }
         else
         {
-            return new TransactionRecord(record!);
+            return new TransactionRecord(record);
         }
     }
 }
