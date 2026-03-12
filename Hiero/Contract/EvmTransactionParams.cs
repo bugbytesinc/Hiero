@@ -50,7 +50,7 @@ public sealed class EvmTransactionParams : TransactionParams<TransactionReceipt>
     /// transaction authorized an amount that was insufficient then the (hapi) payer 
     /// will only be charged the amount needed to make up the difference. If the gas 
     /// price in the ethereum transaction was set to zero then the (hapi) payer will 
-    /// be assessed the entire gas & hedera fees.
+    /// be assessed the entire gas &amp; hedera fees.
     /// </remarks>
     public long AdditionalGasAllowance { get; set; }
     /// <summary>
@@ -93,6 +93,9 @@ public sealed class EvmTransactionParams : TransactionParams<TransactionReceipt>
     }
     string INetworkParams<TransactionReceipt>.OperationDescription => "Contract Call";
 }
+/// <summary>
+/// Extension methods for submitting Ethereum-compatible EVM transactions.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class EvmTransactionExtensions
 {

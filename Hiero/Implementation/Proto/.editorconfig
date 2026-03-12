@@ -1,0 +1,3 @@
+[*.cs]
+# Protobuf partial class extensions - suppress missing XML doc comment warnings
+dotnet_diagnostic.CS1591.severity = none

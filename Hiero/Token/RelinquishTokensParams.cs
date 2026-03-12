@@ -83,6 +83,9 @@ public sealed class RelinquishTokensParams : TransactionParams<TransactionReceip
     }
     string INetworkParams<TransactionReceipt>.OperationDescription => "Relinquish Tokens";
 }
+/// <summary>
+/// Extension methods for relinquishing tokens and NFTs back to the treasury.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class RelinquishTokenExtensions
 {

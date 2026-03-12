@@ -127,6 +127,9 @@ public sealed class AddConsensusNodeParams : TransactionParams<ConsensusNodeRece
     }
     string INetworkParams<ConsensusNodeReceipt>.OperationDescription => "Create Consensus Node";
 }
+/// <summary>
+/// Extension methods for adding consensus nodes to the network address book.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class AddConsensusNodeExtensions
 {

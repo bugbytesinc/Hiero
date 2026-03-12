@@ -5,6 +5,9 @@ using System.Runtime.CompilerServices;
 
 namespace Hiero;
 
+/// <summary>
+/// Transaction parameters for administratively restoring a previously deleted file.
+/// </summary>
 public sealed class SystemRestoreFileParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
@@ -32,6 +35,9 @@ public sealed class SystemRestoreFileParams : TransactionParams<TransactionRecei
     }
     string INetworkParams<TransactionReceipt>.OperationDescription => "System Restore File";
 }
+/// <summary>
+/// Extension methods for administratively restoring a deleted file.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class SystemRestoreFileExtensions
 {

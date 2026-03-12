@@ -6,7 +6,7 @@ using System.Text.Json.Serialization;
 
 namespace Hiero;
 /// <summary>
-/// Identifies an Hedera Address, Token, File, Topics, or Contract, typically
+/// Identifies a Hedera Address, Token, File, Topics, or Contract, typically
 /// in the native format of <code>shard.realm.num</code>, but can also hold
 /// a Key Alias or EVM Payer if such an Entity TransactionId type is required.
 /// </summary>
@@ -93,6 +93,12 @@ public sealed record EntityId : IEquatable<EntityId>
     /// <summary>
     /// Constructor creating a form of Entity TransactionId that represents a Key Alias.
     /// </summary>
+    /// <param name="shardNum">
+    /// The shard number for this Entity ID.
+    /// </param>
+    /// <param name="realmNum">
+    /// The realm number for this Entity ID.
+    /// </param>
     /// <param name="keyAlias">
     /// The Ed25519 or ECDSA Secp 256K1 Endorsement this Entity TransactionId will encapsulate.
     /// </param>
@@ -122,6 +128,12 @@ public sealed record EntityId : IEquatable<EntityId>
     /// <summary>
     /// Constructor creating a form of Entity TransactionId that represents an EVM Address.
     /// </summary>
+    /// <param name="shardNum">
+    /// The shard number for this Entity ID.
+    /// </param>
+    /// <param name="realmNum">
+    /// The realm number for this Entity ID.
+    /// </param>
     /// <param name="evmAddress">
     /// The EVM Address this Entity TransactionId will encapsulate.
     /// </param>
@@ -162,8 +174,8 @@ public sealed record EntityId : IEquatable<EntityId>
     /// this Entity TransactionId instance.  Will return false if this Entity TransactionId
     /// does not hold a Key Alias.
     /// </summary>
-    /// <param name="alias">
-    /// Variable receiving the Key Alias instance if the 
+    /// <param name="keyAlias">
+    /// Variable receiving the Key Alias instance if the
     /// operation is successful, otherwise <code>null</code>.
     /// </param>
     /// <returns>
@@ -229,7 +241,7 @@ public sealed record EntityId : IEquatable<EntityId>
     }
     /// <summary>
     /// Attempts to parse a string as in the [shard.realm.num] format to convert
-    /// into an Hedera Entity TransactionId.
+    /// into a Hedera Entity TransactionId.
     /// </summary>
     /// <param name="value">
     /// The string form ([shard.realm.num]) of an Entity ID.
@@ -251,7 +263,7 @@ public sealed record EntityId : IEquatable<EntityId>
     }
     /// <summary>
     /// Attempts to parse a span of characters (string) from in the [shard.realm.num] 
-    /// format to convert into an Hedera Entity TransactionId.
+    /// format to convert into a Hedera Entity TransactionId.
     /// </summary>
     /// <param name="value">
     /// The sequence of charactes in the form ([shard.realm.num]) of an Entity ID.

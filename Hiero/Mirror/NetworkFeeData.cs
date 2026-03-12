@@ -40,6 +40,9 @@ public class NetworkFeeData
     [JsonPropertyName("timestamp")]
     public ConsensusTimeStamp Timestamp { get; set; }
 }
+/// <summary>
+/// Extension methods for querying network fee data from the mirror node.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class NetworkFeeExtensions
 {

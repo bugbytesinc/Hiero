@@ -4,8 +4,18 @@ using System.Text;
 
 namespace Hiero;
 
+/// <summary>
+/// Utility class for Recursive Length Prefix (RLP) encoding and decoding,
+/// used for serializing data in EVM-compatible transactions.
+/// </summary>
 public static class Rlp
 {
+    /// <summary>
+    /// RLP-encodes one or more data items into a byte array.
+    /// </summary>
+    /// <param name="data">The data items to encode. Supports byte arrays, strings, numeric types, and nested arrays.</param>
+    /// <returns>The RLP-encoded byte array.</returns>
+    /// <exception cref="ArgumentException">If a data item is of an unsupported type.</exception>
     public static byte[] Encode(params object?[] data)
     {
         if (data == null)
@@ -134,6 +144,11 @@ public static class Rlp
         return data;
     }
 
+    /// <summary>
+    /// Decodes an RLP-encoded byte array into its constituent data items.
+    /// </summary>
+    /// <param name="data">The RLP-encoded byte array to decode.</param>
+    /// <returns>An array of decoded objects, where each element is either a byte array or a nested array of objects.</returns>
     public static object[] Decode(byte[] data)
     {
         var list = new List<object>();

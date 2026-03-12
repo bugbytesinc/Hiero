@@ -7,6 +7,9 @@ namespace Hiero;
 /// </summary>
 public sealed record AirdropRecord : TransactionRecord
 {
+    /// <summary>
+    /// The list of pending airdrops created by this transaction.
+    /// </summary>
     public IReadOnlyList<AirdropAmount> Airdrops { get; internal init; }
     /// <summary>
     /// Internal Constructor of the record.

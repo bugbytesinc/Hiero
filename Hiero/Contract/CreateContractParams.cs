@@ -178,6 +178,9 @@ public sealed class CreateContractParams : TransactionParams<CreateContractRecei
     }
     string INetworkParams<CreateContractReceipt>.OperationDescription => "Create Contract";
 }
+/// <summary>
+/// Extension methods for creating smart contracts.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class CreateContractExtensions
 {

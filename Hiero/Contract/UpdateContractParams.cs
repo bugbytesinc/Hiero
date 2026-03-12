@@ -7,7 +7,7 @@ namespace Hiero;
 /// <summary>
 /// Represents the properties on a contract that can be changed.
 /// Any property set to <code>null</code> on this object when submitted to the 
-/// <see cref="ConsensusClient.UpdateContractAsync(UpdateContractParams, Action{IConsensusContext})"/>
+/// <see cref="UpdateContractExtensions.UpdateContractAsync"/>
 /// method will be left unchanged by the system.  The transaction must be
 /// appropriately signed as described by the original
 /// <see cref="CreateContractParams.Administrator"/> endorsement in order
@@ -183,6 +183,9 @@ public sealed class UpdateContractParams : TransactionParams<TransactionReceipt>
     }
     string INetworkParams<TransactionReceipt>.OperationDescription => "Contract Update";
 }
+/// <summary>
+/// Extension methods for updating smart contract properties.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class UpdateContractExtensions
 {

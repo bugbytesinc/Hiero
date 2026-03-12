@@ -41,6 +41,9 @@ public sealed class ContractException : Exception
     /// The final <see cref="ResponseCode"/> returned by the network 
     /// prior to transaction request expiration.
     /// </param>
+    /// <param name="cost">
+    /// The fee cost associated with the failed transaction.
+    /// </param>
     /// <param name="callResult">
     /// The results returned from the contract, which may include
     /// additional information regarding the error.

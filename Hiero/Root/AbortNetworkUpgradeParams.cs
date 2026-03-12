@@ -5,6 +5,9 @@ using System.Runtime.CompilerServices;
 
 namespace Hiero;
 
+/// <summary>
+/// Transaction parameters for aborting a previously scheduled network upgrade.
+/// </summary>
 public sealed class AbortNetworkUpgradeParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
@@ -30,6 +33,9 @@ public sealed class AbortNetworkUpgradeParams : TransactionParams<TransactionRec
         return new TransactionReceipt(transactionId, receipt);
     }
 }
+/// <summary>
+/// Extension methods for aborting a scheduled network upgrade.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class AbortNetworkUpgradeExtensions
 {
@@ -55,6 +61,7 @@ public static class AbortNetworkUpgradeExtensions
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
+    /// <param name="abortParams">The parameters for aborting the scheduled network upgrade.</param>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> AbortNetworkUpgradeAsync(this ConsensusClient client, AbortNetworkUpgradeParams abortParams, Action<IConsensusContext>? configure = null)

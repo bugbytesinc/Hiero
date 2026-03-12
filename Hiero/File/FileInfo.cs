@@ -55,6 +55,9 @@ public sealed record FileInfo
         Ledger = new BigInteger(info.LedgerId.Span, true, true);
     }
 }
+/// <summary>
+/// Extension methods for querying network file information and content.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class FileInfoExtensions
 {
@@ -67,9 +70,10 @@ public static class FileInfoExtensions
     /// <param name="file">
     /// The address of the file contents to retrieve.
     /// </param>
+    /// <param name="cancellationToken">Optional cancellation token.</param>
     /// <param name="configure">
-    /// Optional callback method providing an opportunity to modify 
-    /// the execution configuration for just this method call. 
+    /// Optional callback method providing an opportunity to modify
+    /// the execution configuration for just this method call.
     /// It is executed prior to submitting the request to the network.
     /// </param>
     /// <returns>
@@ -94,9 +98,10 @@ public static class FileInfoExtensions
     /// <param name="file">
     /// Payer of the file to query.
     /// </param>
+    /// <param name="cancellationToken">Optional cancellation token.</param>
     /// <param name="configure">
-    /// Optional callback method providing an opportunity to modify 
-    /// the execution configuration for just this method call. 
+    /// Optional callback method providing an opportunity to modify
+    /// the execution configuration for just this method call.
     /// It is executed prior to submitting the request to the network.
     /// </param>
     /// <returns>

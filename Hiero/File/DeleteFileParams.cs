@@ -40,6 +40,9 @@ public sealed class DeleteFileParams : TransactionParams<TransactionReceipt>, IN
     }
     string INetworkParams<TransactionReceipt>.OperationDescription => "Delete File";
 }
+/// <summary>
+/// Extension methods for deleting network files.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class DeleteFileExtensions
 {

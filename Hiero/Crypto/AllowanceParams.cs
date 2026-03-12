@@ -115,6 +115,9 @@ public sealed class AllowanceParams : TransactionParams<TransactionReceipt>, INe
     }
     string INetworkParams<TransactionReceipt>.OperationDescription => "Create Allowance";
 }
+/// <summary>
+/// Extension methods for allocating crypto, token, and NFT allowances.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class AllowanceExtensions
 {

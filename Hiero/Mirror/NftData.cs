@@ -61,6 +61,9 @@ public class NftData
     [JsonPropertyName("token_id")]
     public EntityId Token { get; set; } = default!;
 }
+/// <summary>
+/// Extension methods for querying NFT data from the mirror node.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class NftDataExtensions
 {

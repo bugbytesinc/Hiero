@@ -7,7 +7,7 @@ namespace Hiero;
 /// <summary>
 /// Represents the properties on an account that can be changed.
 /// Any property set to <code>null</code> on this object when submitted to the 
-/// <see cref="ConsensusClient.UpdateAccountAsync(UpdateAccountParams, Action{IConsensusContext})"/>
+/// <see cref="UpdateAccountExtensions.UpdateAccountAsync"/>
 /// method will be left unchanged by the system.  Certain additional conditions
 /// apply to certain properties such as the signing key are described below.
 /// </summary>
@@ -175,6 +175,9 @@ public sealed class UpdateAccountParams : TransactionParams<TransactionReceipt>,
     }
     string INetworkParams<TransactionReceipt>.OperationDescription => "Account Update";
 }
+/// <summary>
+/// Extension methods for updating cryptocurrency account properties.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class UpdateAccountExtensions
 {

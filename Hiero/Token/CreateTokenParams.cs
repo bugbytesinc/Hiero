@@ -275,6 +275,9 @@ public sealed class CreateTokenParams : TransactionParams<CreateTokenReceipt>, I
     }
     string INetworkParams<CreateTokenReceipt>.OperationDescription => "Create Token";
 }
+/// <summary>
+/// Extension methods for creating new fungible token definitions on the network.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class CreateTokenExtensions
 {

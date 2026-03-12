@@ -35,8 +35,8 @@ public sealed class Signatory : ISignatory, IEquatable<Signatory>
         /// </summary>
         ECDSASecp256K1 = 2,
         /// <summary>
-        /// A <code>Func<IInvoice, Task> signingCallback</code> callback function 
-        /// having the knowledge to properly sign the binary representation of the 
+        /// A <code>Func&lt;IInvoice, Task&gt;</code> signing callback function
+        /// having the knowledge to properly sign the binary representation of the
         /// transaction as serialized using the grpc protocol.
         /// </summary>
         Callback = 4,

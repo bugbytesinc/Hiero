@@ -5,6 +5,9 @@ using System.Runtime.CompilerServices;
 
 namespace Hiero;
 
+/// <summary>
+/// Transaction parameters for administratively restoring a previously deleted contract.
+/// </summary>
 public sealed class SystemRestoreContractParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
@@ -32,6 +35,9 @@ public sealed class SystemRestoreContractParams : TransactionParams<TransactionR
     }
     string INetworkParams<TransactionReceipt>.OperationDescription => "System Restore Contract";
 }
+/// <summary>
+/// Extension methods for administratively restoring a deleted contract.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class SystemRestoreContractExtensions
 {

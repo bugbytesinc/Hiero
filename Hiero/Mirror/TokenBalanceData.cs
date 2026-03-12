@@ -23,6 +23,9 @@ public class TokenBalanceData
     [JsonPropertyName("balance")]
     public long Balance { get; set; }
 }
+/// <summary>
+/// Extension methods for querying token balance data from the mirror node.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class TokenBalanceDataExtensions
 {

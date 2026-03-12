@@ -30,6 +30,9 @@ public class CryptoAllowanceData
     [JsonConverter(typeof(LongMirrorConverter))]
     public long Amount { get; set; }
 }
+/// <summary>
+/// Extension methods for querying crypto allowance data from the mirror node.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class CryptoAllowanceDataExtensions
 {

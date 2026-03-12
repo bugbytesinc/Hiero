@@ -60,6 +60,9 @@ public class HcsTopicData
     [JsonPropertyName("timestamp")]
     public TimestampRangeData TimestampRange { get; set; } = default!;
 }
+/// <summary>
+/// Extension methods for querying HCS topic data from the mirror node.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class HcsTopicDataExtensions
 {

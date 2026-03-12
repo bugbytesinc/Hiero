@@ -251,6 +251,9 @@ public sealed class CreateNftParams : TransactionParams<CreateTokenReceipt>, INe
     }
     string INetworkParams<CreateTokenReceipt>.OperationDescription => "Create NFT";
 }
+/// <summary>
+/// Extension methods for creating new NFT token definitions on the network.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class CreateNftExtensions
 {

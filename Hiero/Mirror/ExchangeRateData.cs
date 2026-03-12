@@ -32,6 +32,9 @@ public class ExchangeRateData
     [JsonPropertyName("timestamp")]
     public ConsensusTimeStamp Timestamp { get; set; }
 }
+/// <summary>
+/// Extension methods for querying exchange rate data from the mirror node.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class ExchangeRateDataExtensions
 {
@@ -41,6 +44,10 @@ public static class ExchangeRateDataExtensions
     /// </summary>
     /// <param name="client">
     /// Mirror Rest Client to use for the request.
+    /// </param>
+    /// <param name="consensus">
+    /// Optional consensus timestamp to retrieve the exchange rate
+    /// at or before the given time.  If not specified, returns the current rate.
     /// </param>
     /// <returns>
     /// Exchange rate information for the current and next

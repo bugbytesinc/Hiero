@@ -24,6 +24,9 @@ public class TransactionDetailData : TransactionData
     [JsonPropertyName("nft_transfers")]
     public AssetTransferData[]? AssetTransfers { get; set; }
 }
+/// <summary>
+/// Extension methods for querying transaction detail data from the mirror node.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class TransactionDetailDataExtensions
 {

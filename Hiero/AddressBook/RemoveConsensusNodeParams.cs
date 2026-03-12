@@ -44,6 +44,9 @@ public sealed class RemoveConsensusNodeParams : TransactionParams<TransactionRec
     }
     string INetworkParams<TransactionReceipt>.OperationDescription => "Delete Node";
 }
+/// <summary>
+/// Extension methods for removing consensus nodes from the network address book.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class RemoveConsensusNodeExtensions
 {

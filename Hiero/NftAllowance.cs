@@ -65,6 +65,9 @@ public sealed record NftAllowance
     /// is <code>null</code> then all NFTs of the
     /// token class may be spent.
     /// </param>
+    /// <param name="ownersDelegate">
+    /// The optional delegating account controlling NFTs for the owner.
+    /// </param>
     /// <exception cref="ArgumentException">
     /// If any of the addresses are null or empty.
     /// </exception>
@@ -110,6 +113,9 @@ public sealed record NftAllowance
     /// <param name="spender">
     /// The account that may spend the allocated
     /// allowance of NFT.
+    /// </param>
+    /// <param name="ownersDelegate">
+    /// The optional delegating account controlling NFTs for the owner.
     /// </param>
     /// <exception cref="ArgumentException">
     /// If any of the addresses are null or empty.

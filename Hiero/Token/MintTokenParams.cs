@@ -52,6 +52,9 @@ public sealed class MintTokenParams : TransactionParams<TokenReceipt>, INetworkP
     }
     string INetworkParams<TokenReceipt>.OperationDescription => "Mint Tokens";
 }
+/// <summary>
+/// Extension methods for minting fungible tokens to the treasury.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class MintTokenExtensions
 {

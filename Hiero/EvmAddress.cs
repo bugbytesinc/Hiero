@@ -49,8 +49,9 @@ public sealed record EvmAddress : IEquatable<EvmAddress>
     /// <summary>
     /// Constructor from ECDSASecp256K1 Endorsement, converts the public
     /// key into the appropriate 20-byte public key hash.
+    /// </summary>
     /// <param name="endorsement">
-    /// An ECDSASecp256K1 public key.  The EvmAddress will automatically 
+    /// An ECDSASecp256K1 public key.  The EvmAddress will automatically
     /// convert the public key into the matching 20-byte eth hash.
     /// </param>
     public EvmAddress(Endorsement endorsement)
@@ -165,7 +166,7 @@ public sealed record EvmAddress : IEquatable<EvmAddress>
         return checksum.ToString();
     }
     /// <summary>
-    /// Tries to parse a string value into an EVM Payer address.
+    /// Tries to parse a string value into an EVM Address.
     /// </summary>
     /// <param name="value">The string representation of the EVM address, may start with '0x'</param>
     /// <param name="evmAddress">Contains the EVM Address if parsing is successful</param>
@@ -180,7 +181,7 @@ public sealed record EvmAddress : IEquatable<EvmAddress>
         return false;
     }
     /// <summary>
-    /// Tries to parse a string value into an EVM Payer address.
+    /// Tries to parse a string value into an EVM Address.
     /// </summary>
     /// <param name="value">The string representation of the EVM address, may start with '0x'</param>
     /// <param name="evmAddress">Contains the EVM Address if parsing is successful</param>
@@ -205,33 +206,33 @@ public sealed record EvmAddress : IEquatable<EvmAddress>
         return false;
     }
     /// <summary>
-    /// Implicit operator for converting a readonly memory array 
-    /// into an EVM Payer. It sets the shard and realm values to zero.
+    /// Implicit operator for converting a readonly memory array
+    /// into an EVM Address. It sets the shard and realm values to zero.
     /// </summary>
     /// <param name="bytes">
-    /// The bytes representing the EVM Payer.
+    /// The bytes representing the EVM Address.
     /// </param>
     public static implicit operator EvmAddress(ReadOnlyMemory<byte> bytes)
     {
         return new EvmAddress(bytes.Span);
     }
     /// <summary>
-    /// Implicit operator for converting a readonly span of bytes into 
-    /// an EVM Payer.  It sets the shard and realm values to zero.
+    /// Implicit operator for converting a readonly span of bytes into
+    /// an EVM Address.  It sets the shard and realm values to zero.
     /// </summary>
     /// <param name="bytes">
-    /// The bytes representing the EVM Payer.
+    /// The bytes representing the EVM Address.
     /// </param>
     public static implicit operator EvmAddress(ReadOnlySpan<byte> bytes)
     {
         return new EvmAddress(bytes);
     }
     /// <summary>
-    /// Implicitly wraps an EVM Payer within an
+    /// Implicitly wraps an EVM Address within an
     /// <code>EntityId</code> construct.
     /// </summary>
     /// <param name="evmAddress">
-    /// The EVM Payer to wrap within an <code>EntityId</code>.
+    /// The EVM Address to wrap within an <code>EntityId</code>.
     /// </param>
     public static implicit operator EntityId(EvmAddress evmAddress)
     {

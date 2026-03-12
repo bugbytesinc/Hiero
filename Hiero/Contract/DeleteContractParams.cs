@@ -55,6 +55,9 @@ public sealed class DeleteContractParams : TransactionParams<TransactionReceipt>
     }
     string INetworkParams<TransactionReceipt>.OperationDescription => "Delete Contract";
 }
+/// <summary>
+/// Extension methods for deleting smart contracts.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class DeleteContractExtensions
 {

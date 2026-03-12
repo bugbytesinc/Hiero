@@ -5,6 +5,7 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<IsAotCompatible>true</IsAotCompatible>
 		<Nullable>enable</Nullable>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<RootNamespace>Hiero</RootNamespace>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
@@ -13,7 +14,6 @@
 		<Title>Hiero .NET SDK</Title>
 		<Description>.NET Client Library for Hiero Network and Hedera Hashgraph</Description>
 		<Copyright>Copyright 2025 BugBytes, Inc. All Rights Reserved.</Copyright>
-		<PackageLicenseFile></PackageLicenseFile>
 		<PackageProjectUrl>https://hashgraph.bugbytes.com/</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/bugbytesinc/Hiero.git</RepositoryUrl>
 		<PublishRepositoryUrl>true</PublishRepositoryUrl>
@@ -38,7 +38,6 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
 	</ItemGroup>
 	<ItemGroup>
 		<Protobuf Include="..\Reference\hedera-protobufs\**\*.proto" GrpcServices="Client" ProtoRoot="..\Reference\hedera-protobufs">

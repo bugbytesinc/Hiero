@@ -6,6 +6,9 @@ using System.Runtime.CompilerServices;
 
 namespace Hiero;
 
+/// <summary>
+/// Extension methods for working with protobuf signature maps.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class SignatureMapExtensions
 {

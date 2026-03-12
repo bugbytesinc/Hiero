@@ -128,6 +128,9 @@ public class AccountData
     [JsonPropertyName("stake_period_start")]
     public ConsensusTimeStamp StakePeriodStart { get; set; }
 }
+/// <summary>
+/// Extension methods for querying account data from the mirror node.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class AccountDataExtensions
 {
@@ -139,6 +142,9 @@ public static class AccountDataExtensions
     /// </param>
     /// <param name="account">
     /// The id of the contract to retrieve.
+    /// </param>
+    /// <param name="filters">
+    /// Optional list of filters to apply to the query.
     /// </param>
     /// <returns>
     /// An Address information object or throws an exception if not found.

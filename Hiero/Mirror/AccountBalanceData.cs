@@ -25,6 +25,9 @@ public class AccountBalanceData
     [JsonConverter(typeof(LongMirrorConverter))]
     public long Balance { get; set; }
 }
+/// <summary>
+/// Extension methods for querying account balance data from the mirror node.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class AccountBalanceDataExtensions
 {

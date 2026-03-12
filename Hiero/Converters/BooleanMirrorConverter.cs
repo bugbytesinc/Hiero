@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace Hiero.Converters;
 /// <summary>
-/// Long Converter that tolerates null values.
+/// Boolean JSON converter that tolerates string representations from mirror node responses.
 /// </summary>
 public sealed class BooleanMirrorConverter : JsonConverter<bool>
 {

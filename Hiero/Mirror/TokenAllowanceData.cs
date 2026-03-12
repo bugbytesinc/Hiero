@@ -43,6 +43,9 @@ public class TokenAllowanceData
     [JsonConverter(typeof(LongMirrorConverter))]
     public long Amount { get; set; }
 }
+/// <summary>
+/// Extension methods for querying token allowance data from the mirror node.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class TokenAllowanceDataExtensions
 {

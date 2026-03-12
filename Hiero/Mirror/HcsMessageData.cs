@@ -54,6 +54,9 @@ public class HcsMessageData
     [JsonPropertyName("topic_id")]
     public EntityId TopicId { get; set; } = default!;
 }
+/// <summary>
+/// Extension methods for querying HCS message data from the mirror node.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class HcsMessageDataExtensions
 {

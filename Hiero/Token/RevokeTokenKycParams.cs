@@ -49,6 +49,9 @@ public sealed class RevokeTokenKycParams : TransactionParams<TransactionReceipt>
     }
     string INetworkParams<TransactionReceipt>.OperationDescription => "Revoke Token KYC";
 }
+/// <summary>
+/// Extension methods for revoking KYC status from token-holding accounts.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class RevokeTokenKycExtensions
 {

@@ -49,6 +49,9 @@ public sealed class GrantTokenKycParams : TransactionParams<TransactionReceipt>,
     }
     string INetworkParams<TransactionReceipt>.OperationDescription => "Grant Token KYC";
 }
+/// <summary>
+/// Extension methods for granting KYC status to token-holding accounts.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class GrantTokenKycExtensions
 {

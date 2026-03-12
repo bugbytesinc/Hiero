@@ -15,6 +15,9 @@ internal class TransactionTimestampData
     [JsonPropertyName("consensus_timestamp")]
     public ConsensusTimeStamp Consensus { get; set; }
 }
+/// <summary>
+/// Extension methods for retrieving the latest consensus timestamp from the mirror node.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class TransactionTimestampDataExtensions
 {

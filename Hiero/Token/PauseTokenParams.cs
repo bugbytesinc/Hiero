@@ -44,6 +44,9 @@ public sealed class PauseTokenParams : TransactionParams<TransactionReceipt>, IN
     }
     string INetworkParams<TransactionReceipt>.OperationDescription => "Pause Token";
 }
+/// <summary>
+/// Extension methods for pausing a token on the network.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class PauseTokenExtensions
 {

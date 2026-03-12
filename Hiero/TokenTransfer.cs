@@ -10,7 +10,7 @@ public sealed record TokenTransfer
     /// </summary>
     public EntityId Token { get; private init; }
     /// <summary>
-    /// The account sending or receiving the token's coins.
+    /// The Payer receiving or sending the token's coins.
     /// </summary>
     public EntityId Account { get; private init; }
     /// <summary>

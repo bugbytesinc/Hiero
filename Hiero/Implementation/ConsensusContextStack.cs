@@ -79,9 +79,6 @@ namespace Hiero.Implementation
         /// of the parent contexts are included in the return value, request handlers can 
         /// be stacked through contexts.
         /// </remarks>
-        /// <param name="context">
-        /// Context that may be configured with a sending request callback.
-        /// </param>
         /// <returns>
         /// An Action that may or may not delegate to multiple handlers that are called just
         /// before a message is sent to the gossip node grpc endpoint.
@@ -125,9 +122,6 @@ namespace Hiero.Implementation
         /// of the parent contexts are included in the return value, request handlers can 
         /// be stacked through contexts.
         /// </remarks>
-        /// <param name="context">
-        /// Context that may be configured with a receiving request callback.
-        /// </param>
         /// <returns>
         /// An Action that may or may not delegate to multiple handlers that are called just
         /// after a message is received from the gossip node grpc endpoint.

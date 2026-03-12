@@ -5,6 +5,9 @@ using System.Runtime.CompilerServices;
 
 namespace Hiero;
 
+/// <summary>
+/// Transaction parameters for scheduling a telemetry services upgrade.
+/// </summary>
 public sealed class ScheduleTelemetryUpgradeParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
@@ -28,6 +31,9 @@ public sealed class ScheduleTelemetryUpgradeParams : TransactionParams<Transacti
     }
     string INetworkParams<TransactionReceipt>.OperationDescription => "Schedule Telemetry Upgrade Command";
 }
+/// <summary>
+/// Extension methods for scheduling a telemetry upgrade.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class ScheduleTelemetryUpgradeExtensions
 {

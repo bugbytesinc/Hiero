@@ -92,6 +92,9 @@ public sealed class CreateTopicParams : TransactionParams<CreateTopicReceipt>, I
     }
     string INetworkParams<CreateTopicReceipt>.OperationDescription => "Create Topic";
 }
+/// <summary>
+/// Extension methods for creating consensus topics.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class CreateTopicExtensions
 {

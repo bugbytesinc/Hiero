@@ -95,6 +95,9 @@ internal sealed class ExternalTransactionParamsOrchestrator : INetworkParams<Tra
         }
     }
 }
+/// <summary>
+/// Extension methods for submitting externally created transactions to the network.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class ExternalTransactionParamsExtensions
 {
@@ -123,26 +126,27 @@ public static class ExternalTransactionParamsExtensions
     /// </param>
     /// <param name="signedTransactionBytes">
     /// The serialized protobuf encoded bytes of a <code>SignedTransaction</code>
-    /// object to be submitted to a Hedera Gossip Network Node. These bytes must be 
+    /// object to be submitted to a Hedera Gossip Network Node. These bytes must be
     /// manually created from calling code having a knowledge of how to construct a
     /// proper Hedera transaction.
     /// </param>
+    /// <param name="cancellationToken">Optional cancellation token.</param>
     /// <param name="configure">
-    /// Optional callback method providing an opportunity to modify 
-    /// the execution configuration for just this method call. 
+    /// Optional callback method providing an opportunity to modify
+    /// the execution configuration for just this method call.
     /// It is executed prior to submitting the request to the network.
     /// </param>
     /// <returns>
     /// The <code>ResponseCode</code> corresponding to the precheck value
     /// returned from the remote Hedera Gossip Node which can indicate
-    /// success or failure.  This method does not wait for consensus and does 
+    /// success or failure.  This method does not wait for consensus and does
     /// not return a receipt.  However, it will retry sending the transaction
     /// when it receives a <code>BUSY</code> response from the remote node.
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If transaction submission failed due to network communication errors.  
-    /// The PrecheckException will not be thrown for PRECHECK error codes returned from the remote gRPC endpoint.  
+    /// <exception cref="PrecheckException">If transaction submission failed due to network communication errors.
+    /// The PrecheckException will not be thrown for PRECHECK error codes returned from the remote gRPC endpoint.
     /// This behavior is different from most other API calls that throw a PrecheckException for any precheck value
     /// returned that is not <code>OK</code>.  The PrecheckException is thrown because there is no true response
     /// code to return and the method should divulge some information as to the nature of the network error.</exception>
@@ -173,28 +177,26 @@ public static class ExternalTransactionParamsExtensions
     /// <param name="client">
     /// The Consensus Node Client submitting the raw transaction to the network.
     /// </param>
-    /// <param name="signedTransactionBytes">
-    /// The serialized protobuf encoded bytes of a <code>SignedTransaction</code>
-    /// object to be submitted to a Hedera Gossip Network Node. These bytes must be 
-    /// manually created from calling code having a knowledge of how to construct a
-    /// proper Hedera transaction.
+    /// <param name="externalParams">
+    /// The externally created transaction parameters, including the serialized protobuf
+    /// encoded bytes of a <code>SignedTransaction</code> object to be submitted to the network.
     /// </param>
     /// <param name="configure">
-    /// Optional callback method providing an opportunity to modify 
-    /// the execution configuration for just this method call. 
+    /// Optional callback method providing an opportunity to modify
+    /// the execution configuration for just this method call.
     /// It is executed prior to submitting the request to the network.
     /// </param>
     /// <returns>
     /// The <code>ResponseCode</code> corresponding to the precheck value
     /// returned from the remote Hedera Gossip Node which can indicate
-    /// success or failure.  This method does not wait for consensus and does 
+    /// success or failure.  This method does not wait for consensus and does
     /// not return a receipt.  However, it will retry sending the transaction
     /// when it receives a <code>BUSY</code> response from the remote node.
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If transaction submission failed due to network communication errors.  
-    /// The PrecheckException will not be thrown for PRECHECK error codes returned from the remote gRPC endpoint.  
+    /// <exception cref="PrecheckException">If transaction submission failed due to network communication errors.
+    /// The PrecheckException will not be thrown for PRECHECK error codes returned from the remote gRPC endpoint.
     /// This behavior is different from most other API calls that throw a PrecheckException for any precheck value
     /// returned that is not <code>OK</code>.  The PrecheckException is thrown because there is no true response
     /// code to return and the method should divulge some information as to the nature of the network error.</exception>

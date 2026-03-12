@@ -81,6 +81,9 @@ public sealed record TopicInfo
         Ledger = new BigInteger(info.LedgerId.Span, true, true);
     }
 }
+/// <summary>
+/// Extension methods for querying consensus topic information.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class TopicInfoExtensions
 {
@@ -93,9 +96,10 @@ public static class TopicInfoExtensions
     /// <param name="topic">
     /// The Hedera Network Payer of the Topic instance to retrieve.
     /// </param>
+    /// <param name="cancellationToken">Optional cancellation token.</param>
     /// <param name="configure">
-    /// Optional callback method providing an opportunity to modify 
-    /// the execution configuration for just this method call. 
+    /// Optional callback method providing an opportunity to modify
+    /// the execution configuration for just this method call.
     /// It is executed prior to submitting the request to the network.
     /// </param>
     /// <returns>

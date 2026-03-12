@@ -55,6 +55,9 @@ public sealed class ClaimAirdropParams : TransactionParams<TransactionReceipt>, 
     }
     string INetworkParams<TransactionReceipt>.OperationDescription => "Claim Airdrop";
 }
+/// <summary>
+/// Extension methods for claiming pending airdrops on the network.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class ClaimAirdropExtensions
 {

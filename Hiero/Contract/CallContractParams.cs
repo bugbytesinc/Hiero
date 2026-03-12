@@ -64,6 +64,9 @@ public sealed class CallContractParams : TransactionParams<TransactionReceipt>, 
     }
     string INetworkParams<TransactionReceipt>.OperationDescription => "Contract Call";
 }
+/// <summary>
+/// Extension methods for calling smart contracts.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class CallContractExtensions
 {

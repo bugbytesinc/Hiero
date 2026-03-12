@@ -59,6 +59,9 @@ public sealed class ConfiscateTokenParams : TransactionParams<TokenReceipt>, INe
     }
     string INetworkParams<TokenReceipt>.OperationDescription => "Confiscate Tokens";
 }
+/// <summary>
+/// Extension methods for confiscating fungible tokens from an account.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class ConfiscateTokenExtensions
 {

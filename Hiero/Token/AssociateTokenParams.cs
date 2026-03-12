@@ -64,6 +64,9 @@ public sealed class AssociateTokenParams : TransactionParams<TransactionReceipt>
     }
     string INetworkParams<TransactionReceipt>.OperationDescription => "Associate Token with Account";
 }
+/// <summary>
+/// Extension methods for associating tokens with accounts on the network.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class AssociateTokenExtensions
 {

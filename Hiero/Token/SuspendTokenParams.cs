@@ -50,6 +50,9 @@ public sealed class SuspendTokenParams : TransactionParams<TransactionReceipt>, 
     }
     string INetworkParams<TransactionReceipt>.OperationDescription => "Suspend Token";
 }
+/// <summary>
+/// Extension methods for suspending an account's ability to transact a token.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class SuspendTokenExtensions
 {
@@ -91,15 +94,12 @@ public static class SuspendTokenExtensions
     /// <param name="client">
     /// The Consensus Node Client orchestrating the suspend.
     /// </param>
-    /// <param name="token">
-    /// The identifier (Payer/Symbol) of the token to suspend/freeze.
-    /// </param>
-    /// <param name="holder">
-    /// Payer of the account to suspend.
+    /// <param name="suspendParams">
+    /// The parameters identifying the token and holder account to suspend.
     /// </param>
     /// <param name="configure">
-    /// Optional callback method providing an opportunity to modify 
-    /// the execution configuration for just this method call. 
+    /// Optional callback method providing an opportunity to modify
+    /// the execution configuration for just this method call.
     /// It is executed prior to submitting the request to the network.
     /// </param>
     /// <returns>

@@ -7,6 +7,9 @@ namespace Hiero.Mirror;
 /// </summary>
 public class TransactionData
 {
+    /// <summary>
+    /// The unique identifier for this transaction.
+    /// </summary>
     [JsonPropertyName("transaction_id")]
     [JsonConverter(typeof(TransactionIdMirrorConverter))]
     public TransactionId TransactionId { get; set; } = default!;
@@ -80,7 +83,7 @@ public class TransactionData
     [JsonPropertyName("staking_reward_transfers")]
     public StakingRewardData[]? StakingRewards { get; set; }
     /// <summary>
-    /// Enumerates the tokens that were transfered
+    /// Enumerates the tokens that were transferred
     /// as a part of this transaction.
     /// </summary>
     [JsonPropertyName("token_transfers")]
@@ -91,6 +94,9 @@ public class TransactionData
     [JsonPropertyName("transaction_hash")]
     [JsonConverter(typeof(Base64StringToBytesConverter))]
     public ReadOnlyMemory<byte> Hash { get; set; }
+    /// <summary>
+    /// The list of cryptocurrency transfers associated with this transaction.
+    /// </summary>
     [JsonPropertyName("transfers")]
     public CryptoTransferData[]? CryptoTransfers { get; set; }
     /// <summary>

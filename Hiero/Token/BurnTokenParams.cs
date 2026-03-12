@@ -52,6 +52,9 @@ public sealed class BurnTokenParams : TransactionParams<TokenReceipt>, INetworkP
     }
     string INetworkParams<TokenReceipt>.OperationDescription => "Burn Tokens";
 }
+/// <summary>
+/// Extension methods for burning fungible tokens from the treasury.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class BurnTokenExtensions
 {

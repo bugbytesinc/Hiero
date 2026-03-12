@@ -109,6 +109,9 @@ internal sealed class ScheduleParamsOrchestrator : TransactionParams<ScheduleRec
     }
     string INetworkParams<ScheduleReceipt>.OperationDescription => $"Scheduling {_innerNetworkParams.OperationDescription ?? "Transaction"}";
 }
+/// <summary>
+/// Extension methods for creating scheduled transactions on the network.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class ScheduleExtensions
 {
@@ -189,14 +192,14 @@ public static class ScheduleExtensions
     /// until such time as the retry count is exhausted, in which case it 
     /// is possible to receive a <see cref="ResponseCode.Busy"/> response.
     /// </remarks>
-    /// <typeparam name="T">
-    /// The type of <see cref="TransactionReceipt"/> returned by the request.
-    /// </typeparam>
+    /// <param name="client">
+    /// The Consensus Node Client orchestrating the request.
+    /// </param>
     /// <param name="scheduleParams">
     /// Scheduling transaction input parameters.
     /// </param>
     /// <param name="configure">
-    /// Optional callback to configure the calling context immediately 
+    /// Optional callback to configure the calling context immediately
     /// before assembling the transaction for submission.
     /// </param>
     /// <returns>

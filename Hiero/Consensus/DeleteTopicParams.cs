@@ -43,6 +43,9 @@ public sealed class DeleteTopicParams : TransactionParams<TransactionReceipt>, I
     }
     string INetworkParams<TransactionReceipt>.OperationDescription => "Delete Topic";
 }
+/// <summary>
+/// Extension methods for deleting consensus topics.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class DeleteTopicExtensions
 {

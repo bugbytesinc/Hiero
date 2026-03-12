@@ -9,11 +9,14 @@ namespace Hiero;
 /// </summary>
 public sealed class BatchedTransactionParams
 {
+    /// <summary>
+    /// The list of individual transaction parameters to include in the batch.
+    /// </summary>
     public IReadOnlyList<TransactionParams> TransactionParams { get; set; } = default!;
     /// <summary>
     /// Optional explicit endorsement to be applied to the batch of transactions if not specified
-    /// individually by each <see cref="BatchedTransaction"/>. If not specified by either the batch 
-    /// transaction entry or this property, the default endorsement will be used, which match the 
+    /// individually by each inner transaction. If not specified by either the batch
+    /// transaction entry or this property, the default endorsement will be used, which match the
     /// signatories of the client's context.
     /// </summary>
     public Endorsement? Endorsement { get; set; }
@@ -43,6 +46,7 @@ internal sealed class BatchedParamsOrchestrator : TransactionParams<TransactionR
         _cancellationToken = cancellationToken;
         _networkTransaction = networkTransaction;
     }
+
     internal static async Task<TransactionParams<TransactionReceipt>> CreateAsync(BatchedTransactionParams batchParams, ConsensusClient client)
     {
         var count = batchParams.TransactionParams?.Count ?? 0;
@@ -241,21 +245,24 @@ internal sealed class BatchedParamsOrchestrator : TransactionParams<TransactionR
     string INetworkParams<TransactionReceipt>.OperationDescription => "Atomic Batch Transaction";
 }
 
+/// <summary>
+/// Extension methods for submitting batched transactions to the network.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class TransactionBatchParamsExtensions
 {
     /// <summary>
-    /// Creates, signs, submits a batch of transactions and waits for a response from 
+    /// Creates, signs, submits a batch of transactions and waits for a response from
     /// the target consensus node, returning a receipt.
     /// </summary>
-    /// <typeparam name="T">
-    /// The type of receipt to return.
-    /// </typeparam>
-    /// <param name="transactionParams">
-    /// The details of the transaction to create, sign and submit.
+    /// <param name="client">
+    /// The Consensus Node Client orchestrating the batch submission.
+    /// </param>
+    /// <param name="batchParams">
+    /// The details of the batched transactions to create, sign and submit.
     /// </param>
     /// <param name="configure">
-    /// Optional callback to configure the calling context immediately 
+    /// Optional callback to configure the calling context immediately
     /// before assembling the transaction for submission.
     /// </param>
     /// <returns>
@@ -291,14 +298,14 @@ public static class TransactionBatchParamsExtensions
     /// until such time as the retry count is exhausted, in which case it 
     /// is possible to receive a <see cref="ResponseCode.Busy"/> response.
     /// </remarks>
-    /// <typeparam name="T">
-    /// The type of <see cref="TransactionReceipt"/> returned by the request.
-    /// </typeparam>
-    /// <param name="transactionParams">
-    /// Transaction input parameters.
+    /// <param name="client">
+    /// The Consensus Node Client orchestrating the batch submission.
+    /// </param>
+    /// <param name="batchParams">
+    /// The batched transaction input parameters.
     /// </param>
     /// <param name="configure">
-    /// Optional callback to configure the calling context immediately 
+    /// Optional callback to configure the calling context immediately
     /// before assembling the transaction for submission.
     /// </param>
     /// <returns>

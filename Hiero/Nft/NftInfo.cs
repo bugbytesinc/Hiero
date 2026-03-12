@@ -87,6 +87,9 @@ public sealed record NftInfo
         Spender = AccountIDExtensions.AsAddress(info.SpenderId);
     }
 }
+/// <summary>
+/// Extension methods for querying NFT instance information from the network.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class NftInfoExtensions
 {
@@ -99,9 +102,10 @@ public static class NftInfoExtensions
     /// <param name="nft">
     /// The identifier (Token and Serial Number) of the nft.
     /// </param>
+    /// <param name="cancellationToken">Optional cancellation token.</param>
     /// <param name="configure">
-    /// Optional callback method providing an opportunity to modify 
-    /// the execution configuration for just this method call. 
+    /// Optional callback method providing an opportunity to modify
+    /// the execution configuration for just this method call.
     /// It is executed prior to submitting the request to the network.
     /// </param>
     /// <returns>

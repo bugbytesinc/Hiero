@@ -59,6 +59,9 @@ public sealed class MintNftParams : TransactionParams<NftMintReceipt>, INetworkP
     }
     string INetworkParams<NftMintReceipt>.OperationDescription => "Mint NFT";
 }
+/// <summary>
+/// Extension methods for minting new NFT instances on the network.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class MintNftExtensions
 {

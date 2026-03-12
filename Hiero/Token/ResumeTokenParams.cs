@@ -50,6 +50,9 @@ public sealed class ResumeTokenParams : TransactionParams<TransactionReceipt>, I
     }
     string INetworkParams<TransactionReceipt>.OperationDescription => "Resume Token";
 }
+/// <summary>
+/// Extension methods for resuming a suspended account's ability to transact a token.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class ResumeTokenExtensions
 {

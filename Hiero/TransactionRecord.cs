@@ -87,6 +87,9 @@ public record TransactionRecord : TransactionReceipt
         StakingRewards = record.PaidStakingRewards.AsStakingRewards();
     }
 }
+/// <summary>
+/// Extension methods for retrieving transaction records from the network.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class TransactionRecordExtensions
 {
@@ -100,9 +103,10 @@ public static class TransactionRecordExtensions
     /// <param name="transaction">
     /// TransactionId identifier of the records
     /// </param>
+    /// <param name="cancellationToken">Optional cancellation token.</param>
     /// <param name="configure">
-    /// Optional callback method providing an opportunity to modify 
-    /// the execution configuration for just this method call. 
+    /// Optional callback method providing an opportunity to modify
+    /// the execution configuration for just this method call.
     /// It is executed prior to submitting the request to the network.
     /// </param>
     /// <returns>
@@ -111,7 +115,7 @@ public static class TransactionRecordExtensions
     /// <remarks>
     /// Generally there is only one records per transaction, but in certain cases
     /// where there is a transaction ID collision (deliberate or accidental) there
-    /// may be more, the <see cref="GetAllTransactionRecordsAsync(TransactionId, Action{IConsensusContext}?)"/>
+    /// may be more, the <see cref="GetAllTransactionRecordsAsync"/>
     /// method may be used to retrieve all records.
     /// </remarks>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
@@ -141,9 +145,10 @@ public static class TransactionRecordExtensions
     /// <param name="transaction">
     /// TransactionId identifier of the records
     /// </param>
+    /// <param name="cancellationToken">Optional cancellation token.</param>
     /// <param name="configure">
-    /// Optional callback method providing an opportunity to modify 
-    /// the execution configuration for just this method call. 
+    /// Optional callback method providing an opportunity to modify
+    /// the execution configuration for just this method call.
     /// It is executed prior to submitting the request to the network.
     /// </param>
     /// <returns>
@@ -169,10 +174,11 @@ public static class TransactionRecordExtensions
     }
     /// <summary>
     /// Internal Helper function used to wait for consensus regardless of the reported
-    /// transaction outcome. We do not know if the transaction in question has come 
+    /// transaction outcome. We do not know if the transaction in question has come
     /// to consensus so we need to get the receipt first (and wait if necessary).
-    /// The Receipt status returned does not matter in this case.  
+    /// The Receipt status returned does not matter in this case.
     /// We may be retrieving a failed records (the status would not equal OK).
+    /// </summary>
     private static async Task WaitForConsensusReceipt(ConsensusContextStack context, TransactionID transactionId, CancellationToken cancellationToken)
     {
         INetworkQuery query = new TransactionGetReceiptQuery { TransactionID = transactionId };
@@ -200,9 +206,10 @@ public static class TransactionRecordExtensions
     /// <param name="address">
     /// The Hedera Network Payer to retrieve associated records.
     /// </param>
+    /// <param name="cancellationToken">Optional cancellation token.</param>
     /// <param name="configure">
-    /// Optional callback method providing an opportunity to modify 
-    /// the execution configuration for just this method call. 
+    /// Optional callback method providing an opportunity to modify
+    /// the execution configuration for just this method call.
     /// It is executed prior to submitting the request to the network.
     /// </param>
     /// <returns>

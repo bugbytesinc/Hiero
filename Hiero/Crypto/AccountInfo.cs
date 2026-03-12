@@ -124,6 +124,9 @@ public sealed record AccountInfo
         StakingInfo = new StakingInfo(info.StakingInfo);
     }
 }
+/// <summary>
+/// Extension methods for querying account information.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class AccountInfoExtensions
 {
@@ -136,9 +139,10 @@ public static class AccountInfoExtensions
     /// <param name="address">
     /// The Hedera Network Address to retrieve detailed information of.
     /// </param>
+    /// <param name="cancellationToken">Optional cancellation token.</param>
     /// <param name="configure">
-    /// Optional callback method providing an opportunity to modify 
-    /// the execution configuration for just this method call. 
+    /// Optional callback method providing an opportunity to modify
+    /// the execution configuration for just this method call.
     /// It is executed prior to submitting the request to the network.
     /// </param>
     /// <returns>

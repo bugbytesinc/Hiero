@@ -5,6 +5,9 @@ using System.Runtime.CompilerServices;
 
 namespace Hiero;
 
+/// <summary>
+/// Transaction parameters for suspending network operations at a specified consensus time.
+/// </summary>
 public sealed class SuspendNetworkParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
@@ -35,6 +38,9 @@ public sealed class SuspendNetworkParams : TransactionParams<TransactionReceipt>
     }
     string INetworkParams<TransactionReceipt>.OperationDescription => "Suspend Network Command";
 }
+/// <summary>
+/// Extension methods for suspending network operations.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class SuspendNetworkExtensions
 {

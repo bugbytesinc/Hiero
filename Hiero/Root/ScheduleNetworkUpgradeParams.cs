@@ -5,6 +5,9 @@ using System.Runtime.CompilerServices;
 
 namespace Hiero;
 
+/// <summary>
+/// Transaction parameters for scheduling a previously prepared network upgrade.
+/// </summary>
 public sealed class ScheduleNetworkUpgradeParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
@@ -35,6 +38,9 @@ public sealed class ScheduleNetworkUpgradeParams : TransactionParams<Transaction
     }
     string INetworkParams<TransactionReceipt>.OperationDescription => "Schedule Network Upgrade Command";
 }
+/// <summary>
+/// Extension methods for scheduling a network upgrade.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class ScheduleNetworkUpgradeExtensions
 {

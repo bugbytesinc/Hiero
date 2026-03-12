@@ -55,6 +55,9 @@ public class DeleteAccountParams : TransactionParams<TransactionReceipt>, INetwo
     }
     string INetworkParams<TransactionReceipt>.OperationDescription => "Delete Account";
 }
+/// <summary>
+/// Extension methods for deleting cryptocurrency accounts.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class DeleteAccountExtensions
 {

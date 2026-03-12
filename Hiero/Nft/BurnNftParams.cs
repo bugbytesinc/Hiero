@@ -63,12 +63,18 @@ public sealed class BurnNftParams : TransactionParams<TokenReceipt>, INetworkPar
     }
     string INetworkParams<TokenReceipt>.OperationDescription => "Burn NFT";
 }
+/// <summary>
+/// Extension methods for burning NFT instances on the network.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class BurnNftExtensions
 {
     /// <summary>
     /// Destroys an nft (NFT) instance.
     /// </summary>
+    /// <param name="client">
+    /// The Consensus Node Client orchestrating the burn.
+    /// </param>
     /// <param name="asset">
     /// The identifier of the nft to destroy.
     /// </param>

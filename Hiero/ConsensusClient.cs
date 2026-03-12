@@ -30,7 +30,7 @@ public sealed class ConsensusClient : IAsyncDisposable
     /// </summary>
     private readonly ConsensusContextStack _context;
     /// <summary>
-    /// Creates a new instance of an Hedera Network ConsensusClient.
+    /// Creates a new instance of a Hedera Network ConsensusClient.
     /// </summary>
     /// <remarks>
     /// Creating a new instance of a <code>ConsensusClient</code> initializes a new instance 
@@ -49,7 +49,7 @@ public sealed class ConsensusClient : IAsyncDisposable
     {
     }
     /// <summary>
-    /// Creates a new instance of an Hedera Network ConsensusClient with a custom
+    /// Creates a new instance of a Hedera Network ConsensusClient with a custom
     /// gRPC channel factory.
     /// </summary>
     /// <remarks>

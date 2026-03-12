@@ -44,6 +44,9 @@ namespace Hiero.Mirror
         public ReadOnlyMemory<byte> Value { get; set; }
     }
 }
+/// <summary>
+/// Extension methods for querying contract state data from the mirror node.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class ContractStateDataExtensions
 {

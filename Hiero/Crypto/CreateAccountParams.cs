@@ -138,6 +138,9 @@ public sealed class CreateAccountParams : TransactionParams<CreateAccountReceipt
     }
     string INetworkParams<CreateAccountReceipt>.OperationDescription => "Create Account";
 }
+/// <summary>
+/// Extension methods for creating cryptocurrency accounts.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class CreateAccountExtensions
 {

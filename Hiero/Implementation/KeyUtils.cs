@@ -33,7 +33,7 @@ internal static class KeyUtils
             }
             catch (Exception ex)
             {
-                throw new ArgumentOutOfRangeException($"Expected the 50 byte length key to be an Hedera ECDSA Secp256k1 private key, it is not parsable as such.", ex);
+                throw new ArgumentOutOfRangeException($"Expected the 50 byte length key to be a Hedera ECDSA Secp256k1 private key, it is not parsable as such.", ex);
             }
         }
         // Bouncy Castle Recognized DER Encodings
@@ -99,7 +99,7 @@ internal static class KeyUtils
             }
             catch (Exception ex)
             {
-                throw new ArgumentOutOfRangeException($"Expected the 47 byte length key to be an Hedera ECDSA Secp256k1 public key, it is not parsable as such.", ex);
+                throw new ArgumentOutOfRangeException($"Expected the 47 byte length key to be a Hedera ECDSA Secp256k1 public key, it is not parsable as such.", ex);
             }
         }
         // Bouncy Castle Recognized DER Encodings

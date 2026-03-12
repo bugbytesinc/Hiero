@@ -6,7 +6,7 @@ namespace Hiero;
 
 /// <summary>
 /// Pre-Check and Receipt Response Codes - 1to1 mapping with protobuf ResponseCodeEnum
-/// except RpcError indicating a fundamental inability to communicate with an Hedera Node
+/// except RpcError indicating a fundamental inability to communicate with a Hedera Node
 /// </summary>
 [JsonConverter(typeof(ResponseCodeConverter))]
 public enum ResponseCode
@@ -467,6 +467,9 @@ public enum ResponseCode
     /// Transfer Address should not be same as Address to be deleted
     /// </summary>
     [Description("TRANSFER_ACCOUNT_SAME_AS_DELETE_ACCOUNT")] TransferAccountSameAsDeleteAccount = 107,
+    /// <summary>
+    /// The total ledger balance is invalid.
+    /// </summary>
     [Description("TOTAL_LEDGER_BALANCE_INVALID")] TotalLedgerBalanceInvalid = 108,
     /// <summary>
     /// The expiration date/time on a smart contract may not be reduced
@@ -1364,15 +1367,15 @@ public enum ResponseCode
     /// </summary>
     [Description("TOKEN_HAS_NO_METADATA_OR_SUPPLY_KEY")] TokenHasNoMetadataOrSupplyKey = 360,
     /// <summary>
-    /// The list of `Airdrop`s is empty and MUST NOT be empty.
+    /// The list of `PendingAirdropId`s is empty and MUST NOT be empty.
     /// </summary>
     [Description("EMPTY_PENDING_AIRDROP_ID_LIST")] EmptyPendingAirdropIdList = 361,
     /// <summary>
-    /// A `Airdrop` is repeated in a `claim` or `cancel` transaction.
+    /// A `PendingAirdropId` is repeated in a `claim` or `cancel` transaction.
     /// </summary>
     [Description("PENDING_AIRDROP_ID_REPEATED")] PendingAirdropIdRepeated = 362,
     /// <summary>
-    /// The number of `Airdrop` values in the list exceeds the maximum
+    /// The number of `PendingAirdropId` values in the list exceeds the maximum
     /// allowable number.
     /// </summary>
     [Description("PENDING_AIRDROP_ID_LIST_TOO_LONG")] PendingAirdropIdListTooLong = 363,

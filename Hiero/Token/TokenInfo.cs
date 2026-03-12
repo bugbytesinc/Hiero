@@ -186,6 +186,9 @@ public sealed record TokenInfo
         Ledger = new BigInteger(info.LedgerId.Span, true, true);
     }
 }
+/// <summary>
+/// Extension methods for querying token information from the network.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class TokenInfoExtensions
 {
@@ -198,9 +201,10 @@ public static class TokenInfoExtensions
     /// <param name="token">
     /// The identifier (Payer/Symbol) of the token to retrieve.
     /// </param>
+    /// <param name="cancellationToken">Optional cancellation token.</param>
     /// <param name="configure">
-    /// Optional callback method providing an opportunity to modify 
-    /// the execution configuration for just this method call. 
+    /// Optional callback method providing an opportunity to modify
+    /// the execution configuration for just this method call.
     /// It is executed prior to submitting the request to the network.
     /// </param>
     /// <returns>

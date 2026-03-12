@@ -51,6 +51,9 @@ public class ExtendedContractLogData : ContractLogData
     [JsonPropertyName("root_contract_id")]
     public EntityId RootContract { get; set; } = default!;
 }
+/// <summary>
+/// Extension methods for querying contract log data from the mirror node.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class ExtendedContractLogDataExtensions
 {

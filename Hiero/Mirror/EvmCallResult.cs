@@ -18,6 +18,9 @@ public class EvmCallResult
     [JsonConverter(typeof(HexStringToBytesConverter))]
     public ReadOnlyMemory<byte> Result { get; set; } = ReadOnlyMemory<byte>.Empty;
 }
+/// <summary>
+/// Extension methods for simulating EVM contract calls via the mirror node.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class EvmCallResultExtensions
 {

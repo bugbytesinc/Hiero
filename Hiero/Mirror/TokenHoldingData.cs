@@ -48,6 +48,9 @@ public class TokenHoldingData
     [JsonConverter(typeof(TokenKycStatusConverter))]
     public TokenKycStatus KycStatus { get; set; } = default!;
 }
+/// <summary>
+/// Extension methods for querying token holding data from the mirror node.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class Extensions
 {

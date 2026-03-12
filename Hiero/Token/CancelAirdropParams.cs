@@ -53,6 +53,9 @@ public sealed class CancelAirdropParams : TransactionParams<TransactionReceipt>,
     }
     string INetworkParams<TransactionReceipt>.OperationDescription => "Cancel Airdrop";
 }
+/// <summary>
+/// Extension methods for cancelling pending airdrops on the network.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class CancelAirdropExtensions
 {

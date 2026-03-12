@@ -43,6 +43,9 @@ public sealed class ContinueTokenParams : TransactionParams<TransactionReceipt>,
     }
     string INetworkParams<TransactionReceipt>.OperationDescription => "Continue Token";
 }
+/// <summary>
+/// Extension methods for un-pausing a token on the network.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class ContinueTokenExtensions
 {

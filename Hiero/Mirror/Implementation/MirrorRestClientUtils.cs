@@ -15,10 +15,6 @@ internal static class MirrorRestClientUtils
     /// <param name="rootPath">
     /// Basic root path of the rest query.
     /// </param>
-    /// <param name="limit">
-    /// Optional parameter to set the limit of enumerable items
-    /// returned (typically managed internally to the client library)
-    /// </param>
     /// <param name="filters">
     /// Optional list of filters to translate into query parameters.
     /// </param>

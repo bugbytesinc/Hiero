@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace Hiero.Converters;
 /// <summary>
-/// 64 base encoded memo _entityIdConverter
+/// JSON converter that reads base64-encoded strings and writes them as byte arrays.
 /// </summary>
 public sealed class Base64StringToBytesConverter : JsonConverter<ReadOnlyMemory<byte>>
 {

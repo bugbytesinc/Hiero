@@ -76,16 +76,13 @@ public sealed class MirrorGrpcClient : IAsyncDisposable
     /// Internal implementation of mirror client creation.  Accounts for  newly created 
     /// clients and cloning of clients alike.
     /// </summary>
-    /// <param name="channelFactory">
-    /// The channel factory method to use when a new gRPC client channel is needed.
+    /// <param name="parent">
+    /// The parent <see cref="MirrorContextStack"/> if this creation is a result of a
+    /// <see cref="MirrorGrpcClient.Clone(Action{IMirrorGrpcContext})"/> method call.
     /// </param>
     /// <param name="configure">
-    /// The optional <see cref="IMirrorGrpcContext"/> callback method, passed in from public 
+    /// The optional <see cref="IMirrorGrpcContext"/> callback method, passed in from public
     /// instantiation or a <see cref="MirrorGrpcClient.Clone(Action{IMirrorGrpcContext})"/> method call.
-    /// </param>
-    /// <param name="parent">
-    /// The parent <see cref="MirrorContextStack"/> if this creation is a result of a 
-    /// <see cref="MirrorGrpcClient.Clone(Action{IMirrorGrpcContext})"/> method call.
     /// </param>
     private MirrorGrpcClient(MirrorContextStack parent, Action<IMirrorGrpcContext>? configure)
     {

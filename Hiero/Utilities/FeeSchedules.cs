@@ -46,6 +46,9 @@ public sealed record FeeSchedule
     /// </summary>
     public ConsensusTimeStamp Expires { get; internal init; }
 }
+/// <summary>
+/// Extension methods for retrieving fee schedule information from the network.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class FeeSchedulesExtensions
 {
@@ -59,9 +62,10 @@ public static class FeeSchedulesExtensions
     /// <param name="client">
     /// Consensus Client to QueryAsync
     /// </param>
+    /// <param name="cancellationToken">Optional cancellation token.</param>
     /// <param name="configure">
-    /// Optional callback method providing an opportunity to modify 
-    /// the execution configuration for just this method call. 
+    /// Optional callback method providing an opportunity to modify
+    /// the execution configuration for just this method call.
     /// It is executed prior to submitting the request to the network.
     /// </param>
     /// <returns>

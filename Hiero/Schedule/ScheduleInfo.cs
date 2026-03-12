@@ -108,6 +108,9 @@ public sealed record ScheduleInfo
         DelayExecution = info.WaitForExpiry;
     }
 }
+/// <summary>
+/// Extension methods for querying scheduled transaction information from the network.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class ScheduleInfoExtensions
 {
@@ -120,13 +123,14 @@ public static class ScheduleInfoExtensions
     /// <param name="schedule">
     /// The identifier (Payer/Schedule ID) of the schedule transaction to retrieve.
     /// </param>
+    /// <param name="cancellationToken">Optional cancellation token.</param>
     /// <param name="configure">
-    /// Optional callback method providing an opportunity to modify 
-    /// the execution configuration for just this method call. 
+    /// Optional callback method providing an opportunity to modify
+    /// the execution configuration for just this method call.
     /// It is executed prior to submitting the request to the network.
     /// </param>
     /// <returns>
-    /// A detailed description of the schedule transaction, 
+    /// A detailed description of the schedule transaction,
     /// including the serialized schedule transaction body itself.
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>

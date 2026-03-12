@@ -117,6 +117,9 @@ public sealed record ContractInfo
         StakingInfo = new StakingInfo(info.StakingInfo);
     }
 }
+/// <summary>
+/// Extension methods for querying smart contract information and bytecode.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class ContractInfoExtensions
 {
@@ -129,9 +132,10 @@ public static class ContractInfoExtensions
     /// <param name="contract">
     /// The Hedera Network Payer of the Contract.
     /// </param>
+    /// <param name="cancellationToken">Optional cancellation token.</param>
     /// <param name="configure">
-    /// Optional callback method providing an opportunity to modify 
-    /// the execution configuration for just this method call. 
+    /// Optional callback method providing an opportunity to modify
+    /// the execution configuration for just this method call.
     /// It is executed prior to submitting the request to the network.
     /// </param>
     /// <returns>
@@ -153,9 +157,10 @@ public static class ContractInfoExtensions
     /// <param name="contract">
     /// The Hedera Network Payer of the Contract instance to retrieve.
     /// </param>
+    /// <param name="cancellationToken">Optional cancellation token.</param>
     /// <param name="configure">
-    /// Optional callback method providing an opportunity to modify 
-    /// the execution configuration for just this method call. 
+    /// Optional callback method providing an opportunity to modify
+    /// the execution configuration for just this method call.
     /// It is executed prior to submitting the request to the network.
     /// </param>
     /// <returns>

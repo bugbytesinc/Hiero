@@ -31,9 +31,6 @@ public sealed record CryptoTransfer
     /// <summary>
     /// Public Constructor, a <code>CryptoTransfer</code> is immutable after creation.
     /// </summary>
-    /// <param name="token">
-    /// The account of the crypto whose tinybars have transferred.
-    /// </param>
     /// <param name="address">
     /// The account receiving or sending the crypto.
     /// </param>

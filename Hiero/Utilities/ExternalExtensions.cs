@@ -5,6 +5,9 @@ using System.ComponentModel;
 
 namespace Hiero;
 
+/// <summary>
+/// Extension methods for querying and preparing externally constructed transactions.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class ExternalExtensions
 {
@@ -25,9 +28,10 @@ public static class ExternalExtensions
     /// <param name="queryBytes">
     /// The encoded protobuf bytes of the query to perform.
     /// </param>
+    /// <param name="cancellationToken">Optional cancellation token.</param>
     /// <param name="configure">
-    /// Optional callback method providing an opportunity to modify 
-    /// the execution configuration for just this method call. 
+    /// Optional callback method providing an opportunity to modify
+    /// the execution configuration for just this method call.
     /// It is executed prior to submitting the request to the network.
     /// </param>
     /// <returns>

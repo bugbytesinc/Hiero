@@ -120,6 +120,10 @@ internal static class Engine
     /// <param name="cancellationToken">
     /// Optional cancellation token that can be used to terminate the request.
     /// </param>
+    /// <param name="configure">
+    /// Optional callback method providing an opportunity to modify
+    /// the execution configuration for just this method call.
+    /// </param>
     /// <returns>
     /// A Protobuf Response object matching the type of request submitted.
     /// </returns>
@@ -296,10 +300,6 @@ internal static class Engine
     /// </param>
     /// <param name="instantiateRequestMethod">
     /// A method returning the proper gRPC service matching the request.
-    /// </param>
-    /// <param name="getResponseCode">
-    /// A method knowing how to extract the gossip node's embedded response
-    /// code from the specific response type.
     /// </param>
     /// <param name="cancellationToken">
     /// Optional cancellation token that, when triggered, causes a cancellation exception

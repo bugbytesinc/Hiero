@@ -62,6 +62,9 @@ public sealed class UpdateNftsParams : TransactionParams<TransactionReceipt>, IN
     }
     string INetworkParams<TransactionReceipt>.OperationDescription => "Update NFT Metadata";
 }
+/// <summary>
+/// Extension methods for updating NFT instance metadata on the network.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class UpdateNftsExtensions
 {

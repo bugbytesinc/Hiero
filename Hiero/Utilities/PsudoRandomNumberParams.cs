@@ -41,6 +41,9 @@ public sealed class PseudoRandomNumberParams : TransactionParams<TransactionRece
     }
     string INetworkParams<TransactionReceipt>.OperationDescription => "Generate Random Number";
 }
+/// <summary>
+/// Extension methods for generating pseudo-random numbers on the network.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class PseudoRandomNumberExtensions
 {
@@ -48,11 +51,11 @@ public static class PseudoRandomNumberExtensions
     /// Generates a pseudo random number, which can be retrieved via the
     /// transaction's record.
     /// </summary>
-    /// <param name="maxValue">The maximum allowed value for
-    /// the generated number.</param>
+    /// <param name="client">The Consensus Node Client.</param>
+    /// <param name="randomParams">The parameters for generating the pseudo random number.</param>
     /// <param name="configure">
-    /// Optional callback method providing an opportunity to modify 
-    /// the execution configuration for just this method call. 
+    /// Optional callback method providing an opportunity to modify
+    /// the execution configuration for just this method call.
     /// It is executed prior to submitting the request to the network.
     /// </param>
     /// <returns>

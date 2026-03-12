@@ -127,6 +127,9 @@ public sealed class UpdateConsensusNodeParams : TransactionParams<TransactionRec
     }
     string INetworkParams<TransactionReceipt>.OperationDescription => "Update Node";
 }
+/// <summary>
+/// Extension methods for updating consensus nodes in the network address book.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class UpdateConsensusNodeExtensions
 {

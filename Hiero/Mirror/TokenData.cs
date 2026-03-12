@@ -175,6 +175,9 @@ public class TokenData
     [JsonPropertyName("custom_fees")]
     public CustomFeeData Royalties { get; set; } = default!;
 }
+/// <summary>
+/// Extension methods for querying token data from the mirror node.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class TokenDataExtensions
 {

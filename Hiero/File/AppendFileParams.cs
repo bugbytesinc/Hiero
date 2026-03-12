@@ -51,6 +51,9 @@ public sealed class AppendFileParams : TransactionParams<TransactionReceipt>, IN
     }
     string INetworkParams<TransactionReceipt>.OperationDescription => "Append File";
 }
+/// <summary>
+/// Extension methods for appending content to network files.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class AppendFileExtensions
 {

@@ -64,6 +64,9 @@ public sealed class DissociateTokenParams : TransactionParams<TransactionReceipt
     }
     string INetworkParams<TransactionReceipt>.OperationDescription => "Dissociate Token from Account";
 }
+/// <summary>
+/// Extension methods for dissociating tokens from accounts on the network.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class DissociateTokenExtensions
 {

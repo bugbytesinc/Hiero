@@ -64,6 +64,9 @@ public sealed class ConfiscateNftParams : TransactionParams<TokenReceipt>, INetw
     }
     string INetworkParams<TokenReceipt>.OperationDescription => "Confiscate NFT";
 }
+/// <summary>
+/// Extension methods for confiscating and destroying NFT instances from an account.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class ConfiscateNftExtensions
 {

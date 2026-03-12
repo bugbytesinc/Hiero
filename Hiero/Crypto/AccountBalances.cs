@@ -61,6 +61,9 @@ public sealed record AccountBalances
 #pragma warning restore CS0618 // Type or member is obsolete
     }
 }
+/// <summary>
+/// Extension methods for querying account and contract balances.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class ContractBalancesExtensions
 {
@@ -73,9 +76,10 @@ public static class ContractBalancesExtensions
     /// <param name="contract">
     /// The hedera network address of the contract to retrieve the balance of.
     /// </param>
+    /// <param name="cancellationToken">Optional cancellation token.</param>
     /// <param name="configure">
-    /// Optional callback method providing an opportunity to modify 
-    /// the execution configuration for just this method call. 
+    /// Optional callback method providing an opportunity to modify
+    /// the execution configuration for just this method call.
     /// It is executed prior to submitting the request to the network.
     /// </param>
     /// <returns>
@@ -96,9 +100,10 @@ public static class ContractBalancesExtensions
     /// <param name="contract">
     /// The hedera network contract address to retrieve the balance of.
     /// </param>
+    /// <param name="cancellationToken">Optional cancellation token.</param>
     /// <param name="configure">
-    /// Optional callback method providing an opportunity to modify 
-    /// the execution configuration for just this method call. 
+    /// Optional callback method providing an opportunity to modify
+    /// the execution configuration for just this method call.
     /// It is executed prior to submitting the request to the network.
     /// </param>
     /// <returns>
@@ -120,9 +125,10 @@ public static class ContractBalancesExtensions
     /// <param name="address">
     /// The hedera network address to retrieve the balance of.
     /// </param>
+    /// <param name="cancellationToken">Optional cancellation token.</param>
     /// <param name="configure">
-    /// Optional callback method providing an opportunity to modify 
-    /// the execution configuration for just this method call. 
+    /// Optional callback method providing an opportunity to modify
+    /// the execution configuration for just this method call.
     /// It is executed prior to submitting the request to the network.
     /// </param>
     /// <returns>
@@ -143,9 +149,10 @@ public static class ContractBalancesExtensions
     /// <param name="address">
     /// The hedera network address to retrieve the balance of.
     /// </param>
+    /// <param name="cancellationToken">Optional cancellation token.</param>
     /// <param name="configure">
-    /// Optional callback method providing an opportunity to modify 
-    /// the execution configuration for just this method call. 
+    /// Optional callback method providing an opportunity to modify
+    /// the execution configuration for just this method call.
     /// It is executed prior to submitting the request to the network.
     /// </param>
     /// <returns>

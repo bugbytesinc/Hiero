@@ -58,6 +58,9 @@ public sealed class UpdateRoyaltiesParams : TransactionParams<TransactionReceipt
     }
     string INetworkParams<TransactionReceipt>.OperationDescription => "Royalties Update";
 }
+/// <summary>
+/// Extension methods for updating token royalties (custom fees) on the network.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class UpdateRoyaltiesExtensions
 {

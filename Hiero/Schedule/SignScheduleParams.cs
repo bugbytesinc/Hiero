@@ -42,6 +42,9 @@ public sealed class SignScheduleParams : TransactionParams<TransactionReceipt>, 
     }
     string INetworkParams<TransactionReceipt>.OperationDescription => "Schedule Sign Transaction";
 }
+/// <summary>
+/// Extension methods for adding signatures to scheduled transactions.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class SignScheduleExtensions
 {

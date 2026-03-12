@@ -70,6 +70,9 @@ public sealed class RevokeNftAllowanceParams : TransactionParams<TransactionRece
     }
     string INetworkParams<TransactionReceipt>.OperationDescription => "Delete Allowance";
 }
+/// <summary>
+/// Extension methods for revoking NFT allowances.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class RevokeNftAllowanceExtensions
 {

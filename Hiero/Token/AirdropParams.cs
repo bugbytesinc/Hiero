@@ -137,6 +137,9 @@ public sealed class AirdropParams : TransactionParams<TransactionReceipt>, INetw
     }
     string INetworkParams<TransactionReceipt>.OperationDescription => "Airdrop";
 }
+/// <summary>
+/// Extension methods for airdropping tokens and NFTs on the network.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class AirdropExtensions
 {

@@ -5,6 +5,9 @@ using System.Runtime.CompilerServices;
 
 namespace Hiero;
 
+/// <summary>
+/// Transaction parameters for administratively deleting a file from the network.
+/// </summary>
 public sealed class SystemDeleteFileParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
@@ -32,6 +35,9 @@ public sealed class SystemDeleteFileParams : TransactionParams<TransactionReceip
     }
     string INetworkParams<TransactionReceipt>.OperationDescription => "System Delete File";
 }
+/// <summary>
+/// Extension methods for administratively deleting a file from the network.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class SystemDeleteFileExtensions
 {

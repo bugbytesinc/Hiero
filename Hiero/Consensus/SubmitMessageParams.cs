@@ -130,6 +130,9 @@ public sealed class SubmitMessageParams : TransactionParams<SubmitMessageReceipt
         };
     }
 }
+/// <summary>
+/// Extension methods for submitting messages to consensus topics.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class SubmitMessageExtensions
 {

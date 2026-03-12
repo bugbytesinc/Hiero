@@ -131,6 +131,9 @@ public sealed record AccountDetail
         NftAllowances = info.GrantedNftAllowances is { Count: > 0 } ? info.GrantedNftAllowances.Select(a => new NftAllowance(a, address)).ToArray() : [];
     }
 }
+/// <summary>
+/// Extension methods for querying detailed account information.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class AccountDetailExtensions
 {
@@ -143,9 +146,10 @@ public static class AccountDetailExtensions
     /// <param name="address">
     /// The Hedera account to retrieve details of.
     /// </param>
+    /// <param name="cancellationToken">Optional cancellation token.</param>
     /// <param name="configure">
-    /// Optional callback method providing an opportunity to modify 
-    /// the execution configuration for just this method call. 
+    /// Optional callback method providing an opportunity to modify
+    /// the execution configuration for just this method call.
     /// It is executed prior to submitting the request to the network.
     /// </param>
     /// <returns>

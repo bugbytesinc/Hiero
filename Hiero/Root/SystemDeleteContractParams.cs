@@ -5,6 +5,9 @@ using System.Runtime.CompilerServices;
 
 namespace Hiero;
 
+/// <summary>
+/// Transaction parameters for administratively deleting a contract from the network.
+/// </summary>
 public sealed class SystemDeleteContractParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
@@ -32,6 +35,9 @@ public sealed class SystemDeleteContractParams : TransactionParams<TransactionRe
     }
     string INetworkParams<TransactionReceipt>.OperationDescription => "System Delete Contract";
 }
+/// <summary>
+/// Extension methods for administratively deleting a contract from the network.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class SystemDeleteContractExtensions
 {

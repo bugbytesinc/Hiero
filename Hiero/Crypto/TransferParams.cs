@@ -340,6 +340,9 @@ internal sealed class TransferOnlyTokenParams : TransactionParams<TransactionRec
     }
     string INetworkParams<TransactionReceipt>.OperationDescription => "Token Transfer";
 }
+/// <summary>
+/// Extension methods for transferring crypto, tokens, and NFTs.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class TransferExtensions
 {
@@ -385,7 +388,7 @@ public static class TransferExtensions
     /// <remarks>
     /// This convenience method does not support allowances, to
     /// perform transfers with allowances, use the long of this method,
-    /// <see cref="CryptoExtensions.TransferAsync(ConsensusClient, TransferParams, Action{IConsensusContext}?)"/>,
+    /// <see cref="TransferExtensions.TransferAsync(ConsensusClient, TransferParams, Action{IConsensusContext}?)"/>,
     /// instead.
     /// </remarks>
     /// <param name="client">

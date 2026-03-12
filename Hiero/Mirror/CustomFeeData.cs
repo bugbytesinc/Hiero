@@ -2,6 +2,9 @@
 
 namespace Hiero.Mirror;
 
+/// <summary>
+/// Represents the custom fee schedule data for a token as returned by the mirror node.
+/// </summary>
 public class CustomFeeData
 {
     /// <summary>

@@ -182,6 +182,9 @@ public class ContractResultData
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? ErrorMessage { get; set; }
 }
+/// <summary>
+/// Extension methods for querying contract execution results from the mirror node.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class ContractResultDataExtensions
 {
@@ -232,7 +235,7 @@ public static class ContractResultDataExtensions
     /// Mirror Rest Client to use for the request.
     /// </param>
     /// <param name="transactionId">
-    /// The HAPI transaction id, not teh EVM transaction hash
+    /// The HAPI transaction id, not the EVM transaction hash
     /// </param>
     /// <returns>
     /// The contract results data or null if not found

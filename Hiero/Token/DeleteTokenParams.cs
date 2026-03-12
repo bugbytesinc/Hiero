@@ -43,6 +43,9 @@ public sealed class DeleteTokenParams : TransactionParams<TransactionReceipt>, I
     }
     string INetworkParams<TransactionReceipt>.OperationDescription => "Delete Token";
 }
+/// <summary>
+/// Extension methods for deleting a token from the network.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class DeleteTokenExtensions
 {

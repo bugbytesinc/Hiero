@@ -102,6 +102,9 @@ public class ConsensusNodeData
     [JsonPropertyName("timestamp")]
     public TimestampRangeData ValidRange { get; set; } = default!;
 }
+/// <summary>
+/// Extension methods for querying consensus node data from the mirror node.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class ConsensusNodeDataExtensions
 {
@@ -136,7 +139,7 @@ public static class ConsensusNodeDataExtensions
     /// A dictionary of gateways and the corresponding response
     /// time (in milliseconds).
     /// </returns>
-    public static async Task<IReadOnlyDictionary<ConsensusNodeEndpoint, long>> GetActiveConsensusNodesAsync(this MirrorRestClient client, int maxTimeoutInMiliseconds)
+    public static async Task<IReadOnlyDictionary<ConsensusNodeEndpoint, long>> GetActiveConsensusNodesAsync(this MirrorRestClient client, int maxTimeoutInMilliseconds)
     {
         var list = new List<Task<(ConsensusNodeEndpoint gatway, long response)>>();
         await foreach (var node in client.GetConsensusNodesAsync())
@@ -153,7 +156,7 @@ public static class ConsensusNodeDataExtensions
                         var grpClient = new ConsensusClient(cfg => cfg.Endpoint = gateway);
                         var response = -1L;
                         var task = grpClient.PingAsync();
-                        if (await Task.WhenAny(task, Task.Delay(maxTimeoutInMiliseconds)) == task)
+                        if (await Task.WhenAny(task, Task.Delay(maxTimeoutInMilliseconds)) == task)
                         {
                             try
                             {

@@ -44,6 +44,9 @@ public sealed class DeleteScheduleParams : TransactionParams<TransactionReceipt>
     }
     string INetworkParams<TransactionReceipt>.OperationDescription => "Schedule Delete Transaction";
 }
+/// <summary>
+/// Extension methods for deleting scheduled transactions from the network.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class DeleteScheduleExtensions
 {

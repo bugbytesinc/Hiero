@@ -63,6 +63,9 @@ public sealed class CreateFileParams : TransactionParams<FileReceipt>, INetworkP
     }
     string INetworkParams<FileReceipt>.OperationDescription => "Create File";
 }
+/// <summary>
+/// Extension methods for creating network files.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class CreateFileExtensions
 {

@@ -107,6 +107,9 @@ public class ContractData
     [JsonConverter(typeof(HexStringToBytesConverter))]
     public ReadOnlyMemory<byte> RuntimeBytecode { get; set; }
 }
+/// <summary>
+/// Extension methods for querying contract data from the mirror node.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class ContractDataExtensions
 {

@@ -1,6 +1,6 @@
 ﻿namespace Hiero;
 /// <summary>
-/// Represents an Hedera Node ConsensusNodeEndpoint IP Address and Port
+/// Represents a Hedera Node ConsensusNodeEndpoint IP Address and Port
 /// </summary>
 public sealed record ConsensusNodeEndpointInfo
 {

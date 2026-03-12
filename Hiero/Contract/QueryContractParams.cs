@@ -54,6 +54,9 @@ public sealed class QueryContractParams
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
 }
+/// <summary>
+/// Extension methods for querying smart contract functions locally.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class QueryContractExtensions
 {

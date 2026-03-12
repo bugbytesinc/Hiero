@@ -90,6 +90,9 @@ public sealed class UpdateFileParams : TransactionParams<TransactionReceipt>, IN
     }
     string INetworkParams<TransactionReceipt>.OperationDescription => "File Update";
 }
+/// <summary>
+/// Extension methods for updating network file properties and content.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class UpdateFileExtensions
 {

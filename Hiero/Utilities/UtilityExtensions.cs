@@ -6,6 +6,9 @@ using System.Diagnostics;
 
 namespace Hiero;
 
+/// <summary>
+/// Extension methods providing general-purpose utility operations on the consensus client.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class UtilityExtensions
 {
@@ -60,9 +63,10 @@ public static class UtilityExtensions
     /// The Consensus Node Client performing the ping on the configured
     /// gRPC channel to the gossip node.
     /// </param>
+    /// <param name="cancellationToken">Optional cancellation token.</param>
     /// <param name="configure">
-    /// Optional callback method providing an opportunity to modify 
-    /// the execution configuration for just this method call. 
+    /// Optional callback method providing an opportunity to modify
+    /// the execution configuration for just this method call.
     /// It is executed prior to submitting the request to the network.
     /// </param>
     /// <returns>

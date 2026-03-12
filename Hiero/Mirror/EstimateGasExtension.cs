@@ -176,15 +176,15 @@ public static class EstimateGasExtension
     // NOTE: Previous versions of mirror nodes appeared to not include
     // intrinsic gas.  This has recently changed, the code below is no
     // longer used, consider removing
-    /// <summary>
-    /// Internal helper function that computes the intrinsic gas for a given call data.
-    /// </summary>
-    /// <param name="callData">
-    /// The call data containing the EVM call details.
-    /// </param>
-    /// <returns>
-    /// The computed intrinsic gas based on the number of zero and non-zero bytes in the data.
-    /// </returns>
+    ///// <summary>
+    ///// Internal helper function that computes the intrinsic gas for a given call data.
+    ///// </summary>
+    ///// <param name="callData">
+    ///// The call data containing the EVM call details.
+    ///// </param>
+    ///// <returns>
+    ///// The computed intrinsic gas based on the number of zero and non-zero bytes in the data.
+    ///// </returns>
     //private static long ComputeIntrinsicGas(EvmCallData callData)
     //{
     //    var zeroBytes = callData.Data!.Value.ToArray().Count(b => b == 0);

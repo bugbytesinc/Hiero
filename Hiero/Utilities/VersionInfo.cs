@@ -28,6 +28,9 @@ public sealed record VersionInfo
         HederaServicesVersion = new SemanticVersion(info.HederaServicesVersion);
     }
 }
+/// <summary>
+/// Extension methods for retrieving version information from the network.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class VersionInfoExtensions
 {
@@ -37,9 +40,10 @@ public static class VersionInfoExtensions
     /// <param name="client">
     /// Consensus Client to QueryAsync
     /// </param>
+    /// <param name="cancellationToken">Optional cancellation token.</param>
     /// <param name="configure">
-    /// Optional callback method providing an opportunity to modify 
-    /// the execution configuration for just this method call. 
+    /// Optional callback method providing an opportunity to modify
+    /// the execution configuration for just this method call.
     /// It is executed prior to submitting the request to the network.
     /// </param>
     /// <returns>

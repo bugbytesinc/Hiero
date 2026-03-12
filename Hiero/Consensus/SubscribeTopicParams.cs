@@ -2,6 +2,10 @@
 
 namespace Hiero;
 
+/// <summary>
+/// Parameters for subscribing to a consensus topic message stream
+/// from a mirror node.
+/// </summary>
 public sealed class SubscribeTopicParams
 {
     /// <summary>

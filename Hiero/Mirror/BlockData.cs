@@ -72,6 +72,9 @@ public class BlockData
     [JsonConverter(typeof(HexStringToBytesConverter))]
     public ReadOnlyMemory<byte> LogsBloom { get; set; }
 }
+/// <summary>
+/// Extension methods for querying block data from the mirror node.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class BlockDataExtensions
 {

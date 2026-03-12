@@ -40,6 +40,7 @@ public record TransactionReceipt
     /// <summary>
     /// Internal Constructor of the record.
     /// </summary>
+    /// <param name="transactionId">The transaction ID associated with this receipt.</param>
     /// <param name="receipt">Network Receipt Containing Info</param>
     internal TransactionReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
     {
@@ -52,6 +53,9 @@ public record TransactionReceipt
         }
     }
 }
+/// <summary>
+/// Extension methods for retrieving transaction receipts from the network.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class TransactionReceiptExtensions
 {
@@ -65,14 +69,15 @@ public static class TransactionReceiptExtensions
     /// <param name="transaction">
     /// TransactionId identifier of the receipt.
     /// </param>
+    /// <param name="cancellationToken">Optional cancellation token.</param>
     /// <param name="configure">
-    /// Optional callback method providing an opportunity to modify 
-    /// the execution configuration for just this method call. 
+    /// Optional callback method providing an opportunity to modify
+    /// the execution configuration for just this method call.
     /// It is executed prior to submitting the request to the network.
     /// </param>
     /// <returns>
     /// The receipt matching the transaction id, if found and marked
-    /// successful, otherwise a <see cref="TransactionException"/> is 
+    /// successful, otherwise a <see cref="TransactionException"/> is
     /// not found or returns an error status.
     /// </returns>
     /// <exception cref="TransactionException">If the network has no record of the transaction or request has invalid or had missing data.</exception>
@@ -99,9 +104,10 @@ public static class TransactionReceiptExtensions
     /// <param name="transaction">
     /// TransactionId identifier of the receipt.
     /// </param>
+    /// <param name="cancellationToken">Optional cancellation token.</param>
     /// <param name="configure">
-    /// Optional callback method providing an opportunity to modify 
-    /// the execution configuration for just this method call. 
+    /// Optional callback method providing an opportunity to modify
+    /// the execution configuration for just this method call.
     /// It is executed prior to submitting the request to the network.
     /// </param>
     /// <returns>

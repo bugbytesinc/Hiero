@@ -6,6 +6,9 @@ using System.Runtime.CompilerServices;
 
 namespace Hiero;
 
+/// <summary>
+/// Transaction parameters for preparing the network for a software upgrade.
+/// </summary>
 public sealed class PrepareNetworkUpgradeParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
@@ -47,6 +50,9 @@ public sealed class PrepareNetworkUpgradeParams : TransactionParams<TransactionR
     }
     string INetworkParams<TransactionReceipt>.OperationDescription => "Prepare Upgrade Command";
 }
+/// <summary>
+/// Extension methods for preparing a network upgrade.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class PrepareNetworkUpgradeExtensions
 {
