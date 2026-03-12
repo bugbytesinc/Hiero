@@ -213,19 +213,14 @@ public static class SubmitMessageExtensions
             // of a segmented message.
             //
             // First We need to apply the configure command, to 
-            // create the correct context, and we need to temporarily
-            // capture that context so we can generate a TxId.
-            ConsensusContextStack configuredContext = default!;
-            await using var configuredClient = client.Clone(ctx =>
-            {
-                configure?.Invoke(ctx);
-                configuredContext = (ConsensusContextStack)ctx;
-            });
-            // Generate the TxId manually (or extract it because
+            // create the correct context, before we can generate
+            // the transaction ID.            
+            await using var configuredClient = client.Clone(configure);
+            // Generate the TransactionId manually (or extract it because
             // it was set by the caller), since we need it as
             // a part of the chunk payload and can't let things
             // just work automatically.
-            var initialChunkTransactionId = Engine.GetOrCreateTransactionID(configuredContext).AsTxId();
+            var initialChunkTransactionId = client.CreateNewTransactionId();
             // This is smelly too, but we don't want to alter the original
             // submit params since we don't control how it was created or
             // how it might be re-used, so we work with a clone with the

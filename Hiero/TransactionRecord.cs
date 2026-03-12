@@ -308,6 +308,10 @@ public static class TransactionRecordExtensions
         {
             return new TokenRecord(record);
         }
+        else if (receipt.ScheduleID != null)
+        {
+            return new ScheduleRecord(record);
+        }
         else if (receipt.NodeId > 0)
         {
             return new ConsensusNodeRecord(record);

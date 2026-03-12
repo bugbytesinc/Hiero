@@ -104,10 +104,6 @@ internal static class Engine
         var receipt = networkParams.CreateReceipt(transactionId, result);
         if (receipt.Status != ResponseCode.Success && context.ThrowIfNotSuccess)
         {
-            if (networkTransaction is ScheduleCreateTransactionBody)
-            {
-                throw new TransactionException($"Scheduling {networkParams.OperationDescription} failed with status: {receipt.Status}", receipt);
-            }
             throw new TransactionException($"{networkParams.OperationDescription} failed with status: {receipt.Status}", receipt);
         }
         return (T)receipt;
@@ -273,7 +269,7 @@ internal static class Engine
         }
         else if (preExistingTransaction.Scheduled)
         {
-            throw new ArgumentException("Can not set the context's Transaction ID's Pending field of a transaction to true.", nameof(context.TransactionId));
+            throw new ArgumentException("Cannot set the context's Transaction ID Scheduled field to true.", nameof(context.TransactionId));
         }
         else
         {

@@ -43,7 +43,6 @@ internal sealed class BatchedParamsOrchestrator : TransactionParams<TransactionR
         _cancellationToken = cancellationToken;
         _networkTransaction = networkTransaction;
     }
-
     internal static async Task<TransactionParams<TransactionReceipt>> CreateAsync(BatchedTransactionParams batchParams, ConsensusClient client)
     {
         var count = batchParams.TransactionParams?.Count ?? 0;

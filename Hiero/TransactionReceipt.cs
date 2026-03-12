@@ -205,6 +205,10 @@ public static class TransactionReceiptExtensions
         {
             return new TokenReceipt(transactionId, receipt);
         }
+        else if (receipt.ScheduleID != null)
+        {
+            return new ScheduleReceipt(transactionId, receipt);
+        }
         else if (receipt.NodeId > 0)
         {
             return new ConsensusNodeReceipt(transactionId, receipt);

@@ -8,7 +8,7 @@ public sealed partial class ScheduleSignTransactionBody : INetworkTransaction
 {
     SchedulableTransactionBody INetworkTransaction.CreateSchedulableTransactionBody()
     {
-        throw new InvalidOperationException("Can not Schedule a Sign Pending Transaction.");
+        throw new InvalidOperationException("Cannot schedule a ScheduleSign transaction.");
     }
     TransactionBody INetworkTransaction.CreateTransactionBody()
     {
