@@ -1,6 +1,7 @@
 ﻿using Hiero.Mirror.Filters;
 using System.Diagnostics;
 using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
 using System.Web;
 
 namespace Hiero.Mirror.Implementation;
@@ -89,7 +90,7 @@ internal static class MirrorRestClientUtils
         MirrorError[]? messages = null;
         try
         {
-            messages = JsonSerializer.Deserialize<MirrorErrorListEnvelope>(reason)?.Status?.Messages;
+            messages = JsonSerializer.Deserialize(reason, MirrorJsonContext.Default.MirrorErrorListEnvelope)?.Status?.Messages;
         }
         catch
         {

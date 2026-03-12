@@ -1,5 +1,6 @@
 ﻿using Hiero.Converters;
 using Hiero.Mirror.Filters;
+using Hiero.Mirror.Implementation;
 using System.ComponentModel;
 using System.Text.Json.Serialization;
 using static Hiero.Mirror.Implementation.MirrorRestClientUtils;
@@ -81,6 +82,6 @@ public static class NftDataExtensions
     public static Task<NftData?> GetNftAsync(this MirrorRestClient client, Nft nft, params IMirrorQueryFilter[] filters)
     {
         var path = GenerateInitialPath($"tokens/{nft.Token}/nfts/{nft.SerialNumber}", filters);
-        return client.GetSingleItemAsync<NftData>(path);
+        return client.GetSingleItemAsync<NftData>(path, MirrorJsonContext.Default.NftData);
     }
 }

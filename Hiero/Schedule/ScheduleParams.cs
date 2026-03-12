@@ -99,7 +99,7 @@ internal sealed class ScheduleParamsOrchestrator : TransactionParams<ScheduleRec
             WaitForExpiry = scheduleParams.DelayExecution,
             Memo = scheduleParams.Memo ?? ""
         };
-        var signatory = innerNetworkParams.Signatory is not null ? (scheduleParams.Signatory is not null ? new Signatory(scheduleParams.Signatory, scheduleParams.Signatory) : innerNetworkParams.Signatory) : scheduleParams.Signatory;
+        var signatory = innerNetworkParams.Signatory is not null ? (scheduleParams.Signatory is not null ? new Signatory(innerNetworkParams.Signatory, scheduleParams.Signatory) : innerNetworkParams.Signatory) : scheduleParams.Signatory;
         var cancellationToken = scheduleParams.CancellationToken ?? innerNetworkParams.CancellationToken;
         return new ScheduleParamsOrchestrator(signatory, cancellationToken, innerNetworkParams, scheduleCreateTransactionBody);
     }

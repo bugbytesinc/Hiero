@@ -71,6 +71,6 @@ public static class Extensions
     public static IAsyncEnumerable<TokenHoldingData> GetAccountTokenHoldingsAsync(this MirrorRestClient client, EntityId account, params IMirrorQueryFilter[] filters)
     {
         var path = GenerateInitialPath($"accounts/{MirrorFormat(account)}/tokens", [new LimitFilter(100), .. filters]);
-        return client.GetPagedItemsAsync<TokenHoldingDataPage, TokenHoldingData>(path);
+        return client.GetPagedItemsAsync<TokenHoldingDataPage, TokenHoldingData>(path, MirrorJsonContext.Default.TokenHoldingDataPage);
     }
 }

@@ -1,7 +1,8 @@
-﻿using Hiero.Mirror.Implementation;
+using Hiero.Mirror.Implementation;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json.Serialization.Metadata;
 using static Hiero.Mirror.Implementation.MirrorRestClientUtils;
 
 namespace Hiero;
@@ -51,16 +52,19 @@ public sealed class MirrorRestClient
     /// <param name="payload">
     /// Payload to post, it will be serialized as JSON.
     /// </param>
+    /// <param name="jsonTypeInfo">
+    /// The source-generated JSON type info for the payload type.
+    /// </param>
     /// <returns></returns>
-    internal Task<HttpResponseMessage> PostPayload<TValue>(string path, TValue payload)
+    internal Task<HttpResponseMessage> PostPayload<TValue>(string path, TValue payload, JsonTypeInfo<TValue> jsonTypeInfo)
     {
-        return _client.PostAsJsonAsync($"api/v1/{path}", payload);
+        return _client.PostAsJsonAsync($"api/v1/{path}", payload, jsonTypeInfo);
     }
     /// <summary>
     /// Internal helper function to retrieve a paged items structured
     /// object, converting it into an IAsyncEnumerable for consumption.
     /// </summary>
-    internal async IAsyncEnumerable<TItem> GetPagedItemsAsync<TList, TItem>(string path) where TList : Page<TItem>
+    internal async IAsyncEnumerable<TItem> GetPagedItemsAsync<TList, TItem>(string path, JsonTypeInfo<TList> jsonTypeInfo) where TList : Page<TItem>
     {
         var fullPath = $"api/v1/{path}";
         do
@@ -68,7 +72,7 @@ public sealed class MirrorRestClient
             using var response = await _client.GetAsync(fullPath);
             if (response.IsSuccessStatusCode)
             {
-                var payload = await response.Content.ReadFromJsonAsync<TList>();
+                var payload = await response.Content.ReadFromJsonAsync(jsonTypeInfo);
                 if (payload is not null)
                 {
                     foreach (var item in payload.GetItems())
@@ -93,12 +97,12 @@ public sealed class MirrorRestClient
     /// <summary>
     /// Helper function to retrieve a single item from the rest api call.
     /// </summary>
-    internal async Task<TItem?> GetSingleItemAsync<TItem>(string path)
+    internal async Task<TItem?> GetSingleItemAsync<TItem>(string path, JsonTypeInfo<TItem> jsonTypeInfo)
     {
         using var response = await _client.GetAsync($"api/v1/{path}");
         if (response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadFromJsonAsync<TItem>();
+            return await response.Content.ReadFromJsonAsync(jsonTypeInfo);
         }
         else if (response.StatusCode == HttpStatusCode.NotFound)
         {

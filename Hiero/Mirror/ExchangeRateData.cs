@@ -1,4 +1,5 @@
 ﻿using Hiero.Mirror.Filters;
+using Hiero.Mirror.Implementation;
 using System.ComponentModel;
 using System.Text.Json.Serialization;
 using static Hiero.Mirror.Implementation.MirrorRestClientUtils;
@@ -50,12 +51,12 @@ public static class ExchangeRateDataExtensions
     {
         if (consensus == null)
         {
-            return client.GetSingleItemAsync<ExchangeRateData>("network/exchangerate");
+            return client.GetSingleItemAsync<ExchangeRateData>("network/exchangerate", MirrorJsonContext.Default.ExchangeRateData);
         }
         else
         {
             var path = GenerateInitialPath($"network/exchangerate", [new TimestampOnOrBeforeFilter(consensus.Value)]);
-            return client.GetSingleItemAsync<ExchangeRateData>(path);
+            return client.GetSingleItemAsync<ExchangeRateData>(path, MirrorJsonContext.Default.ExchangeRateData);
         }
     }
 }

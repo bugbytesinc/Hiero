@@ -1,4 +1,6 @@
-﻿namespace Hiero.Mirror.Implementation;
+﻿using System.Text.Json.Serialization;
+
+namespace Hiero.Mirror.Implementation;
 /// <summary>
 /// Paged list of block information.
 /// </summary>
@@ -7,6 +9,7 @@ internal class BlockDataPage : Page<BlockData>
     /// <summary>
     /// List of block info objects.
     /// </summary>
+    [JsonPropertyName("blocks")]
     public BlockData[]? Blocks { get; set; }
     /// <summary>
     /// Enumerates the list of block info objects.

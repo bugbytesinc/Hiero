@@ -8,6 +8,8 @@ namespace Hiero.Converters;
 /// </summary>
 public sealed class TransactionIdStructuredConverter : JsonConverter<TransactionId>
 {
+    private static readonly EntityIdConverter _entityIdConverter = new();
+    private static readonly ConsensusTimeStampConverter _consensusTimeStampConverter = new();
     /// <inheritdoc />
     public override TransactionId Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
@@ -28,7 +30,7 @@ public sealed class TransactionIdStructuredConverter : JsonConverter<Transaction
                 switch (propertyName)
                 {
                     case "account_id":
-                        accountId = new EntityIdConverter().Read(ref reader, typeof(EntityId), options);
+                        accountId = _entityIdConverter.Read(ref reader, typeof(EntityId), options);
                         break;
 
                     case "nonce":
@@ -40,7 +42,7 @@ public sealed class TransactionIdStructuredConverter : JsonConverter<Transaction
                         break;
 
                     case "transaction_valid_start":
-                        validStart = new ConsensusTimeStampConverter().Read(ref reader, typeof(ConsensusTimeStamp), options);
+                        validStart = _consensusTimeStampConverter.Read(ref reader, typeof(ConsensusTimeStamp), options);
                         break;
                 }
             }
@@ -58,7 +60,7 @@ public sealed class TransactionIdStructuredConverter : JsonConverter<Transaction
     {
         writer.WriteStartObject();
         writer.WritePropertyName("account_id");
-        new EntityIdConverter().Write(writer, id.Payer, options);
+        _entityIdConverter.Write(writer, id.Payer, options);
         writer.WritePropertyName("nonce");
         writer.WriteNumberValue(id.ChildNonce);
         writer.WritePropertyName("scheduled");

@@ -1,5 +1,6 @@
 ﻿using Hiero.Converters;
 using Hiero.Mirror.Filters;
+using Hiero.Mirror.Implementation;
 using System.ComponentModel;
 using System.Text.Json.Serialization;
 using static Hiero.Mirror.Implementation.MirrorRestClientUtils;
@@ -57,7 +58,7 @@ public static class NetworkFeeExtensions
     public static Task<NetworkFeeData?> GetNetworkFees(this MirrorRestClient client, ConsensusTimeStamp consensus)
     {
         var path = GenerateInitialPath($"network/fees", [new TimestampOnOrBeforeFilter(consensus)]);
-        return client.GetSingleItemAsync<NetworkFeeData>(path);
+        return client.GetSingleItemAsync<NetworkFeeData>(path, MirrorJsonContext.Default.NetworkFeeData);
     }
     /// <summary>
     /// Retrieves the latest network fee data from the ledger.
@@ -70,6 +71,6 @@ public static class NetworkFeeExtensions
     /// </returns>
     public static Task<NetworkFeeData?> GetLatestNetworkFeesAsync(this MirrorRestClient client)
     {
-        return client.GetSingleItemAsync<NetworkFeeData>("network/fees");
+        return client.GetSingleItemAsync<NetworkFeeData>("network/fees", MirrorJsonContext.Default.NetworkFeeData);
     }
 }

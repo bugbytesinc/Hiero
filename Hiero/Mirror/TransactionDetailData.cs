@@ -43,7 +43,7 @@ public static class TransactionDetailDataExtensions
     /// </returns>
     public static async Task<TransactionDetailData[]> GetTransactionGroupAsync(this MirrorRestClient client, TransactionId transactionId)
     {
-        var list = await client.GetSingleItemAsync<TransactionDetailByIdResponse>($"transactions/{MirrorFormat(transactionId)}").ConfigureAwait(false);
+        var list = await client.GetSingleItemAsync<TransactionDetailByIdResponse>($"transactions/{MirrorFormat(transactionId)}", MirrorJsonContext.Default.TransactionDetailByIdResponse).ConfigureAwait(false);
         if (list?.Transactions?.Length > 0)
         {
             return list.Transactions;
@@ -66,7 +66,7 @@ public static class TransactionDetailDataExtensions
     public static async Task<TransactionDetailData?> GetTransactionAsync(this MirrorRestClient client, ConsensusTimeStamp consensus)
     {
         var path = GenerateInitialPath($"transactions", [new LimitFilter(100), new TimestampEqualsFilter(consensus)]);
-        var list = await client.GetSingleItemAsync<TransactionDetailByIdResponse>(path).ConfigureAwait(false);
+        var list = await client.GetSingleItemAsync<TransactionDetailByIdResponse>(path, MirrorJsonContext.Default.TransactionDetailByIdResponse).ConfigureAwait(false);
         return list?.Transactions?.FirstOrDefault();
     }
     /// <summary>
@@ -88,6 +88,6 @@ public static class TransactionDetailDataExtensions
     public static IAsyncEnumerable<TransactionDetailData> GetTransactionsForAccountAsync(this MirrorRestClient client, EntityId account, params IMirrorQueryFilter[] filters)
     {
         var path = GenerateInitialPath($"transactions", [new LimitFilter(100), new AccountIsFilter(account), .. filters]);
-        return client.GetPagedItemsAsync<TransactionDetailDataPage, TransactionDetailData>(path);
+        return client.GetPagedItemsAsync<TransactionDetailDataPage, TransactionDetailData>(path, MirrorJsonContext.Default.TransactionDetailDataPage);
     }
 }

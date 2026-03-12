@@ -74,7 +74,7 @@ public static class HcsMessageDataExtensions
     /// </returns>    
     public static Task<HcsMessageData?> GetHcsMessageAsync(this MirrorRestClient client, EntityId topic, ulong sequenceNumber)
     {
-        return client.GetSingleItemAsync<HcsMessageData>($"topics/{topic}/messages/{sequenceNumber}");
+        return client.GetSingleItemAsync<HcsMessageData>($"topics/{topic}/messages/{sequenceNumber}", MirrorJsonContext.Default.HcsMessageData);
     }
     /// <summary>
     /// Retrieves a list of HCS message.  Messages may be filtered by a starting 
@@ -96,6 +96,6 @@ public static class HcsMessageDataExtensions
     public static IAsyncEnumerable<HcsMessageData> GetHcsMessagesAsync(this MirrorRestClient client, EntityId topic, params IMirrorQueryFilter[] filters)
     {
         var path = GenerateInitialPath($"topics/{topic}/messages", [new LimitFilter(100), .. filters]);
-        return client.GetPagedItemsAsync<HcsMessageDataPage, HcsMessageData>(path);
+        return client.GetPagedItemsAsync<HcsMessageDataPage, HcsMessageData>(path, MirrorJsonContext.Default.HcsMessageDataPage);
     }
 }

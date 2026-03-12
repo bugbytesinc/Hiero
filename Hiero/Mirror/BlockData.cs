@@ -89,7 +89,7 @@ public static class BlockDataExtensions
     /// </returns>
     public static Task<BlockData?> GetBlockAsync(this MirrorRestClient client, long blockNumber)
     {
-        return client.GetSingleItemAsync<BlockData>($"blocks/{blockNumber}");
+        return client.GetSingleItemAsync<BlockData>($"blocks/{blockNumber}", MirrorJsonContext.Default.BlockData);
     }
     /// <summary>
     /// Retrieves block information given the block blockhash.
@@ -105,7 +105,7 @@ public static class BlockDataExtensions
     /// </returns>
     public static Task<BlockData?> GetBlockAsync(this MirrorRestClient client, ReadOnlyMemory<byte> blockhash)
     {
-        return client.GetSingleItemAsync<BlockData>($"blocks/0x{Hex.FromBytes(blockhash)}");
+        return client.GetSingleItemAsync<BlockData>($"blocks/0x{Hex.FromBytes(blockhash)}", MirrorJsonContext.Default.BlockData);
     }
     /// <summary>
     /// Retrieves the latest block known to the remote mirror node.
@@ -119,7 +119,7 @@ public static class BlockDataExtensions
     /// </returns>
     public static async Task<BlockData?> GetLatestBlockAsync(this MirrorRestClient client)
     {
-        var list = await client.GetSingleItemAsync<BlockDataPage>("blocks?limit=1&order=desc").ConfigureAwait(false);
+        var list = await client.GetSingleItemAsync<BlockDataPage>("blocks?limit=1&order=desc", MirrorJsonContext.Default.BlockDataPage).ConfigureAwait(false);
         return list?.Blocks?.FirstOrDefault();
     }
     /// <summary>
@@ -133,7 +133,7 @@ public static class BlockDataExtensions
     public static async Task<BlockData?> GetLatestBlockBeforeConsensusAsync(this MirrorRestClient client, ConsensusTimeStamp consensus)
     {
         var path = GenerateInitialPath($"blocks", [new LimitFilter(1), OrderByFilter.Descending, new TimestampOnOrBeforeFilter(consensus)]);
-        var list = await client.GetSingleItemAsync<BlockDataPage>("blocks?limit=1&order=desc").ConfigureAwait(false);
+        var list = await client.GetSingleItemAsync<BlockDataPage>("blocks?limit=1&order=desc", MirrorJsonContext.Default.BlockDataPage).ConfigureAwait(false);
         return list?.Blocks?.FirstOrDefault();
     }
 }

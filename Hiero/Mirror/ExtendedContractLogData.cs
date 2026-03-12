@@ -70,10 +70,10 @@ public static class ExtendedContractLogDataExtensions
     public static IAsyncEnumerable<ExtendedContractLogData> GetLogEventsForContractAsync(this MirrorRestClient client, EntityId contract, params IMirrorQueryFilter[] filters)
     {
         var path = GenerateInitialPath($"contracts/{MirrorFormat(contract)}/results/logs", [new LimitFilter(100), .. filters]);
-        return client.GetPagedItemsAsync<ExtendedContractLogDataPage, ExtendedContractLogData>(path);
+        return client.GetPagedItemsAsync<ExtendedContractLogDataPage, ExtendedContractLogData>(path, MirrorJsonContext.Default.ExtendedContractLogDataPage);
     }
     /// <summary>
-    /// Retrieves the log events for all contracts satisfying the 
+    /// Retrieves the log events for all contracts satisfying the
     /// filters.
     /// </summary>
     /// <param name="client">
@@ -86,6 +86,6 @@ public static class ExtendedContractLogDataExtensions
     public static IAsyncEnumerable<ExtendedContractLogData> GetLogEventsForAllContractsAsync(this MirrorRestClient client, params IMirrorQueryFilter[] filters)
     {
         var path = GenerateInitialPath($"contracts/results/logs", [new LimitFilter(100), .. filters]);
-        return client.GetPagedItemsAsync<ExtendedContractLogDataPage, ExtendedContractLogData>(path);
+        return client.GetPagedItemsAsync<ExtendedContractLogDataPage, ExtendedContractLogData>(path, MirrorJsonContext.Default.ExtendedContractLogDataPage);
     }
 }

@@ -64,6 +64,6 @@ public static class TokenAllowanceDataExtensions
     public static IAsyncEnumerable<TokenAllowanceData> GetAccountTokenAllowancesAsync(this MirrorRestClient client, EntityId account, params IMirrorQueryFilter[] filters)
     {
         var path = GenerateInitialPath($"accounts/{MirrorFormat(account)}/allowances/tokens", [new LimitFilter(100), .. filters]);
-        return client.GetPagedItemsAsync<TokenAllowanceDataPage, TokenAllowanceData>(path);
+        return client.GetPagedItemsAsync<TokenAllowanceDataPage, TokenAllowanceData>(path, MirrorJsonContext.Default.TokenAllowanceDataPage);
     }
 }

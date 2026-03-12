@@ -51,6 +51,6 @@ public static class CryptoAllowanceDataExtensions
     public static IAsyncEnumerable<CryptoAllowanceData> GetAccountCryptoAllowancesAsync(this MirrorRestClient client, EntityId account, params IMirrorQueryFilter[] filters)
     {
         var path = GenerateInitialPath($"accounts/{MirrorFormat(account)}/allowances/crypto", [new LimitFilter(100), .. filters]);
-        return client.GetPagedItemsAsync<CryptoAllowanceDataPage, CryptoAllowanceData>(path);
+        return client.GetPagedItemsAsync<CryptoAllowanceDataPage, CryptoAllowanceData>(path, MirrorJsonContext.Default.CryptoAllowanceDataPage);
     }
 }

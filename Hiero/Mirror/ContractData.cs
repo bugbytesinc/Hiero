@@ -1,5 +1,6 @@
 ﻿using Hiero.Converters;
 using Hiero.Mirror.Filters;
+using Hiero.Mirror.Implementation;
 using System.ComponentModel;
 using System.Text.Json.Serialization;
 using static Hiero.Mirror.Implementation.MirrorRestClientUtils;
@@ -127,6 +128,6 @@ public static class ContractDataExtensions
     public static Task<ContractData?> GetContractDataAsync(this MirrorRestClient client, EntityId contract, params IMirrorQueryFilter[] filters)
     {
         var path = GenerateInitialPath($"contracts/{MirrorFormat(contract)}", filters);
-        return client.GetSingleItemAsync<ContractData>(path);
+        return client.GetSingleItemAsync<ContractData>(path, MirrorJsonContext.Default.ContractData);
     }
 }

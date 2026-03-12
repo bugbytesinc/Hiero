@@ -1,5 +1,6 @@
 ﻿using Hiero.Converters;
 using Hiero.Mirror.Filters;
+using Hiero.Mirror.Implementation;
 using System.ComponentModel;
 using System.Text.Json.Serialization;
 using static Hiero.Mirror.Implementation.MirrorRestClientUtils;
@@ -195,6 +196,6 @@ public static class TokenDataExtensions
     public static Task<TokenData?> GetTokenAsync(this MirrorRestClient client, EntityId token, params IMirrorQueryFilter[] filters)
     {
         var path = GenerateInitialPath($"tokens/{token}", filters);
-        return client.GetSingleItemAsync<TokenData>(path);
+        return client.GetSingleItemAsync<TokenData>(path, MirrorJsonContext.Default.TokenData);
     }
 }

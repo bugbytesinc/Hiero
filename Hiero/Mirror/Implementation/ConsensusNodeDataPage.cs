@@ -1,4 +1,6 @@
-﻿namespace Hiero.Mirror.Implementation;
+﻿using System.Text.Json.Serialization;
+
+namespace Hiero.Mirror.Implementation;
 /// <summary>
 /// Paged list of gossip nodes.
 /// </summary>
@@ -7,6 +9,7 @@ internal class ConsensusNodeDataPage : Page<ConsensusNodeData>
     /// <summary>
     /// List of gossip nodes.
     /// </summary>
+    [JsonPropertyName("nodes")]
     public ConsensusNodeData[]? Nodes { get; set; }
     /// <summary>
     /// Enumerates the list of gossip nodes.

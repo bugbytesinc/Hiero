@@ -146,7 +146,7 @@ public static class AccountDataExtensions
     public static Task<AccountData?> GetAccountAsync(this MirrorRestClient client, EntityId account, params IMirrorQueryFilter[] filters)
     {
         var path = GenerateInitialPath($"accounts/{MirrorFormat(account)}", filters);
-        return client.GetSingleItemAsync<AccountData>(path);
+        return client.GetSingleItemAsync<AccountData>(path, MirrorJsonContext.Default.AccountData);
     }
     /// <summary>
     /// Returns a list of accounts matching the given public key endorsement value.
@@ -164,6 +164,6 @@ public static class AccountDataExtensions
     public static IAsyncEnumerable<AccountData> GetAccountsFromEndorsementAsync(this MirrorRestClient client, Endorsement endorsement)
     {
         var searchKey = Hex.FromBytes(endorsement.ToBytes(KeyFormat.Mirror));
-        return client.GetPagedItemsAsync<AccountDataPage, AccountData>($"accounts?account.publickey={searchKey}&balance=true&limit=20&order=asc");
+        return client.GetPagedItemsAsync<AccountDataPage, AccountData>($"accounts?account.publickey={searchKey}&balance=true&limit=20&order=asc", MirrorJsonContext.Default.AccountDataPage);
     }
 }

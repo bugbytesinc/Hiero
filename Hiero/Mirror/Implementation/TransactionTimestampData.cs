@@ -29,7 +29,7 @@ public static class TransactionTimestampDataExtensions
     /// </returns>
     public static async Task<ConsensusTimeStamp> GetLatestConsensusTimestampAsync(this MirrorRestClient client)
     {
-        var list = await client.GetSingleItemAsync<TransactionTimestampDataPage>("transactions?limit=1&order=desc");
+        var list = await client.GetSingleItemAsync<TransactionTimestampDataPage>("transactions?limit=1&order=desc", MirrorJsonContext.Default.TransactionTimestampDataPage);
         if (list?.Transactions?.Length > 0)
         {
             return list.Transactions[0].Consensus;

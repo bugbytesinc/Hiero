@@ -68,7 +68,7 @@ public static class ContractStateDataExtensions
     public static async Task<ContractStateData?> GetContractState(this MirrorRestClient client, EntityId contract, BigInteger position, IMirrorQueryFilter[] filters)
     {
         var path = GenerateInitialPath($"contracts/{MirrorFormat(contract)}/state", [new SlotIsFilter(position), .. filters]);
-        var list = await client.GetSingleItemAsync<ContractStateDataPage>(path).ConfigureAwait(false);
+        var list = await client.GetSingleItemAsync<ContractStateDataPage>(path, MirrorJsonContext.Default.ContractStateDataPage).ConfigureAwait(false);
         return list?.States?.FirstOrDefault();
     }
 }

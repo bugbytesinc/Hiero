@@ -1,5 +1,6 @@
 ﻿using Hiero.Converters;
 using Hiero.Mirror.Filters;
+using Hiero.Mirror.Implementation;
 using System.ComponentModel;
 using System.Text.Json.Serialization;
 using static Hiero.Mirror.Implementation.MirrorRestClientUtils;
@@ -80,6 +81,6 @@ public static class HcsTopicDataExtensions
     public static Task<HcsTopicData?> GetHcsTopicAsync(this MirrorRestClient client, EntityId topic, params IMirrorQueryFilter[] filters)
     {
         var path = GenerateInitialPath($"topics/{MirrorFormat(topic)}", filters);
-        return client.GetSingleItemAsync<HcsTopicData>(path);
+        return client.GetSingleItemAsync<HcsTopicData>(path, MirrorJsonContext.Default.HcsTopicData);
     }
 }

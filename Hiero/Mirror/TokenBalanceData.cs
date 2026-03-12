@@ -49,7 +49,7 @@ public static class TokenBalanceDataExtensions
     public static async Task<long?> GetAccountTokenBalanceAsync(this MirrorRestClient client, EntityId account, EntityId token, params IMirrorQueryFilter[] filters)
     {
         var path = GenerateInitialPath($"accounts/{MirrorFormat(account)}/tokens", [new TokenIsFilter(token), .. filters]);
-        var payload = await client.GetSingleItemAsync<TokenHoldingDataPage>(path).ConfigureAwait(false);
+        var payload = await client.GetSingleItemAsync<TokenHoldingDataPage>(path, MirrorJsonContext.Default.TokenHoldingDataPage).ConfigureAwait(false);
         return payload?.TokenHoldings?.FirstOrDefault(r => r.Token == token)?.Balance;
     }
 }

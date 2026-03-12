@@ -116,7 +116,7 @@ public static class ConsensusNodeDataExtensions
     /// </returns>
     public static IAsyncEnumerable<ConsensusNodeData> GetConsensusNodesAsync(this MirrorRestClient client)
     {
-        return client.GetPagedItemsAsync<ConsensusNodeDataPage, ConsensusNodeData>("network/nodes");
+        return client.GetPagedItemsAsync<ConsensusNodeDataPage, ConsensusNodeData>("network/nodes", MirrorJsonContext.Default.ConsensusNodeDataPage);
     }
     /// <summary>
     /// Retrieves a list of Hedera gRPC nodes known to the 
