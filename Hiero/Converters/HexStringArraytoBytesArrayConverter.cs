@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace Hiero.Converters;
 /// <summary>
-/// Address Payer Array JSON Converter
+/// Hex String Array to Bytes Array JSON Converter
 /// </summary>
 public sealed class HexStringArraytoBytesArrayConverter : JsonConverter<ReadOnlyMemory<byte>[]>
 {

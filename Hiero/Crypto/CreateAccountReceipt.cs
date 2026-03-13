@@ -2,7 +2,7 @@
 
 namespace Hiero;
 /// <summary>
-/// A transaction record containing information concerning the newly created account.
+/// A transaction receipt containing information concerning the newly created account.
 /// </summary>
 public sealed record CreateAccountReceipt : TransactionReceipt
 {

@@ -42,7 +42,7 @@ public static class TransactionDetailDataExtensions
     /// </param>
     /// <returns>
     /// A list of transactions (including child transactions with nonces)
-    /// matching the given transaciton ID, or an empty list if none are found.
+    /// matching the given transaction ID, or an empty list if none are found.
     /// </returns>
     public static async Task<TransactionDetailData[]> GetTransactionGroupAsync(this MirrorRestClient client, TransactionId transactionId)
     {
@@ -73,20 +73,20 @@ public static class TransactionDetailDataExtensions
         return list?.Transactions?.FirstOrDefault();
     }
     /// <summary>
-    /// Retrieves a list of transactions associated with this contract
+    /// Retrieves a list of transactions associated with the given account
     /// </summary>
     /// <param name="client">
     /// Mirror Rest Client to use for the request.
     /// </param>
     /// <param name="account">
-    /// Payer of the contract to search for.
+    /// The account ID to search for.
     /// </param>
     /// <param name="filters">
     /// Additional query filters if desired.
     /// </param>
     /// <returns>
     /// A list of transactions (which may be child transactions) that
-    /// involve the specified contract (regardless of payer status).
+    /// involve the specified account (regardless of payer status).
     /// </returns>
     public static IAsyncEnumerable<TransactionDetailData> GetTransactionsForAccountAsync(this MirrorRestClient client, EntityId account, params IMirrorQueryFilter[] filters)
     {

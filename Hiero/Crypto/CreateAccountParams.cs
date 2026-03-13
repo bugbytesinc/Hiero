@@ -30,7 +30,7 @@ public sealed class CreateAccountParams : TransactionParams<CreateAccountReceipt
     /// </summary>
     public bool RequireReceiveSignature { get; set; } = false;
     /// <summary>
-    /// The maximum number of token or NFTs that this account may
+    /// The maximum number of tokens or NFTs that this account may
     /// be implicitly associated with (by means of being made a treasury
     /// or other related actions).
     /// </summary>
@@ -54,8 +54,8 @@ public sealed class CreateAccountParams : TransactionParams<CreateAccountReceipt
     /// the gossip node with the given ID.
     /// </summary>
     /// <remarks>
-    /// Can not be greater than zero if the 
-    /// <code>StakingProxy</code> property is set.
+    /// Can not be greater than zero if the
+    /// <code>ProxyAccount</code> property is set.
     /// </remarks>
     public long? StakedNode { get; set; } = null;
     /// <summary>
@@ -90,7 +90,7 @@ public sealed class CreateAccountParams : TransactionParams<CreateAccountReceipt
     /// </remarks>
     public Signatory? Signatory { get; set; }
     /// <summary>
-    /// Optional Cancellation token that interrupt the creation process.
+    /// Optional Cancellation token that can interrupt the creation process.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
     INetworkTransaction INetworkParams<CreateAccountReceipt>.CreateNetworkTransaction()
@@ -165,7 +165,7 @@ public static class CreateAccountExtensions
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
+    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -54,13 +54,12 @@ public static class FeeSchedulesExtensions
 {
     /// <summary>
     /// Retrieves the metrics for calculating fees from the network.
-    /// network.
     /// </summary>
     /// <remarks>
     /// NOTE: this method incurs a charge to retrieve the file from the network.
     /// </remarks>
     /// <param name="client">
-    /// Consensus Client to QueryAsync
+    /// Consensus Client to query
     /// </param>
     /// <param name="cancellationToken">Optional cancellation token.</param>
     /// <param name="configure">

@@ -14,7 +14,7 @@ internal class AccountBalancePage : Page<AccountBalanceData>
     [JsonConverter(typeof(ConsensusTimeStampConverter))]
     public ConsensusTimeStamp TimeStamp { get; set; }
     /// <summary>
-    /// List of balances for returned by the mirror node query.
+    /// List of balances returned by the mirror node query.
     /// </summary>
     [JsonPropertyName("balances")]
     public AccountBalanceData[]? Balances { get; set; }

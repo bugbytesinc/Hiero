@@ -23,14 +23,14 @@ public sealed record SemanticVersion
     public int Patch { get; private init; }
     /// <summary>
     /// A special designation of a semantic version that can't be created.
-    /// It represents the absence of a information.  It will resolve to 
+    /// It represents the absence of version information.  It will resolve to
     /// the values of 0, 0, 0.
     /// </summary>
     public static SemanticVersion None { get; } = new SemanticVersion();
     /// <summary>
-    /// Internal Constructor representing the "None" version of an
-    /// version.  This is a special construct indicating the version
-    /// number is not known or is not specified.
+    /// Internal Constructor representing the "None" version of a
+    /// semantic version.  This is a special construct indicating the
+    /// version number is not known or is not specified.
     /// </summary>
     private SemanticVersion()
     {

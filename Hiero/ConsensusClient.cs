@@ -7,10 +7,10 @@ using System.Runtime.CompilerServices;
 
 namespace Hiero;
 /// <summary>
-/// Hedera Network Consensus (Gossip) Node Client
+/// Hiero Network Consensus (Gossip) Node Client
 /// </summary>
 /// <remarks>
-/// This component facilitates interaction with the Hedera Network.  
+/// This component facilitates interaction with the Hiero Network.  
 /// It manages the communication channels with the network and 
 /// serialization of requests and responses.  This library generally 
 /// shields the client code from directly interacting with the 
@@ -30,26 +30,26 @@ public sealed class ConsensusClient : IAsyncDisposable
     /// </summary>
     private readonly ConsensusContextStack _context;
     /// <summary>
-    /// Creates a new instance of a Hedera Network ConsensusClient.
+    /// Creates a new instance of a Hiero Network ConsensusClient.
     /// </summary>
     /// <remarks>
-    /// Creating a new instance of a <code>ConsensusClient</code> initializes a new instance 
-    /// of a client.  It will have a separate cache of GRPC channels to the network 
-    /// and will maintain a separate configuration from other clients.  The constructor 
-    /// takes an optional callback method that configures the details on how the 
-    /// client should connect to the network and what accounts generally pay 
-    /// transaction fees and other details.  See the <see cref="IConsensusContext"/> documentation 
+    /// Creating a new instance of a <code>ConsensusClient</code> initializes a new instance
+    /// of a client.  It will have a separate cache of GRPC channels to the network
+    /// and will maintain a separate configuration from other clients.  The constructor
+    /// takes an optional callback method that configures the details on how the
+    /// client should connect to the network and what accounts generally pay
+    /// transaction fees and other details.  See the <see cref="IConsensusContext"/> documentation
     /// for configuration details.
     /// </remarks>
     /// <param name="configure">
-    /// Optional configuration method that can set the location of the network node 
+    /// Optional configuration method that can set the location of the network node
     /// accessing the network and how transaction fees shall be paid for.
     /// </param>
     public ConsensusClient(Action<IConsensusContext>? configure = null) : this(DefaultChannelFactory, configure)
     {
     }
     /// <summary>
-    /// Creates a new instance of a Hedera Network ConsensusClient with a custom
+    /// Creates a new instance of a Hiero Network ConsensusClient with a custom
     /// gRPC channel factory.
     /// </summary>
     /// <remarks>
@@ -94,13 +94,13 @@ public sealed class ConsensusClient : IAsyncDisposable
     /// Internal implementation of client creation.  Accounts for  newly created 
     /// clients and cloning of clients alike.
     /// </summary>
-    /// <param name="configure">
-    /// The optional <see cref="IConsensusContext"/> callback method, passed in from public 
-    /// instantiation or a <see cref="ConsensusClient.Clone(Action{IConsensusContext})"/> method call.
-    /// </param>
     /// <param name="parent">
-    /// The parent <see cref="ConsensusContextStack"/> if this creation is a result of a 
+    /// The parent <see cref="ConsensusContextStack"/> if this creation is a result of a
     /// <see cref="ConsensusClient.Clone(Action{IConsensusContext})"/> method call.
+    /// </param>
+    /// <param name="configure">
+    /// The optional <see cref="IConsensusContext"/> callback method, passed in from public
+    /// instantiation or a <see cref="ConsensusClient.Clone(Action{IConsensusContext})"/> method call.
     /// </param>
     private ConsensusClient(ConsensusContextStack parent, Action<IConsensusContext>? configure)
     {
@@ -125,8 +125,8 @@ public sealed class ConsensusClient : IAsyncDisposable
     }
     /// <summary>
     /// Creates a new instance of the client having a shared base configuration with its 
-    /// parent.  Changes to the parent’s configuration will reflect in this instances 
-    /// configuration while changes in this instances configuration will not be reflected 
+    /// parent.  Changes to the parent’s configuration will reflect in this instance’s
+    /// configuration while changes in this instance’s configuration will not be reflected 
     /// in the parent configuration.
     /// </summary>
     /// <param name="configure">

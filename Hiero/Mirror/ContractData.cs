@@ -22,7 +22,7 @@ public class ContractData
     [JsonPropertyName("auto_renew_account")]
     public EntityId? AutoRenewAccount { get; set; }
     /// <summary>
-    /// Address Auto-Renew Period in seconds.
+    /// Contract Auto-Renew Period in seconds.
     /// </summary>
     [JsonPropertyName("auto_renew_period")]
     [JsonConverter(typeof(LongMirrorConverter))]
@@ -33,26 +33,26 @@ public class ContractData
     [JsonPropertyName("contract_id")]
     public EntityId HapiAddress { get; set; } = default!;
     /// <summary>
-    /// Consensus Timestamp when this account was created
+    /// Consensus Timestamp when this contract was created
     /// </summary>
     [JsonPropertyName("created_timestamp")]
     public ConsensusTimeStamp Created { get; set; }
     /// <summary>
-    /// Flag indicating that the account has been deleted.
+    /// Flag indicating that the contract has been deleted.
     /// </summary>
     [JsonPropertyName("deleted")]
     [JsonConverter(typeof(BooleanMirrorConverter))]
     public bool Deleted { get; set; }
     /// <summary>
-    /// The account's public address encoded
+    /// The contract's public address encoded
     /// for use with the contract EVM.
     /// </summary>
     [JsonPropertyName("evm_address")]
     public EvmAddress EvmAddress { get; set; } = default!;
     /// <summary>
     /// Timestamp at which the network will try to 
-    /// renew the account rent or delete the account
-    /// if there are no funds to extends its lifetime.
+    /// renew the contract rent or delete the contract
+    /// if there are no funds to extend its lifetime.
     /// </summary>
     [JsonPropertyName("expiration_timestamp")]
     public ConsensusTimeStamp Expiration { get; set; }
@@ -62,13 +62,13 @@ public class ContractData
     [JsonPropertyName("file_id")]
     public EntityId File { get; set; } = default!;
     /// <summary>
-    /// The number of auto-associations for this account.
+    /// The number of auto-associations for this contract.
     /// </summary>
     [JsonPropertyName("max_automatic_token_associations")]
     [JsonConverter(typeof(IntMirrorConverter))]
     public int Associations { get; set; }
     /// <summary>
-    /// The account's memo.
+    /// The contract's memo.
     /// </summary>
     [JsonPropertyName("memo")]
     public string Memo { get; set; } = default!;

@@ -11,7 +11,7 @@ public sealed class PrecheckException : Exception
     /// </summary>
     public ResponseCode Status { get; private set; }
     /// <summary>
-    /// The TransactionId ID corresponding to the request that failed.
+    /// The transaction ID corresponding to the request that failed.
     /// </summary>
     public TransactionId TxId { get; private set; }
     /// <summary>
@@ -26,7 +26,7 @@ public sealed class PrecheckException : Exception
     /// A message describing the nature of the problem.
     /// </param>
     /// <param name="transaction">
-    /// The TransactionId ID corresponding to the request that failed.
+    /// The transaction ID corresponding to the request that failed.
     /// </param>
     /// <param name="code">
     /// The status code returned by the gateway node.
@@ -47,7 +47,7 @@ public sealed class PrecheckException : Exception
     /// A message describing the nature of the problem.
     /// </param>
     /// <param name="transaction">
-    /// The TransactionId ID corresponding to the request that failed.
+    /// The transaction ID corresponding to the request that failed.
     /// </param>
     /// <param name="innerException">
     /// Inner exception causing this error, typically reserved for

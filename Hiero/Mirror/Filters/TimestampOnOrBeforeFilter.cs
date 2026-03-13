@@ -13,7 +13,7 @@ public class TimestampOnOrBeforeFilter : IMirrorQueryFilter
     /// </summary>
     /// <param name="timestamp">
     /// The consensus timestamp representing the moment in time
-    /// in the ledger that any data after the value should be returned.
+    /// in the ledger that any data on or before the value should be returned.
     /// </param>
     public TimestampOnOrBeforeFilter(ConsensusTimeStamp timestamp)
     {

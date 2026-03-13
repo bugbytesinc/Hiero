@@ -5,8 +5,8 @@ using Grpc.Net.Client;
 namespace Hiero.Implementation;
 
 /// <summary>
-/// Internal Implementation of the <see cref="IConsensusContext"/> used for configuring
-/// <see cref="ConsensusClient"/> objects.  Maintains a stack of parent objects 
+/// Internal Implementation of the <see cref="IMirrorGrpcContext"/> used for configuring
+/// <see cref="MirrorGrpcClient"/> objects.  Maintains a stack of parent objects
 /// and coordinates values returned for various contexts.  Not intended for
 /// public use.
 /// </summary>

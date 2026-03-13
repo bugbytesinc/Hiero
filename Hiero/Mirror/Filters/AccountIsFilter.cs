@@ -1,6 +1,6 @@
 ﻿namespace Hiero.Mirror.Filters;
 /// <summary>
-/// Retrieve consensus messages filtered by account id.
+/// Filter results by account ID.
 /// </summary>
 public class AccountIsFilter : IMirrorQueryFilter
 {
@@ -12,7 +12,7 @@ public class AccountIsFilter : IMirrorQueryFilter
     /// Constructor requires the account to filter the request by.
     /// </summary>
     /// <param name="account">
-    /// Payer of the account to filter the response by.
+    /// The ID of the account to filter the response by.
     /// </param>
     public AccountIsFilter(EntityId account)
     {

@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 namespace Hiero.Converters;
 
 /// <summary>
-/// Consensus Timestamp JSON Converter
+/// Pause Status JSON Converter
 /// </summary>
 public sealed class PauseStatusConverter : JsonConverter<TokenTradableStatus>
 {

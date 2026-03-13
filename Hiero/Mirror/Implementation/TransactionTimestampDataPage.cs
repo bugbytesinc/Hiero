@@ -15,7 +15,7 @@ internal class TransactionTimestampDataPage : Page<TransactionTimestampData>
     /// Method enumerating the items in the list.
     /// </summary>
     /// <returns>
-    /// Enumerable of TransactionParams.
+    /// Enumerable of TransactionTimestampData.
     /// </returns>
     public override IEnumerable<TransactionTimestampData> GetItems()
     {

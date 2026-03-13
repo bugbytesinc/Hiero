@@ -30,13 +30,13 @@ public class TokenBalanceData
 public static class TokenBalanceDataExtensions
 {
     /// <summary>
-    /// Retrieves the token balance for an contract and given token.
+    /// Retrieves the token balance for an account and given token.
     /// </summary>
     /// <param name="client">
     /// Mirror Rest Client to use for the request.
     /// </param>
     /// <param name="account">
-    /// The contract ID.
+    /// The account ID.
     /// </param>
     /// <param name="token">
     /// The token ID
@@ -45,8 +45,8 @@ public static class TokenBalanceDataExtensions
     /// Additional query filters if desired.
     /// </param>
     /// <returns>
-    /// The amount of token held by the 
-    /// target contract, or null if the
+    /// The amount of token held by the
+    /// target account, or null if the
     /// token has not been associated.
     /// </returns>
     public static async Task<long?> GetAccountTokenBalanceAsync(this MirrorRestClient client, EntityId account, EntityId token, params IMirrorQueryFilter[] filters)

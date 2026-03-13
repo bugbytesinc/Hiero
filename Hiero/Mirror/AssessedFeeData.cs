@@ -27,7 +27,7 @@ public class AssessedFeeData
     [JsonConverter(typeof(EntityIdArrayConverter))]
     public EntityId[] Payers { get; set; } = default!;
     /// <summary>
-    /// Payer of the token transferred, or None
+    /// The ID of the token transferred, or None
     /// for tinybars.
     /// </summary>
     [JsonPropertyName("token_id")]

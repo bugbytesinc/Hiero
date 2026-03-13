@@ -9,7 +9,7 @@ namespace Hiero;
 public sealed class SubscribeTopicParams
 {
     /// <summary>
-    /// The Message's Topics.
+    /// The topic to subscribe to.
     /// </summary>
     public EntityId Topic { get; set; } = default!;
     /// <summary>

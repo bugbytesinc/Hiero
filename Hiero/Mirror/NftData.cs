@@ -71,7 +71,8 @@ public static class NftDataExtensions
     /// Retrieves information for the given asset.
     /// </summary>
     /// <param name="client">
-    /// Mirror Rest Client to use for the request./// </param>
+    /// Mirror Rest Client to use for the request.
+    /// </param>
     /// <param name="nft">
     /// The identifier of the NFT to retrieve, which includes the token address 
     /// and the serial number of the NFT.

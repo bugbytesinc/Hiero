@@ -54,21 +54,21 @@ public sealed class UpdateAccountParams : TransactionParams<TransactionReceipt>,
     /// </summary>
     public string? Memo { get; set; }
     /// <summary>
-    /// If set, updates the maximum number of token or NFTs that this account may
+    /// If set, updates the maximum number of tokens or NFTs that this account may
     /// be implicitly associated with (by means of being made a treasury
     /// or other related actions).
     /// </summary>
     public int? AutoAssociationLimit { get; set; }
     /// <summary>
     /// If set, updates this account's staking proxy
-    /// account.  If set The funds of this account will 
-    /// be staked to the node that this account is staked 
-    /// to and the specified proxy account will receive 
+    /// account.  The funds of this account will
+    /// be staked to the node that this account is staked
+    /// to and the specified proxy account will receive
     /// the earned reward.
     /// </summary>
     public EntityId? ProxyAccount { get; set; }
     /// <summary>
-    /// If set, updates this accounts's staked node.
+    /// If set, updates this account's staked node.
     /// The funds of this account will be staked to
     /// the gossip node with the given ID.
     /// </summary>
@@ -95,7 +95,7 @@ public sealed class UpdateAccountParams : TransactionParams<TransactionReceipt>,
     /// </remarks>
     public Signatory? Signatory { get; set; }
     /// <summary>
-    /// Optional Cancellation token that interrupt the creation process.
+    /// Optional Cancellation token that can interrupt the update process.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
     INetworkTransaction INetworkParams<TransactionReceipt>.CreateNetworkTransaction()
@@ -199,13 +199,12 @@ public static class UpdateAccountExtensions
     /// </param>
     /// <returns>
     /// A transaction receipt indicating success of the operation.
-    /// of the request.
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
+    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
-    /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    /// <exception cref="TransactionException">If the network rejected the update request as invalid or had missing data.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> UpdateAccountAsync(this ConsensusClient client, UpdateAccountParams updateParameters, Action<IConsensusContext>? configure = null)
     {

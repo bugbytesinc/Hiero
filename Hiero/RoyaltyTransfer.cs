@@ -10,7 +10,7 @@ namespace Hiero;
 public sealed record RoyaltyTransfer
 {
     /// <summary>
-    /// The Payer of the token who's coins (or crypto)
+    /// The token whose coins (or crypto)
     /// have been transferred to pay the royalty.
     /// </summary>
     public EntityId Token { get; private init; }
@@ -19,7 +19,7 @@ public sealed record RoyaltyTransfer
     /// </summary>
     public IReadOnlyList<EntityId> Payers { get; private init; }
     /// <summary>
-    /// The Payer receiving the transferred token or crypto.
+    /// The account receiving the transferred token or crypto.
     /// </summary>
     public EntityId Receiver { get; private init; }
     /// <summary>
@@ -28,7 +28,7 @@ public sealed record RoyaltyTransfer
     public long Amount { get; init; }
     /// <summary>
     /// Internal Constructor representing the "None" 
-    /// version of an royalty transfer.
+    /// version of a royalty transfer.
     /// </summary>
     private RoyaltyTransfer()
     {
@@ -38,7 +38,7 @@ public sealed record RoyaltyTransfer
         Amount = 0;
     }
     /// <summary>
-    /// Internal Helper Class to Create Royalty Transfer
+    /// Internal constructor to create a Royalty Transfer
     /// from raw protobuf.
     /// </summary>        
     internal RoyaltyTransfer(AssessedCustomFee fee)

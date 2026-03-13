@@ -10,17 +10,17 @@ namespace Hiero;
 public sealed class ConfiscateTokenParams : TransactionParams<TokenReceipt>, INetworkParams<TokenReceipt>
 {
     /// <summary>
-    /// The TransactionId of the fungible tokens to confiscate (wipe) and
-    /// return to the treasury account.
+    /// The identifier of the fungible token to confiscate (wipe) and
+    /// remove from circulation.
     /// </summary>
     public EntityId Token { get; set; } = default!;
     /// <summary>
-    /// The TransactionId of the account holding the tokens to confiscate (wipe).
+    /// The identifier of the account holding the tokens to confiscate (wipe).
     /// </summary>
     public EntityId Holder { get; set; } = default!;
     /// <summary>
-    /// The Amount of fungible tokens to confiscate and return
-    /// to the treasury account, specified in the smallest denomination.
+    /// The Amount of fungible tokens to confiscate and remove
+    /// from circulation, specified in the smallest denomination.
     /// </summary>
     public ulong Amount { get; set; }
     /// <summary>
@@ -66,8 +66,8 @@ public sealed class ConfiscateTokenParams : TransactionParams<TokenReceipt>, INe
 public static class ConfiscateTokenExtensions
 {
     /// <summary>
-    /// Removes the holdings of given token from the associated 
-    /// account and returns them to the treasury. Must be signed by 
+    /// Removes the holdings of given token from the associated
+    /// account and removes them from circulation. Must be signed by
     /// the confiscate/wipe admin key.
     /// </summary>
     /// <param name="client">
@@ -80,8 +80,8 @@ public static class ConfiscateTokenExtensions
     /// Holder holding the tokens to be confiscated.
     /// </param>
     /// <param name="amount">
-    /// The amount of fungible token to confiscate and return to
-    /// the treasury account.
+    /// The amount of fungible token to confiscate and remove
+    /// from circulation.
     /// </param>
     /// <param name="configure">
     /// Optional callback method providing an opportunity to modify 
@@ -93,17 +93,17 @@ public static class ConfiscateTokenExtensions
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission, for example, if the token is already deleted.</exception>
+    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission, for example, if the token is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
-    /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TokenReceipt> ConfiscateTokensAsync(this ConsensusClient client, EntityId token, EntityId holder, ulong amount, Action<IConsensusContext>? configure = null)
     {
         return client.ExecuteAsync(new ConfiscateTokenParams { Token = token, Holder = holder, Amount = amount }, configure);
     }
     /// <summary>
-    /// Removes the holdings of given token from the associated 
-    /// account and returns them to the treasury. Must be signed by 
+    /// Removes the holdings of given token from the associated
+    /// account and removes them from circulation. Must be signed by
     /// the confiscate/wipe admin key.
     /// </summary>
     /// <param name="client">
@@ -122,9 +122,9 @@ public static class ConfiscateTokenExtensions
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission, for example, if the token is already deleted.</exception>
+    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission, for example, if the token is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
-    /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TokenReceipt> ConfiscateTokensAsync(this ConsensusClient client, ConfiscateTokenParams confiscateParams, Action<IConsensusContext>? configure = null)
     {

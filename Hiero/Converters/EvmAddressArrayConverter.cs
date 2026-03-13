@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace Hiero.Converters;
 /// <summary>
-/// Address EvmAddress Array JSON Converter
+/// EVM Address Array JSON Converter
 /// </summary>
 public sealed class EvmAddressArrayConverter : JsonConverter<EvmAddress[]>
 {

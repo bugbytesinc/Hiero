@@ -10,8 +10,8 @@ namespace Hiero;
 public sealed record TokenAllowance
 {
     /// <summary>
-    /// The address of the token that having
-    /// the allocated allowance.
+    /// The address of the token that has the allocated
+    /// allowance.
     /// </summary>
     public EntityId Token { get; private init; }
     /// <summary>
@@ -30,13 +30,13 @@ public sealed record TokenAllowance
     /// </summary>
     public long Amount { get; private init; }
     /// <summary>
-    /// Represents an allowance allocation permitting a
-    /// agent account privileges of spending the specified
+    /// Represents an allowance allocation permitting
+    /// an agent account privileges of spending the specified
     /// amount of tokens from the owning account.
     /// </summary>
     /// <param name="token">
-    /// The address of the token that having
-    /// the allocated allowance.
+    /// The address of the token that has the allocated
+    /// allowance.
     /// </param>
     /// <param name="owner">
     /// The Address owner holding the tokens that
@@ -51,10 +51,10 @@ public sealed record TokenAllowance
     /// tokens that the delegate may spend.
     /// </param>
     /// <exception cref="ArgumentException">
-    /// If any of the address are null or None.
+    /// If any of the addresses are null or None.
     /// </exception>
     /// <exception cref="ArgumentOutOfRangeException">
-    /// If the amount is zero.
+    /// If the amount is negative.
     /// </exception>
     public TokenAllowance(EntityId token, EntityId owner, EntityId agent, long amount)
     {

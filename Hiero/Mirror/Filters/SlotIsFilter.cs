@@ -2,7 +2,7 @@
 
 namespace Hiero.Mirror.Filters;
 /// <summary>
-/// Retrieve consensus messages filtered by slot id.
+/// Filter contract state data by slot ID.
 /// </summary>
 public class SlotIsFilter : IMirrorQueryFilter
 {
@@ -11,10 +11,10 @@ public class SlotIsFilter : IMirrorQueryFilter
     /// </summary>
     private readonly BigInteger _slot;
     /// <summary>
-    /// Constructor requires the account to filter the request by.
+    /// Constructor requires the slot to filter the request by.
     /// </summary>
     /// <param name="slot">
-    /// TransactionId of the slot to filter the response by.
+    /// The ID of the slot to filter the response by.
     /// </param>
     public SlotIsFilter(BigInteger slot)
     {

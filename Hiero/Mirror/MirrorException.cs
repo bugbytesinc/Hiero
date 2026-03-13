@@ -11,7 +11,7 @@ public class MirrorException : Exception
     /// </summary>
     public HttpStatusCode StatusCode { get; private set; }
     /// <summary>
-    /// The detailed error details returned by the mirror node.
+    /// The error details returned by the mirror node.
     /// </summary>
     public MirrorError[] Details { get; private set; }
     /// <summary>

@@ -13,7 +13,7 @@ namespace Hiero;
 public sealed record TransactionId
 {
     /// <summary>
-    /// The payer of the account paying the
+    /// The account paying the
     /// transaction processing fee.
     /// </summary>
     public EntityId Payer { get; private init; }
@@ -35,8 +35,8 @@ public sealed record TransactionId
     /// </remarks>
     public int ValidStartNanos { get; private init; }
     /// <summary>
-    /// This transaction ID represents a scheduled or 
-    /// scheduled transaction that may or may not have 
+    /// This transaction ID represents a scheduled
+    /// transaction that may or may not have
     /// been executed.  The flag should be set to true 
     /// when interacting with scheduled transactions.
     /// </summary>
@@ -46,7 +46,7 @@ public sealed record TransactionId
     /// is a child transaction spawned as a part of a 
     /// larger user-initiated transaction, such as an 
     /// implicit account creation (pay to key alias) 
-    /// or side  effects of a contract method invocation.
+    /// or side effects of a contract method invocation.
     /// It will have the payer and timestamp matching 
     /// the parent transaction that initiated the original 
     /// ledger state change.
@@ -56,7 +56,7 @@ public sealed record TransactionId
     /// Public constructor.
     /// </summary>
     /// <param name="payer">
-    /// The payer of the account that is
+    /// The account that is
     /// both associated with and pays the
     /// transaction fees for this transaction.
     /// </param>
@@ -104,7 +104,7 @@ public sealed record TransactionId
     /// Epoch for use by the network.
     /// </summary>
     /// <param name="payer">
-    /// The payer of the account that is
+    /// The account that is
     /// both associated with and pays the
     /// transaction fees for this transaction.
     /// </param>
@@ -139,7 +139,7 @@ public sealed record TransactionId
         ChildNonce = childNonce;
     }
     /// <summary>
-    /// A special designation of an transaction id that can't be created.
+    /// A special designation of a transaction id that can't be created.
     /// It represents the absence of a transaction id.
     /// </summary>
     public static TransactionId None { get; } = new TransactionId(EntityId.None, 0, 0, false, 0);

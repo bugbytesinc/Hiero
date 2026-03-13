@@ -19,26 +19,26 @@ public sealed class BurnNftParams : TransactionParams<TokenReceipt>, INetworkPar
     public IReadOnlyList<long> SerialNumbers { get; set; } = default!;
     /// <summary>
     /// Additional private key, keys or signing callback method 
-    /// required to authorize the transfers.  Typically matches the
-    /// Endorsement assigned to sending accounts.
+    /// required to authorize the burn.  Typically matches the
+    /// supply key endorsement assigned to the token.
     /// </summary>
     /// <remarks>
     /// Keys/callbacks added here will be combined with those already
     /// identified in the client object's context when signing this 
-    /// transaction to change the state of this account.
+    /// transaction to burn the NFT.
     /// </remarks>
     public Signatory? Signatory { get; set; }
     /// <summary>
-    /// Optional Cancellation token that interrupt the token
+    /// Optional Cancellation token that can interrupt the token
     /// submission process.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
     /// <summary>
-    /// Creates a Crypto Transfer Transaction Body from these
+    /// Creates a Token Burn Transaction Body from these
     /// parameters.
     /// </summary>
     /// <returns>
-    /// CryptoTransferTransactionBody implementing INetworkTransaction
+    /// TokenBurnTransactionBody implementing INetworkTransaction
     /// </returns>
     INetworkTransaction INetworkParams<TokenReceipt>.CreateNetworkTransaction()
     {
@@ -70,13 +70,13 @@ public sealed class BurnNftParams : TransactionParams<TokenReceipt>, INetworkPar
 public static class BurnNftExtensions
 {
     /// <summary>
-    /// Destroys an nft (NFT) instance.
+    /// Destroys an NFT instance.
     /// </summary>
     /// <param name="client">
     /// The Consensus Node Client orchestrating the burn.
     /// </param>
     /// <param name="asset">
-    /// The identifier of the nft to destroy.
+    /// The identifier of the NFT to destroy.
     /// </param>
     /// <param name="configure">
     /// Optional callback method providing an opportunity to modify 
@@ -90,14 +90,14 @@ public static class BurnNftExtensions
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission, for example if the nft is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
-    /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    /// <exception cref="TransactionException">If the network rejected the burn request as invalid or had missing data.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TokenReceipt> BurnNftAsync(this ConsensusClient client, Nft asset, Action<IConsensusContext>? configure = null)
     {
         return client.ExecuteAsync(new BurnNftParams { Token = asset.Token, SerialNumbers = [asset.SerialNumber] }, configure);
     }
     /// <summary>
-    /// Destroys multiple nft (NFT) instances.
+    /// Destroys multiple NFT instances.
     /// </summary>
     /// <param name="client">
     /// The Consensus Node Client orchestrating the burn.
@@ -117,7 +117,7 @@ public static class BurnNftExtensions
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission, for example if the nft is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
-    /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    /// <exception cref="TransactionException">If the network rejected the burn request as invalid or had missing data.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TokenReceipt> BurnNftsAsync(this ConsensusClient client, BurnNftParams burnParams, Action<IConsensusContext>? configure = null)
     {

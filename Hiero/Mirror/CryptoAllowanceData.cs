@@ -12,7 +12,7 @@ namespace Hiero.Mirror;
 public class CryptoAllowanceData
 {
     /// <summary>
-    /// ID of the token owner.
+    /// ID of the allowance owner.
     /// </summary>
     [JsonPropertyName("owner")]
     public EntityId Owner { get; set; } = default!;
@@ -22,7 +22,7 @@ public class CryptoAllowanceData
     [JsonPropertyName("spender")]
     public EntityId Spender { get; set; } = default!;
     /// <summary>
-    /// The amount of token the allowed spender may
+    /// The amount of hBar (in tinybars) the allowed spender may
     /// spend from the owner account (denominated
     /// in smallest denomination)
     /// </summary>
@@ -37,19 +37,19 @@ public class CryptoAllowanceData
 public static class CryptoAllowanceDataExtensions
 {
     /// <summary>
-    /// Retrieves the crypto allowances associated with this contract.
+    /// Retrieves the crypto allowances associated with this account.
     /// </summary>
     /// <param name="client">
     /// Mirror Rest Client to use for the request.
     /// </param>
     /// <param name="account">
-    /// The contract ID
+    /// The account ID
     /// </param>
     /// <param name="filters">
     /// Additional query filters if desired.
     /// </param>
     /// <returns>
-    /// A list of crypto allowances associated with this contract.
+    /// A list of crypto allowances associated with this account.
     /// </returns>
     public static IAsyncEnumerable<CryptoAllowanceData> GetAccountCryptoAllowancesAsync(this MirrorRestClient client, EntityId account, params IMirrorQueryFilter[] filters)
     {

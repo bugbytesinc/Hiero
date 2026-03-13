@@ -309,7 +309,7 @@ internal static class KeyUtils
         var prefix = publicKey.AsSpan(0, Math.Min(Math.Max(6, invoice.MinimumDesiredPrefixSize), publicKey.Length));
         invoice.AddSignature(KeyType.ECDSASecp256K1, prefix, encoded);
     }
-    internal static (byte[] R, byte[] S, int RevoeryId) Sign(byte[] data, ECPrivateKeyParameters privateKey)
+    internal static (byte[] R, byte[] S, int RecoveryId) Sign(byte[] data, ECPrivateKeyParameters privateKey)
     {
         var digest = new KeccakDigest(256);
         digest.BlockUpdate(data, 0, data.Length);

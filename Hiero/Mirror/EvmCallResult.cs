@@ -36,7 +36,7 @@ public static class EvmCallResultExtensions
     /// arguments to send to the simulated EVM.
     /// </param>
     /// <returns>
-    /// The CallDataResponse returned from the simulated EVM call.
+    /// The encoded parameters returned from the simulated EVM call.
     /// </returns>
     public static async Task<EncodedParams> CallEvmAsync(this MirrorRestClient client, EvmCallData callData)
     {

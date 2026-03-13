@@ -66,7 +66,7 @@ public static class UpdateRoyaltiesExtensions
 {
     /// <summary>
     /// Updates (replaces) the royalties (custom fees) associated with 
-    /// a token, must be signed by the RoyaltiesEndorsment private key(s).
+    /// a token, must be signed by the RoyaltiesEndorsement private key(s).
     /// </summary>
     /// <param name="client">
     /// The Consensus Node Client orchestrating the update.
@@ -89,9 +89,9 @@ public static class UpdateRoyaltiesExtensions
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission, for example of the token is already deleted.</exception>
+    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission, for example if the token is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
-    /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> UpdateRoyaltiesAsync(this ConsensusClient client, EntityId token, IReadOnlyList<IRoyalty>? royalties, Action<IConsensusContext>? configure = null)
     {
@@ -99,7 +99,7 @@ public static class UpdateRoyaltiesExtensions
     }
     /// <summary>
     /// Updates (replaces) the royalties (custom fees) associated with 
-    /// a token, must be signed by the RoyaltiesEndorsment private key(s).
+    /// a token, must be signed by the RoyaltiesEndorsement private key(s).
     /// </summary>
     /// <param name="client">
     /// The Consensus Node Client orchestrating the update.
@@ -117,9 +117,9 @@ public static class UpdateRoyaltiesExtensions
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission, for example of the token is already deleted.</exception>
+    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission, for example if the token is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
-    /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> UpdateRoyaltiesAsync(this ConsensusClient client, UpdateRoyaltiesParams updateRoyaltiesParams, Action<IConsensusContext>? configure = null)
     {

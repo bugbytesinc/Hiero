@@ -63,7 +63,7 @@ public sealed record Nft
         SerialNumber = serialNum;
     }
     /// <summary>
-    /// Private constructor for creating a sentinel value representing
+    /// Private constructor for creating a sentinel value representing an uninitialized NFT.
     /// </summary>
     private Nft()
     {

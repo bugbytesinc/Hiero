@@ -68,7 +68,7 @@ public class TokenData
     public ConsensusTimeStamp Modified { get; set; }
     /// <summary>
     /// Optional address of the account supporting the auto renewal of 
-    /// the token at expiration time.  The topic lifetime will be
+    /// the token at expiration time.  The token lifetime will be
     /// extended by the RenewPeriod at expiration time if this account
     /// contains sufficient funds.  The private key associated with
     /// this account must sign the transaction if RenewAccount is
@@ -77,11 +77,11 @@ public class TokenData
     [JsonPropertyName("auto_renew_account")]
     public EntityId? RenewAccount { get; set; }
     /// <summary>
-    /// Interval of the topic and auto-renewal period. If
-    /// the associated renewal account does not have sufficient funds to 
-    /// renew at the expiration time, it will be renewed for a period 
+    /// Interval of the token and auto-renewal period. If
+    /// the associated renewal account does not have sufficient funds to
+    /// renew at the expiration time, it will be renewed for a period
     /// of time the remaining funds can support.  If no funds remain, the
-    /// topic instance will be deleted.
+    /// token instance will be deleted.
     /// </summary>
     [JsonPropertyName("auto_renew_period")]
     [JsonConverter(typeof(LongMirrorConverter))]
@@ -122,7 +122,7 @@ public class TokenData
     [JsonPropertyName("pause_key")]
     public Endorsement? PauseEndorsement { get; set; }
     /// <summary>
-    /// Administrator key for signing transaction that completely remove tokens
+    /// Administrator key for signing transactions that completely remove tokens
     /// from an crypto address.
     /// </summary>
     [JsonPropertyName("wipe_key")]
@@ -188,7 +188,7 @@ public static class TokenDataExtensions
     /// Mirror Rest Client to use for the request.
     /// </param>
     /// <param name="token">
-    /// TransactionId of the token to retrieve.
+    /// The ID of the token to retrieve.
     /// </param>
     /// <param name="filters">
     /// Optional list of filter constraints for this query.

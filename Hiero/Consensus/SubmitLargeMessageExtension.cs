@@ -19,7 +19,7 @@ public static class SubmitLargeMessageExtension
     /// upload the entire message.
     /// </summary>
     /// <param name="client">
-    /// A Hashgraph ConsensusClient instance.
+    /// A Hiero ConsensusClient instance.
     /// </param>
     /// <param name="topic">
     /// The address of the topic for the message.
@@ -47,15 +47,15 @@ public static class SubmitLargeMessageExtension
     /// </param>
     /// <returns>
     /// An array of Submit Message Receipts indicating success, one for each
-    /// segment uploaded.  The TransactionId ID of the first receipt matches
+    /// segment uploaded.  The transaction ID of the first receipt matches
     /// the correlation transaction ID for the series of message segments
     /// as a whole.
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
+    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
-    /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
 
     public static async Task<SubmitMessageReceipt[]> SubmitLargeMessageAsync(this ConsensusClient client, EntityId topic, ReadOnlyMemory<byte> message, int segmentSize, Signatory? signatory = null, Action<IConsensusContext>? configure = null)
     {

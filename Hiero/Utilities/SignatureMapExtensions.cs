@@ -86,7 +86,7 @@ public static class SignatureMapExtensions
     /// Note: this method does not return errors when it discovers invalid
     /// signatures.  It may still return <code>true</code> if sufficient
     /// correct signatures exist in the signature map to satisfy the 
-    /// requrements described in the target <see cref="Endorsement"/>.
+    /// requirements described in the target <see cref="Endorsement"/>.
     /// </remarks>
     /// <param name="signatureMap">
     /// A signature map containing one or more signatures.

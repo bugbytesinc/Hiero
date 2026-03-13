@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 namespace Hiero.Converters;
 
 /// <summary>
-/// Consensus Timestamp JSON Converter (from microseconds long value)
+/// Consensus Timestamp JSON Converter (from nanoseconds long value)
 /// that is special to ONLY the expiry timestamp returned for token info.
 /// </summary>
 public sealed class ConsensusTimeStampForTokenExpirationConverter : JsonConverter<ConsensusTimeStamp>

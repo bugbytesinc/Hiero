@@ -38,7 +38,7 @@ public static class VersionInfoExtensions
     /// Retrieves version information from the node.
     /// </summary>
     /// <param name="client">
-    /// Consensus Client to QueryAsync
+    /// Consensus Client to query
     /// </param>
     /// <param name="cancellationToken">Optional cancellation token.</param>
     /// <param name="configure">

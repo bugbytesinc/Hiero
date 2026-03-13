@@ -15,12 +15,12 @@ public class DeleteAccountParams : TransactionParams<TransactionReceipt>, INetwo
     public EntityId Account { get; set; } = default!;
     /// <summary>
     /// The address of the account that will receive any remaining 
-    /// crypto funds held by the contract.
+    /// crypto funds held by the account.
     /// </summary>
     public EntityId FundsReceiver { get; set; } = default!;
     /// <summary>
     /// Additional private key, keys or signing callback method 
-    /// required to delete this contract.
+    /// required to delete this account.
     /// </summary>
     /// <remarks>
     /// Keys/callbacks added here will be combined with those already
@@ -29,7 +29,7 @@ public class DeleteAccountParams : TransactionParams<TransactionReceipt>, INetwo
     /// </remarks>
     public Signatory? Signatory { get; set; }
     /// <summary>
-    /// Optional Cancellation token that interrupt the delete attempt.
+    /// Optional Cancellation token that can interrupt the delete attempt.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
     INetworkTransaction INetworkParams<TransactionReceipt>.CreateNetworkTransaction()
@@ -82,9 +82,9 @@ public static class DeleteAccountExtensions
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
+    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
-    /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    /// <exception cref="TransactionException">If the network rejected the delete request as invalid or had missing data.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> DeleteAccountAsync(this ConsensusClient client, DeleteAccountParams deleteAccountParams, Action<IConsensusContext>? configure = null)
     {

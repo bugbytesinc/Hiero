@@ -12,7 +12,7 @@ namespace Hiero;
 public record TransactionReceipt
 {
     /// <summary>
-    /// The TransactionId ID associated with the request.
+    /// The Transaction ID associated with the request.
     /// </summary>
     public TransactionId TransactionId { get; internal init; }
     /// <summary>
@@ -77,8 +77,8 @@ public static class TransactionReceiptExtensions
     /// </param>
     /// <returns>
     /// The receipt matching the transaction id, if found and marked
-    /// successful, otherwise a <see cref="TransactionException"/> is
-    /// not found or returns an error status.
+    /// successful, otherwise a <see cref="TransactionException"/> is thrown if
+    /// not found or the receipt returns an error status.
     /// </returns>
     /// <exception cref="TransactionException">If the network has no record of the transaction or request has invalid or had missing data.</exception>
     public static async Task<TransactionReceipt> GetReceiptAsync(this ConsensusClient client, TransactionId transaction, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)

@@ -38,7 +38,7 @@ public static class ExternalExtensions
     /// The bytes of the <see cref="Proto.Response"/> representing the query results.
     /// </returns>
     /// <exception cref="ArgumentException">
-    /// If the bytes do not represent a valid Protobuf Encoded QueryAsync.
+    /// If the bytes do not represent a valid Protobuf Encoded Query.
     /// </exception>
     public static async Task<ReadOnlyMemory<byte>> QueryExternalAsync(this ConsensusClient client, ReadOnlyMemory<byte> queryBytes, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
     {

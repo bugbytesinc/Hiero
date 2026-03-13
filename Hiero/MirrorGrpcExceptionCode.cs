@@ -2,18 +2,18 @@
 
 namespace Hiero;
 /// <summary>
-/// Pre-Check and Receipt Response Codes - 1:1 mapping with protobuf ResponseCodeEnum
+/// Status codes identifying the type of error encountered during mirror gRPC streaming.
 /// </summary>
 public enum MirrorGrpcExceptionCode
 {
     /// <summary>
-    /// An entity exists with the specified Payer
+    /// An entity exists with the specified address
     /// but it is not a topic.
     /// </summary>
     [Description("Not a Topic")] InvalidTopicAddress = 1,
     /// <summary>
-    /// No entity was found to exist at the 
-    /// specified Payer.
+    /// No entity was found to exist at the
+    /// specified address.
     /// </summary>
     [Description("Not Found")] TopicNotFound = 2,
     /// <summary>

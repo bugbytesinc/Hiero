@@ -80,7 +80,7 @@ public sealed class CreateContractParams : TransactionParams<CreateContractRecei
     public int AutoAssociationLimit { get; set; } = 0;
     /// <summary>
     /// The funds of this contract will be staked to
-    /// the node that this account is staked to and the
+    /// the node that this contract is staked to and the
     /// specified account will receive the earned reward.
     /// </summary>
     /// <remarks>
@@ -120,7 +120,7 @@ public sealed class CreateContractParams : TransactionParams<CreateContractRecei
     /// </remarks>
     public Signatory? Signatory { get; set; }
     /// <summary>
-    /// Optional Cancellation token that interrupt the contract creation.
+    /// Optional Cancellation token that can interrupt the contract creation.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
     INetworkTransaction INetworkParams<CreateContractReceipt>.CreateNetworkTransaction()
@@ -199,12 +199,12 @@ public static class CreateContractExtensions
     /// It is executed prior to submitting the request to the network.
     /// </param>
     /// <returns>
-    /// A transaction receipt with a description of the newly created contract.
+    /// A transaction receipt with a description of the newly created contract
     /// and receipt information.
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
+    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace Hiero;
 /// <summary>
-/// Provides services to decode smart contract ABI data into .net primitives.
+/// Provides services to decode smart contract ABI data into .NET primitives.
 /// Typically represents data returned from a smart contract invocation.
 /// </summary>
 [JsonConverter(typeof(EncodedParamsConverter))]
@@ -103,7 +103,7 @@ public sealed class EncodedParams
         return ((T1)args[0], (T2)args[1]);
     }
     /// <summary>
-    /// Retrieves the three values from the contract function result cast to the desired types.
+    /// Retrieves the first three values from the contract function result cast to the desired types.
     /// </summary>
     /// <typeparam name="T1">
     /// Type of the first argument, must be known to the caller.
@@ -123,7 +123,7 @@ public sealed class EncodedParams
         return ((T1)args[0], (T2)args[1], (T3)args[2]);
     }
     /// <summary>
-    /// Retrieves the four values from the contract function result cast to the desired types.
+    /// Retrieves the first four values from the contract function result cast to the desired types.
     /// </summary>
     /// <typeparam name="T1">
     /// Type of the first argument, must be known to the caller.
@@ -146,7 +146,7 @@ public sealed class EncodedParams
         return ((T1)args[0], (T2)args[1], (T3)args[2], (T4)args[3]);
     }
     /// <summary>
-    /// Retrieves the five values from the contract function result cast to the desired types.
+    /// Retrieves the first five values from the contract function result cast to the desired types.
     /// </summary>
     /// <typeparam name="T1">
     /// Type of the first argument, must be known to the caller.

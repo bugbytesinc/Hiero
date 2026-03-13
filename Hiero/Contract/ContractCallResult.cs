@@ -46,9 +46,9 @@ public sealed record ContractCallResult
     /// </summary>
     public ReadOnlyCollection<ContractEvent> Events { get; private init; }
     /// <summary>
-    /// The contract's 20-byte EVM address, may or may 
-    /// correspond to the shard.realm.num encoded, the
-    /// EIP-1014 or <code>None</code> if not returned 
+    /// The contract's 20-byte EVM address, may or may not
+    /// correspond to the shard.realm.num encoded, an
+    /// EIP-1014 derived address or <code>None</code> if not returned
     /// from the network.
     /// </summary>
     public EvmAddress EvmAddress { get; private init; }
@@ -59,7 +59,7 @@ public sealed record ContractCallResult
     /// <summary>
     /// A list of updated contract account nonces containing the new nonce 
     /// value for each contract account involved in this transaction. For
-    /// QueryAsync transactions, this should be empty as a Contract QueryAsync call
+    /// query transactions, this should be empty as a contract query call
     /// does not change the state of the EVM.
     /// </summary>
     public ReadOnlyDictionary<EntityId, long> Nonces { get; private init; }
@@ -94,7 +94,7 @@ public sealed record ContractCallResult
 public sealed class ContractEvent
 {
     /// <summary>
-    /// Payer of a contract that emitted the event.
+    /// Address of the contract that emitted the event.
     /// </summary>
     public EntityId Contract { get; private init; }
     /// <summary>

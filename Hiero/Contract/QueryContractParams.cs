@@ -50,7 +50,7 @@ public sealed class QueryContractParams
     /// </summary>
     public bool ThrowOnFail { get; set; } = true;
     /// <summary>
-    /// Optional Cancellation token that interrupt the query.
+    /// Optional Cancellation token that can interrupt the query.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
 }
@@ -85,7 +85,7 @@ public static class QueryContractExtensions
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
+    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ContractException">If the request was accepted by the network but the contract failed for
     /// some reason.  Contains additional information returned from the contract virtual machine.  Only thrown if
     /// the <see cref="QueryContractParams.ThrowOnFail"/> is set to <code>true</code>, the default, otherwise

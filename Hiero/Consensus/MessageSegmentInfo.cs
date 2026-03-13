@@ -2,8 +2,8 @@
 
 namespace Hiero;
 /// <summary>
-/// Optional metadata that may be attached to an
-/// Segmented HCS message identifying the index
+/// Optional metadata that may be attached to a
+/// segmented HCS message identifying the index
 /// of the segment and which parent message this
 /// segment correlates with.
 /// </summary>

@@ -13,7 +13,7 @@ namespace Hiero.Mirror;
 public class ContractResultData
 {
     /// <summary>
-    /// Payer of the contract that was called
+    /// The EVM address of the contract that was called
     /// </summary>
     [JsonPropertyName("address")]
     public EvmAddress ContractAddress { get; set; } = default!;
@@ -42,7 +42,7 @@ public class ContractResultData
     public EntityId Contract { get; set; } = default!;
     /// <summary>
     /// IDs of any contracts that were created as
-    /// a side affect of this contract call.
+    /// a side effect of this contract call.
     /// </summary>
     [JsonPropertyName("created_contract_ids")]
     [JsonConverter(typeof(EntityIdArrayConverter))]
@@ -204,8 +204,8 @@ public static class ContractResultDataExtensions
     /// <returns>
     /// A list of contract results data for each contract call, the
     /// returned data is not comprehensive in that it does not include
-    /// all of the assoiated HAPI transaction data, to retrieve that
-    /// data, additional calls retrieveing transaction data may be required.
+    /// all of the associated HAPI transaction data, to retrieve that
+    /// data, additional calls retrieving transaction data may be required.
     /// </returns>
     public static IAsyncEnumerable<ContractResultData> GetResultsForContractAsync(this MirrorRestClient client, EntityId contract, params IMirrorQueryFilter[] filters)
     {
@@ -284,7 +284,7 @@ public static class ContractResultDataExtensions
         return client.GetPagedItemsAsync<ContractResultDataPage, ContractResultData>(path, MirrorJsonContext.Default.ContractResultDataPage);
     }
     /// <summary>
-    /// Retrieves the list of contract results fulfilling the fitlered criteria
+    /// Retrieves the list of contract results fulfilling the filtered criteria
     /// </summary>
     /// <param name="client">
     /// Mirror Rest Client to use for the request.

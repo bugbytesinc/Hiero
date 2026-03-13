@@ -18,7 +18,7 @@ public enum RoyaltyType
     [Description("Fixed Royalty Fee")] Fixed = 0,
     /// <summary>
     /// A Royalty computed from value given in exchange for
-    /// receiving an Nft (NFT).
+    /// receiving an NFT.
     /// </summary>
     /// <remarks>
     /// Only applies to assets (NFTs).

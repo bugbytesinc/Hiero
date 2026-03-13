@@ -115,7 +115,7 @@ namespace Hiero.Implementation
             };
         }
         /// <summary>
-        /// Generates the optional receiving request hook method, if configured in the context.
+        /// Generates the optional response received hook method, if configured in the context.
         /// </summary>
         /// <remarks>
         /// Unlike other context methods and properties, ALL the configured handlers in all

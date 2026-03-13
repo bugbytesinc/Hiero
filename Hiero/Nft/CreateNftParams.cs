@@ -51,7 +51,7 @@ public sealed class CreateNftParams : TransactionParams<CreateTokenReceipt>, INe
     /// </summary>
     public Endorsement? PauseEndorsement { get; set; }
     /// <summary>
-    /// Administrator key for signing transaction that confiscate and destroy
+    /// Administrator key for signing transactions that confiscate and destroy
     /// (wipe) NFTs from an arbitrary crypto address.
     /// </summary>
     public Endorsement? ConfiscateEndorsement { get; set; }
@@ -89,16 +89,16 @@ public sealed class CreateNftParams : TransactionParams<CreateTokenReceipt>, INe
     /// </summary>
     public ConsensusTimeStamp Expiration { get; set; }
     /// <summary>
-    /// Interval of the topic and auto-renewal period. If
-    /// the associated renewal account does not have sufficient funds to 
-    /// renew at the expiration time, it will be renewed for a period 
+    /// Interval of the NFT token and auto-renewal period. If
+    /// the associated renewal account does not have sufficient funds to
+    /// renew at the expiration time, it will be renewed for a period
     /// of time the remaining funds can support.  If no funds remain, the
-    /// topic instance will be deleted.
+    /// NFT token instance will be deleted.
     /// </summary>
     public TimeSpan? RenewPeriod { get; set; }
     /// <summary>
-    /// Optional address of the account supporting the auto renewal of 
-    /// the asset at expiration time.  The topic lifetime will be
+    /// Optional address of the account supporting the auto renewal of
+    /// the asset at expiration time.  The NFT token lifetime will be
     /// extended by the RenewPeriod at expiration time if this account
     /// contains sufficient funds.  The private key associated with
     /// this account must sign the transaction if RenewAccount is
@@ -115,13 +115,13 @@ public sealed class CreateNftParams : TransactionParams<CreateTokenReceipt>, INe
     /// <summary>
     /// Additional private key, keys or signing callback method 
     /// required to create this asset.  Typically matches the
-    /// Administrator, KycEndorsement, FreezeEndorsement and other
+    /// Administrator, GrantKycEndorsement, SuspendEndorsement and other
     /// listed endorsements associated with this asset.
     /// </summary>
     /// <remarks>
     /// Keys/callbacks added here will be combined with those already
     /// identified in the client object's context when signing this 
-    /// transaction to change the state of this account.
+    /// transaction to create this NFT token type.
     /// </remarks>
     public Signatory? Signatory { get; set; }
     /// <summary>
@@ -130,11 +130,11 @@ public sealed class CreateNftParams : TransactionParams<CreateTokenReceipt>, INe
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
     /// <summary>
-    /// Creates a Crypto Transfer Transaction Body from these
+    /// Creates a Token Create Transaction Body from these
     /// parameters.
     /// </summary>
     /// <returns>
-    /// CryptoTransferTransactionBody implementing INetworkTransaction
+    /// TokenCreateTransactionBody implementing INetworkTransaction
     /// </returns>
     INetworkTransaction INetworkParams<CreateTokenReceipt>.CreateNetworkTransaction()
     {

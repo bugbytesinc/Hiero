@@ -49,7 +49,7 @@ public class TransactionData
     [JsonPropertyName("name")]
     public string? TransactionType { get; set; }
     /// <summary>
-    /// The Hedera Gossip Node the submitted this transaction
+    /// The Hedera Gossip Node that submitted this transaction
     /// </summary>
     [JsonPropertyName("node")]
     public EntityId? GossipNode { get; set; }
@@ -107,7 +107,7 @@ public class TransactionData
     [JsonConverter(typeof(ValidDurationInSecondsConverter))]
     public TimeSpan ValidDuration { get; set; }
     /// <summary>
-    /// The transacitons valid starting timestamp.
+    /// The transaction's valid starting timestamp.
     /// </summary>
     [JsonPropertyName("valid_start_timestamp")]
     public ConsensusTimeStamp ValidStarting { get; set; }

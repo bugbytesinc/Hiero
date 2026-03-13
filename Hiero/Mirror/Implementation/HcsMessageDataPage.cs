@@ -7,7 +7,7 @@ namespace Hiero.Mirror.Implementation;
 internal class HcsMessageDataPage : Page<HcsMessageData>
 {
     /// <summary>
-    /// List of HCS Message.
+    /// List of HCS Messages.
     /// </summary>
     [JsonPropertyName("messages")]
     public HcsMessageData[]? Messages { get; set; }

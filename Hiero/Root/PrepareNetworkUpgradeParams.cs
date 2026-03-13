@@ -16,7 +16,7 @@ public sealed class PrepareNetworkUpgradeParams : TransactionParams<TransactionR
     /// </summary>
     public EntityId File { get; set; } = default!;
     /// <summary>
-    /// Hash of the file upgrade file's contents.
+    /// Hash of the upgrade file's contents.
     /// </summary>
     public ReadOnlyMemory<byte> FileHash { get; set; }
     /// <summary>
@@ -83,9 +83,9 @@ public static class PrepareNetworkUpgradeExtensions
     /// </remarks>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
+    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
-    /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> PrepareNetworkUpgradeAsync(this ConsensusClient client, PrepareNetworkUpgradeParams prepareParams, Action<IConsensusContext>? configure = null)
     {

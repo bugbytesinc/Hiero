@@ -16,12 +16,12 @@ namespace Hiero.Mirror
     public class ContractStateData
     {
         /// <summary>
-        /// The contract's EVM ADdress
+        /// The contract's EVM Address
         /// </summary>
         [JsonPropertyName("address")]
         public EvmAddress EvmAddress { get; set; } = default!;
         /// <summary>
-        /// The contract's HAPI ADdress
+        /// The contract's HAPI Address
         /// </summary>
         [JsonPropertyName("contract_id")]
         public EntityId HapiAddress { get; set; } = default!;
@@ -57,7 +57,7 @@ public static class ContractStateDataExtensions
     /// Mirror Rest Client to use for the request.
     /// </param>
     /// <param name="contract">
-    /// Payer of the contract.
+    /// The EntityId of the contract.
     /// </param>
     /// <param name="position">
     /// The position within the data (slot number).

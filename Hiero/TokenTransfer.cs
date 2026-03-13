@@ -10,13 +10,13 @@ public sealed record TokenTransfer
     /// </summary>
     public EntityId Token { get; private init; }
     /// <summary>
-    /// The Payer receiving or sending the token's coins.
+    /// The account receiving or sending the token's coins.
     /// </summary>
     public EntityId Account { get; private init; }
     /// <summary>
     /// The (divisible) amount of coins transferred.  Negative values
-    /// indicate an outflow of coins to the <code>Address</code> positive
-    /// values indicate an inflow of coins from the associated <code>Address</code>.
+    /// indicate an outflow of coins from the account. Positive
+    /// values indicate an inflow of coins to the account.
     /// </summary>
     public long Amount { get; init; }
     /// <summary>
@@ -28,15 +28,15 @@ public sealed record TokenTransfer
     /// Public Constructor, an <code>TokenTransfer</code> is immutable after creation.
     /// </summary>
     /// <param name="token">
-    /// The Payer of the Token who's coins have transferred.
+    /// The identifier of the Token whose coins were transferred.
     /// </param>
     /// <param name="address">
-    /// The Payer receiving or sending the token's coins.
+    /// The account receiving or sending the token's coins.
     /// </param>
     /// <param name="amount">
     /// The (divisible) amount of coins transferred.  Negative values
-    /// indicate an outflow of coins to the <code>Address</code> positive
-    /// values indicate an inflow of coins from the associated <code>Address</code>.
+    /// indicate an outflow of coins from the account. Positive
+    /// values indicate an inflow of coins to the account.
     /// </param>
     /// <param name="delegated">
     /// Indicates the parties involved in the transaction

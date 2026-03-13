@@ -26,7 +26,7 @@ public sealed class UpdateTokenParams : TransactionParams<TransactionReceipt>, I
     /// </summary>
     public EntityId? Treasury { get; set; }
     /// <summary>
-    /// Replace this Tokens's current administrative key signing requirements 
+    /// Replace this Token's current administrative key signing requirements 
     /// with new signing requirements.  
     /// </summary>
     /// <remarks>
@@ -53,7 +53,7 @@ public sealed class UpdateTokenParams : TransactionParams<TransactionReceipt>, I
     /// </summary>
     public Endorsement? PauseEndorsement { get; set; }
     /// <summary>
-    /// Changes the administrator key for signing transaction that completely 
+    /// Changes the administrator key for signing transactions that completely 
     /// remove tokens from a crypto address.
     /// </summary>
     public Endorsement? ConfiscateEndorsement { get; set; }
@@ -83,7 +83,7 @@ public sealed class UpdateTokenParams : TransactionParams<TransactionReceipt>, I
     /// </summary>
     public string? Name { get; set; }
     /// <summary>
-    /// If specified, changes to expiration new date, fees will be charged as appropriate.
+    /// If specified, changes the expiration to a new date, fees will be charged as appropriate.
     /// </summary>
     public ConsensusTimeStamp? Expiration { get; set; }
     /// <summary>
@@ -95,12 +95,12 @@ public sealed class UpdateTokenParams : TransactionParams<TransactionReceipt>, I
     /// </summary>
     public TimeSpan? RenewPeriod { get; set; }
     /// <summary>
-    /// If specified updates the address of the account supporting the auto 
+    /// If specified, updates the address of the account supporting the auto 
     /// renewal of the token at expiration time.  The token lifetime will be
     /// extended by the RenewPeriod at expiration time if this account
     /// contains sufficient funds.  The private key associated with
     /// this account must sign the transaction if RenewAccount is
-    /// specified.  Setting the value to <code>Payer.None</code> clears the
+    /// specified.  Setting the value to <code>EntityId.None</code> clears the
     /// renewal account.
     /// </summary>
     public EntityId? RenewAccount { get; set; }
@@ -148,7 +148,7 @@ public sealed class UpdateTokenParams : TransactionParams<TransactionReceipt>, I
             RenewAccount is null &&
             Memo is null)
         {
-            throw new ArgumentException("The Topic Updates contain no update properties, it is blank.", nameof(UpdateTokenParams));
+            throw new ArgumentException("The Token Updates contain no update properties, it is blank.", nameof(UpdateTokenParams));
         }
         var result = new TokenUpdateTransactionBody()
         {
@@ -270,13 +270,12 @@ public static class UpdateTokenExtensions
     /// </param>
     /// <returns>
     /// A transaction receipt indicating success of the operation.
-    /// of the request.
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
+    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
-    /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    /// <exception cref="TransactionException">If the network rejected the update request as invalid or had missing data.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> UpdateTokenAsync(this ConsensusClient client, UpdateTokenParams updateParameters, Action<IConsensusContext>? configure = null)
     {

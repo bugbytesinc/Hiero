@@ -8,7 +8,7 @@ namespace Hiero;
 
 /// <summary>
 /// Submit Message Parameters, optionally including
-/// Message Message Information. 
+/// message segment information. 
 /// </summary>
 /// <remarks>
 /// The hedera network does not validate
@@ -27,7 +27,7 @@ public sealed class SubmitMessageParams : TransactionParams<SubmitMessageReceipt
     public EntityId Topic { get; set; } = default!;
     /// <summary>
     /// The value of this message or segment of the message,
-    /// limited to the 4K total Network TransactionId Size.
+    /// limited to the 4K total network transaction size.
     /// </summary>
     public ReadOnlyMemory<byte> Message { get; set; }
     /// <summary>
@@ -67,7 +67,7 @@ public sealed class SubmitMessageParams : TransactionParams<SubmitMessageReceipt
     /// </summary>
     public Signatory? Signatory { get; set; }
     /// <summary>
-    /// Optional Cancellation token that interrupt the token
+    /// Optional cancellation token that can interrupt the
     /// submission process.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
@@ -146,7 +146,7 @@ public static class SubmitMessageExtensions
     /// The address of the topic for the message.
     /// </param>
     /// <param name="message">
-    /// The value of the message, limited to the 4K total Network TransactionId Size.
+    /// The value of the message, limited to the 4K total network transaction size.
     /// </param>
     /// <param name="configure">
     /// Optional callback method providing an opportunity to modify 
@@ -159,9 +159,9 @@ public static class SubmitMessageExtensions
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
+    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
-    /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<SubmitMessageReceipt> SubmitMessageAsync(this ConsensusClient client, EntityId topic, ReadOnlyMemory<byte> message, Action<IConsensusContext>? configure = null)
     {
@@ -190,9 +190,9 @@ public static class SubmitMessageExtensions
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
+    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
-    /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
     public static async Task<SubmitMessageReceipt> SubmitMessageAsync(this ConsensusClient client, SubmitMessageParams submitParams, Action<IConsensusContext>? configure = null)
     {
         // We have a special case when the segment index

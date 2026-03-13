@@ -13,7 +13,7 @@ namespace Hiero;
 public record TransactionRecord : TransactionReceipt
 {
     /// <summary>
-    /// Hash of the TransactionId.
+    /// Hash of the Transaction.
     /// </summary>
     public ReadOnlyMemory<byte> Hash { get; internal init; }
     /// <summary>
@@ -59,17 +59,16 @@ public record TransactionRecord : TransactionReceipt
     public IReadOnlyList<Association> Associations { get; internal init; }
 
     /// <summary>
-    /// If this records represents a child transaction, the consensus timestamp
+    /// If this record represents a child transaction, the consensus timestamp
     /// of the parent transaction to this transaction, otherwise null.
-    /// transaction 
     /// </summary>
     public ConsensusTimeStamp? ParentTransactionConsensus { get; internal init; }
     /// <summary>
-    /// A List of account staking rewards paid  as a result of this transaction.
+    /// A List of account staking rewards paid as a result of this transaction.
     /// </summary>
     public ReadOnlyDictionary<EntityId, long> StakingRewards { get; internal init; }
     /// <summary>
-    /// Internal Constructor of the records.
+    /// Internal Constructor of the record.
     /// </summary>
     internal TransactionRecord(Proto.TransactionRecord record) : base(record.TransactionID, record.Receipt)
     {
@@ -101,7 +100,7 @@ public static class TransactionRecordExtensions
     /// The Consensus Node Client to query.
     /// </param>
     /// <param name="transaction">
-    /// TransactionId identifier of the records
+    /// TransactionId identifier of the record
     /// </param>
     /// <param name="cancellationToken">Optional cancellation token.</param>
     /// <param name="configure">
@@ -110,10 +109,10 @@ public static class TransactionRecordExtensions
     /// It is executed prior to submitting the request to the network.
     /// </param>
     /// <returns>
-    /// A transaction records with the specified id, or an exception if not found.
+    /// A transaction record with the specified id, or an exception if not found.
     /// </returns>
     /// <remarks>
-    /// Generally there is only one records per transaction, but in certain cases
+    /// Generally there is only one record per transaction, but in certain cases
     /// where there is a transaction ID collision (deliberate or accidental) there
     /// may be more, the <see cref="GetAllTransactionRecordsAsync"/>
     /// method may be used to retrieve all records.
@@ -136,14 +135,14 @@ public static class TransactionRecordExtensions
     /// <summary>
     /// Retrieves all records having the given transaction ID, including duplicates
     /// that were rejected or produced errors during execution.  Typically there is
-    /// only one records per transaction, but in some cases, deliberate or accidental
+    /// only one record per transaction, but in some cases, deliberate or accidental
     /// there may be more than one for a given transaction ID.
     /// </summary>
     /// <param name="client">
     /// The Consensus Node Client to query.
     /// </param>
     /// <param name="transaction">
-    /// TransactionId identifier of the records
+    /// TransactionId identifier of the record
     /// </param>
     /// <param name="cancellationToken">Optional cancellation token.</param>
     /// <param name="configure">
@@ -177,7 +176,7 @@ public static class TransactionRecordExtensions
     /// transaction outcome. We do not know if the transaction in question has come
     /// to consensus so we need to get the receipt first (and wait if necessary).
     /// The Receipt status returned does not matter in this case.
-    /// We may be retrieving a failed records (the status would not equal OK).
+    /// We may be retrieving a failed record (the status would not equal OK).
     /// </summary>
     private static async Task WaitForConsensusReceipt(ConsensusContextStack context, TransactionID transactionId, CancellationToken cancellationToken)
     {
@@ -204,7 +203,7 @@ public static class TransactionRecordExtensions
     /// The Consensus Node Client to query.
     /// </param>
     /// <param name="address">
-    /// The Hedera Network Payer to retrieve associated records.
+    /// The Hedera Network address to retrieve associated records.
     /// </param>
     /// <param name="cancellationToken">Optional cancellation token.</param>
     /// <param name="configure">
@@ -213,7 +212,7 @@ public static class TransactionRecordExtensions
     /// It is executed prior to submitting the request to the network.
     /// </param>
     /// <returns>
-    /// A detailed description of the account.
+    /// An array of transaction records associated with the given account.
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
@@ -230,10 +229,10 @@ public static class TransactionRecordExtensions
     /// <summary>
     /// Helper Function to create a collection of transaction records from a network query.
     /// </summary>
-    /// <param name="rootRecord">If exists, the parent records</param>
-    /// <param name="childrenRecords"></param>
-    /// <param name="failedRecords"></param>
-    /// <returns></returns>
+    /// <param name="rootRecord">If exists, the parent record</param>
+    /// <param name="childrenRecords">Collection of child transaction records spawned by the root transaction.</param>
+    /// <param name="failedRecords">Collection of failed duplicate transaction records.</param>
+    /// <returns>A read-only collection of all transaction records associated with the transaction.</returns>
     internal static ReadOnlyCollection<TransactionRecord> Create(Proto.TransactionRecord? rootRecord, RepeatedField<Proto.TransactionRecord>? childrenRecords, RepeatedField<Proto.TransactionRecord>? failedRecords)
     {
         var count = (rootRecord != null ? 1 : 0) + (childrenRecords != null ? childrenRecords.Count : 0) + (failedRecords != null ? failedRecords.Count : 0);

@@ -38,13 +38,13 @@ public class ExtendedContractLogData : ContractLogData
     [JsonConverter(typeof(HexStringToBytesConverter))]
     public ReadOnlyMemory<byte> TransactionHash { get; set; }
     /// <summary>
-    /// The TransactionId Block SegmentIndex for this log record
+    /// The transaction index within the block for this log record
     /// </summary>
     [JsonPropertyName("transaction_index")]
     [JsonConverter(typeof(LongMirrorConverter))]
     public long TransactionIndex { get; set; }
     /// <summary>
-    /// Payer of the contract that was called 
+    /// The ID of the contract that was called
     /// externally, may be different than the contract
     /// that emitted this event.
     /// </summary>
@@ -69,7 +69,7 @@ public static class ExtendedContractLogDataExtensions
     /// <param name="filters">
     /// Additional query filters if desired.
     /// </param>
-    /// <returns></returns>
+    /// <returns>An async enumerable of contract log events meeting the given criteria.</returns>
     public static IAsyncEnumerable<ExtendedContractLogData> GetLogEventsForContractAsync(this MirrorRestClient client, EntityId contract, params IMirrorQueryFilter[] filters)
     {
         var path = GenerateInitialPath($"contracts/{MirrorFormat(contract)}/results/logs", [new LimitFilter(100), .. filters]);
@@ -85,7 +85,7 @@ public static class ExtendedContractLogDataExtensions
     /// <param name="filters">
     /// Additional filters
     /// </param>
-    /// <returns></returns>
+    /// <returns>An async enumerable of contract log events meeting the given criteria.</returns>
     public static IAsyncEnumerable<ExtendedContractLogData> GetLogEventsForAllContractsAsync(this MirrorRestClient client, params IMirrorQueryFilter[] filters)
     {
         var path = GenerateInitialPath($"contracts/results/logs", [new LimitFilter(100), .. filters]);

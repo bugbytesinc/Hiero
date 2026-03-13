@@ -15,7 +15,7 @@ internal class TransactionDataPage : Page<TransactionData>
     /// Method enumerating the items in the list.
     /// </summary>
     /// <returns>
-    /// Enumerable of TransactionParams.
+    /// Enumerable of TransactionData.
     /// </returns>
     public override IEnumerable<TransactionData> GetItems()
     {

@@ -25,7 +25,7 @@ public sealed record TokenBalance : CryptoBalance
     public TokenTradableStatus TradableStatus { get; private init; }
     /// <summary>
     /// True if this token was associated automatically by
-    /// the network via autoassociation via becoming a
+    /// the network through autoassociation or by becoming a
     /// token or asset treasury.
     /// </summary>
     public bool AutoAssociated { get; private init; }

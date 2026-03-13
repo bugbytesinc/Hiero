@@ -5,10 +5,9 @@ using System.Collections.Concurrent;
 namespace Hiero.Implementation;
 
 /// <summary>
-/// Internal Base Implementation of the <see cref="IConsensusContext"/> and 
-/// <see cref="IMirrorGrpcContext"/> used for configuring
-/// <see cref="ConsensusClient"/> and <see cref="MirrorGrpcClient"/>objects.  Maintains 
-/// a stack of parent objects and coordinates values returned for 
+/// Internal base class for context stacks that support configuring
+/// <see cref="ConsensusClient"/> and <see cref="MirrorGrpcClient"/> objects.
+/// Maintains a stack of parent objects and coordinates values returned for
 /// various contexts.  Not intended for public use.
 /// </summary>
 internal abstract class ContextStack<TContext, TChannelKey> : IAsyncDisposable where TContext : ContextStack<TContext, TChannelKey> where TChannelKey : notnull

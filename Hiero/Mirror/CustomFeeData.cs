@@ -27,5 +27,5 @@ public class CustomFeeData
     /// Associated Royalty Fees
     /// </summary>
     [JsonPropertyName("royalty_fees")]
-    public FractionalFeeData[] RoyaltyFees { get; set; } = default!;
+    public RoyaltyFeeData[] RoyaltyFees { get; set; } = default!;
 }

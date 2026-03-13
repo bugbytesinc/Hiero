@@ -30,13 +30,13 @@ public sealed class CreateFileParams : TransactionParams<FileReceipt>, INetworkP
     public string Memo { get; set; } = default!;
     /// <summary>
     /// Additional private key, keys or signing callback method 
-    /// required to create to this file.  Typically matches the
+    /// required to create this file.  Typically matches the
     /// Endorsements associated with this file.
     /// </summary>
     /// <remarks>
     /// Keys or callbacks added here will be combined with those already
     /// identified in the client object's context when signing this 
-    /// transaction to change the state of this account.
+    /// transaction to create this file.
     /// </remarks>
     public Signatory? Signatory { get; set; }
     /// <summary>
@@ -85,11 +85,10 @@ public static class CreateFileExtensions
     /// </param>
     /// <returns>
     /// A transaction receipt with a description of the newly created file.
-    /// and record information.
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
+    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

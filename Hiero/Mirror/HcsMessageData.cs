@@ -61,7 +61,7 @@ public class HcsMessageData
 public static class HcsMessageDataExtensions
 {
     /// <summary>
-    /// Retrieves an HCS message with the given token and sequence number.
+    /// Retrieves an HCS message with the given topic and sequence number.
     /// </summary>
     /// <param name="client">
     /// Mirror Rest Client to use for the request.
@@ -70,7 +70,7 @@ public static class HcsMessageDataExtensions
     /// The HCS message topic to retrieve.
     /// </param>
     /// <param name="sequenceNumber">
-    /// The sequence number of message within the token stream to retrieve.
+    /// The sequence number of the message within the topic stream to retrieve.
     /// </param>
     /// <returns>
     /// The HCS Message information or null if not found.
@@ -80,7 +80,7 @@ public static class HcsMessageDataExtensions
         return client.GetSingleItemAsync<HcsMessageData>($"topics/{topic}/messages/{sequenceNumber}", MirrorJsonContext.Default.HcsMessageData);
     }
     /// <summary>
-    /// Retrieves a list of HCS message.  Messages may be filtered by a starting 
+    /// Retrieves a list of HCS messages.  Messages may be filtered by a starting
     /// sequence number or consensus timestamp.
     /// </summary>
     /// <param name="client">

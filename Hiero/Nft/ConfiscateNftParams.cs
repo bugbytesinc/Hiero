@@ -35,7 +35,7 @@ public sealed class ConfiscateNftParams : TransactionParams<TokenReceipt>, INetw
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
     /// <summary>
-    /// Creates the appropriate Hedera transaction Body from these parameters.
+    /// Creates the appropriate network transaction body from these parameters.
     /// </summary>
     /// <returns>
     /// TokenWipeAccountTransactionBody implementing INetworkTransaction
@@ -96,14 +96,14 @@ public static class ConfiscateNftExtensions
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission, for example if the nft is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
-    /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    /// <exception cref="TransactionException">If the network rejected the confiscate request as invalid or had missing data.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TokenReceipt> ConfiscateNftAsync(this ConsensusClient client, Nft nft, EntityId account, Action<IConsensusContext>? configure = null)
     {
         return client.ExecuteAsync(new ConfiscateNftParams { Token = nft.Token, Account = account, SerialNumbers = [nft.SerialNumber] }, configure);
     }
     /// <summary>
-    /// Confiscates and Destroys multiple nft (NFT) instances.
+    /// Confiscates and destroys multiple NFT instances.
     /// </summary>
     /// <param name="client">
     /// The Consensus Node Client orchestrating the confiscation.
@@ -124,7 +124,7 @@ public static class ConfiscateNftExtensions
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission, for example if the nft is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
-    /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    /// <exception cref="TransactionException">If the network rejected the confiscate request as invalid or had missing data.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TokenReceipt> ConfiscateNftsAsync(this ConsensusClient client, ConfiscateNftParams confiscateParams, Action<IConsensusContext>? configure = null)
     {

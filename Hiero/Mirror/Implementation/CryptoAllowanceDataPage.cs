@@ -12,10 +12,10 @@ internal class CryptoAllowanceDataPage : Page<CryptoAllowanceData>
     [JsonPropertyName("allowances")]
     public CryptoAllowanceData[]? CryptoAllowances { get; set; }
     /// <summary>
-    /// Enumerates the list of token allowances.
+    /// Enumerates the list of crypto allowances.
     /// </summary>
     /// <returns>
-    /// An enumerator listing the token allowance records in the list.
+    /// An enumerator listing the crypto allowance records in the list.
     /// </returns>
     public override IEnumerable<CryptoAllowanceData> GetItems()
     {

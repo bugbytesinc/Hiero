@@ -32,13 +32,13 @@ public sealed class CreateTokenParams : TransactionParams<CreateTokenReceipt>, I
     /// </summary>
     public string Symbol { get; set; } = default!;
     /// <summary>
-    /// The initial number of tokens to placed into the token treasury
+    /// The initial number of tokens to place into the token treasury
     /// account upon creation of the token (specified in the smallest 
-    /// unit). The Treasury receive the initial circulation.
+    /// unit). The Treasury receives the initial circulation.
     /// </summary>
     public ulong Circulation { get; set; }
     /// <summary>
-    /// The number of decimal places token may be subdivided.
+    /// The number of decimal places a token may be subdivided.
     /// </summary>
     public uint Decimals { get; set; }
     /// <summary>
@@ -71,8 +71,8 @@ public sealed class CreateTokenParams : TransactionParams<CreateTokenReceipt>, I
     /// </summary>
     public Endorsement? PauseEndorsement { get; set; }
     /// <summary>
-    /// Administrator key for signing transaction that completely remove tokens
-    /// from an crypto address.
+    /// Administrator key for signing transactions that completely remove tokens
+    /// from a crypto address.
     /// </summary>
     public Endorsement? ConfiscateEndorsement { get; set; }
     /// <summary>
@@ -130,7 +130,7 @@ public sealed class CreateTokenParams : TransactionParams<CreateTokenReceipt>, I
     public EntityId? RenewAccount { get; set; }
     /// <summary>
     /// Additional private key, keys or signing callback method 
-    /// required to create to this token.  Typically matches the
+    /// required to create this token.  Typically matches the
     /// Administrator, KycEndorsement, FreezeEndorsement and other
     /// listed endorsements associated with this token.
     /// </summary>

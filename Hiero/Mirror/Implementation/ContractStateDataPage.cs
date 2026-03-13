@@ -12,7 +12,7 @@ internal class ContractStateDataPage : Page<ContractStateData>
     [JsonPropertyName("state")]
     public ContractStateData[]? States { get; set; }
     /// <summary>
-    /// Enumerates the list of account slot detail objects.
+    /// Enumerates the list of contract slot detail objects.
     /// </summary>
     /// <returns>
     /// Enumerator of slot detail objects for this

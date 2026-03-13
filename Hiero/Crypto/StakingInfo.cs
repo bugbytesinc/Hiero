@@ -2,8 +2,8 @@
 
 namespace Hiero;
 /// <summary>
-/// The staking information returned from the 
-/// by CryptoGetInfo or ContractGetInfo queries.
+/// The staking information returned from the
+/// CryptoGetInfo or ContractGetInfo queries.
 /// </summary>
 public sealed record StakingInfo
 {

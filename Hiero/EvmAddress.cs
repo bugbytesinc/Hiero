@@ -117,7 +117,7 @@ public sealed record EvmAddress : IEquatable<EvmAddress>
     /// The other <code>EvmAddress</code> object to compare.
     /// </param>
     /// <returns>
-    /// True if NFT, owner, created and metadata are the same.
+    /// True if the EVM address bytes are identical.
     /// </returns>
     public bool Equals(EvmAddress? other)
     {
@@ -207,7 +207,7 @@ public sealed record EvmAddress : IEquatable<EvmAddress>
     }
     /// <summary>
     /// Implicit operator for converting a readonly memory array
-    /// into an EVM Address. It sets the shard and realm values to zero.
+    /// into an EVM Address.
     /// </summary>
     /// <param name="bytes">
     /// The bytes representing the EVM Address.
@@ -218,7 +218,7 @@ public sealed record EvmAddress : IEquatable<EvmAddress>
     }
     /// <summary>
     /// Implicit operator for converting a readonly span of bytes into
-    /// an EVM Address.  It sets the shard and realm values to zero.
+    /// an EVM Address.
     /// </summary>
     /// <param name="bytes">
     /// The bytes representing the EVM Address.

@@ -48,18 +48,18 @@ public sealed class CreateTopicParams : TransactionParams<CreateTopicReceipt>, I
     public EntityId? RenewAccount { get; set; }
     /// <summary>
     /// Additional private key, keys or signing callback method 
-    /// required to create to this topic.  Typically matches the
+    /// required to create this topic.  Typically matches the
     /// Administrator, Submitter and RenewAccount key(s)
     /// associated with this topic.
     /// </summary>
     /// <remarks>
     /// Keys/callbacks added here will be combined with those already
     /// identified in the client object's context when signing this 
-    /// transaction to change the state of this account.
+    /// transaction to change the state of this topic.
     /// </remarks>
     public Signatory? Signatory { get; set; }
     /// <summary>
-    /// Optional Cancellation token that interrupt the token
+    /// Optional cancellation token that can interrupt the
     /// submission process.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
@@ -117,9 +117,9 @@ public static class CreateTopicExtensions
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
+    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
-    /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<CreateTopicReceipt> CreateTopicAsync(this ConsensusClient client, CreateTopicParams createParameters, Action<IConsensusContext>? configure = null)
     {

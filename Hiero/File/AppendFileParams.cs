@@ -26,7 +26,7 @@ public sealed class AppendFileParams : TransactionParams<TransactionReceipt>, IN
     /// <remarks>
     /// Keys or callbacks added here will be combined with those already
     /// identified in the client object's context when signing this 
-    /// transaction to change the state of this account.
+    /// transaction to append to this file.
     /// </remarks>
     public Signatory? Signatory { get; set; }
     /// <summary>
@@ -76,9 +76,9 @@ public static class AppendFileExtensions
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
+    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
-    /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    /// <exception cref="TransactionException">If the network rejected the append request as invalid or had missing data.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> AppendFileAsync(this ConsensusClient client, AppendFileParams appendParameters, Action<IConsensusContext>? configure = null)
     {

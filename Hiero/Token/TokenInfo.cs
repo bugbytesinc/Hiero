@@ -65,8 +65,8 @@ public sealed record TokenInfo
     /// </summary>
     public Endorsement? PauseEndorsement { get; set; }
     /// <summary>
-    /// Administrator key for signing transaction that completely remove tokens
-    /// from an crypto address.
+    /// Administrator key for signing transactions that completely remove tokens
+    /// from a crypto address.
     /// </summary>
     public Endorsement? ConfiscateEndorsement { get; private init; }
     /// <summary>
@@ -97,7 +97,7 @@ public sealed record TokenInfo
     /// </summary>
     public TokenTradableStatus PauseStatus { get; private init; }
     /// <summary>
-    /// The list of fixed royalties assessed on transactions
+    /// The list of royalties assessed on transactions
     /// by the network when transferring this token.
     /// </summary>
     public IReadOnlyList<IRoyalty> Royalties { get; internal init; }
@@ -199,7 +199,7 @@ public static class TokenInfoExtensions
     /// The Consensus Node Client returning the information.
     /// </param>
     /// <param name="token">
-    /// The identifier (Payer/Symbol) of the token to retrieve.
+    /// The identifier of the token to retrieve.
     /// </param>
     /// <param name="cancellationToken">Optional cancellation token.</param>
     /// <param name="configure">
@@ -212,7 +212,7 @@ public static class TokenInfoExtensions
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
+    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     public static async Task<TokenInfo> GetTokenInfoAsync(this ConsensusClient client, EntityId token, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
     {
         return new TokenInfo(await Engine.QueryAsync(client, new TokenGetInfoQuery { Token = new TokenID(token) }, cancellationToken, configure).ConfigureAwait(false));

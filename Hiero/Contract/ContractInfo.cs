@@ -32,7 +32,7 @@ public sealed record ContractInfo
     /// </summary>
     public Endorsement? Administrator { get; private init; }
     /// <summary>
-    /// The consensus time at which this instance of the contract is
+    /// The consensus time at which this instance of the contract
     /// (and associated account) is set to expire.
     /// </summary>
     public ConsensusTimeStamp Expiration { get; private init; }
@@ -54,7 +54,7 @@ public sealed record ContractInfo
     /// </summary>
     public EntityId? RenewAccount { get; private init; }
     /// <summary>
-    /// The number of bytes of required to store this contract instance.
+    /// The number of bytes required to store this contract instance.
     /// This value impacts the cost of extending the expiration time.
     /// </summary>
     public long Size { get; private init; }
@@ -87,7 +87,7 @@ public sealed record ContractInfo
     /// </summary>
     public BigInteger Ledger { get; private init; }
     /// <summary>
-    /// Staking Metadata Information for the account.
+    /// Staking metadata information for the contract.
     /// </summary>
     public StakingInfo StakingInfo { get; private init; }
     /// <summary>
@@ -130,7 +130,7 @@ public static class ContractInfoExtensions
     /// The Consensus Node Client to query.
     /// </param>
     /// <param name="contract">
-    /// The Hedera Network Payer of the Contract.
+    /// The address of the Contract.
     /// </param>
     /// <param name="cancellationToken">Optional cancellation token.</param>
     /// <param name="configure">
@@ -143,7 +143,7 @@ public static class ContractInfoExtensions
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
+    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     public static async Task<ReadOnlyMemory<byte>> GetContractBytecodeAsync(this ConsensusClient client, EntityId contract, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
     {
         return (await Engine.QueryAsync(client, new ContractGetBytecodeQuery { ContractID = new ContractID(contract) }, cancellationToken, configure).ConfigureAwait(false)).ContractGetBytecodeResponse.Bytecode.Memory;
@@ -155,7 +155,7 @@ public static class ContractInfoExtensions
     /// The Consensus Node Client to query.
     /// </param>
     /// <param name="contract">
-    /// The Hedera Network Payer of the Contract instance to retrieve.
+    /// The address of the Contract instance to retrieve.
     /// </param>
     /// <param name="cancellationToken">Optional cancellation token.</param>
     /// <param name="configure">
@@ -168,7 +168,7 @@ public static class ContractInfoExtensions
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
+    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     public static async Task<ContractInfo> GetContractInfoAsync(this ConsensusClient client, EntityId contract, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
     {
         return new ContractInfo(await Engine.QueryAsync(client, new ContractGetInfoQuery { ContractID = new ContractID(contract) }, cancellationToken, configure).ConfigureAwait(false));

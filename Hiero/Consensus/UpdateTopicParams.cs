@@ -32,9 +32,9 @@ public sealed class UpdateTopicParams : TransactionParams<TransactionReceipt>, I
     /// </summary>
     /// <remarks>
     /// For this request to be accepted by the network, both the current private
-    /// key(s) for this account and the new private key(s) must sign the transaction.  
-    /// The existing key must sign for security and the new key must sign as a 
-    /// safeguard to avoid accidentally changing the key to an invalid value.  
+    /// key(s) for this topic and the new private key(s) must sign the transaction.
+    /// The existing key must sign for security and the new key must sign as a
+    /// safeguard to avoid accidentally changing the key to an invalid value.
     /// </remarks>
     public Endorsement? Administrator { get; set; }
     /// <summary>
@@ -53,7 +53,7 @@ public sealed class UpdateTopicParams : TransactionParams<TransactionReceipt>, I
     /// </summary>
     public ConsensusTimeStamp? Expiration { get; set; }
     /// <summary>
-    /// Incremental period for auto-renewal of the topic account. If
+    /// Incremental period for auto-renewal of the topic. If
     /// the associated account does not have sufficient funds to 
     /// renew at the expiration time, it will be renewed for a period 
     /// of time the remaining funds can support.  If no funds remain, the
@@ -72,16 +72,16 @@ public sealed class UpdateTopicParams : TransactionParams<TransactionReceipt>, I
     /// <summary>
     /// Additional private key, keys or signing callback method 
     /// required to update this topic.  Typically matches the
-    /// Administrator endorsement associated with this contract.
+    /// Administrator endorsement associated with this topic.
     /// </summary>
     /// <remarks>
     /// Keys/callbacks added here will be combined with those already
     /// identified in the client object's context when signing this 
-    /// transaction to change the state of this account.
+    /// transaction to change the state of this topic.
     /// </remarks>
     public Signatory? Signatory { get; set; }
     /// <summary>
-    /// Optional Cancellation token that interrupt the token
+    /// Optional cancellation token that can interrupt the
     /// submission process.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
@@ -160,13 +160,12 @@ public static class UpdateTopicExtensions
     /// </param>
     /// <returns>
     /// A transaction receipt indicating success of the operation.
-    /// of the request.
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
+    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
-    /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    /// <exception cref="TransactionException">If the network rejected the update request as invalid or had missing data.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> UpdateTopicAsync(this ConsensusClient client, UpdateTopicParams updateParameters, Action<IConsensusContext>? configure = null)
     {

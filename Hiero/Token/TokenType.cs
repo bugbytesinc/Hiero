@@ -14,7 +14,7 @@ public enum TokenType
     /// </summary>
     Fungible = 0,
     /// <summary>
-    /// NonFungible Token (Non-Fungible, non Divisible)
+    /// NonFungible Token (Non-Fungible, Non-Divisible)
     /// </summary>
     NonFungible = 1
 }

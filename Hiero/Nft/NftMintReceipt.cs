@@ -5,8 +5,8 @@ namespace Hiero;
 
 /// <summary>
 /// A transaction receipt containing information regarding
-/// new token coin balance, typically returned from methods
-/// that can affect a change on the total circulation supply.
+/// the newly minted NFTs, typically returned from methods
+/// that can affect a change on the total NFT circulation supply.
 /// </summary>
 public sealed record NftMintReceipt : TransactionReceipt
 {

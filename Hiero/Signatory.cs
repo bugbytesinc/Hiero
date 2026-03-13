@@ -27,11 +27,11 @@ public sealed class Signatory : ISignatory, IEquatable<Signatory>
     private enum Type
     {
         /// <summary>
-        /// Ed25519 Public Key (Stored as a <see cref="Org.BouncyCastle.Crypto.Parameters.Ed25519PublicKeyParameters"/>).
+        /// Ed25519 Private Key (Stored as a <see cref="Org.BouncyCastle.Crypto.Parameters.Ed25519PrivateKeyParameters"/>).
         /// </summary>
         Ed25519 = 1,
         /// <summary>
-        /// ECDSASecp256K1 Public Key (Stored as a <see cref="Org.BouncyCastle.Crypto.Parameters.ECPublicKeyParameters"/>).
+        /// ECDSASecp256K1 Private Key (Stored as a <see cref="Org.BouncyCastle.Crypto.Parameters.ECPrivateKeyParameters"/>).
         /// </summary>
         ECDSASecp256K1 = 2,
         /// <summary>
@@ -380,7 +380,7 @@ public sealed class Signatory : ISignatory, IEquatable<Signatory>
     /// ID, Memo and serialized bytes of the crypto transfers and other
     /// embedded information making up the transaction.
     /// </param>
-    /// <returns></returns>
+    /// <returns>A ValueTask representing the asynchronous signing operation.</returns>
     async ValueTask ISignatory.SignAsync(IInvoice invoice)
     {
         switch (_type)

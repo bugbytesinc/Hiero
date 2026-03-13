@@ -11,17 +11,17 @@ namespace Hiero;
 public sealed class GrantTokenKycParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
-    /// The TransactionId of the Fungible or NFT Token Class to grant KYC.
+    /// The identifier of the Fungible or NFT Token Class to grant KYC.
     /// </summary>
     public EntityId Token { get; set; } = default!;
     /// <summary>
-    /// The TransactionId of the account associated or holding the tokens.
+    /// The identifier of the account associated or holding the tokens.
     /// </summary>
     public EntityId Holder { get; set; } = default!;
     /// <summary>
     /// Additional private key, keys or signing callback method 
-    /// required to authorize the transfers.  Typically matches the
-    /// Endorsement assigned to the pause key for the token if it is not already
+    /// required to authorize the KYC grant.  Typically matches the
+    /// Endorsement assigned to the KYC key for the token if it is not already
     /// set as the payer for the transaction.
     /// </summary>
     /// <remarks>
@@ -56,7 +56,7 @@ public sealed class GrantTokenKycParams : TransactionParams<TransactionReceipt>,
 public static class GrantTokenKycExtensions
 {
     /// <summary>
-    /// Grants KYC status to the associated account's relating to the specified token.
+    /// Grants KYC status to the associated account relating to the specified token.
     /// </summary>
     /// <param name="client">
     /// The Consensus Node Client orchestrating the kyc grant.
@@ -77,16 +77,16 @@ public static class GrantTokenKycExtensions
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission, for example, if the token is already deleted.</exception>
+    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission, for example, if the token is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
-    /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> GrantTokenKycAsync(this ConsensusClient client, EntityId token, EntityId holder, Action<IConsensusContext>? configure = null)
     {
         return client.ExecuteAsync(new GrantTokenKycParams { Token = token, Holder = holder }, configure);
     }
     /// <summary>
-    /// Grants KYC status to the associated account's relating to the specified token.
+    /// Grants KYC status to the associated account relating to the specified token.
     /// </summary>
     /// <param name="client">
     /// The Consensus Node Client orchestrating the kyc grant.
@@ -104,9 +104,9 @@ public static class GrantTokenKycExtensions
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission, for example, if the token is already deleted.</exception>
+    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission, for example, if the token is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
-    /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> GrantTokenKycAsync(this ConsensusClient client, GrantTokenKycParams grantTokenKycParams, Action<IConsensusContext>? configure = null)
     {

@@ -46,7 +46,7 @@ public sealed record ConsensusNodeInfo
 public static class ConsensusNodeInfoExtensions
 {
     /// <summary>
-    /// Retrieves the current USD to hBar exchange rate information from the network.
+    /// Retrieves the consensus node address book information from the network.
     /// </summary>
     /// <remarks>
     /// NOTE: this method incurs a charge to retrieve the file from the network.
@@ -59,12 +59,11 @@ public static class ConsensusNodeInfoExtensions
     /// It is executed prior to submitting the request to the network.
     /// </param>
     /// <returns>
-    /// An Exchange Rates object providing the current and next
-    /// exchange rates.
+    /// An array of consensus node information entries from the network's address book.
     /// </returns>
     public static async Task<ConsensusNodeInfo[]> GetAddressBookAsync(this ConsensusClient client, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
     {
-        // Well known address of the exchange rate file is 0.0.102
+        // Well known address of the address book file is 0.0.102
         var file = await client.GetFileContentAsync(new EntityId(0, 0, 102), cancellationToken, configure).ConfigureAwait(false);
         var book = NodeAddressBook.Parser.ParseFrom(file.Span);
         if (book.NodeAddress is { Count: > 0 })

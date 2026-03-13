@@ -27,7 +27,7 @@ public sealed class MirrorGrpcClient : IAsyncDisposable
     /// Creates a new instance of a Hedera Mirror Network MirrorGrpcClient.
     /// </summary>
     /// <remarks>
-    /// Creating a new instance of a <code>Mirror</code> initializes a new instance 
+    /// Creating a new instance of a <code>MirrorGrpcClient</code> initializes a new instance 
     /// of a client.  It will have a separate cache of GRPC channels to the network 
     /// and will maintain a separate configuration from other clients.  The constructor 
     /// takes an optional callback method that configures the details on how the 
@@ -36,7 +36,7 @@ public sealed class MirrorGrpcClient : IAsyncDisposable
     /// </remarks>
     /// <param name="configure">
     /// Optional configuration method that can set the location of the network node 
-    /// accessing the network and how transaction fees shall be paid for.
+    /// accessing the network.
     /// </param>
     public MirrorGrpcClient(Action<IMirrorGrpcContext>? configure = null) : this(DefaultChannelFactory, configure)
     {
@@ -46,7 +46,7 @@ public sealed class MirrorGrpcClient : IAsyncDisposable
     /// custom gRPC channel factory.
     /// </summary>
     /// <remarks>
-    /// Creating a new instance of a <code>Mirror</code> initializes a new instance 
+    /// Creating a new instance of a <code>MirrorGrpcClient</code> initializes a new instance 
     /// of a client.  It will have a separate cache of GRPC channels to the network 
     /// and will maintain a separate configuration from other clients.  The constructor 
     /// takes an optional callback method that configures the details on how the 
@@ -61,7 +61,7 @@ public sealed class MirrorGrpcClient : IAsyncDisposable
     /// </param>
     /// <param name="configure">
     /// Optional configuration method that can set the location of the network node 
-    /// accessing the network and how transaction fees shall be paid for.
+    /// accessing the network.
     /// </param>
     public MirrorGrpcClient(Func<Uri, GrpcChannel> channelFactory, Action<IMirrorGrpcContext>? configure = null)
     {
@@ -141,7 +141,7 @@ public sealed class MirrorGrpcClient : IAsyncDisposable
     /// .NET Asynchronous dispose method.
     /// </summary>
     /// <remarks>
-    /// Closes any GRPC channels solely owned by this <code>Mirror</code> instance.
+    /// Closes any GRPC channels solely owned by this <code>MirrorGrpcClient</code> instance.
     /// </remarks>
     /// <returns>
     /// An Async Task.
@@ -167,7 +167,7 @@ public sealed class MirrorGrpcClient : IAsyncDisposable
     /// </param>
     /// <returns>
     /// Returns only after one of the four conditions occur: the output channel is 
-    /// completed by calling code; the cancelation token provided in the params is 
+    /// completed by calling code; the cancellation token provided in the params is
     /// signaled; the maximum number of topic messages was returned as configured in
     /// the params; or if the mirror stream faults during streaming, in which case a 
     /// <see cref="MirrorGrpcException"/> is thrown.

@@ -15,7 +15,7 @@ internal class BlockDataPage : Page<BlockData>
     /// Enumerates the list of block info objects.
     /// </summary>
     /// <returns>
-    /// Enumerator of account block objects for this paged list.
+    /// Enumerator of block info objects for this paged list.
     /// </returns>
     public override IEnumerable<BlockData> GetItems()
     {

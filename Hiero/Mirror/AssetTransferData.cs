@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 namespace Hiero.Mirror;
 
 /// <summary>
-/// Represents an Nft (NFT) transfer within a transaction.
+/// Represents an NFT transfer within a transaction.
 /// </summary>
 public class AssetTransferData
 {
@@ -14,7 +14,7 @@ public class AssetTransferData
     [JsonPropertyName("token_id")]
     public EntityId Token { get; set; } = default!;
     /// <summary>
-    /// The serial number of the Nft (NFT) transferred.
+    /// The serial number of the NFT transferred.
     /// </summary>
     [JsonPropertyName("serial_number")]
     [JsonConverter(typeof(LongMirrorConverter))]

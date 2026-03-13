@@ -124,7 +124,7 @@ public static class RelinquishTokenExtensions
     /// Relinquishes a specific NFT instance, returning it to the token treasury.
     /// </summary>
     /// <param name="client">
-    /// The Consensus Node Client orchestrating the rejection.
+    /// The Consensus Node Client orchestrating the relinquishment.
     /// </param>
     /// <param name="nft">
     /// The NFT instance to reject.

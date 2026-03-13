@@ -10,7 +10,7 @@ namespace Hiero.Mirror;
 public class ConsensusNodeData
 {
     /// <summary>
-    /// The consensus nodes account ID (for payment purposes).
+    /// The consensus node's account ID (for payment purposes).
     /// </summary>
     [JsonPropertyName("node_account_id")]
     public EntityId Account { get; set; } = default!;
@@ -123,12 +123,12 @@ public static class ConsensusNodeDataExtensions
     }
     /// <summary>
     /// Retrieves a list of Hedera gRPC nodes known to the 
-    /// mirror node that respond to a const_ask query within 
+    /// mirror node that respond to a ping query within
     /// the given timeout value.  This can be used to create
     /// a list of working gRPC nodes for submitting transactions.
     /// </summary>
     /// <param name="client">
-    /// The Mirror Node REST ConsensusClient
+    /// Mirror Rest Client to use for the request.
     /// </param>
     /// <param name="maxTimeoutInMilliseconds">
     /// The time value threshold, that if exceeded, will result

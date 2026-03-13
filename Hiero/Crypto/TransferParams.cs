@@ -41,7 +41,7 @@ public sealed class TransferParams : TransactionParams<TransactionReceipt>, INet
     /// </remarks>
     public Signatory? Signatory { get; set; }
     /// <summary>
-    /// Optional Cancellation token that interrupts the token
+    /// Optional Cancellation token that interrupts the transfer
     /// submission process.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
@@ -190,7 +190,7 @@ public sealed class TransferParams : TransactionParams<TransactionReceipt>, INet
 /// Shortcut Internal Transfer Params for transferring tinybars only.
 /// </summary>
 /// <remarks>
-/// Bypasses most of the checks for the gneric CryptoTransferTransactionBody construction.
+/// Bypasses most of the checks for the generic CryptoTransferTransactionBody construction.
 /// </remarks>
 internal sealed class TransferOnlyCryptoParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
@@ -374,9 +374,9 @@ public static class TransferExtensions
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
+    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
-    /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    /// <exception cref="TransactionException">If the network rejected the transfer request as invalid or had missing data.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> TransferAsync(this ConsensusClient client, EntityId fromAddress, EntityId toAddress, long amount, Action<IConsensusContext>? configure = null)
     {
@@ -387,7 +387,7 @@ public static class TransferExtensions
     /// </summary>
     /// <remarks>
     /// This convenience method does not support allowances, to
-    /// perform transfers with allowances, use the long of this method,
+    /// perform transfers with allowances, use the overload of this method,
     /// <see cref="TransferExtensions.TransferAsync(ConsensusClient, TransferParams, Action{IConsensusContext}?)"/>,
     /// instead.
     /// </remarks>
@@ -416,9 +416,9 @@ public static class TransferExtensions
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
+    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
-    /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    /// <exception cref="TransactionException">If the network rejected the transfer request as invalid or had missing data.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> TransferNftAsync(this ConsensusClient client, Nft nft, EntityId fromAddress, EntityId toAddress, Action<IConsensusContext>? configure = null)
     {
@@ -443,15 +443,15 @@ public static class TransferExtensions
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
+    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
-    /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    /// <exception cref="TransactionException">If the network rejected the transfer request as invalid or had missing data.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> TransferAsync(this ConsensusClient client, TransferParams transfers, Action<IConsensusContext>? configure = null)
     {
         if (transfers is null)
         {
-            throw new ArgumentNullException(nameof(transfers), "The transfer parameters cannot not be null.");
+            throw new ArgumentNullException(nameof(transfers), "The transfer parameters cannot be null.");
         }
         return client.ExecuteAsync(transfers, configure);
     }
@@ -491,9 +491,9 @@ public static class TransferExtensions
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
+    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
-    /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    /// <exception cref="TransactionException">If the network rejected the transfer request as invalid or had missing data.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> TransferTokensAsync(this ConsensusClient client, EntityId token, EntityId fromAddress, EntityId toAddress, long amount, Action<IConsensusContext>? configure = null)
     {

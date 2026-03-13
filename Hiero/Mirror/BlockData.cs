@@ -95,7 +95,7 @@ public static class BlockDataExtensions
         return client.GetSingleItemAsync<BlockData>($"blocks/{blockNumber}", MirrorJsonContext.Default.BlockData);
     }
     /// <summary>
-    /// Retrieves block information given the block blockhash.
+    /// Retrieves block information given the block hash.
     /// </summary>
     /// <param name="client">
     /// Mirror Rest Client to use for the request.

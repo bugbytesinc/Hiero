@@ -47,7 +47,7 @@ public sealed record AccountInfo
     [Obsolete("This field is deprecated by HIP-367")]
     public IReadOnlyList<TokenBalance> Tokens { get; private init; }
     /// <summary>
-    /// <code>True</code> if any receipt of funds require
+    /// <code>True</code> if any receipt of funds requires
     /// a signature from this account.
     /// </summary>
     public bool ReceiveSignatureRequired { get; private init; }
@@ -74,7 +74,7 @@ public sealed record AccountInfo
     /// </summary>
     public long NftCount { get; private init; }
     /// <summary>
-    /// The maximum number of token or NFTs that this account may
+    /// The maximum number of tokens or NFTs that this account may
     /// be implicitly associated with (by means of being made a treasury
     /// or other related actions).
     /// </summary>
@@ -150,7 +150,7 @@ public static class AccountInfoExtensions
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
+    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     public static async Task<AccountInfo> GetAccountInfoAsync(this ConsensusClient client, EntityId address, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
     {
         return new AccountInfo(await Engine.QueryAsync(client, new CryptoGetInfoQuery { AccountID = new AccountID(address) }, cancellationToken, configure).ConfigureAwait(false));

@@ -6,8 +6,8 @@ using System.Numerics;
 namespace Hiero;
 /// <summary>
 /// The information returned from the GetNftInfo ConsensusClient 
-/// method call.  It represents the details concerning an 
-/// Hedera Non-Fungible Token (NFT).
+/// method call.  It represents the details concerning
+/// a Hedera Non-Fungible Token (NFT).
 /// </summary>
 public sealed record NftInfo
 {
@@ -44,7 +44,7 @@ public sealed record NftInfo
     /// The other <code>NftInfo</code> object to compare.
     /// </param>
     /// <returns>
-    /// True if asset, owner, created and metadata are the same.
+    /// True if all properties (nft, owner, spender, created, metadata, and ledger) are the same.
     /// </returns>
     public bool Equals(NftInfo? other)
     {
@@ -113,7 +113,7 @@ public static class NftInfoExtensions
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
+    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     public static async Task<NftInfo> GetNftInfoAsync(this ConsensusClient client, Nft nft, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
     {
         return new NftInfo(await Engine.QueryAsync(client, new TokenGetNftInfoQuery { NftID = new NftID(nft) }, cancellationToken, configure).ConfigureAwait(false));

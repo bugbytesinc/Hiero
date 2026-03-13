@@ -121,7 +121,7 @@ public static class ScheduleInfoExtensions
     /// The Consensus Node Client to query.
     /// </param>
     /// <param name="schedule">
-    /// The identifier (Payer/Schedule ID) of the schedule transaction to retrieve.
+    /// The address of the schedule entity to retrieve.
     /// </param>
     /// <param name="cancellationToken">Optional cancellation token.</param>
     /// <param name="configure">
@@ -135,7 +135,7 @@ public static class ScheduleInfoExtensions
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
+    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     public static async Task<ScheduleInfo> GetScheduleInfoAsync(this ConsensusClient client, EntityId schedule, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
     {
         return new ScheduleInfo(await Engine.QueryAsync(client, new ScheduleGetInfoQuery { ScheduleID = new ScheduleID(schedule) }, cancellationToken, configure).ConfigureAwait(false));

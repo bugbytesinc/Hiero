@@ -14,7 +14,7 @@ public sealed class DissociateTokenParams : TransactionParams<TransactionReceipt
     /// </summary>
     public EntityId Account { get; set; } = default!;
     /// <summary>
-    /// List of Token or NFT class IDs to associate with the account.
+    /// List of Token or NFT class IDs to dissociate from the account.
     /// </summary>
     public IEnumerable<EntityId> Tokens { get; set; } = default!;
     /// <summary>
@@ -82,10 +82,10 @@ public static class DissociateTokenExtensions
     /// The Consensus Node Client orchestrating the dissociation.
     /// </param>
     /// <param name="token">
-    /// The Payer of the token that will be dissociated.
+    /// The identifier of the token that will be dissociated.
     /// </param>
     /// <param name="account">
-    /// Payer of the account that will be dissociated.
+    /// The identifier of the account that will be dissociated.
     /// </param>
     /// <param name="configure">
     /// Optional callback method providing an opportunity to modify 
@@ -97,9 +97,9 @@ public static class DissociateTokenExtensions
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission, for example, if the token has already been dissociated.</exception>
+    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission, for example, if the token has already been dissociated.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
-    /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> DissociateTokenAsync(this ConsensusClient client, EntityId token, EntityId account, Action<IConsensusContext>? configure = null)
     {
@@ -133,9 +133,9 @@ public static class DissociateTokenExtensions
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission, for example, if the token has already been dissociated.</exception>
+    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission, for example, if the token has already been dissociated.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
-    /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> DissociateTokenAsync(this ConsensusClient client, DissociateTokenParams dissociateParams, Action<IConsensusContext>? configure = null)
     {

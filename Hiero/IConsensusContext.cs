@@ -21,7 +21,7 @@ namespace Hiero;
 public interface IConsensusContext
 {
     /// <summary>
-    /// Network Payer and Node Address address for gaining 
+    /// Network Payer and Node Address for gaining
     /// access to the Hedera Network.
     /// </summary>
     ConsensusNodeEndpoint? Endpoint { get; set; }
@@ -68,7 +68,7 @@ public interface IConsensusContext
     /// </summary>
     TimeSpan TransactionDuration { get; set; }
     /// <summary>
-    /// The default memo associated with transactions set to the network.
+    /// The default memo associated with transactions sent to the network.
     /// </summary>
     string? Memo { get; set; }
     /// <summary>

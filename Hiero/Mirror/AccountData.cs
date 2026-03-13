@@ -7,7 +7,7 @@ using static Hiero.Mirror.Implementation.MirrorRestClientUtils;
 
 namespace Hiero.Mirror;
 /// <summary>
-/// Address information retrieved from a mirror node.
+/// Account information retrieved from a mirror node.
 /// </summary>
 public class AccountData
 {
@@ -70,7 +70,7 @@ public class AccountData
     /// <summary>
     /// Timestamp at which the network will try to 
     /// renew the account rent or delete the account
-    /// if there are no funds to extends its lifetime.
+    /// if there are no funds to extend its lifetime.
     /// </summary>
     [JsonPropertyName("expiry_timestamp")]
     public ConsensusTimeStamp Expiration { get; set; }
@@ -135,19 +135,19 @@ public class AccountData
 public static class AccountDataExtensions
 {
     /// <summary>
-    /// Retrieves information about an contract.
+    /// Retrieves information about an account.
     /// </summary>
     /// <param name="client">
     /// Mirror Rest Client to use for the request.
     /// </param>
     /// <param name="account">
-    /// The id of the contract to retrieve.
+    /// The id of the account to retrieve.
     /// </param>
     /// <param name="filters">
     /// Optional list of filters to apply to the query.
     /// </param>
     /// <returns>
-    /// An Address information object or throws an exception if not found.
+    /// An account information object, or null if not found.
     /// </returns>
     public static Task<AccountData?> GetAccountAsync(this MirrorRestClient client, EntityId account, params IMirrorQueryFilter[] filters)
     {
@@ -164,7 +164,7 @@ public static class AccountDataExtensions
     /// The endorsement to match against.
     /// </param>
     /// <returns>
-    /// Array of contract information objects with public keys matching the endorsement,
+    /// Array of account information objects with public keys matching the endorsement,
     /// or empty if no matches are found.
     /// </returns>
     public static IAsyncEnumerable<AccountData> GetAccountsFromEndorsementAsync(this MirrorRestClient client, Endorsement endorsement)

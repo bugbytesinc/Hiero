@@ -1,18 +1,18 @@
 ﻿namespace Hiero.Mirror.Filters;
 /// <summary>
-/// Retrieve consensus messages filtered by account id.
+/// Filter results by token ID.
 /// </summary>
 public class TokenIsFilter : IMirrorQueryFilter
 {
     /// <summary>
-    /// The account id to filter the request by.
+    /// The token ID to filter the request by.
     /// </summary>
     private readonly EntityId _token;
     /// <summary>
     /// Constructor requires the token to filter the request by.
     /// </summary>
     /// <param name="token">
-    /// Payer of the token to filter the response by.
+    /// The ID of the token to filter the response by.
     /// </param>
     public TokenIsFilter(EntityId token)
     {

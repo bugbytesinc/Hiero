@@ -209,13 +209,13 @@ public static class ExternalTransactionParamsExtensions
         return (ResponseCode)precheck.NodeTransactionPrecheckCode;
     }
     /// <summary>
-    /// Submits an arbitrary externally Hedera Transaction to the network.  
+    /// Submits an arbitrary externally created Hedera Transaction to the network.  
     /// The transaction is submitted as a <code>SignedTransaction</code> object, 
     /// protobuf encoded, and may include signatures in the associated 
     /// <code>sigMap</code> field.  Any Signatories held in the client context 
     /// (or method call) will add signatures to this transaction prior to submitting.  
     /// It is not necessary to include a <code>Payer</code> in the context as the 
-    /// transaction itself defines the payer, however a mataching (via Node Account ID)
+    /// transaction itself defines the payer, however a matching (via Node Account ID)
     /// <code>ConsensusNodeEndpoint</code> must be contained in context as it
     /// provides the necessary gRPC routing to the Hedera Network’s node, which is 
     /// not encoded in the signed transaction structure.
@@ -223,7 +223,7 @@ public static class ExternalTransactionParamsExtensions
     /// <remarks>
     /// Note: this method accepts protobuf encoded as a <code>SignedTransaction</code>,
     /// not a <code>Transaction</code> object as the transaction object contains 
-    /// depricated protobuf fields not supported by this SDK.  The method will peform
+    /// deprecated protobuf fields not supported by this SDK.  The method will perform
     /// the necessary final wrapping of the transaction for final submission.
     /// </remarks>
     /// <param name="client">
@@ -231,7 +231,7 @@ public static class ExternalTransactionParamsExtensions
     /// </param>
     /// <param name="signedTransactionBytes">
     /// The serialized protobuf encoded bytes of a <code>SignedTransaction</code>
-    /// object to be submitted to a Gossip Network TransactionId. These bytes must be 
+    /// object to be submitted to a Gossip Network Node. These bytes must be 
     /// manually created from calling code having a knowledge of how to construct the 
     /// Hedera transaction.
     /// </param>
@@ -254,7 +254,7 @@ public static class ExternalTransactionParamsExtensions
         return SubmitExternalTransactionAsync(client, new ExternalTransactionParams { SignedTransactionBytes = signedTransactionBytes }, configure);
     }
     /// <summary>
-    /// Submits an arbitrary externally Hedera Transaction to the network.  
+    /// Submits an arbitrary externally created Hedera Transaction to the network.  
     /// The Transaction is submitted as a <code>SignedTransaction</code> object, 
     /// protobuf encoded, and may include signatures in the associated 
     /// <code>sigMap</code> field.  Any Signatories held in the client context 
@@ -276,7 +276,7 @@ public static class ExternalTransactionParamsExtensions
     /// </param>
     /// <param name="externalParams">
     /// The serialized protobuf encoded bytes of a <code>SignedTransaction</code>
-    /// object to be submitted to a Gossip Network TransactionId. These bytes must be 
+    /// object to be submitted to a Gossip Network Node. These bytes must be 
     /// manually created from calling code having a knowledge of how to construct the 
     /// Hedera transaction.
     /// </param>

@@ -248,7 +248,7 @@ internal static class Engine
     /// transaction ID that was specified in the context overriding the
     /// automatic generation of the ID.
     /// </returns>
-    /// <exception cref="InvalidOperationException"></exception>
+    /// <exception cref="InvalidOperationException">If the Payer is not configured in the context.</exception>
     /// <exception cref="ArgumentException">
     /// If neither the Payer or Explicit Transaction ID are specified, there is 
     /// not enough information to generate a transaction ID and this exception

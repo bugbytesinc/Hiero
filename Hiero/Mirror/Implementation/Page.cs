@@ -5,7 +5,7 @@ namespace Hiero.Mirror.Implementation;
 /// Generic paged list object that follows the pattern for all paged items 
 /// returned from a mirror node.
 /// </summary>
-/// <typeparam name="T"></typeparam>
+/// <typeparam name="T">The type of item contained in the page.</typeparam>
 internal abstract class Page<T>
 {
     /// <summary>

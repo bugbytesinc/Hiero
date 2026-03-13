@@ -1,6 +1,6 @@
 ﻿namespace Hiero.Mirror.Filters;
 /// <summary>
-/// Retrieve consensus messages filtered by contract address.
+/// Filter by contract EVM address.
 /// </summary>
 public class ContractIsFilter : IMirrorQueryFilter
 {
@@ -12,7 +12,7 @@ public class ContractIsFilter : IMirrorQueryFilter
     /// Constructor requires the address to filter the request by.
     /// </summary>
     /// <param name="moniker">
-    /// Payer of the account to filter the response by.
+    /// The contract EVM address to filter the response by.
     /// </param>
     public ContractIsFilter(EvmAddress moniker)
     {

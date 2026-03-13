@@ -44,7 +44,7 @@ public sealed class CallContractParams : TransactionParams<TransactionReceipt>, 
     /// </remarks>
     public Signatory? Signatory { get; set; }
     /// <summary>
-    /// Optional Cancellation token that interrupt the contract
+    /// Optional Cancellation token that can interrupt the contract
     /// call.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
@@ -75,7 +75,7 @@ public static class CallContractExtensions
     /// This call does not return the data emitted from the contract, to
     /// obtain that data, use a mirror node to fetch the results by transaction
     /// id or retrieve the transaction record from the mirror node
-    /// via and cast the result to a <see cref="CallContractRecord"/>.
+    /// and cast the result to a <see cref="CallContractRecord"/>.
     /// </summary>
     /// <param name="client">
     /// The Consensus Node Client executing the contract call.
@@ -95,7 +95,7 @@ public static class CallContractExtensions
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
+    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -33,7 +33,7 @@ public sealed record NftTransfer
     /// The address of the crypto account having the NFT.
     /// </param>
     /// <param name="toAddress">
-    /// The address of the crypto account sending the NFT.
+    /// The address of the crypto account receiving the NFT.
     /// </param>
     /// <param name="delegated">
     /// Indicates the parties involved in the transaction

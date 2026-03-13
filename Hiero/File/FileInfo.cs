@@ -18,7 +18,7 @@ public sealed record FileInfo
     /// </summary>
     public string Memo { get; private init; }
     /// <summary>
-    /// The size of the file in bytes (plus 30 extra for overhead).
+    /// The size of the file in bytes.
     /// </summary>
     public long Size { get; private init; }
     /// <summary>
@@ -37,7 +37,7 @@ public sealed record FileInfo
     public bool Deleted { get; private init; }
     /// <summary>
     /// Identification of the Ledger (Network) this 
-    /// account information was retrieved from.
+    /// file information was retrieved from.
     /// </summary>
     public BigInteger Ledger { get; private init; }
     /// <summary>
@@ -81,9 +81,9 @@ public static class FileInfoExtensions
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
+    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
-    /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
     public static async Task<ReadOnlyMemory<byte>> GetFileContentAsync(this ConsensusClient client, EntityId file, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
     {
         var response = await Engine.QueryAsync(client, new FileGetContentsQuery { FileID = new FileID(file) }, cancellationToken, configure).ConfigureAwait(false);
@@ -96,7 +96,7 @@ public static class FileInfoExtensions
     /// The Consensus Node Client to query.
     /// </param>
     /// <param name="file">
-    /// Payer of the file to query.
+    /// The address of the file to query.
     /// </param>
     /// <param name="cancellationToken">Optional cancellation token.</param>
     /// <param name="configure">
@@ -109,7 +109,7 @@ public static class FileInfoExtensions
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
+    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     public static async Task<FileInfo> GetFileInfoAsync(this ConsensusClient client, EntityId file, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
     {
         return new FileInfo(await Engine.QueryAsync(client, new FileGetInfoQuery { FileID = new FileID(file) }, cancellationToken, configure).ConfigureAwait(false));

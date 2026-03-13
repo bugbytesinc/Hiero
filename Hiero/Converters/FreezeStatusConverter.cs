@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace Hiero.Converters;
 /// <summary>
-/// Consensus Timestamp JSON Converter
+/// Freeze Status JSON Converter
 /// </summary>
 public sealed class FreezeStatusConverter : JsonConverter<TokenTradableStatus>
 {

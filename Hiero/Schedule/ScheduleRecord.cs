@@ -17,7 +17,7 @@ public sealed record ScheduleRecord : TransactionRecord
     /// </summary>
     public TransactionId ScheduledTxId { get; internal init; }
     /// <summary>
-    /// Internal Constructor of the receipt.
+    /// Internal Constructor of the record.
     /// </summary>
     internal ScheduleRecord(Proto.TransactionRecord record) : base(record)
     {

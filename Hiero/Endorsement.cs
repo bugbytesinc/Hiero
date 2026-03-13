@@ -51,8 +51,8 @@ public sealed class Endorsement : IEquatable<Endorsement>
     public KeyType Type { get; private set; }
     /// <summary>
     /// The bytes of the public key held by this endorsement if it is
-    /// an Ed25519 or ECDSA Secp256K1 key type.  If it is a list or 
-    /// endorsement, it can be extracted as HAPI protobuf.
+    /// an Ed25519 or ECDSA Secp256K1 key type.  If it is a list or
+    /// contract type, it can be extracted as HAPI protobuf.
     /// </summary>
     public ReadOnlyMemory<byte> ToBytes(KeyFormat keyFormat = KeyFormat.Default)
     {
@@ -178,7 +178,7 @@ public sealed class Endorsement : IEquatable<Endorsement>
     /// </param>
     /// <exception cref="ArgumentNullException">if endorsements is null</exception>
     /// <exception cref="ArgumentOutOfRangeException">if the required amount is negative
-    /// greater than the number of endorsements</exception>
+    /// or greater than the number of endorsements</exception>
     public Endorsement(uint requiredCount, params Endorsement[] endorsements)
     {
         if (endorsements is null)
@@ -231,9 +231,9 @@ public sealed class Endorsement : IEquatable<Endorsement>
         };
     }
     /// <summary>
-    /// Creates an endorsement representing an endorsement instance.
+    /// Creates an endorsement representing a contract instance.
     /// </summary>
-    /// <param name="contract">The address of the endorsement instance.</param>
+    /// <param name="contract">The address of the contract instance.</param>
     public Endorsement(EntityId contract)
     {
         Type = KeyType.Contract;
@@ -258,7 +258,7 @@ public sealed class Endorsement : IEquatable<Endorsement>
         return new Endorsement(publicKey);
     }
     /// <summary>
-    /// Implicit constructor converting a endorsement key alias into an
+    /// Implicit constructor converting an endorsement key alias into an
     /// <code>EntityId</code>.
     /// </summary>
     /// <param name="endorsement">The Key Alias value to wrap in an Entity ID</param>

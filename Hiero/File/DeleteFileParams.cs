@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 
 namespace Hiero;
 /// <summary>
-/// Represents the parameters required to delete a file from the Hedera network.
+/// File deletion parameters.
 /// </summary>
 public sealed class DeleteFileParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
@@ -66,9 +66,9 @@ public static class DeleteFileExtensions
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
+    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
-    /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    /// <exception cref="TransactionException">If the network rejected the delete request as invalid or had missing data.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> DeleteFileAsync(this ConsensusClient client, DeleteFileParams deleteParams, Action<IConsensusContext>? configure = null)
     {

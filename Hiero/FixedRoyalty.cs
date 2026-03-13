@@ -25,7 +25,7 @@ public sealed record FixedRoyalty : IRoyalty
     /// <summary>
     /// The amount of token or cryptocurrency
     /// that will be assessed and deducted from
-    /// the receiver sending the associated token
+    /// the sender of the associated token
     /// or NFT.
     /// </summary>
     public long Amount { get; private init; }
@@ -53,7 +53,7 @@ public sealed record FixedRoyalty : IRoyalty
     /// <param name="amount">
     /// The amount of token or cryptocurrency
     /// that will be assessed and deducted from
-    /// the receiver sending the associated token
+    /// the sender of the associated token
     /// or NFT.
     /// </param>
     public FixedRoyalty(EntityId receiver, EntityId token, long amount)

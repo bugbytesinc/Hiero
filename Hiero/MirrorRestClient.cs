@@ -55,7 +55,7 @@ public sealed class MirrorRestClient
     /// <param name="jsonTypeInfo">
     /// The source-generated JSON type info for the payload type.
     /// </param>
-    /// <returns></returns>
+    /// <returns>The HTTP response message from the mirror node REST API.</returns>
     internal Task<HttpResponseMessage> PostPayload<TValue>(string path, TValue payload, JsonTypeInfo<TValue> jsonTypeInfo)
     {
         return _client.PostAsJsonAsync($"api/v1/{path}", payload, jsonTypeInfo);

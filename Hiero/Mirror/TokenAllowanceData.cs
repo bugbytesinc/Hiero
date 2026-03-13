@@ -50,19 +50,19 @@ public class TokenAllowanceData
 public static class TokenAllowanceDataExtensions
 {
     /// <summary>
-    /// Retrieves the token allowances associated with this contract.
+    /// Retrieves the token allowances associated with this account.
     /// </summary>
     /// <param name="client">
     /// Mirror Rest Client to use for the request.
     /// </param>
     /// <param name="account">
-    /// The contract ID
+    /// The account ID
     /// </param>
     /// <param name="filters">
     /// Additional query filters if desired.
     /// </param>
     /// <returns>
-    /// A list of token allowances granted by this contract.
+    /// A list of token allowances granted by this account.
     /// </returns>
     public static IAsyncEnumerable<TokenAllowanceData> GetAccountTokenAllowancesAsync(this MirrorRestClient client, EntityId account, params IMirrorQueryFilter[] filters)
     {

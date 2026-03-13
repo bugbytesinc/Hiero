@@ -4,8 +4,8 @@ using System.Text.Json.Serialization;
 
 namespace Hiero;
 /// <summary>
-/// Class representing the Network Payer and gRPC ConsensusNodeEndpoint
-/// address for gaining access to the Hedera Network.
+/// Represents a consensus node's network address, consisting of a node
+/// identifier and a gRPC endpoint URI for accessing the Hiero Network.
 /// </summary>
 /// <remarks>
 /// This class consists of both an <see cref="EntityId"/> representing 
@@ -18,7 +18,7 @@ namespace Hiero;
 public sealed record ConsensusNodeEndpoint
 {
     /// <summary>
-    /// The URL and port of the public Hedera Network 
+    /// The URL and port of the public Hiero Network
     /// Consensus Node access point.
     /// </summary>
     public Uri Uri { get; private init; }
@@ -28,13 +28,13 @@ public sealed record ConsensusNodeEndpoint
     /// </summary>
     public EntityId Node { get; private init; }
     /// <summary>
-    /// Public Constructor, a <code>ConsensusEndpoint</code> is immutable after creation.
+    /// Public Constructor, a <code>ConsensusNodeEndpoint</code> is immutable after creation.
     /// </summary>
     /// <param name="node">
     /// Main Network Consensus Node's Address.
     /// </param>
     /// <param name="uri">
-    /// The URL and port of the public Hedera Network Consensus Node's gRPC access point.
+    /// The URL and port of the public Hiero Network Consensus Node's gRPC access point.
     /// A consensus node may actually have multiple gRPC endpoints mapped to the same
     /// wallet address (shard.realm.num).
     /// </param>
@@ -60,18 +60,18 @@ public sealed record ConsensusNodeEndpoint
         Node = node;
     }
     /// <summary>
-    /// Implicit operator for converting a Consensus ConsensusNodeEndpoint to a Payer Entity ID
+    /// Implicit operator for converting a ConsensusNodeEndpoint to an EntityId.
     /// </summary>
     /// <param name="endpoint">
-    /// The ConsensusNodeEndpoint object containing the realm, shard and node 
-    /// number node information to convert into an address object.
+    /// The ConsensusNodeEndpoint object containing the shard, realm and node
+    /// number information to convert into an address object.
     /// </param>
     public static implicit operator EntityId(ConsensusNodeEndpoint endpoint)
     {
         return endpoint.Node;
     }
     /// <summary>
-    /// Returns a string representation of the Consensus Node ConsensusNodeEndpoint,
+    /// Returns a string representation of the Consensus Node ConsensusNodeEndpoint.
     /// </summary>
     /// <returns>String Representation of the Consensus Node ConsensusNodeEndpoint</returns>
     public override string ToString()

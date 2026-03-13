@@ -111,7 +111,7 @@ public static class ContractBalancesExtensions
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
+    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     public static async Task<ulong> GetContractBalanceAsync(this ConsensusClient client, EntityId contract, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
     {
         return new AccountBalances(await Engine.QueryAsync(client, new CryptoGetAccountBalanceQuery { ContractID = new ContractID(contract) }, cancellationToken, configure).ConfigureAwait(false)).Crypto;
@@ -160,7 +160,7 @@ public static class ContractBalancesExtensions
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
+    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     public static async Task<ulong> GetAccountBalanceAsync(this ConsensusClient client, EntityId address, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
     {
         return new AccountBalances(await Engine.QueryAsync(client, new CryptoGetAccountBalanceQuery { AccountID = new AccountID(address) }, cancellationToken, configure).ConfigureAwait(false)).Crypto;

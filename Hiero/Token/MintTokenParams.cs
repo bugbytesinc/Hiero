@@ -10,7 +10,7 @@ namespace Hiero;
 public sealed class MintTokenParams : TransactionParams<TokenReceipt>, INetworkParams<TokenReceipt>
 {
     /// <summary>
-    /// The TransactionId of the fungible tokens to mint.
+    /// The identifier of the fungible token to mint.
     /// </summary>
     public EntityId Token { get; set; } = default!;
     /// <summary>
@@ -80,9 +80,9 @@ public static class MintTokenExtensions
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission, for example, if the token is already deleted.</exception>
+    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission, for example, if the token is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
-    /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TokenReceipt> MintTokenAsync(this ConsensusClient client, EntityId token, ulong amount, Action<IConsensusContext>? configure = null)
     {
@@ -107,9 +107,9 @@ public static class MintTokenExtensions
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission, for example, if the token is already deleted.</exception>
+    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission, for example, if the token is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
-    /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TokenReceipt> MintTokenAsync(this ConsensusClient client, MintTokenParams mintParams, Action<IConsensusContext>? configure = null)
     {

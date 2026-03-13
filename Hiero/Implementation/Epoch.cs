@@ -1,7 +1,7 @@
 ﻿namespace Hiero.Implementation;
 
 /// <summary>
-/// Helper class providing .net to Hedera timestamp and 
+/// Helper class providing .NET timestamp and
 /// timespan conversions.  Also provides a timestamp
 /// creation method that guarantees a unique timestamp
 /// for each call.  This helps reduce the chance of a

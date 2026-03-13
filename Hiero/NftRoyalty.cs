@@ -22,7 +22,7 @@ public sealed record NftRoyalty : IRoyalty
     /// </summary>
     /// <remarks>
     /// This is not expressed as a floating point number
-    /// in order to avoid rounding fees inherent in 
+    /// in order to avoid rounding errors inherent in 
     /// computing platforms.
     /// </remarks>
     public long Numerator { get; private init; }
@@ -32,7 +32,7 @@ public sealed record NftRoyalty : IRoyalty
     /// </summary>
     /// <remarks>
     /// This is not expressed as a floating point number
-    /// in order to avoid rounding fees inherent in 
+    /// in order to avoid rounding errors inherent in 
     /// computing platforms.
     /// </remarks>
     public long Denominator { get; private init; }
@@ -62,7 +62,7 @@ public sealed record NftRoyalty : IRoyalty
     /// Address receiving the royalty assessment.
     /// </param>
     /// <param name="numerator">
-    /// The denominator portion of the assessment fraction
+    /// The numerator portion of the assessment fraction
     /// of the value exchanged in return for the NFT.
     /// </param>
     /// <param name="denominator">

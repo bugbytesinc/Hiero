@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 namespace Hiero.Converters;
 
 /// <summary>
-/// Encoded Params data 64 base encoded string JSON Converter.
+/// Encoded Params data hex-encoded string JSON Converter.
 /// </summary>
 public sealed class EncodedParamsConverter : JsonConverter<EncodedParams>
 {

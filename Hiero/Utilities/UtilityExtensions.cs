@@ -70,7 +70,7 @@ public static class UtilityExtensions
     /// It is executed prior to submitting the request to the network.
     /// </param>
     /// <returns>
-    /// The time it takes (in miliseconds) to receive a response from
+    /// The time it takes (in milliseconds) to receive a response from
     /// the remote gossip node.
     /// </returns>
     /// <exception cref="PrecheckException">

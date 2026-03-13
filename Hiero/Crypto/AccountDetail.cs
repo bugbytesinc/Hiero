@@ -6,7 +6,7 @@ using System.Numerics;
 namespace Hiero;
 
 /// <summary>
-/// The information returned from the CreateAccountAsync ConsensusClient method call.  
+/// The information returned from the GetAccountDetailAsync ConsensusClient method call.  
 /// It represents the details concerning a Hedera Network Address, including 
 /// the public key value to use in smart contract interaction.
 /// </summary>
@@ -47,7 +47,7 @@ public sealed record AccountDetail
     /// </summary>
     public IReadOnlyList<TokenBalance> Tokens { get; private init; }
     /// <summary>
-    /// <code>True</code> if any receipt of funds require
+    /// <code>True</code> if any receipt of funds requires
     /// a signature from this account.
     /// </summary>
     public bool ReceiveSignatureRequired { get; private init; }
@@ -74,7 +74,7 @@ public sealed record AccountDetail
     /// </summary>
     public long NftCount { get; private init; }
     /// <summary>
-    /// The maximum number of token or NFTs that this account may
+    /// The maximum number of tokens or NFTs that this account may
     /// be implicitly associated with (by means of being made a treasury
     /// or other related actions).
     /// </summary>
@@ -92,17 +92,17 @@ public sealed record AccountDetail
     public BigInteger Ledger { get; private init; }
     /// <summary>
     /// List of crypto delegate allowances 
-    /// allocated  by this account.
+    /// allocated by this account.
     /// </summary>
     public IReadOnlyList<CryptoAllowance> CryptoAllowances { get; private init; }
     /// <summary>
     /// List of token delegate allowances 
-    /// allocated  by this account.
+    /// allocated by this account.
     /// </summary>
     public IReadOnlyList<TokenAllowance> TokenAllowances { get; private init; }
     /// <summary>
     /// List of Nft delegate allowances 
-    /// allocated  by this account.
+    /// allocated by this account.
     /// </summary>
     public IReadOnlyList<NftAllowance> NftAllowances { get; private init; }
     /// <summary>
@@ -157,7 +157,7 @@ public static class AccountDetailExtensions
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
+    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     public static async Task<AccountDetail> GetAccountDetailAsync(this ConsensusClient client, EntityId address, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
     {
         return new AccountDetail(await Engine.QueryAsync(client, new GetAccountDetailsQuery { AccountId = new AccountID(address) }, cancellationToken, configure).ConfigureAwait(false));

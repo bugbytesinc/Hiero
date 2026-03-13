@@ -2,7 +2,7 @@
 
 namespace Hiero.Mirror.Implementation;
 /// <summary>
-/// Paged list of account transaction details.
+/// Paged list of extended contract log data.
 /// </summary>
 internal class ExtendedContractLogDataPage : Page<ExtendedContractLogData>
 {
@@ -15,7 +15,7 @@ internal class ExtendedContractLogDataPage : Page<ExtendedContractLogData>
     /// Enumerates the list of log objects.
     /// </summary>
     /// <returns>
-    /// Enumerator of account log objects for this
+    /// Enumerator of contract log objects for this
     /// paged list.
     /// </returns>
     public override IEnumerable<ExtendedContractLogData> GetItems()

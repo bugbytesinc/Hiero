@@ -32,7 +32,7 @@ public sealed class RevokeNftAllowanceParams : TransactionParams<TransactionRece
     /// </remarks>
     public Signatory? Signatory { get; set; }
     /// <summary>
-    /// Optional Cancellation token that interrupt the allowance
+    /// Optional Cancellation token that can interrupt the allowance
     /// update process.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
@@ -80,7 +80,7 @@ public static class RevokeNftAllowanceExtensions
     /// Removes approved spending allowance(s) for specific NFTs.
     /// </summary>
     /// <param name="client">
-    /// The Consensus Node Client to query.
+    /// The Consensus Node Client orchestrating the revocation.
     /// </param>
     /// <param name="revokeParams">
     /// The parameters containing the token id, owner and serial numbers
@@ -95,9 +95,9 @@ public static class RevokeNftAllowanceExtensions
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
+    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
-    /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    /// <exception cref="TransactionException">If the network rejected the revoke request as invalid or had missing data.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> RevokeNftAllowancesAsync(this ConsensusClient client, RevokeNftAllowanceParams revokeParams, Action<IConsensusContext>? configure = null)
     {

@@ -136,7 +136,7 @@ internal sealed class BatchedParamsOrchestrator : TransactionParams<TransactionR
                     var batchEndorsements = batchKeySignatory.GetEndorsements();
                     if (batchEndorsements.Count == 0)
                     {
-                        throw new InvalidOperationException("Unable to derive the batch key endorsment from the primary signatory for this batched transaction.");
+                        throw new InvalidOperationException("Unable to derive the batch key endorsement from the primary signatory for this batched transaction.");
                     }
                     if (batchEndorsements.Count == 1)
                     {
@@ -158,7 +158,7 @@ internal sealed class BatchedParamsOrchestrator : TransactionParams<TransactionR
         {
             if (explicitTransactionId is null)
             {
-                // We create these transaction IDs temporably before the outter transaction is
+                // We create these transaction IDs temporarily before the outer transaction is
                 // created, so they fall within the same valid start time more or less.
                 var (seconds, nanos) = Epoch.UniqueSecondsAndNanos(context.AdjustForLocalClockDrift);
                 return new TransactionID
@@ -175,7 +175,7 @@ internal sealed class BatchedParamsOrchestrator : TransactionParams<TransactionR
             {
                 // This Ensures the transaction start times of interior batched
                 // transactions fall within the same valid time frame as the outer
-                // transaction if the outter transaction start time is explicitly set.
+                // transaction if the outer transaction start time is explicitly set.
                 var seconds = explicitTransactionId.ValidStartSeconds;
                 var nanos = explicitTransactionId.ValidStartNanos - count + index;
                 if (nanos < 0)

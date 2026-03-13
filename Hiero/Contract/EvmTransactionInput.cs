@@ -47,7 +47,7 @@ public sealed class EvmTransactionInput
     /// </summary>
     public long ValueInTinybars { get; set; } = 0;
     /// <summary>
-    /// Optimal Method Name to call on the contract, if this is a contract call.
+    /// Optional method name to call on the contract, if this is a contract call.
     /// This value must be specified if the transaction is a contract call having
     /// any values in the MethodParameters array.
     /// </summary>

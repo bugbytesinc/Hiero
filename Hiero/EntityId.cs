@@ -60,7 +60,7 @@ public sealed record EntityId : IEquatable<EntityId>
     /// </summary>
     public static EntityId None { get; } = new EntityId(0, 0, 0);
     /// <summary>
-    /// Public Constructor, an <code>Payer</code> is immutable after creation.
+    /// Public Constructor, an <code>EntityId</code> is immutable after creation.
     /// </summary>
     /// <param name="shardNum">
     /// Network Shard Number
@@ -247,7 +247,7 @@ public sealed record EntityId : IEquatable<EntityId>
     /// The string form ([shard.realm.num]) of an Entity ID.
     /// </param>
     /// <param name="entityId">
-    /// The resulting Entity TransactionId if convertable, otherwise null.
+    /// The resulting Entity TransactionId if convertible, otherwise null.
     /// </param>
     /// <returns>
     /// True if the Entity TransactionId could be converted and contains a valid value.
@@ -266,10 +266,10 @@ public sealed record EntityId : IEquatable<EntityId>
     /// format to convert into a Hedera Entity TransactionId.
     /// </summary>
     /// <param name="value">
-    /// The sequence of charactes in the form ([shard.realm.num]) of an Entity ID.
+    /// The sequence of characters in the form ([shard.realm.num]) of an Entity ID.
     /// </param>
     /// <param name="entityId">
-    /// The resulting Entity TransactionId if convertable, otherwise null.
+    /// The resulting Entity TransactionId if convertible, otherwise null.
     /// </param>
     /// <returns>
     /// True if the Entity TransactionId could be converted and contains a valid value.

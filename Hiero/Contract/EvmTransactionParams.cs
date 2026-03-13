@@ -38,8 +38,8 @@ public sealed class EvmTransactionParams : TransactionParams<TransactionReceipt>
     /// </summary>
     public EntityId ExtraCallData { get; set; } = default!;
     /// <summary>
-    /// The maximum amount of gas, in tinybars, that the payer of the hedera 
-    /// ethereum transaction is willing to pay to execute the transaction.
+    /// The maximum amount, in tinybars, that the HAPI payer of the transaction
+    /// is willing to pay to cover gas fees.
     /// </summary>
     /// <remarks>
     /// Ordinarily the account with the ECDSA alias corresponding to the public 
@@ -67,7 +67,7 @@ public sealed class EvmTransactionParams : TransactionParams<TransactionReceipt>
     /// </remarks>
     public Signatory? Signatory { get; set; }
     /// <summary>
-    /// Optional Cancellation token that interrupt the contract call.
+    /// Optional Cancellation token that can interrupt the transaction.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
     INetworkTransaction INetworkParams<TransactionReceipt>.CreateNetworkTransaction()
@@ -104,7 +104,7 @@ public static class EvmTransactionExtensions
     /// transaction to the hedera network.
     /// </summary>
     /// <param name="client">
-    /// The Consensus Node Client executing the contract create.
+    /// The Consensus Node Client executing the EVM transaction.
     /// </param>
     /// <param name="transactionParams">
     /// The ethereum formatted transaction details.
@@ -120,9 +120,9 @@ public static class EvmTransactionExtensions
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
+    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
-    /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> ExecuteEvmTransactionAsync(this ConsensusClient client, EvmTransactionParams transactionParams, Action<IConsensusContext>? configure = null)
     {

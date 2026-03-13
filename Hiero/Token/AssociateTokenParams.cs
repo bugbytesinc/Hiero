@@ -79,10 +79,10 @@ public static class AssociateTokenExtensions
     /// it must be signed by the account's key.
     /// </remarks>
     /// <param name="client">
-    /// The Consensus Node Client orchestrating the transfer.
+    /// The Consensus Node Client orchestrating the association.
     /// </param>
     /// <param name="account">
-    /// Payer of the account to provision token balance storage.
+    /// The identifier of the account to provision token balance storage.
     /// </param>
     /// <param name="token">
     /// The token or NFT token class type to associate with the account.
@@ -97,9 +97,9 @@ public static class AssociateTokenExtensions
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission, for example, if the token has already been associated.</exception>
+    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission, for example, if the token has already been associated.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
-    /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> AssociateTokenAsync(this ConsensusClient client, EntityId account, EntityId token, Action<IConsensusContext>? configure = null)
     {
@@ -118,7 +118,7 @@ public static class AssociateTokenExtensions
     /// it must be signed by the account's key.
     /// </remarks>
     /// <param name="client">
-    /// The Consensus Node Client orchestrating the transfer.
+    /// The Consensus Node Client orchestrating the association.
     /// </param>
     /// <param name="associateParams">
     /// The association parameters containing the account and tokens to associate.
@@ -133,9 +133,9 @@ public static class AssociateTokenExtensions
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission, for example, if the token has already been associated.</exception>
+    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission, for example, if the token has already been associated.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
-    /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> AssociateTokensAsync(this ConsensusClient client, AssociateTokenParams associateParams, Action<IConsensusContext>? configure = null)
     {

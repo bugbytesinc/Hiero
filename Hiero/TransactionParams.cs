@@ -7,7 +7,7 @@ namespace Hiero;
 public abstract class TransactionParams
 {
     /// <remarks>
-    /// Only classes from the Hashgraph assembly 
+    /// Only classes from the Hiero assembly 
     /// may derive from this class.
     /// </remarks>
     internal TransactionParams() { }
@@ -18,7 +18,7 @@ public abstract class TransactionParams
 public abstract class TransactionParams<TReceipt> : TransactionParams where TReceipt : TransactionReceipt
 {
     /// <remarks>
-    /// Only classes from the Hashgraph assembly 
+    /// Only classes from the Hiero assembly 
     /// may derive from this class.
     /// </remarks>
     internal TransactionParams() { }

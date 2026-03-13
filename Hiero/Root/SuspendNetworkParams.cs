@@ -53,9 +53,8 @@ public static class SuspendNetworkExtensions
     /// The Consensus Node Client orchestrating the administrative command.
     /// </param>
     /// <param name="suspendParams">
-    /// The time of consensus that nodes will stop services, this
-    /// date must be in the future relative to the submission of
-    /// this transaction.
+    /// The parameters for suspending the network, including the
+    /// consensus time at which nodes will stop services.
     /// </param>
     /// <param name="configure">
     /// Optional callback method providing an opportunity to modify 
@@ -71,9 +70,9 @@ public static class SuspendNetworkExtensions
     /// </remarks>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
+    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
-    /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> SuspendNetworkAsync(this ConsensusClient client, SuspendNetworkParams suspendParams, Action<IConsensusContext>? configure = null)
     {

@@ -1,6 +1,6 @@
 ﻿namespace Hiero;
 /// <summary>
-/// Represents a token transfer (Token, Address, Amount)
+/// Represents a crypto transfer (Address, Amount)
 /// </summary>
 public sealed record CryptoTransfer
 {
@@ -10,8 +10,8 @@ public sealed record CryptoTransfer
     public EntityId Address { get; private init; }
     /// <summary>
     /// The amount of crypto transferred in tinybars.  Negative values
-    /// indicate an outflow of tinybars to the <code>Address</code> positive
-    /// values indicate an inflow of tinybars from the associated <code>Address</code>.
+    /// indicate an outflow of tinybars from the <code>Address</code>.  Positive
+    /// values indicate an inflow of tinybars to the associated <code>Address</code>.
     /// </summary>
     public long Amount { get; private init; }
     /// <summary>
@@ -20,8 +20,8 @@ public sealed record CryptoTransfer
     /// </summary>
     public bool Delegated { get; private init; }
     /// <summary>
-    /// Internal Constructor representing the "None" 
-    /// version of an transfer.
+    /// Internal Constructor representing the "None"
+    /// version of a transfer.
     /// </summary>
     private CryptoTransfer()
     {
@@ -36,8 +36,8 @@ public sealed record CryptoTransfer
     /// </param>
     /// <param name="amount">
     /// The amount of crypto transferred in tinybars.  Negative values
-    /// indicate an outflow of tinybars to the <code>Address</code> positive
-    /// values indicate an inflow of tinybars from the associated <code>Address</code>.
+    /// indicate an outflow of tinybars from the <code>Address</code>.  Positive
+    /// values indicate an inflow of tinybars to the associated <code>Address</code>.
     /// </param>
     /// <param name="delegated">
     /// Indicates the parties involved in the transaction

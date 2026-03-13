@@ -5,7 +5,7 @@
 public sealed record ConsensusNodeEndpointInfo
 {
     /// <summary>
-    /// Presently, the The 32-bit IPv4 address of the 
+    /// Presently, the 32-bit IPv4 address of the 
     /// server node's gRPC access encoded in left to 
     /// right order (e.g. 127.0.0.1 has 127 as its first byte)
     /// </summary>

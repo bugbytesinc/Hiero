@@ -25,7 +25,7 @@ public sealed record Association
     /// Internal Helper constructor creating an association
     /// record from raw protobuf.
     /// </summary>
-    /// <param name="association"></param>
+    /// <param name="association">The raw protobuf token association to convert.</param>
     internal Association(TokenAssociation association)
     {
         Token = association.TokenId.AsAddress();

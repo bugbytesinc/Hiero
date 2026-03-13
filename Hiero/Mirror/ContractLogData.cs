@@ -8,7 +8,7 @@ namespace Hiero.Mirror;
 public class ContractLogData
 {
     /// <summary>
-    /// Payer of the contract that generated the event,
+    /// The EVM address of the contract that generated the event,
     /// this is not necessarily the contract that externally called.
     /// </summary>
     [JsonPropertyName("address")]
@@ -31,7 +31,7 @@ public class ContractLogData
     [JsonConverter(typeof(HexStringToBytesConverter))]
     public ReadOnlyMemory<byte> Data { get; set; }
     /// <summary>
-    /// The Block SegmentIndex for this log record
+    /// The log index within the block for this log record
     /// </summary>
     [JsonPropertyName("index")]
     [JsonConverter(typeof(LongMirrorConverter))]

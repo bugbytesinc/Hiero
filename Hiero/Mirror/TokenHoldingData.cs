@@ -56,14 +56,14 @@ public static class Extensions
 {
 
     /// <summary>
-    /// Retrieves the list of token holdings for this contract, which includes
+    /// Retrieves the list of token holdings for this account, which includes
     /// both fungible tokens and NFTs.
     /// </summary>
     /// <param name="client">
     /// Mirror Rest Client to use for the request.
     /// </param>
     /// <param name="account">
-    /// The contract to retrieve the token holdings.
+    /// The account to retrieve the token holdings.
     /// </param>
     /// <param name="filters">
     /// Additional query filters if desired.

@@ -54,11 +54,11 @@ public sealed class UpdateContractParams : TransactionParams<TransactionReceipt>
     public TimeSpan? RenewPeriod { get; set; }
     /// <summary>
     /// If specified updates the address of the account supporting the auto 
-    /// renewal of the contract at expiration time.  The topic lifetime will be
+    /// renewal of the contract at expiration time.  The contract lifetime will be
     /// extended by the RenewPeriod at expiration time if this account
     /// contains sufficient funds.  The private key associated with
     /// this account must sign the transaction if RenewAccount is
-    /// specified.  Setting the value to <code>Payer.None</code> clears the
+    /// specified.  Setting the value to <code>EntityId.None</code> clears the
     /// renewal account.
     /// </summary>
     public EntityId? RenewAccount { get; set; }
@@ -75,7 +75,7 @@ public sealed class UpdateContractParams : TransactionParams<TransactionReceipt>
     public int? AutoAssociationLimit { get; set; }
     /// <summary>
     /// If set, updates this contract's staking proxy
-    /// account.  If set The funds of this contract will 
+    /// account. The funds of this contract will
     /// be staked to the node that this account is staked 
     /// to and the specified account will receive 
     /// the earned reward.
@@ -105,7 +105,7 @@ public sealed class UpdateContractParams : TransactionParams<TransactionReceipt>
     /// </remarks>
     public Signatory? Signatory { get; set; }
     /// <summary>
-    /// Optional Cancellation token that interrupt the contract update.
+    /// Optional Cancellation token that can interrupt the contract update.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
     INetworkTransaction INetworkParams<TransactionReceipt>.CreateNetworkTransaction()
@@ -207,13 +207,12 @@ public static class UpdateContractExtensions
     /// </param>
     /// <returns>
     /// A transaction receipt indicating success of the operation.
-    /// of the request.
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
+    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
-    /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    /// <exception cref="TransactionException">If the network rejected the update request as invalid or had missing data.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> UpdateContractAsync(this ConsensusClient client, UpdateContractParams updateParameters, Action<IConsensusContext>? configure = null)
     {
