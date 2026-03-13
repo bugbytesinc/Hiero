@@ -1,0 +1,6 @@
+- name: Fee Schedule
+  href: fees.md
+- name: Exchange Rates
+  href: rate.md
+- name: Suspend Network
+  href: suspend.md
