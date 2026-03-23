@@ -1,4 +1,5 @@
-﻿using Hiero.Implementation;
+﻿using Com.Hedera.Hapi.Node.Hooks;
+using Hiero.Implementation;
 using Proto;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
@@ -85,6 +86,15 @@ public sealed class UpdateAccountParams : TransactionParams<TransactionReceipt>,
     /// </summary>
     public bool? DeclineStakeReward { get; set; }
     /// <summary>
+    /// Optional list of hooks to add to the account.
+    /// </summary>
+    public IEnumerable<HookMetadata>? AddHooks { get; set; }
+    /// <summary>
+    /// Optional list of hook numeric identifiers to remove
+    /// from the account.
+    /// </summary>
+    public IEnumerable<long>? RemoveHooks { get; set; }
+    /// <summary>
     /// Any additional signing keys required to validate the transaction
     /// that are not already specified in the client object's context.
     /// </summary>
@@ -116,7 +126,9 @@ public sealed class UpdateAccountParams : TransactionParams<TransactionReceipt>,
             AutoAssociationLimit is null &&
             ProxyAccount is null &&
             StakedNode is null &&
-            DeclineStakeReward is null)
+            DeclineStakeReward is null &&
+            AddHooks is null &&
+            RemoveHooks is null)
         {
             throw new ArgumentException("The Account Updates contains no update properties, it is blank.", nameof(UpdateAccountParams));
         }
@@ -166,6 +178,17 @@ public sealed class UpdateAccountParams : TransactionParams<TransactionReceipt>,
         if (DeclineStakeReward is not null)
         {
             result.DeclineReward = DeclineStakeReward.Value;
+        }
+        if (RemoveHooks is not null)
+        {
+            result.HookIdsToDelete.AddRange(RemoveHooks);
+        }
+        if (AddHooks is not null)
+        {
+            foreach (var hook in AddHooks)
+            {
+                result.HookCreationDetails.Add(hook.ToProto());
+            }
         }
         return result;
     }

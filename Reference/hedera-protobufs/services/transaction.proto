@@ -28,6 +28,7 @@ import "services/contract_call.proto";
 import "services/contract_create.proto";
 import "services/contract_update.proto";
 
+//import "services/crypto_add_live_hash.proto";
 import "services/crypto_create.proto";
 import "services/crypto_delete.proto";
 import "services/crypto_delete_live_hash.proto";
@@ -97,8 +98,8 @@ import "services/auxiliary/history/history_proof_signature.proto";
 import "services/auxiliary/history/history_proof_key_publication.proto";
 import "services/auxiliary/history/history_proof_vote.proto";
 
-import "services/lambda_sstore.proto";
-import "services/hook_dispatch.proto";
+import "services/hook_store.proto";
+//import "services/hook_dispatch.proto";
 
 /**
  * A wrapper around signed transaction bytes.<br/>
@@ -652,14 +653,14 @@ message TransactionBody {
         AtomicBatchTransactionBody atomic_batch = 74;
 
         /**
-         * A transaction body for updating the storage of a EVM lambda hook.
+         * A transaction body for updating the storage of an EVM hook.
          */
-        com.hedera.hapi.node.hooks.LambdaSStoreTransactionBody lambda_sstore = 75;
+        com.hedera.hapi.node.hooks.HookStoreTransactionBody hook_store = 75;
 
         /**
          * An internal-only transaction body for dispatching a hook CRUD operation.
          */
-        com.hedera.hapi.node.hooks.HookDispatchTransactionBody hook_dispatch = 76;
+        //com.hedera.hapi.node.hooks.HookDispatchTransactionBody hook_dispatch = 76;
     }
 
     /**

@@ -1,4 +1,5 @@
-﻿using Hiero.Implementation;
+﻿using Com.Hedera.Hapi.Node.Hooks;
+using Hiero.Implementation;
 using Proto;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
@@ -94,7 +95,16 @@ public sealed class UpdateContractParams : TransactionParams<TransactionReceipt>
     /// </summary>
     public bool? DeclineStakeReward { get; set; }
     /// <summary>
-    /// Additional private key, keys or signing callback method 
+    /// Optional list of hooks to add to the contract.
+    /// </summary>
+    public IEnumerable<HookMetadata>? AddHooks { get; set; }
+    /// <summary>
+    /// Optional list of hook numeric identifiers to remove
+    /// from the contract.
+    /// </summary>
+    public IEnumerable<long>? RemoveHooks { get; set; }
+    /// <summary>
+    /// Additional private key, keys or signing callback method
     /// required to update this contract.  Typically matches the
     /// Administrator endorsement associated with this contract.
     /// </summary>
@@ -122,7 +132,9 @@ public sealed class UpdateContractParams : TransactionParams<TransactionReceipt>
             ProxyAccount is null &&
             StakedNode is null &&
             DeclineStakeReward is null &&
-            AutoAssociationLimit is null)
+            AutoAssociationLimit is null &&
+            AddHooks is null &&
+            RemoveHooks is null)
         {
             throw new ArgumentException("The Contract Updates contains no update properties, it is blank.", nameof(UpdateContractParams));
         }
@@ -174,6 +186,17 @@ public sealed class UpdateContractParams : TransactionParams<TransactionReceipt>
         if (DeclineStakeReward is not null)
         {
             result.DeclineReward = DeclineStakeReward.Value;
+        }
+        if (RemoveHooks is not null)
+        {
+            result.HookIdsToDelete.AddRange(RemoveHooks);
+        }
+        if (AddHooks is not null)
+        {
+            foreach (var hook in AddHooks)
+            {
+                result.HookCreationDetails.Add(hook.ToProto());
+            }
         }
         return result;
     }

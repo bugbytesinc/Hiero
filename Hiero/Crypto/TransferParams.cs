@@ -58,7 +58,7 @@ public sealed class TransferParams : TransactionParams<TransactionReceipt>, INet
         if (CryptoTransfers is not null)
         {
             long sum = 0;
-            var netRequests = new Dictionary<EntityId, (long Amount, bool Delegated)>();
+            var netRequests = new Dictionary<EntityId, (long Amount, bool Delegated, HookCall? Hook)>();
             foreach (var transfer in CryptoTransfers)
             {
                 if (transfer.Amount == 0)
@@ -68,11 +68,11 @@ public sealed class TransferParams : TransactionParams<TransactionReceipt>, INet
                 ref var entry = ref CollectionsMarshal.GetValueRefOrAddDefault(netRequests, transfer.Address, out bool exists);
                 if (!exists)
                 {
-                    entry = (transfer.Amount, transfer.Delegated);
+                    entry = (transfer.Amount, transfer.Delegated, transfer.AllowanceHook);
                 }
                 else
                 {
-                    entry = (entry.Amount + transfer.Amount, entry.Delegated || transfer.Delegated);
+                    entry = (entry.Amount + transfer.Amount, entry.Delegated || transfer.Delegated, transfer.AllowanceHook ?? entry.Hook);
                 }
                 sum += transfer.Amount;
             }
@@ -89,7 +89,7 @@ public sealed class TransferParams : TransactionParams<TransactionReceipt>, INet
             {
                 if (transfer.Value.Amount != 0)
                 {
-                    xferList.AccountAmounts.Add(new AccountAmount(transfer.Key, transfer.Value.Amount, transfer.Value.Delegated));
+                    xferList.AccountAmounts.Add(new AccountAmount(transfer.Key, transfer.Value.Amount, transfer.Value.Delegated, transfer.Value.Hook));
                 }
             }
             result.Transfers = xferList;
@@ -120,7 +120,7 @@ public sealed class TransferParams : TransactionParams<TransactionReceipt>, INet
                     };
                 }
                 entry.sum += xfer.Amount;
-                entry.list.Transfers.Add(new AccountAmount(xfer.Account, xfer.Amount, xfer.Delegated));
+                entry.list.Transfers.Add(new AccountAmount(xfer.Account, xfer.Amount, xfer.Delegated, xfer.AllowanceHook));
             }
             foreach (var record in netTransfers)
             {
@@ -148,13 +148,38 @@ public sealed class TransferParams : TransactionParams<TransactionReceipt>, INet
                 {
                     throw new ArgumentException(nameof(xfer.To), "The list of NFT transfers cannot contain a null or empty to account value.");
                 }
-                if (!nftXferList.TryAdd(xfer.Nft, new Proto.NftTransfer
+                var protoNftXfer = new Proto.NftTransfer
                 {
                     SenderAccountID = new AccountID(xfer.From),
                     ReceiverAccountID = new AccountID(xfer.To),
                     SerialNumber = xfer.Nft.SerialNumber,
                     IsApproval = xfer.Delegated
-                }))
+                };
+                if (xfer.SenderAllowanceHook is not null)
+                {
+                    var senderProto = xfer.SenderAllowanceHook.ToHookCallProto();
+                    if (xfer.SenderAllowanceHook.CallMode == HookCallMode.PreAndPost)
+                    {
+                        protoNftXfer.PrePostTxSenderAllowanceHook = senderProto;
+                    }
+                    else
+                    {
+                        protoNftXfer.PreTxSenderAllowanceHook = senderProto;
+                    }
+                }
+                if (xfer.ReceiverAllowanceHook is not null)
+                {
+                    var receiverProto = xfer.ReceiverAllowanceHook.ToHookCallProto();
+                    if (xfer.ReceiverAllowanceHook.CallMode == HookCallMode.PreAndPost)
+                    {
+                        protoNftXfer.PrePostTxReceiverAllowanceHook = receiverProto;
+                    }
+                    else
+                    {
+                        protoNftXfer.PreTxReceiverAllowanceHook = receiverProto;
+                    }
+                }
+                if (!nftXferList.TryAdd(xfer.Nft, protoNftXfer))
                 {
                     throw new ArgumentException(nameof(xfer.Nft), "The list of NFT transfers cannot contain the same NFT in multiple transfers at once.");
                 }

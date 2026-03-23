@@ -1,4 +1,4 @@
-﻿namespace Hiero;
+namespace Hiero;
 /// <summary>
 /// Represents a crypto transfer (Address, Amount)
 /// </summary>
@@ -19,6 +19,12 @@ public sealed record CryptoTransfer
     /// are acting as delegates through a granted allowance.
     /// </summary>
     public bool Delegated { get; private init; }
+    /// <summary>
+    /// Optional allowance hook call for this transfer. The hook's
+    /// <see cref="HookCall.CallMode"/> determines whether it is
+    /// invoked before the transfer only, or both before and after.
+    /// </summary>
+    public HookCall? AllowanceHook { get; private init; }
     /// <summary>
     /// Internal Constructor representing the "None"
     /// version of a transfer.
@@ -43,10 +49,14 @@ public sealed record CryptoTransfer
     /// Indicates the parties involved in the transaction
     /// are acting as delegates through a granted allowance.
     /// </param>
-    public CryptoTransfer(EntityId address, long amount, bool delegated = false)
+    /// <param name="allowanceHook">
+    /// Optional allowance hook call for this transfer.
+    /// </param>
+    public CryptoTransfer(EntityId address, long amount, bool delegated = false, HookCall? allowanceHook = null)
     {
         Address = address;
         Amount = amount;
         Delegated = delegated;
+        AllowanceHook = allowanceHook;
     }
 }

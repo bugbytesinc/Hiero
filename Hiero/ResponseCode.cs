@@ -28,7 +28,7 @@ public enum ResponseCode
     /// </summary>
     [Description("PAYER_ACCOUNT_NOT_FOUND")] PayerAccountNotFound = 2,
     /// <summary>
-    /// Node Address provided does not match the node account of the node the transaction was submitted
+    /// Node Account provided does not match the node account of the node the transaction was submitted
     /// to.
     /// </summary>
     [Description("INVALID_NODE_ACCOUNT")] InvalidNodeAccount = 3,
@@ -38,7 +38,7 @@ public enum ResponseCode
     /// </summary>
     [Description("TRANSACTION_EXPIRED")] TransactionExpired = 4,
     /// <summary>
-    /// TransactionId start time is greater than current consensus time
+    /// Transaction start time is greater than current consensus time
     /// </summary>
     [Description("INVALID_TRANSACTION_START")] InvalidTransactionStart = 5,
     /// <summary>
@@ -52,7 +52,7 @@ public enum ResponseCode
     /// </summary>
     [Description("INVALID_SIGNATURE")] InvalidSignature = 7,
     /// <summary>
-    /// TransactionId memo size exceeded 100 bytes
+    /// Transaction memo size exceeded 100 bytes
     /// </summary>
     [Description("MEMO_TOO_LONG")] MemoTooLong = 8,
     /// <summary>
@@ -89,7 +89,7 @@ public enum ResponseCode
     /// </summary>
     [Description("INVALID_CONTRACT_ID")] InvalidContractId = 16,
     /// <summary>
-    /// TransactionId id is not valid
+    /// Transaction id is not valid
     /// </summary>
     [Description("INVALID_TRANSACTION_ID")] InvalidTransactionId = 17,
     /// <summary>
@@ -162,12 +162,12 @@ public enum ResponseCode
     /// </summary>
     [Description("CONTRACT_EXECUTION_EXCEPTION")] ContractExecutionException = 34,
     /// <summary>
-    /// In QueryAsync validation, account with +ve(amount) value should be Receiving node account, the
+    /// In Query validation, account with +ve(amount) value should be Receiving node account, the
     /// receiver account should be only one account in the list
     /// </summary>
     [Description("INVALID_RECEIVING_NODE_ACCOUNT")] InvalidReceivingNodeAccount = 35,
     /// <summary>
-    /// Header is missing in QueryAsync request
+    /// Header is missing in Query request
     /// </summary>
     [Description("MISSING_QUERY_HEADER")] MissingQueryHeader = 36,
     /// <summary>
@@ -219,7 +219,7 @@ public enum ResponseCode
     /// </summary>
     [Description("INVALID_ACCOUNT_AMOUNTS")] InvalidAccountAmounts = 48,
     /// <summary>
-    /// TransactionId body provided is empty
+    /// Transaction body provided is empty
     /// </summary>
     [Description("EMPTY_TRANSACTION_BODY")] EmptyTransactionBody = 49,
     /// <summary>
@@ -282,11 +282,11 @@ public enum ResponseCode
     /// </summary>
     [Description("SERIALIZATION_FAILED")] SerializationFailed = 63,
     /// <summary>
-    /// The size of the TransactionId is greater than transactionMaxBytes
+    /// The size of the Transaction is greater than transactionMaxBytes
     /// </summary>
     [Description("TRANSACTION_OVERSIZE")] TransactionOversize = 64,
     /// <summary>
-    /// The TransactionId has more than 50 levels
+    /// The Transaction has more than 50 levels
     /// </summary>
     [Description("TRANSACTION_TOO_MANY_LAYERS")] TransactionTooManyLayers = 65,
     /// <summary>
@@ -382,12 +382,12 @@ public enum ResponseCode
     /// </summary>
     [Description("INVALID_SEND_RECORD_THRESHOLD")] InvalidSendRecordThreshold = 87,
     /// <summary>
-    /// Special Address Operations should be performed by only Genesis account, return this code if it
-    /// is not Genesis Address
+    /// Special Account Operations should be performed by only Genesis account, return this code if it
+    /// is not Genesis Account
     /// </summary>
     [Description("ACCOUNT_IS_NOT_GENESIS_ACCOUNT")] AccountIsNotGenesisAccount = 88,
     /// <summary>
-    /// The fee payer account doesn't have permission to submit such TransactionId
+    /// The fee payer account doesn't have permission to submit such Transaction
     /// </summary>
     [Description("PAYER_ACCOUNT_UNAUTHORIZED")] PayerAccountUnauthorized = 89,
     /// <summary>
@@ -436,9 +436,9 @@ public enum ResponseCode
     [Description("ENTITY_NOT_ALLOWED_TO_DELETE")] EntityNotAllowedToDelete = 100,
     /// <summary>
     /// Violating one of these rules: 1) treasury account can update all entities below 0.0.1000, 2)
-    /// account 0.0.50 can update all entities from 0.0.51 - 0.0.80, 3) Network Function Master Address
+    /// account 0.0.50 can update all entities from 0.0.51 - 0.0.80, 3) Network Function Master Account
     /// A/c 0.0.50 - Update all Network Function accounts &amp; perform all the Network Functions listed
-    /// below, 4) Network Function Accounts: i) A/c 0.0.55 - Update Payer Book files (0.0.101/102),
+    /// below, 4) Network Function Accounts: i) A/c 0.0.55 - Update Address Book files (0.0.101/102),
     /// ii) A/c 0.0.56 - Update Fee schedule (0.0.111), iii) A/c 0.0.57 - Update Exchange Rate
     /// (0.0.112).
     /// </summary>
@@ -464,7 +464,7 @@ public enum ResponseCode
     /// </summary>
     [Description("MAX_CONTRACT_STORAGE_EXCEEDED")] MaxContractStorageExceeded = 106,
     /// <summary>
-    /// Transfer Address should not be same as Address to be deleted
+    /// Transfer Account should not be same as Account to be deleted
     /// </summary>
     [Description("TRANSFER_ACCOUNT_SAME_AS_DELETE_ACCOUNT")] TransferAccountSameAsDeleteAccount = 107,
     /// <summary>
@@ -488,7 +488,7 @@ public enum ResponseCode
     /// </summary>
     [Description("RECEIVER_SIG_REQUIRED")] ReceiverSigRequired = 113,
     /// <summary>
-    /// The Topics ID specified is not in the system.
+    /// The Topic ID specified is not in the system.
     /// </summary>
     [Description("INVALID_TOPIC_ID")] InvalidTopicId = 150,
     /// <summary>
@@ -526,11 +526,11 @@ public enum ResponseCode
     /// </summary>
     [Description("INVALID_CHUNK_NUMBER")] InvalidChunkNumber = 163,
     /// <summary>
-    /// For every chunk, the payer account that is part of initialTransactionID must match the Payer Address of this transaction. The entire initialTransactionID should match the transactionID of the first chunk, but this is not checked or enforced by Hedera except when the chunk number is 1.
+    /// For every chunk, the payer account that is part of initialTransactionID must match the Payer Account of this transaction. The entire initialTransactionID should match the transactionID of the first chunk, but this is not checked or enforced by Hedera except when the chunk number is 1.
     /// </summary>
     [Description("INVALID_CHUNK_TRANSACTION_ID")] InvalidChunkTransactionId = 164,
     /// <summary>
-    /// Address is frozen and cannot transact with the token
+    /// Account is frozen and cannot transact with the token
     /// </summary>
     [Description("ACCOUNT_FROZEN_FOR_TOKEN")] AccountFrozenForToken = 165,
     /// <summary>
@@ -550,7 +550,7 @@ public enum ResponseCode
     /// </summary>
     [Description("INVALID_TOKEN_INITIAL_SUPPLY")] InvalidTokenInitialSupply = 169,
     /// <summary>
-    /// Treasury Address does not exist or is deleted
+    /// Treasury Account does not exist or is deleted
     /// </summary>
     [Description("INVALID_TREASURY_ACCOUNT_FOR_TOKEN")] InvalidTreasuryAccountForToken = 170,
     /// <summary>
@@ -686,7 +686,7 @@ public enum ResponseCode
     /// </summary>
     [Description("INVALID_SCHEDULE_PAYER_ID")] InvalidSchedulePayerId = 203,
     /// <summary>
-    /// The Schedule Create TransactionId TransactionID account does not exist
+    /// The Schedule Create Transaction TransactionID account does not exist
     /// </summary>
     [Description("INVALID_SCHEDULE_ACCOUNT_ID")] InvalidScheduleAccountId = 204,
     /// <summary>
@@ -931,7 +931,7 @@ public enum ResponseCode
     /// </summary>
     [Description("REQUESTED_NUM_AUTOMATIC_ASSOCIATIONS_EXCEEDS_ASSOCIATION_LIMIT")] RequestedNumAutomaticAssociationsExceedsAssociationLimit = 264,
     /// <summary>
-    /// Token is paused. This Token cannot be a part of any kind of TransactionId until unpaused.
+    /// Token is paused. This Token cannot be a part of any kind of Transaction until unpaused.
     /// </summary>
     [Description("TOKEN_IS_PAUSED")] TokenIsPaused = 265,
     /// <summary>
@@ -1097,7 +1097,7 @@ public enum ResponseCode
     /// </summary>
     [Description("REPEATED_ALLOWANCES_TO_DELETE")] RepeatedAllowancesToDelete = 302,
     /// <summary>
-    /// If the account TransactionId specified as the delegating spender is invalid or does not exist.
+    /// If the account Id specified as the delegating spender is invalid or does not exist.
     /// </summary>
     [Description("INVALID_DELEGATING_SPENDER")] InvalidDelegatingSpender = 303,
     /// <summary>
@@ -1216,7 +1216,7 @@ public enum ResponseCode
     /// </summary>
     [Description("TRANSACTION_HAS_UNKNOWN_FIELDS")] TransactionHasUnknownFields = 330,
     /// <summary>
-    /// The account cannot be modified. Address's key is not set
+    /// The account cannot be modified. Account's key is not set
     /// </summary>
     [Description("ACCOUNT_IS_IMMUTABLE")] AccountIsImmutable = 331,
     /// <summary>
@@ -1561,6 +1561,10 @@ public enum ResponseCode
     /// </summary>
     [Description("INVALID_SERIALIZED_TX_MESSAGE_HASH_ALGORITHM")] InvalidSerializedTxMessageHashAlgorithm = 401,
     /// <summary>
+    /// A HookStore referenced a valid entity number but with the wrong entity type.
+    /// </summary>
+    [Description("WRONG_HOOK_ENTITY_TYPE")] WrongHookEntityType = 499,
+    /// <summary>
     /// An EVM hook execution was throttled due to high network gas utilization.
     /// </summary>
     [Description("EVM_HOOK_GAS_THROTTLED")] EvmHookGasThrottled = 500,
@@ -1582,22 +1586,22 @@ public enum ResponseCode
     /// </summary>
     [Description("HOOK_NOT_FOUND")] HookNotFound = 504,
     /// <summary>
-    /// A lambda mapping slot, storage key, or storage value exceeded 32 bytes.
+    /// An EVM hook mapping slot, storage key, or storage value exceeded 32 bytes.
     /// </summary>
-    [Description("LAMBDA_STORAGE_UPDATE_BYTES_TOO_LONG")] LambdaStorageUpdateBytesTooLong = 505,
+    [Description("EVM_HOOK_STORAGE_UPDATE_BYTES_TOO_LONG")] EvmHookStorageUpdateBytesTooLong = 505,
     /// <summary>
-    /// A lambda mapping slot, storage key, or storage value failed to use the
+    /// An EVM hook's mapping slot, storage key, or storage value failed to use the
     /// minimal representation (i.e., no leading zeros).
     /// </summary>
-    [Description("LAMBDA_STORAGE_UPDATE_BYTES_MUST_USE_MINIMAL_REPRESENTATION")] LambdaStorageUpdateBytesMustUseMinimalRepresentation = 506,
+    [Description("EVM_HOOK_STORAGE_UPDATE_BYTES_MUST_USE_MINIMAL_REPRESENTATION")] EvmHookStorageUpdateBytesMustUseMinimalRepresentation = 506,
     /// <summary>
     /// A hook id was invalid.
     /// </summary>
     [Description("INVALID_HOOK_ID")] InvalidHookId = 507,
     /// <summary>
-    /// A lambda storage update had no contents.
+    /// An EVM hook storage update had no contents.
     /// </summary>
-    [Description("EMPTY_LAMBDA_STORAGE_UPDATE")] EmptyLambdaStorageUpdate = 508,
+    [Description("EMPTY_EVM_HOOK_STORAGE_UPDATE")] EmptyEvmHookStorageUpdate = 508,
     /// <summary>
     /// A user repeated the same hook id in a creation details list.
     /// </summary>
@@ -1607,15 +1611,83 @@ public enum ResponseCode
     /// </summary>
     [Description("HOOKS_NOT_ENABLED")] HooksNotEnabled = 510,
     /// <summary>
-    /// The target hook is not a lambda.
+    /// The target hook is not an EVM hook.
     /// </summary>
-    [Description("HOOK_IS_NOT_A_LAMBDA")] HookIsNotALambda = 511,
+    [Description("HOOK_IS_NOT_AN_EVM_HOOK")] HookIsNotAnEvmHook = 511,
     /// <summary>
     /// A hook was deleted.
     /// </summary>
     [Description("HOOK_DELETED")] HookDeleted = 512,
     /// <summary>
-    /// The LambdaSStore tried to update too many storage slots in a single transaction.
+    /// The HookStore tried to update too many storage slots in a single transaction.
     /// </summary>
-    [Description("TOO_MANY_LAMBDA_STORAGE_UPDATES")] TooManyLambdaStorageUpdates = 513,
+    [Description("TOO_MANY_EVM_HOOK_STORAGE_UPDATES")] TooManyEvmHookStorageUpdates = 513,
+    /// <summary>
+    /// An EVM hook mapping slot, storage key, or storage value failed to use the
+    /// minimal representation (i.e., no leading zeros).
+    /// </summary>
+    [Description("HOOK_CREATION_BYTES_MUST_USE_MINIMAL_REPRESENTATION")] HookCreationBytesMustUseMinimalRepresentation = 514,
+    /// <summary>
+    /// A EVM hook mapping slot, storage key, or storage value exceeded 32 bytes.
+    /// </summary>
+    [Description("HOOK_CREATION_BYTES_TOO_LONG")] HookCreationBytesTooLong = 515,
+    /// <summary>
+    /// A hook creation spec was not found.
+    /// </summary>
+    [Description("INVALID_HOOK_CREATION_SPEC")] InvalidHookCreationSpec = 516,
+    /// <summary>
+    /// A hook extension point was empty.
+    /// </summary>
+    [Description("HOOK_EXTENSION_EMPTY")] HookExtensionEmpty = 517,
+    /// <summary>
+    /// A hook admin key was invalid.
+    /// </summary>
+    [Description("INVALID_HOOK_ADMIN_KEY")] InvalidHookAdminKey = 518,
+    /// <summary>
+    /// The hook deletion requires the hook to have zero storage slots.
+    /// </summary>
+    [Description("HOOK_DELETION_REQUIRES_ZERO_STORAGE_SLOTS")] HookDeletionRequiresZeroStorageSlots = 519,
+    /// <summary>
+    /// Cannot set both a hook call and an approval on the same AccountAmount or NftTransfer message.
+    /// </summary>
+    [Description("CANNOT_SET_HOOKS_AND_APPROVAL")] CannotSetHooksAndApproval = 520,
+    /// <summary>
+    /// The attempted operation is invalid until all the target entity's hooks have been deleted.
+    /// </summary>
+    [Description("TRANSACTION_REQUIRES_ZERO_HOOKS")] TransactionRequiresZeroHooks = 521,
+    /// <summary>
+    /// The HookCall set in the transaction is invalid
+    /// </summary>
+    [Description("INVALID_HOOK_CALL")] InvalidHookCall = 522,
+    /// <summary>
+    /// Hooks are not supported to be used in TokenAirdrop transactions
+    /// </summary>
+    [Description("HOOKS_ARE_NOT_SUPPORTED_IN_AIRDROPS")] HooksAreNotSupportedInAirdrops = 523,
+    /// <summary>
+    /// This operation cannot be completed because the target account is a "Node Account".
+    /// This account is currently in use as the "Node Account" for a consensus node, and
+    /// therefore the requested change is not permitted. The transaction may be resubmitted
+    /// once the account is no longer in use as a "Node Account" for any consensus node.
+    /// </summary>
+    [Description("ACCOUNT_IS_LINKED_TO_A_NODE")] AccountIsLinkedToANode = 524,
+    /// <summary>
+    /// Hooks are not supported to be used in Batch transactions and Scheduled transactions.
+    /// They are only supported in a top level CryptoTransfer transaction.
+    /// </summary>
+    [Description("HOOKS_EXECUTIONS_REQUIRE_TOP_LEVEL_CRYPTO_TRANSFER")] HooksExecutionsRequireTopLevelCryptoTransfer = 525,
+    /// <summary>
+    /// This operation cannot be completed because the target account has a zero balance.
+    /// Node accounts require a positive balance. The transaction may be resubmitted once
+    /// the account has been funded.
+    /// </summary>
+    [Description("NODE_ACCOUNT_HAS_ZERO_BALANCE")] NodeAccountHasZeroBalance = 526,
+    /// <summary>
+    /// This operation cannot be completed because the target account is a "Fee Collection Account".
+    /// Any attempt to transfer to a fee collection account is not permitted.
+    /// </summary>
+    [Description("TRANSFER_TO_FEE_COLLECTION_ACCOUNT_NOT_ALLOWED")] TransferToFeeCollectionAccountNotAllowed = 527,
+    /// <summary>
+    /// The number of hook invocations exceeds the maximum allowed per transaction.
+    /// </summary>
+    [Description("TOO_MANY_HOOK_INVOCATIONS")] TooManyHookInvocations = 528,
 }

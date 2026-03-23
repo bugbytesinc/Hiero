@@ -1,4 +1,5 @@
-﻿using Google.Protobuf;
+﻿using Com.Hedera.Hapi.Node.Hooks;
+using Google.Protobuf;
 using Hiero.Implementation;
 using Proto;
 using System.ComponentModel;
@@ -109,7 +110,12 @@ public sealed class CreateContractParams : TransactionParams<CreateContractRecei
     /// </summary>
     public string? Memo { get; set; }
     /// <summary>
-    /// Additional private key, keys or signing callback method 
+    /// Optional list of hooks to create on the contract immediately
+    /// after it is created.
+    /// </summary>
+    public IEnumerable<HookMetadata>? Hooks { get; set; }
+    /// <summary>
+    /// Additional private key, keys or signing callback method
     /// required to create this contract.  Typically matches the
     /// Administrator endorsement assigned to this new contract.
     /// </summary>
@@ -170,6 +176,13 @@ public sealed class CreateContractParams : TransactionParams<CreateContractRecei
         result.ConstructorParameters = ByteString.CopyFrom(Abi.EncodeArguments(ConstructorArgs).ToArray());
         result.DeclineReward = DeclineStakeReward;
         result.Memo = Memo ?? "";
+        if (Hooks is not null)
+        {
+            foreach (var hook in Hooks)
+            {
+                result.HookCreationDetails.Add(hook.ToProto());
+            }
+        }
         return result;
     }
     CreateContractReceipt INetworkParams<CreateContractReceipt>.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)

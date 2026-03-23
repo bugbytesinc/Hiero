@@ -1,4 +1,4 @@
-﻿namespace Hiero;
+namespace Hiero;
 
 /// <summary>
 /// Represents a NFT transfer.
@@ -24,6 +24,20 @@ public sealed record NftTransfer
     /// </summary>
     public bool Delegated { get; private init; }
     /// <summary>
+    /// Optional allowance hook call for the sender of this
+    /// NFT transfer. The hook's <see cref="HookCall.CallMode"/>
+    /// determines whether it is invoked before the transfer
+    /// only, or both before and after.
+    /// </summary>
+    public HookCall? SenderAllowanceHook { get; private init; }
+    /// <summary>
+    /// Optional allowance hook call for the receiver of this
+    /// NFT transfer. The hook's <see cref="HookCall.CallMode"/>
+    /// determines whether it is invoked before the transfer
+    /// only, or both before and after.
+    /// </summary>
+    public HookCall? ReceiverAllowanceHook { get; private init; }
+    /// <summary>
     /// Public Constructor, an <code>NftTransfer</code> is immutable after creation.
     /// </summary>
     /// <param name="nft">
@@ -39,11 +53,19 @@ public sealed record NftTransfer
     /// Indicates the parties involved in the transaction
     /// are acting as delegates through a granted allowance.
     /// </param>
-    public NftTransfer(Nft nft, EntityId fromAddress, EntityId toAddress, bool delegated = false)
+    /// <param name="senderAllowanceHook">
+    /// Optional allowance hook call for the sender.
+    /// </param>
+    /// <param name="receiverAllowanceHook">
+    /// Optional allowance hook call for the receiver.
+    /// </param>
+    public NftTransfer(Nft nft, EntityId fromAddress, EntityId toAddress, bool delegated = false, HookCall? senderAllowanceHook = null, HookCall? receiverAllowanceHook = null)
     {
         Nft = nft;
         From = fromAddress;
         To = toAddress;
         Delegated = delegated;
+        SenderAllowanceHook = senderAllowanceHook;
+        ReceiverAllowanceHook = receiverAllowanceHook;
     }
 }

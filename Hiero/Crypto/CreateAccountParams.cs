@@ -1,4 +1,5 @@
-﻿using Google.Protobuf;
+﻿using Com.Hedera.Hapi.Node.Hooks;
+using Google.Protobuf;
 using Hiero.Implementation;
 using Proto;
 using System.ComponentModel;
@@ -79,7 +80,12 @@ public sealed class CreateAccountParams : TransactionParams<CreateAccountReceipt
     /// </summary>
     public string? Memo { get; set; }
     /// <summary>
-    /// Additional private key, keys or signing callback method 
+    /// Optional list of hooks to create on the account immediately
+    /// after it is created.
+    /// </summary>
+    public IEnumerable<HookMetadata>? Hooks { get; set; }
+    /// <summary>
+    /// Additional private key, keys or signing callback method
     /// required to create this account.  Typically matches the
     /// Endorsement assigned to this new account.
     /// </summary>
@@ -130,6 +136,13 @@ public sealed class CreateAccountParams : TransactionParams<CreateAccountReceipt
         result.DeclineReward = DeclineStakeReward;
         result.Memo = Memo ?? string.Empty;
         result.MaxAutomaticTokenAssociations = AutoAssociationLimit;
+        if (Hooks is not null)
+        {
+            foreach (var hook in Hooks)
+            {
+                result.HookCreationDetails.Add(hook.ToProto());
+            }
+        }
         return result;
     }
     CreateAccountReceipt INetworkParams<CreateAccountReceipt>.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)

@@ -1,4 +1,4 @@
-﻿namespace Hiero;
+namespace Hiero;
 
 /// <summary>
 /// Represents a token transfer (Token, Address, Amount)
@@ -25,6 +25,13 @@ public sealed record TokenTransfer
     /// </summary>
     public bool Delegated { get; private init; }
     /// <summary>
+    /// Optional allowance hook call for this token transfer.
+    /// The hook's <see cref="HookCall.CallMode"/> determines
+    /// whether it is invoked before the transfer only, or both
+    /// before and after.
+    /// </summary>
+    public HookCall? AllowanceHook { get; private init; }
+    /// <summary>
     /// Public Constructor, an <code>TokenTransfer</code> is immutable after creation.
     /// </summary>
     /// <param name="token">
@@ -42,11 +49,15 @@ public sealed record TokenTransfer
     /// Indicates the parties involved in the transaction
     /// are acting as delegates through a granted allowance.
     /// </param>
-    public TokenTransfer(EntityId token, EntityId address, long amount, bool delegated = false)
+    /// <param name="allowanceHook">
+    /// Optional allowance hook call for this token transfer.
+    /// </param>
+    public TokenTransfer(EntityId token, EntityId address, long amount, bool delegated = false, HookCall? allowanceHook = null)
     {
         Token = token;
         Account = address;
         Amount = amount;
         Delegated = delegated;
+        AllowanceHook = allowanceHook;
     }
 }
