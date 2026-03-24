@@ -60,8 +60,14 @@ Hiero provides access to the Hedera network via the [`ConsensusClient`](xref:Hie
     * [Transfer Crypto](crypto/transfer.md)
     * [Get Account Info](crypto/info.md)
     * [Create New Account](crypto/create.md)
+    * [Update Account](crypto/update.md)
+    * [Delete Account](crypto/delete.md)
   * File Manipulation
     * [Create File](file/createfile.md)
+  * Miscellaneous
+    * [Fee Schedule](misc/fees.md)
+    * [Exchange Rates](misc/rate.md)
+    * [Suspend Network](misc/suspend.md)
 
 * [API Documentation](~/obj/temp/apiyml/Hiero.yml): We have API Documentation generated from the source code itself.  This is useful if you are looking for a low-level understanding of the moving pieces.
 

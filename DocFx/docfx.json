@@ -43,7 +43,9 @@
       {
         "files": [
           "images/**",
-          "styles/**"
+          "styles/**",
+          "llms.txt",
+          "llms-full.txt"
         ]
       }
     ],

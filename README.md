@@ -129,7 +129,7 @@ dotnet build Hiero.slnx
 
 ```sh
 dotnet tool restore
-dotnet docfx docfx/docfx.json --serve
+dotnet docfx DocFx/docfx.json --serve
 ```
 
 ## Project Structure
@@ -150,7 +150,9 @@ Hiero/                     Source library
 ├── Converters/            JSON serialization
 └── Implementation/        Internal machinery
 Reference/                 Upstream protobuf definitions (do not modify)
-docfx/                     DocFX documentation site
+DocFx/                     DocFX documentation site
+docs/                      API cookbook and reference
+samples/                   Runnable sample console apps
 ```
 
 ## Dependencies
@@ -162,6 +164,8 @@ docfx/                     DocFX documentation site
 
 - **[API Reference](https://hashgraph.bugbytes.com/)** — Generated from XML doc comments
 - **[Tutorials](https://hashgraph.bugbytes.com/tutorials/)** — Getting started guides with code examples
+- **[API Cookbook](docs/api-cookbook.md)** — Quick reference for all SDK operations
+- **[Samples](samples/)** — Runnable console apps for every major workflow
 
 ## License
 

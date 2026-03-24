@@ -1,0 +1,878 @@
+# Hiero .NET SDK - Complete Reference
+
+> .NET Client Library for the Hiero Network and Hedera Hashgraph.
+> NuGet: https://www.nuget.org/packages/Hiero/
+> Source: https://github.com/bugbytesinc/Hiero
+> Requires: .NET 10 SDK
+> License: GPL-3.0-or-later
+
+This document covers the full public API surface of the Hiero SDK. All code
+examples use C# with `using Hiero;` implied.
+
+---
+
+## 1. Client Setup
+
+Hiero provides three client types for different network access patterns.
+
+### ConsensusClient
+
+The primary client for submitting transactions and queries to Hedera gossip
+nodes. All state-changing operations and most queries use this client.
+
+```csharp
+await using var client = new ConsensusClient(ctx =>
+{
+    ctx.Endpoint = new ConsensusNodeEndpoint(
+        new EntityId(0, 0, 3),                          // gossip node account
+        new Uri("https://2.testnet.hedera.com:50211"));  // gossip node gRPC
+    ctx.Payer = new EntityId(0, 0, payerAccountNum);
+    ctx.Signatory = new Signatory(payerPrivateKey);
+});
+```
+
+Free queries (like `GetAccountBalanceAsync`) only require `Endpoint`. Paid
+queries and transactions also require `Payer` and `Signatory`.
+
+#### IConsensusContext Properties
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `Endpoint` | `ConsensusNodeEndpoint?` | null | Target gossip node (required) |
+| `Payer` | `EntityId?` | null | Account paying transaction fees |
+| `Signatory` | `Signatory?` | null | Key(s) for transaction signing |
+| `FeeLimit` | `long` | varies | Maximum fee in tinybars |
+| `TransactionDuration` | `TimeSpan` | 120s | Transaction validity window |
+| `Memo` | `string?` | null | Memo attached to transactions |
+| `RetryCount` | `int` | 5 | Auto-retry count on BUSY |
+| `RetryDelay` | `TimeSpan` | 200ms | Delay between retries |
+| `AdjustForLocalClockDrift` | `bool` | true | Compensate for clock skew |
+| `SignaturePrefixTrimLimit` | `int` | 6 | Trim prefix on key matching |
+
+Configuration can be overridden per-call:
+
+```csharp
+await client.TransferAsync(from, to, amount, ctx =>
+{
+    ctx.FeeLimit = 500_000_000;
+    ctx.Memo = "override memo";
+});
+```
+
+Or by cloning the client:
+
+```csharp
+var child = client.Clone(ctx => ctx.FeeLimit = 500_000_000);
+```
+
+### MirrorRestClient
+
+For querying historical data and current state from Hedera Mirror Nodes via
+REST API.
+
+```csharp
+var mirror = new MirrorRestClient(new HttpClient
+{
+    BaseAddress = new Uri("https://testnet.mirrornode.hedera.com")
+});
+```
+
+### MirrorGrpcClient
+
+For subscribing to real-time HCS topic message streams.
+
+```csharp
+await using var stream = new MirrorGrpcClient(ctx =>
+{
+    ctx.Uri = new Uri("https://hcs.testnet.mirrornode.hedera.com:5600");
+});
+```
+
+---
+
+## 2. Core Types
+
+### EntityId
+
+Hedera entity address in `shard.realm.num` format.
+
+```csharp
+var account = new EntityId(0, 0, 1234);          // by number
+var alias = new EntityId(0, 0, endorsement);      // by key alias
+var evm = new EntityId(0, 0, evmAddress);         // by EVM address
+```
+
+Properties: `ShardNum`, `RealmNum`, `AccountNum`, `IsShardRealmNum`,
+`IsEvmAddress`, `IsKeyAlias`. Static: `EntityId.None`.
+
+### Endorsement
+
+Public key or multi-key threshold representing signing requirements.
+
+```csharp
+var single = new Endorsement(publicKeyBytes);             // single Ed25519 key
+var secp = new Endorsement(KeyType.ECDSASecp256K1, key);  // ECDSA key
+var multi = new Endorsement(key1, key2, key3);            // all-of list
+var threshold = new Endorsement(2, key1, key2, key3);     // 2-of-3
+```
+
+### Signatory
+
+Private key or signing strategy for authorizing transactions.
+
+```csharp
+var key = new Signatory(privateKeyBytes);              // single Ed25519 key
+var multi = new Signatory(key1, key2);                 // multiple keys
+var secp = new Signatory(KeyType.ECDSASecp256K1, key); // ECDSA key
+var callback = new Signatory(async invoice =>           // external signer
+{
+    var sig = await hsm.SignAsync(invoice.TxBytes);
+    invoice.AddSignature(KeyType.Ed25519, pubKey, sig);
+});
+```
+
+`GetEndorsements()` returns the corresponding public key endorsement(s).
+
+### ConsensusTimeStamp
+
+Nanosecond-precision Hedera timestamp.
+
+```csharp
+var ts = new ConsensusTimeStamp(DateTime.UtcNow);
+var ts = new ConsensusTimeStamp(1234567890.123456789m);  // seconds
+```
+
+Static: `ConsensusTimeStamp.MinValue`, `MaxValue`, `Now`.
+
+### Hex Utility
+
+```csharp
+ReadOnlyMemory<byte> bytes = Hex.ToBytes("302e0201...");
+string hex = Hex.FromBytes(someBytes);
+```
+
+### Nft
+
+```csharp
+var nft = new Nft(tokenEntityId, serialNumber);
+```
+
+---
+
+## 3. Transaction Pattern
+
+All state-changing operations follow:
+
+```
+Create *Params -> client.*Async(params) -> *Receipt or TransactionReceipt
+```
+
+Every `*Params` class supports optional `Signatory` and `CancellationToken`
+properties for additional signing keys and cancellation.
+
+---
+
+## 4. Cryptocurrency Operations
+
+### Create Account
+
+```csharp
+var receipt = await client.CreateAccountAsync(new CreateAccountParams
+{
+    Endorsement = new Endorsement(publicKey),
+    InitialBalance = 100_000_000  // tinybars (1 hbar)
+});
+EntityId newAccount = receipt.Address;
+```
+
+CreateAccountParams properties:
+- `Endorsement` (Endorsement?) - public key for the new account
+- `InitialBalance` (ulong) - starting balance in tinybars
+- `RequireReceiveSignature` (bool) - require sig to receive
+- `AutoAssociationLimit` (int) - max auto token associations
+- `AutoRenewPeriod` (TimeSpan) - auto-renewal duration
+- `Memo` (string?) - account memo
+- `StakedNode` (long?) - staking node ID
+- `DeclineStakeReward` (bool) - opt out of staking rewards
+
+### Transfer Crypto
+
+```csharp
+// Simple transfer
+var receipt = await client.TransferAsync(fromAccount, toAccount, amount);
+
+// Multi-party transfer
+var receipt = await client.TransferAsync(new TransferParams
+{
+    CryptoTransfers = new CryptoTransfer[]
+    {
+        new(sender1, -500),
+        new(sender2, -500),
+        new(receiver, 1000)
+    },
+    TokenTransfers = new TokenTransfer[]  // optional: include token transfers
+    {
+        new(tokenId, sender, -100),
+        new(tokenId, receiver, 100)
+    },
+    NftTransfers = new NftTransfer[]      // optional: include NFT transfers
+    {
+        new(new Nft(nftToken, 1), fromAccount, toAccount)
+    },
+    Signatory = new Signatory(sender1Key, sender2Key)
+});
+
+// Convenience: transfer fungible tokens
+await client.TransferTokensAsync(token, from, to, amount);
+
+// Convenience: transfer NFT
+await client.TransferNftAsync(new Nft(token, serial), from, to);
+```
+
+### Query Balance
+
+```csharp
+ulong balance = await client.GetAccountBalanceAsync(account);
+AccountBalances all = await client.GetAccountBalancesAsync(account);
+// all.Crypto, all.Tokens (dictionary of token balances)
+```
+
+### Query Account Info
+
+```csharp
+AccountInfo info = await client.GetAccountInfoAsync(account);
+```
+
+AccountInfo properties: `Address`, `EvmAddress`, `Balance`, `Endorsement`,
+`ReceiveSignatureRequired`, `AutoRenewPeriod`, `Expiration`, `Memo`,
+`Tokens`, `NftCount`, `AutoAssociationLimit`, `Deleted`, `StakingInfo`.
+
+```csharp
+AccountDetail detail = await client.GetAccountDetailAsync(account);
+// Includes all AccountInfo fields plus:
+// CryptoAllowances, TokenAllowances, NftAllowances
+```
+
+### Update Account
+
+```csharp
+await client.UpdateAccountAsync(new UpdateAccountParams
+{
+    Address = account,
+    Endorsement = new Endorsement(newKey),   // change key
+    Memo = "New memo",
+    Signatory = new Signatory(currentKey)
+});
+```
+
+### Delete Account
+
+```csharp
+await client.DeleteAccountAsync(new DeleteAccountParams
+{
+    Account = accountToDelete,
+    FundsReceiver = receiverAccount,
+    Signatory = new Signatory(accountKey)
+});
+```
+
+### Allowances
+
+```csharp
+await client.AllocateAllowanceAsync(new AllowanceParams
+{
+    CryptoAllowances = new[] { new CryptoAllowance(owner, spender, amount) },
+    TokenAllowances = new[] { new TokenAllowance(token, owner, spender, amount) },
+    NftAllowances = new[] { new NftAllowance(token, owner, spender, serials) },
+    Signatory = new Signatory(ownerKey)
+});
+
+await client.RevokeNftAllowancesAsync(new RevokeNftAllowanceParams
+{
+    Owner = owner, Token = token,
+    SerialNumbers = new long[] { 1, 2, 3 },
+    Signatory = new Signatory(ownerKey)
+});
+```
+
+---
+
+## 5. Fungible Token Operations
+
+### Create Token
+
+```csharp
+var receipt = await client.CreateTokenAsync(new CreateTokenParams
+{
+    Name = "My Token",
+    Symbol = "MTK",
+    Circulation = 1_000_000,       // initial supply (smallest unit)
+    Decimals = 8,
+    Ceiling = 10_000_000,          // max supply (0 = unlimited)
+    Treasury = treasuryAccount,
+    Administrator = new Endorsement(adminKey),
+    SupplyEndorsement = new Endorsement(supplyKey),
+    GrantKycEndorsement = new Endorsement(kycKey),       // optional
+    SuspendEndorsement = new Endorsement(freezeKey),     // optional
+    PauseEndorsement = new Endorsement(pauseKey),        // optional
+    ConfiscateEndorsement = new Endorsement(wipeKey),    // optional
+    RoyaltiesEndorsement = new Endorsement(feeKey),      // optional
+    MetadataEndorsement = new Endorsement(metaKey),      // optional
+    Royalties = new IRoyalty[] { ... },                  // optional
+    Memo = "My token",
+    Signatory = new Signatory(adminKey, treasuryKey)
+});
+EntityId tokenId = receipt.Token;
+```
+
+CreateTokenParams key properties:
+- `Name` (string) - token name
+- `Symbol` (string) - token symbol
+- `Circulation` (ulong) - initial supply in smallest unit
+- `Decimals` (uint) - decimal places
+- `Ceiling` (long) - max supply (0 = unlimited)
+- `Treasury` (EntityId) - treasury account
+- `Administrator` (Endorsement?) - admin key (omit for immutable token)
+- `SupplyEndorsement` (Endorsement?) - mint/burn key (omit for fixed supply)
+- Various optional management endorsements for KYC, freeze, pause, wipe, etc.
+
+### Mint / Burn
+
+```csharp
+TokenReceipt r = await client.MintTokenAsync(token, 500_000);
+TokenReceipt r = await client.MintTokenAsync(new MintTokenParams { ... });
+
+TokenReceipt r = await client.BurnTokensAsync(token, 100_000);
+TokenReceipt r = await client.BurnTokensAsync(new BurnTokenParams { ... });
+```
+
+### Associate / Dissociate
+
+Accounts must be associated with a token before they can hold it
+(unless auto-association slots are available).
+
+```csharp
+await client.AssociateTokenAsync(account, token);
+await client.DissociateTokenAsync(token, account);
+```
+
+### Suspend / Resume (per-account freeze)
+
+```csharp
+await client.SuspendTokenAsync(token, holder);
+await client.ResumeTokenAsync(token, holder);
+```
+
+### Pause / Continue (global freeze)
+
+```csharp
+await client.PauseTokenAsync(token);
+await client.ContinueTokenAsync(token);
+```
+
+### KYC Grant / Revoke
+
+```csharp
+await client.GrantTokenKycAsync(token, holder);
+await client.RevokeTokenKycAsync(token, holder);
+```
+
+### Confiscate (Wipe)
+
+```csharp
+await client.ConfiscateTokensAsync(token, holder, amount);
+```
+
+### Delete / Update
+
+```csharp
+await client.DeleteTokenAsync(token);
+await client.UpdateTokenAsync(new UpdateTokenParams { Token = token, Name = "New Name" });
+await client.UpdateRoyaltiesAsync(token, royalties);
+```
+
+### Query Token Info
+
+```csharp
+TokenInfo info = await client.GetTokenInfoAsync(token);
+// info.Name, info.Symbol, info.Circulation, info.Decimals,
+// info.Ceiling, info.Treasury, info.Administrator, info.Suspended,
+// info.Deleted, info.Expiration, info.Royalties, ...
+```
+
+---
+
+## 6. Non-Fungible Token (NFT) Operations
+
+### Create NFT Collection
+
+```csharp
+var receipt = await client.CreateNftAsync(new CreateNftParams
+{
+    Name = "My NFT Collection",
+    Symbol = "MNFT",
+    Ceiling = 1000,
+    Treasury = treasuryAccount,
+    Administrator = new Endorsement(adminKey),
+    SupplyEndorsement = new Endorsement(supplyKey),
+    Royalties = new IRoyalty[] { ... },
+    Signatory = new Signatory(adminKey, treasuryKey)
+});
+EntityId nftToken = receipt.Token;  // returns CreateTokenReceipt
+```
+
+### Mint NFTs
+
+```csharp
+// Single
+NftMintReceipt r = await client.MintNftAsync(nftToken, metadata);
+long serial = r.SerialNumbers[0];
+
+// Batch
+NftMintReceipt r = await client.MintNftsAsync(new MintNftParams
+{
+    Token = nftToken,
+    Metadata = new[] { meta1, meta2, meta3 },
+    Signatory = new Signatory(supplyKey)
+});
+IReadOnlyList<long> serials = r.SerialNumbers;
+```
+
+### Burn / Confiscate / Update NFTs
+
+```csharp
+await client.BurnNftAsync(new Nft(nftToken, serial));
+await client.ConfiscateNftAsync(new Nft(nftToken, serial), holder);
+await client.UpdateNftMetadataAsync(new Nft(nftToken, serial), newMetadata);
+```
+
+### Query NFT Info
+
+```csharp
+NftInfo info = await client.GetNftInfoAsync(new Nft(nftToken, serial));
+```
+
+---
+
+## 7. Airdrop Operations
+
+### Airdrop Tokens
+
+```csharp
+// Simple fungible airdrop
+await client.AirdropTokenAsync(token, from, to, amount);
+
+// Simple NFT airdrop
+await client.AirdropNftAsync(new Nft(nftToken, serial), from, to);
+
+// Batch airdrop
+await client.AirdropAsync(new AirdropParams
+{
+    TokenTransfers = new[]
+    {
+        new TokenTransfer(token, sender, -1000),
+        new TokenTransfer(token, receiver1, 500),
+        new TokenTransfer(token, receiver2, 500)
+    },
+    NftTransfers = new[]
+    {
+        new NftTransfer(new Nft(nftToken, 1), from, to)
+    },
+    Signatory = new Signatory(senderKey)
+});
+```
+
+If the recipient is not associated with the token and has no available
+auto-association slots, a pending airdrop is created.
+
+### Claim / Cancel Pending Airdrops
+
+```csharp
+await client.ClaimAirdropAsync(new Airdrop(token, sender, receiver));
+await client.CancelAirdropAsync(new Airdrop(token, sender, receiver));
+
+// Batch
+await client.ClaimAirdropsAsync(new ClaimAirdropParams { ... });
+await client.CancelAirdropsAsync(new CancelAirdropParams { ... });
+```
+
+---
+
+## 8. Consensus Service (HCS)
+
+### Create Topic
+
+```csharp
+var receipt = await client.CreateTopicAsync(new CreateTopicParams
+{
+    Memo = "My Topic",
+    Administrator = new Endorsement(adminKey),
+    Participant = new Endorsement(submitKey),
+    RenewPeriod = TimeSpan.FromDays(90),
+    RenewAccount = renewAccount
+});
+EntityId topicId = receipt.Topic;
+```
+
+### Submit Message
+
+```csharp
+// Simple
+var receipt = await client.SubmitMessageAsync(topic,
+    Encoding.UTF8.GetBytes("Hello HCS!"));
+// receipt.SequenceNumber, receipt.RunningHash, receipt.Status
+
+// With params
+var receipt = await client.SubmitMessageAsync(new SubmitMessageParams
+{
+    Topic = topic,
+    Message = Encoding.UTF8.GetBytes("Hello HCS!"),
+    Signatory = new Signatory(submitKey)
+});
+
+// Large message (auto-segmented)
+SubmitMessageReceipt[] receipts = await client.SubmitLargeMessageAsync(
+    topic, largePayload, segmentSize: 1024, signatory: new Signatory(submitKey));
+```
+
+### Subscribe to Topic Stream (MirrorGrpcClient)
+
+```csharp
+var channel = Channel.CreateUnbounded<TopicMessage>();
+_ = stream.SubscribeTopicAsync(new SubscribeTopicParams
+{
+    Topic = topic,
+    MessageWriter = channel.Writer,
+    Starting = ConsensusTimeStamp.MinValue,  // from beginning
+    MaxCount = 100                           // limit (0 = unlimited)
+});
+
+await foreach (var msg in channel.Reader.ReadAllAsync())
+{
+    // msg.Topic, msg.Consensus, msg.Message, msg.SequenceNumber,
+    // msg.RunningHash, msg.SegmentInfo
+    Console.WriteLine(Encoding.UTF8.GetString(msg.Message.Span));
+}
+```
+
+### Update / Delete Topic
+
+```csharp
+await client.UpdateTopicAsync(new UpdateTopicParams
+{
+    Topic = topic, Memo = "Updated memo"
+});
+await client.DeleteTopicAsync(topic);
+```
+
+### Query Topic Info
+
+```csharp
+TopicInfo info = await client.GetTopicInfoAsync(topic);
+// info.Memo, info.RunningHash, info.SequenceNumber, info.Administrator,
+// info.Participant, info.AutoRenewPeriod, info.Expiration
+```
+
+---
+
+## 9. Smart Contract Operations
+
+### Create Contract
+
+```csharp
+var receipt = await client.CreateContractAsync(new CreateContractParams
+{
+    File = fileWithBytecode,           // or ByteCode = bytecodeBytes
+    Gas = 200_000,
+    Administrator = new Endorsement(adminKey),
+    RenewPeriod = TimeSpan.FromDays(90),
+    ConstructorArgs = new object[] { arg1, arg2 },
+    InitialBalance = 0,
+    AutoAssociationLimit = 10,
+    Memo = "My contract"
+});
+EntityId contractId = receipt.Contract;
+```
+
+### Call Contract (state-changing)
+
+```csharp
+var receipt = await client.CallContractAsync(new CallContractParams
+{
+    Contract = contractId,
+    Gas = 100_000,
+    PayableAmount = 0,
+    MethodName = "transfer",
+    MethodArgs = new object[] { toAddress, amount }
+});
+```
+
+### Query Contract (read-only, no state change)
+
+```csharp
+ContractCallResult result = await client.QueryContractAsync(new QueryContractParams
+{
+    Contract = contractId,
+    Gas = 50_000,
+    MethodName = "balanceOf",
+    MethodArgs = new object[] { address }
+});
+```
+
+### EVM Transaction
+
+```csharp
+await client.ExecuteEvmTransactionAsync(new EvmTransactionParams { ... });
+```
+
+### Query Contract Info
+
+```csharp
+ContractInfo info = await client.GetContractInfoAsync(contractId);
+ReadOnlyMemory<byte> code = await client.GetContractBytecodeAsync(contractId);
+```
+
+---
+
+## 10. File Service
+
+### Create File
+
+```csharp
+var receipt = await client.CreateFileAsync(new CreateFileParams
+{
+    Contents = Encoding.UTF8.GetBytes("Hello Hedera!"),
+    Endorsements = new[] { new Endorsement(adminKey) },
+    Memo = "My file"
+});
+EntityId fileId = receipt.File;
+```
+
+### Append to File
+
+```csharp
+await client.AppendFileAsync(new AppendFileParams
+{
+    File = fileId,
+    Contents = additionalBytes
+});
+```
+
+### Update File
+
+```csharp
+await client.UpdateFileAsync(new UpdateFileParams
+{
+    File = fileId,
+    Contents = newContents,
+    Endorsements = newEndorsements
+});
+```
+
+### Delete File
+
+```csharp
+await client.DeleteFileAsync(new DeleteFileParams { File = fileId });
+```
+
+### Query File
+
+```csharp
+ReadOnlyMemory<byte> content = await client.GetFileContentAsync(fileId);
+FileInfo info = await client.GetFileInfoAsync(fileId);
+// info.File, info.Memo, info.Endorsements, info.Expiration, info.Deleted
+```
+
+---
+
+## 11. Scheduled Transactions
+
+Any transaction can be wrapped for deferred execution. The network holds the
+transaction until all required signatures are collected.
+
+### Schedule a Transaction
+
+```csharp
+var receipt = await client.ScheduleAsync(new ScheduleParams
+{
+    Transaction = new TransferParams
+    {
+        CryptoTransfers = new[]
+        {
+            new CryptoTransfer(sender, -1000),
+            new CryptoTransfer(receiver, 1000)
+        }
+    },
+    Memo = "Scheduled transfer",
+    Administrator = new Endorsement(adminKey),
+    Payer = executionPayerAccount,
+    Expiration = new ConsensusTimeStamp(DateTime.UtcNow.AddHours(24)),
+    DelayExecution = false
+});
+EntityId scheduleId = receipt.Schedule;
+```
+
+ScheduleParams properties:
+- `Transaction` (TransactionParams) - the transaction to schedule
+- `Administrator` (Endorsement?) - key to delete the schedule
+- `Memo` (string?) - schedule memo
+- `Payer` (EntityId?) - account paying execution fees
+- `Expiration` (ConsensusTimeStamp?) - when the schedule expires
+- `DelayExecution` (bool) - wait until expiration even if all sigs collected
+
+### Sign Schedule
+
+```csharp
+await client.SignScheduleAsync(scheduleId);
+await client.SignScheduleAsync(new SignScheduleParams
+{
+    Schedule = scheduleId,
+    Signatory = new Signatory(additionalKey)
+});
+```
+
+### Delete Schedule
+
+```csharp
+await client.DeleteScheduleAsync(scheduleId);
+```
+
+### Query Schedule
+
+```csharp
+ScheduleInfo info = await client.GetScheduleInfoAsync(scheduleId);
+```
+
+---
+
+## 12. Network Utilities
+
+```csharp
+// Exchange rates (USD/hbar)
+ExchangeRates rates = await client.GetExchangeRatesAsync();
+// rates.Current.USDCentEquivalent, rates.Current.HBarEquivalent,
+// rates.Current.Expiration, rates.Next
+
+// Fee schedules
+FeeSchedules fees = await client.GetFeeScheduleAsync();
+// fees.Current.Data (Dictionary<string, string[]>), fees.Current.Expires
+
+// Network version
+VersionInfo ver = await client.GetVersionInfoAsync();
+
+// Address book (all consensus nodes)
+ConsensusNodeInfo[] nodes = await client.GetAddressBookAsync();
+
+// Ping node (returns round-trip time in ms)
+long ms = await client.PingAsync();
+
+// Pseudo-random number generation
+await client.GeneratePseudoRandomNumberAsync(new PseudoRandomNumberParams { ... });
+```
+
+---
+
+## 13. Mirror Node REST Queries (MirrorRestClient)
+
+```csharp
+var mirror = new MirrorRestClient(new HttpClient
+{
+    BaseAddress = new Uri("https://testnet.mirrornode.hedera.com")
+});
+
+// Available query methods include:
+await mirror.GetAccountAsync(accountId);
+await mirror.GetTokenAsync(tokenId);
+await mirror.GetNftAsync(tokenId, serialNo);
+await mirror.GetContractAsync(contractId);
+await mirror.GetTransactionAsync(txIdString);
+```
+
+---
+
+## 14. Receipts and Records
+
+Every transaction returns a receipt. Detailed records are available via
+separate queries.
+
+### TransactionReceipt
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `TransactionId` | `TransactionId` | Unique transaction identifier |
+| `Status` | `ResponseCode` | Result status (e.g., `Ok`) |
+| `CurrentExchangeRate` | `ExchangeRate?` | Current USD/hbar rate |
+| `NextExchangeRate` | `ExchangeRate?` | Upcoming rate |
+
+### TransactionRecord (extends TransactionReceipt)
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `Hash` | `ReadOnlyMemory<byte>` | Transaction hash |
+| `Consensus` | `ConsensusTimeStamp?` | Consensus timestamp |
+| `Memo` | `string` | Transaction memo |
+| `Fee` | `ulong` | Actual fee paid |
+| `Transfers` | `ReadOnlyDictionary<EntityId, long>` | Crypto transfers |
+| `TokenTransfers` | `IReadOnlyList<TokenTransfer>` | Token transfers |
+| `NftTransfers` | `IReadOnlyList<NftTransfer>` | NFT transfers |
+
+```csharp
+TransactionReceipt receipt = await client.GetReceiptAsync(txId);
+TransactionRecord record = await client.GetTransactionRecordAsync(txId);
+```
+
+---
+
+## 15. Error Handling
+
+```csharp
+try
+{
+    await client.TransferAsync(from, to, amount);
+}
+catch (PrecheckException ex)
+{
+    // Rejected before consensus (bad fee, invalid account, etc.)
+    Console.WriteLine($"Precheck: {ex.Status}");
+}
+catch (TransactionException ex)
+{
+    // Reached consensus but failed (insufficient balance, etc.)
+    Console.WriteLine($"Failed: {ex.Status}");
+}
+catch (ConsensusException ex)
+{
+    // Network/communication error
+}
+catch (ContractException ex)
+{
+    // Smart contract execution error
+}
+```
+
+---
+
+## 16. Hedera Network Endpoints
+
+### Testnet
+
+| Node Account | gRPC Endpoint |
+|---|---|
+| 0.0.3 | `https://0.testnet.hedera.com:50211` |
+| 0.0.4 | `https://1.testnet.hedera.com:50211` |
+| 0.0.5 | `https://2.testnet.hedera.com:50211` |
+| 0.0.6 | `https://3.testnet.hedera.com:50211` |
+
+Mirror REST: `https://testnet.mirrornode.hedera.com`
+Mirror gRPC: `https://hcs.testnet.mirrornode.hedera.com:5600`
+
+### Mainnet
+
+| Node Account | gRPC Endpoint |
+|---|---|
+| 0.0.3 | `https://35.237.200.180:50211` |
+| 0.0.4 | `https://35.186.191.247:50211` |
+| ... | (use `GetAddressBookAsync()` for full list) |
+
+Mirror REST: `https://mainnet-public.mirrornode.hedera.com`
+Mirror gRPC: `https://mainnet-public.mirrornode.hedera.com:443`

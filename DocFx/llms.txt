@@ -1,0 +1,34 @@
+# Hiero
+
+> .NET Client Library for the Hiero Network and Hedera Hashgraph
+
+Hiero is a .NET 10 SDK that provides idiomatic async access to the full Hedera
+public network: cryptocurrency, consensus messaging, tokens, NFTs, smart
+contracts, file storage, scheduled transactions, airdrops, and more.
+
+- NuGet: https://www.nuget.org/packages/Hiero/
+- Source: https://github.com/bugbytesinc/Hiero
+- API Reference: https://hashgraph.bugbytes.com/
+- License: GPL-3.0-or-later
+
+## Quick Install
+
+```sh
+dotnet add package Hiero
+```
+
+Requires .NET 10 SDK.
+
+## Clients
+
+| Client | Purpose | Protocol |
+|--------|---------|----------|
+| `ConsensusClient` | Transactions and queries to gossip nodes | gRPC |
+| `MirrorRestClient` | Historical data and state from Mirror Nodes | REST/JSON |
+| `MirrorGrpcClient` | Real-time HCS topic subscriptions | gRPC streaming |
+
+## Detailed Documentation
+
+- [Full AI-readable reference](llms-full.txt): Complete API surface, all operations, types, and code examples
+- [Tutorials](https://hashgraph.bugbytes.com/tutorials/): Getting started guides
+- [API Docs](https://hashgraph.bugbytes.com/api/): Generated API reference
