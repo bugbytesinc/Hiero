@@ -1,4 +1,5 @@
-﻿using Google.Protobuf;
+﻿// SPDX-License-Identifier: Apache-2.0
+using Google.Protobuf;
 using Hiero.Converters;
 using Hiero.Implementation;
 using Org.BouncyCastle.Crypto.Parameters;

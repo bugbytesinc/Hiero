@@ -1,4 +1,5 @@
-﻿#pragma warning disable CS8766
+﻿// SPDX-License-Identifier: Apache-2.0
+#pragma warning disable CS8766
 using Google.Protobuf;
 using Grpc.Net.Client;
 

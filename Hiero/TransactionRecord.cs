@@ -1,4 +1,5 @@
-﻿using Google.Protobuf.Collections;
+﻿// SPDX-License-Identifier: Apache-2.0
+using Google.Protobuf.Collections;
 using Hiero.Implementation;
 using Proto;
 using System.Collections.ObjectModel;

@@ -1,4 +1,5 @@
-﻿namespace Hiero;
+﻿// SPDX-License-Identifier: Apache-2.0
+namespace Hiero;
 /// <summary>
 /// Exception thrown when a network call was accepted by the gateway 
 /// node but did not achieve network consensus before the expiration 

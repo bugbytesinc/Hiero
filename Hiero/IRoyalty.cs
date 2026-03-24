@@ -1,4 +1,5 @@
-﻿namespace Hiero;
+﻿// SPDX-License-Identifier: Apache-2.0
+namespace Hiero;
 /// <summary>
 /// Represents a royalty (fee or royalty) associated 
 /// with transfers of a token or asset.

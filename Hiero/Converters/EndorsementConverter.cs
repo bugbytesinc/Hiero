@@ -1,4 +1,5 @@
-﻿using Google.Protobuf;
+﻿// SPDX-License-Identifier: Apache-2.0
+using Google.Protobuf;
 using Org.BouncyCastle.Crypto.Parameters;
 using System.Text.Json;
 using System.Text.Json.Serialization;

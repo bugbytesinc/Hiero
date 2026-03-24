@@ -1,4 +1,5 @@
-﻿namespace Hiero.Mirror.Filters;
+﻿// SPDX-License-Identifier: Apache-2.0
+namespace Hiero.Mirror.Filters;
 /// <summary>
 /// Indicates the number of results to return in a page.
 /// </summary>

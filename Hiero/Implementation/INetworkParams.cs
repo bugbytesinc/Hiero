@@ -1,4 +1,5 @@
-﻿namespace Hiero.Implementation;
+﻿// SPDX-License-Identifier: Apache-2.0
+namespace Hiero.Implementation;
 
 /// <summary>
 /// Defines the common properties required by all transaction parameter objects.

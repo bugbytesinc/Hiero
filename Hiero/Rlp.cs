@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿// SPDX-License-Identifier: Apache-2.0
+using System.Collections;
 using System.Numerics;
 using System.Text;
 

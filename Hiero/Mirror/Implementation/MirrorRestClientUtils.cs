@@ -1,4 +1,5 @@
-﻿using Hiero.Mirror.Filters;
+﻿// SPDX-License-Identifier: Apache-2.0
+using Hiero.Mirror.Filters;
 using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;

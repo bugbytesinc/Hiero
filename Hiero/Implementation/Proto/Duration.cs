@@ -1,4 +1,5 @@
-﻿namespace Proto;
+﻿// SPDX-License-Identifier: Apache-2.0
+namespace Proto;
 
 public sealed partial class Duration
 {

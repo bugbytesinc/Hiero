@@ -1,4 +1,5 @@
-﻿namespace Hiero.Mirror.Filters;
+﻿// SPDX-License-Identifier: Apache-2.0
+namespace Hiero.Mirror.Filters;
 /// <summary>
 /// Retrieve consensus messages for a topic after the
 /// given hcs consensus message number.

@@ -1,4 +1,5 @@
-﻿namespace Hiero;
+﻿// SPDX-License-Identifier: Apache-2.0
+namespace Hiero;
 /// <summary>
 /// Enumerates known HD Key Derivation paths for
 /// various Key formats and Wallets in the Hedera ecosystem.

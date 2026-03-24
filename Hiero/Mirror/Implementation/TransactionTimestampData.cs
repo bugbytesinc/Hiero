@@ -1,4 +1,5 @@
-﻿#pragma warning disable CS8618 
+﻿// SPDX-License-Identifier: Apache-2.0
+#pragma warning disable CS8618 
 using Hiero.Mirror.Implementation;
 using System.ComponentModel;
 using System.Text.Json.Serialization;

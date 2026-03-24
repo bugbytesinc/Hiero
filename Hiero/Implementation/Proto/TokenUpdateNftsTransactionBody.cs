@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 using Grpc.Core;
 using Grpc.Net.Client;
 using Hiero.Implementation;

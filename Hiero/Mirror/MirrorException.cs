@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿// SPDX-License-Identifier: Apache-2.0
+using System.Net;
 
 namespace Hiero.Mirror;
 /// <summary>

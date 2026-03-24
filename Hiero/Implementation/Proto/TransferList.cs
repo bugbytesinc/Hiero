@@ -1,4 +1,5 @@
-﻿using System.Collections.ObjectModel;
+﻿// SPDX-License-Identifier: Apache-2.0
+using System.Collections.ObjectModel;
 
 namespace Proto;
 

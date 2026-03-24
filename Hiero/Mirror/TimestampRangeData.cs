@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿// SPDX-License-Identifier: Apache-2.0
+using System.Text.Json.Serialization;
 
 namespace Hiero.Mirror;
 

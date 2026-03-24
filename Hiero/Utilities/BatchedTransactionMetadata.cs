@@ -1,4 +1,5 @@
-﻿namespace Hiero;
+﻿// SPDX-License-Identifier: Apache-2.0
+namespace Hiero;
 /// <summary>
 /// Represents a single transaction within a batch, identifying
 /// the transaction parameters, and other optional batch metadata.

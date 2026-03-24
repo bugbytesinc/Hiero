@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 namespace Hiero;
 /// <summary>
 /// Represents a single storage entry for an EVM hook,

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 using Com.Hedera.Hapi.Node.Hooks;
 using Hiero.Implementation;
 using Proto;

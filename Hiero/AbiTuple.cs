@@ -1,4 +1,5 @@
-﻿namespace Hiero;
+﻿// SPDX-License-Identifier: Apache-2.0
+namespace Hiero;
 /// <summary>
 /// Represents a tuple of values that can be used in smart contract calls.
 /// </summary>

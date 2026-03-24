@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 using Hiero;
 
 // Usage: dotnet run -- <endpointUrl> <nodeNum> <payerNum> <payerKeyHex> <contractNum> <methodName> [args...]

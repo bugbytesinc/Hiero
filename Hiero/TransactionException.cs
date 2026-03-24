@@ -1,4 +1,5 @@
-﻿namespace Hiero;
+﻿// SPDX-License-Identifier: Apache-2.0
+namespace Hiero;
 /// <summary>
 /// Represents an error with a transaction that passed the gateway node 
 /// pre-check and was processed by the network but did not succeed.

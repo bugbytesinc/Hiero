@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿// SPDX-License-Identifier: Apache-2.0
+using System.Runtime.CompilerServices;
 
 namespace Hiero;
 /// <summary>

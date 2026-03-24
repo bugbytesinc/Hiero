@@ -1,4 +1,5 @@
-﻿#pragma warning disable CS8618
+﻿// SPDX-License-Identifier: Apache-2.0
+#pragma warning disable CS8618
 namespace Hiero;
 /// <summary>
 /// Represents a Topic Message retrieved from a mirror node.

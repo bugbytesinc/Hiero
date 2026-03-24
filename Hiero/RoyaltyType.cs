@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿// SPDX-License-Identifier: Apache-2.0
+using System.ComponentModel;
 
 namespace Hiero;
 

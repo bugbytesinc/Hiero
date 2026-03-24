@@ -1,4 +1,5 @@
-﻿using Google.Protobuf;
+﻿// SPDX-License-Identifier: Apache-2.0
+using Google.Protobuf;
 using Proto;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;

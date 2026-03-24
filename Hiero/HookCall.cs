@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 namespace Hiero;
 /// <summary>
 /// Represents a hook call specification, including the

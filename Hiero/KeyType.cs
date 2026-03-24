@@ -1,4 +1,5 @@
-﻿namespace Hiero;
+﻿// SPDX-License-Identifier: Apache-2.0
+namespace Hiero;
 
 /// <summary>
 /// Identifies the type of <see cref="Signatory"/> or

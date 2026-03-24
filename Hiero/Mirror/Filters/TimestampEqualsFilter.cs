@@ -1,4 +1,5 @@
-﻿namespace Hiero.Mirror.Filters;
+﻿// SPDX-License-Identifier: Apache-2.0
+namespace Hiero.Mirror.Filters;
 /// <summary>
 /// Retrieve data matching the given consensus timestamp
 /// in the hedera ledger.

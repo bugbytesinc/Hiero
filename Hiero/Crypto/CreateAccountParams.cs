@@ -1,4 +1,5 @@
-﻿using Com.Hedera.Hapi.Node.Hooks;
+﻿// SPDX-License-Identifier: Apache-2.0
+using Com.Hedera.Hapi.Node.Hooks;
 using Google.Protobuf;
 using Hiero.Implementation;
 using Proto;

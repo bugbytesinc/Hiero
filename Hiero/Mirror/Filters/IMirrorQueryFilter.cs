@@ -1,4 +1,5 @@
-﻿namespace Hiero.Mirror.Filters;
+﻿// SPDX-License-Identifier: Apache-2.0
+namespace Hiero.Mirror.Filters;
 
 /// <summary>
 /// Represents a basic filter to a mirror node query, it

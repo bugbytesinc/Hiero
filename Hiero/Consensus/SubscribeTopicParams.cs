@@ -1,4 +1,5 @@
-﻿using System.Threading.Channels;
+﻿// SPDX-License-Identifier: Apache-2.0
+using System.Threading.Channels;
 
 namespace Hiero;
 

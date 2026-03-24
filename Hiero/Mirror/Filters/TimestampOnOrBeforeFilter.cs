@@ -1,4 +1,5 @@
-﻿namespace Hiero.Mirror.Filters;
+﻿// SPDX-License-Identifier: Apache-2.0
+namespace Hiero.Mirror.Filters;
 /// <summary>
 /// Retrieve data before or on the given consensus time value.
 /// </summary>

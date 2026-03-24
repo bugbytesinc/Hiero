@@ -1,4 +1,5 @@
-﻿using Proto;
+﻿// SPDX-License-Identifier: Apache-2.0
+using Proto;
 
 namespace Hiero.Implementation;
 

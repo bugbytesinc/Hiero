@@ -1,4 +1,5 @@
-﻿using Org.BouncyCastle.Crypto.Digests;
+﻿// SPDX-License-Identifier: Apache-2.0
+using Org.BouncyCastle.Crypto.Digests;
 using System.Numerics;
 using System.Text;
 

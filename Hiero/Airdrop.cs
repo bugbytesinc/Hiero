@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 namespace Hiero;
 /// <summary>
 /// Identifies a pending airdrop by its sender, receiver, and token.

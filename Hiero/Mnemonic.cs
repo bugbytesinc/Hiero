@@ -1,4 +1,5 @@
-﻿using Hiero.Implementation;
+﻿// SPDX-License-Identifier: Apache-2.0
+using Hiero.Implementation;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Math;
 using Org.BouncyCastle.Math.EC.Rfc8032;
