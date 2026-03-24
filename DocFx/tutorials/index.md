@@ -75,4 +75,4 @@ Our documentation is a work in progress and will be adding to it and improving o
 
 ## Is this project Open Source?
 
-Yes, this is an open source project released under the [GPL-3.0-or-later License](https://github.com/bugbytesinc/Hiero/blob/main/LICENSE), the source code can be found at https://github.com/bugbytesinc/Hiero.
+Yes, this is an open source project released under the [Apache-2.0 License](https://github.com/bugbytesinc/Hiero/blob/main/LICENSE), the source code can be found at https://github.com/bugbytesinc/Hiero.

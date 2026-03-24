@@ -47,7 +47,7 @@ documentType: homepage
         <div class="col-md-10 col-md-offset-1 text-center">
         <section>
             <h2>Open Source</h2>
-            <p class="lead">Hiero is released under the <a href="https://github.com/bugbytesinc/Hiero/blob/main/LICENSE">GPL-3.0-or-later License</a>, the source code is available on <a href="https://github.com/bugbytesinc/Hiero">GitHub</a>.</p>
+            <p class="lead">Hiero is released under the <a href="https://github.com/bugbytesinc/Hiero/blob/main/LICENSE">Apache-2.0 License</a>, the source code is available on <a href="https://github.com/bugbytesinc/Hiero">GitHub</a>.</p>
         </section>
         </div>
     </div>

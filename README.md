@@ -3,7 +3,7 @@
 **.NET Client Library for the Hiero Network and Hedera Hashgraph**
 
 [![NuGet](https://img.shields.io/nuget/v/Hiero.svg)](https://www.nuget.org/packages/Hiero/)
-[![License](https://img.shields.io/badge/license-GPL--3.0--or--later-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
 Hiero provides idiomatic .NET access to the full [Hedera](https://www.hedera.com/) public network — cryptocurrency, consensus messaging, tokens, NFTs, smart contracts, file storage, scheduled transactions, airdrops, and more.
 
@@ -169,6 +169,6 @@ samples/                   Runnable sample console apps
 
 ## License
 
-This project is licensed under the [GPL-3.0-or-later](LICENSE).
+This project is licensed under the [Apache-2.0](LICENSE).
 
 Copyright 2025 [BugBytes, Inc.](https://bugbytes.com/) All Rights Reserved.

@@ -9,7 +9,7 @@ contracts, file storage, scheduled transactions, airdrops, and more.
 - NuGet: https://www.nuget.org/packages/Hiero/
 - Source: https://github.com/bugbytesinc/Hiero
 - API Reference: https://hashgraph.bugbytes.com/
-- License: GPL-3.0-or-later
+- License: Apache-2.0
 
 ## Quick Install
 

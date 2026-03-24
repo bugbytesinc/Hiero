@@ -4,7 +4,7 @@
 > NuGet: https://www.nuget.org/packages/Hiero/
 > Source: https://github.com/bugbytesinc/Hiero
 > Requires: .NET 10 SDK
-> License: GPL-3.0-or-later
+> License: Apache-2.0
 
 This document covers the full public API surface of the Hiero SDK. All code
 examples use C# with `using Hiero;` implied.
