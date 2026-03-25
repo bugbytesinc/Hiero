@@ -151,6 +151,24 @@ ReadOnlyMemory<byte> bytes = Hex.ToBytes("302e0201...");
 string hex = Hex.FromBytes(someBytes);
 ```
 
+### TransactionId
+
+Unique transaction identifier combining payer account and valid-start timestamp.
+
+```csharp
+TransactionId txId = receipt.TransactionId;
+// txId.Address (payer), txId.ValidStartSeconds, txId.ValidStartNanos
+```
+
+### EvmAddress
+
+20-byte EVM-compatible address with EIP-55 checksum formatting.
+
+```csharp
+EvmAddress evm = info.EvmAddress;
+string checksummed = evm.ToString();  // EIP-55 checksum encoding
+```
+
 ### Nft
 
 ```csharp
@@ -381,6 +399,28 @@ await client.RevokeTokenKycAsync(token, holder);
 
 ```csharp
 await client.ConfiscateTokensAsync(token, holder, amount);
+```
+
+### Relinquish (Return to Treasury)
+
+Returns tokens or NFTs to the token treasury. Unlike confiscate (which
+requires the wipe key), relinquish is initiated by the token holder.
+
+```csharp
+// Return full balance of a fungible token
+await client.RelinquishTokenAsync(token);
+
+// Return a specific NFT
+await client.RelinquishNftAsync(new Nft(nftToken, serial));
+
+// Batch relinquish with explicit owner
+await client.RelinquishAsync(new RelinquishTokensParams
+{
+    Owner = holderAccount,
+    Tokens = new[] { token1, token2 },
+    Nfts = new[] { new Nft(nftToken, 1), new Nft(nftToken, 2) },
+    Signatory = new Signatory(holderKey)
+});
 ```
 
 ### Delete / Update
@@ -745,7 +785,292 @@ ScheduleInfo info = await client.GetScheduleInfoAsync(scheduleId);
 
 ---
 
-## 12. Network Utilities
+## 12. Batched/Atomic Transactions
+
+Submit multiple transactions as a single atomic batch — either all succeed or
+all fail together.
+
+```csharp
+var receipt = await client.ExecuteAsync(new BatchedTransactionParams
+{
+    TransactionParams = new TransactionParams[]
+    {
+        new TransferParams
+        {
+            CryptoTransfers = new[]
+            {
+                new CryptoTransfer(sender, -1000),
+                new CryptoTransfer(receiver1, 1000)
+            }
+        },
+        new TransferParams
+        {
+            CryptoTransfers = new[]
+            {
+                new CryptoTransfer(sender, -2000),
+                new CryptoTransfer(receiver2, 2000)
+            }
+        }
+    },
+    Signatory = new Signatory(senderKey)
+});
+```
+
+BatchedTransactionParams properties:
+- `TransactionParams` (IReadOnlyList\<TransactionParams\>) - list of transactions to batch
+- `Endorsement` (Endorsement?) - default batch key endorsement
+- `Signatory` (Signatory?) - signing key(s) for the batch
+- `CancellationToken` (CancellationToken?) - cancellation token
+
+For per-transaction overrides, wrap individual entries in `BatchedTransactionMetadata`:
+
+```csharp
+new BatchedTransactionMetadata
+{
+    TransactionParams = new TransferParams { ... },
+    Payer = specificPayer,         // override payer for this entry
+    Endorsement = specificKey,     // override batch key for this entry
+    Memo = "entry memo"
+}
+```
+
+A fire-and-forget variant returns only the precheck code:
+
+```csharp
+ResponseCode code = await client.SubmitAsync(batchParams);
+```
+
+---
+
+## 13. Key Management (Mnemonic)
+
+Generate Ed25519 or ECDSA keys from BIP-39 mnemonic seed phrases using
+HD key derivation.
+
+```csharp
+var mnemonic = new Mnemonic(
+    new[] { "word1", "word2", ... , "word24" },
+    passphrase: "optional passphrase"
+);
+
+// Derive key pair using a known wallet derivation path
+var (publicKey, privateKey) = mnemonic.GenerateKeyPair(KeyDerivationPath.HashPack);
+
+// Use derived keys with the SDK
+var signatory = new Signatory(privateKey);
+var endorsement = new Endorsement(publicKey);
+```
+
+### Built-in Derivation Paths
+
+| Path | KeyType | Wallet |
+|------|---------|--------|
+| `KeyDerivationPath.HashPack` | Ed25519 | HashPack (24-word) |
+| `KeyDerivationPath.Calaxy` | Ed25519 | Calaxy (12-word) |
+| `KeyDerivationPath.WallaWallet` | Ed25519 | WallaWallet (12/24-word) |
+| `KeyDerivationPath.Blade` | ECDSASecp256K1 | Blade Wallet (12-word) |
+
+### KeyType Enum
+
+| Value | Description |
+|-------|-------------|
+| `Ed25519` | Ed25519 key (most common on Hedera) |
+| `ECDSASecp256K1` | ECDSA secp256k1 key (EVM-compatible) |
+| `Contract` | Smart contract reference |
+| `List` | Composite key list |
+
+---
+
+## 14. Address Book (Consensus Node Management)
+
+These are privileged operations requiring Hedera governing council authorization.
+Changes take effect at the next network upgrade.
+
+### Add Consensus Node
+
+```csharp
+var receipt = await client.AddConsensusNodeAsync(new AddConsensusNodeParams
+{
+    Account = nodeAccount,
+    AdminKey = new Endorsement(nodeAdminKey),
+    GossipEndpoints = new[] { new Uri("https://node.example.com:50111") },
+    ServiceEndpoints = new[] { new Uri("https://node.example.com:50211") },
+    GossipCaCertificate = certBytes,
+    Description = "My Node",
+    Signatory = new Signatory(nodeAdminKey, councilKey)
+});
+ulong nodeId = receipt.NodeId;
+```
+
+AddConsensusNodeParams properties:
+- `Account` (EntityId) - account to associate with the node (required)
+- `AdminKey` (Endorsement) - administrative key for the node (required)
+- `GossipEndpoints` (IEnumerable\<Uri\>) - gossip endpoints, 1–10 (required)
+- `ServiceEndpoints` (IEnumerable\<Uri\>) - gRPC endpoints, 1–8 (required)
+- `GossipCaCertificate` (ReadOnlyMemory\<byte\>) - DER-encoded CA cert (required)
+- `Description` (string?) - up to 100 UTF-8 bytes
+- `GrpcCertificateHash` (ReadOnlyMemory\<byte\>?) - SHA-384 of TLS cert
+- `GrpcProxyEndpoint` (Uri?) - gRPC-Web proxy endpoint
+- `DeclineReward` (bool) - opt out of node rewards
+
+### Remove Consensus Node
+
+```csharp
+await client.RemoveConsensusNodeAsync(nodeId);
+```
+
+### Update Consensus Node
+
+```csharp
+await client.UpdateConsensusNodeAsync(new UpdateConsensusNodeParams
+{
+    NodeId = nodeId,
+    Description = "Updated description",
+    ServiceEndpoints = new[] { new Uri("https://new-endpoint:50211") },
+    Signatory = new Signatory(currentAdminKey)
+});
+```
+
+Null properties are left unchanged.
+
+---
+
+## 15. Hook Operations
+
+Hooks are EVM-based smart contract extensions that execute before (and optionally
+after) transactions. Currently supports the `ACCOUNT_ALLOWANCE_HOOK` extension
+point.
+
+### Core Types
+
+| Type | Description |
+|------|-------------|
+| `Hook` | Identifies a hook by owner (EntityId) and numeric Id. Sentinel: `Hook.None`. |
+| `HookMetadata` | Defines a hook: Id, Contract (EntityId), optional AdminKey and InitialStorage. |
+| `HookCall` | Invocation spec: HookId, Data (bytes), GasLimit, CallMode. |
+| `HookCallMode` | `PreOnly` (before transaction) or `PreAndPost` (before and after). |
+| `HookStorageEntry` | Storage slot update: Key, Value, optional IndexKey for Solidity mappings. |
+
+### Attach Hooks to Accounts or Contracts
+
+Hooks are attached during account/contract creation or update:
+
+```csharp
+// Create account with a hook
+var receipt = await client.CreateAccountAsync(new CreateAccountParams
+{
+    Endorsement = new Endorsement(publicKey),
+    Hooks = new[]
+    {
+        new HookMetadata(
+            id: 1,
+            contract: hookContractId,
+            adminKey: new Endorsement(hookAdminKey),
+            initialStorage: new[]
+            {
+                new HookStorageEntry(slotKey, slotValue)
+            })
+    }
+});
+
+// Add hooks to an existing account
+await client.UpdateAccountAsync(new UpdateAccountParams
+{
+    Address = account,
+    AddHooks = new[] { new HookMetadata(2, hookContractId) }
+});
+```
+
+### Invoke Hooks During Transfers
+
+```csharp
+var receipt = await client.TransferAsync(new TransferParams
+{
+    CryptoTransfers = new[]
+    {
+        new CryptoTransfer(sender, -1000, allowanceHook: new HookCall(
+            hookId: 1,
+            data: callData,
+            gasLimit: 100_000,
+            callMode: HookCallMode.PreOnly)),
+        new CryptoTransfer(receiver, 1000)
+    }
+});
+```
+
+### Update Hook Storage
+
+```csharp
+await client.UpdateHookStorageAsync(new UpdateHookStorageParams
+{
+    Hook = new Hook(ownerAccount, hookId: 1),
+    StorageUpdates = new[]
+    {
+        new HookStorageEntry(slotKey, newValue),                       // direct slot
+        new HookStorageEntry(mappingSlot, indexKey, value, false),     // mapping entry
+        new HookStorageEntry(mappingSlot, preimage, value, true)       // preimage key
+    },
+    Signatory = new Signatory(hookAdminKey)
+});
+```
+
+---
+
+## 16. System Administration (Privileged)
+
+These operations require system-level or council authorization and are not
+available to regular accounts.
+
+### Network Upgrade Lifecycle
+
+```csharp
+// 1. Upload upgrade file, then prepare the upgrade
+await client.PrepareNetworkUpgradeAsync(new PrepareNetworkUpgradeParams
+{
+    File = upgradeFileId,
+    FileHash = fileHashBytes
+});
+
+// 2. Schedule the upgrade at a specific consensus time
+await client.ScheduleNetworkUpgradeAsync(new ScheduleNetworkUpgradeParams
+{
+    Consensus = new ConsensusTimeStamp(upgradeTime)
+});
+
+// 3. Cancel if needed
+await client.AbortNetworkUpgradeAsync(new AbortNetworkUpgradeParams());
+```
+
+### Telemetry Upgrade
+
+```csharp
+await client.ScheduleTelemetryUpgradeAsync(new ScheduleTelemetryUpgradeParams());
+```
+
+### Suspend Network
+
+```csharp
+await client.SuspendNetworkAsync(new SuspendNetworkParams
+{
+    Consensus = new ConsensusTimeStamp(suspendTime)
+});
+```
+
+### System Delete / Restore
+
+Administratively delete or restore files and contracts:
+
+```csharp
+await client.SystemDeleteFileAsync(new SystemDeleteFileParams { File = fileId });
+await client.SystemRestoreFileAsync(new SystemRestoreFileParams { File = fileId });
+
+await client.SystemDeleteContractAsync(new SystemDeleteContractParams { Contract = contractId });
+await client.SystemRestoreContractAsync(new SystemRestoreContractParams { Contract = contractId });
+```
+
+---
+
+## 17. Network Utilities
 
 ```csharp
 // Exchange rates (USD/hbar)
@@ -772,25 +1097,105 @@ await client.GeneratePseudoRandomNumberAsync(new PseudoRandomNumberParams { ... 
 
 ---
 
-## 13. Mirror Node REST Queries (MirrorRestClient)
+## 18. Mirror Node REST Queries (MirrorRestClient)
 
 ```csharp
 var mirror = new MirrorRestClient(new HttpClient
 {
     BaseAddress = new Uri("https://testnet.mirrornode.hedera.com")
 });
-
-// Available query methods include:
-await mirror.GetAccountAsync(accountId);
-await mirror.GetTokenAsync(tokenId);
-await mirror.GetNftAsync(tokenId, serialNo);
-await mirror.GetContractAsync(contractId);
-await mirror.GetTransactionAsync(txIdString);
 ```
+
+### Accounts
+
+```csharp
+AccountData? data = await mirror.GetAccountAsync(accountId);
+IAsyncEnumerable<AccountData> accounts = mirror.GetAccountsFromEndorsementAsync(endorsement);
+IAsyncEnumerable<CryptoAllowanceData> allowances = mirror.GetAccountCryptoAllowancesAsync(account);
+IAsyncEnumerable<TokenAllowanceData> tokenAllowances = mirror.GetAccountTokenAllowancesAsync(account);
+IAsyncEnumerable<TokenHoldingData> holdings = mirror.GetAccountTokenHoldingsAsync(account);
+long? balance = await mirror.GetAccountTokenBalanceAsync(account, token);
+```
+
+### Tokens and NFTs
+
+```csharp
+TokenData? data = await mirror.GetTokenAsync(tokenId);
+NftData? nft = await mirror.GetNftAsync(new Nft(tokenId, serial));
+IAsyncEnumerable<AccountBalanceData> balances = mirror.GetTokenBalancesAsync(tokenId);
+```
+
+### Transactions
+
+```csharp
+TransactionDetailData[] group = await mirror.GetTransactionGroupAsync(txId);
+TransactionDetailData? tx = await mirror.GetTransactionAsync(consensusTimestamp);
+IAsyncEnumerable<TransactionDetailData> txs = mirror.GetTransactionsForAccountAsync(account);
+ConsensusTimeStamp latest = await mirror.GetLatestConsensusTimestampAsync();
+```
+
+### HCS (Consensus Service)
+
+```csharp
+HcsTopicData? topic = await mirror.GetHcsTopicAsync(topicId);
+HcsMessageData? msg = await mirror.GetHcsMessageAsync(topicId, sequenceNumber);
+IAsyncEnumerable<HcsMessageData> msgs = mirror.GetHcsMessagesAsync(topicId);
+```
+
+### Contracts
+
+```csharp
+ContractData? data = await mirror.GetContractDataAsync(contractId);
+IAsyncEnumerable<ContractResultData> results = mirror.GetResultsForContractAsync(contractId);
+ContractResultData? result = await mirror.GetContractResultsFromTxIdAsync(txId);
+IAsyncEnumerable<ExtendedContractLogData> logs = mirror.GetLogEventsForContractAsync(contractId);
+ContractStateData? state = await mirror.GetContractState(contractId, position, filters);
+EncodedParams result = await mirror.CallEvmAsync(evmCallData);
+long gas = await mirror.EstimateGasAsync(fromEvmAddress, callParams);
+BigInteger chainId = await mirror.GetChainIdAsync();
+```
+
+### Blocks
+
+```csharp
+BlockData? block = await mirror.GetBlockAsync(blockNumber);
+BlockData? block = await mirror.GetBlockAsync(blockhash);
+BlockData? latest = await mirror.GetLatestBlockAsync();
+```
+
+### Network
+
+```csharp
+IAsyncEnumerable<ConsensusNodeData> nodes = mirror.GetConsensusNodesAsync();
+IReadOnlyDictionary<ConsensusNodeEndpoint, long> active =
+    await mirror.GetActiveConsensusNodesAsync(timeoutMs);
+ExchangeRateData? rate = await mirror.GetExchangeRateAsync();
+NetworkFeeData? fees = await mirror.GetLatestNetworkFeesAsync();
+```
+
+### Query Filters
+
+Many methods accept `IMirrorQueryFilter` parameters for pagination and filtering:
+
+```csharp
+var txs = mirror.GetTransactionsForAccountAsync(account,
+    new LimitFilter(25),
+    new OrderByFilter("desc"),
+    new TimestampAfterFilter(timestamp));
+
+var holdings = mirror.GetAccountTokenHoldingsAsync(account,
+    new TokenIsFilter(tokenId),
+    new LimitFilter(10));
+```
+
+Available filters: `LimitFilter`, `OrderByFilter`, `TimestampAfterFilter`,
+`TimestampEqualsFilter`, `TimestampOnOrBeforeFilter`, `SequenceAfterFilter`,
+`AccountIsFilter`, `ContractIsFilter`, `TokenIsFilter`, `SpenderIsFilter`,
+`SlotIsFilter`, `TopicFilter`.
 
 ---
 
-## 14. Receipts and Records
+## 19. Receipts and Records
 
 Every transaction returns a receipt. Detailed records are available via
 separate queries.
@@ -823,7 +1228,7 @@ TransactionRecord record = await client.GetTransactionRecordAsync(txId);
 
 ---
 
-## 15. Error Handling
+## 20. Error Handling
 
 ```csharp
 try
@@ -848,11 +1253,25 @@ catch (ContractException ex)
 {
     // Smart contract execution error
 }
+catch (MirrorGrpcException ex)
+{
+    // Mirror Node gRPC stream terminated unexpectedly
+    // ex.Code (MirrorGrpcExceptionCode)
+}
+```
+
+To suppress `TransactionException` and check status manually:
+
+```csharp
+var receipt = await client.TransferAsync(from, to, amount, ctx =>
+    ctx.ThrowIfNotSuccess = false);
+if (receipt.Status != ResponseCode.Success)
+    Console.WriteLine($"Non-success: {receipt.Status}");
 ```
 
 ---
 
-## 16. Hedera Network Endpoints
+## 21. Hedera Network Endpoints
 
 ### Testnet
 

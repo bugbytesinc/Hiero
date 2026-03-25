@@ -12,23 +12,25 @@
 		<Authors>BugBytes, Inc.</Authors>
 		<Company>BugBytes, Inc.</Company>
 		<Title>Hiero .NET SDK</Title>
-		<Description>.NET Client Library for Hiero Network and Hedera Hashgraph</Description>
-		<Copyright>Copyright 2025 BugBytes, Inc. All Rights Reserved.</Copyright>
+		<Description>Idiomatic .NET SDK for the Hedera network (Hiero). Provides async access to cryptocurrency transfers, fungible and non-fungible tokens (NFTs), Hedera Consensus Service (HCS) messaging, smart contracts, file storage, scheduled transactions, airdrops, and mirror node queries. Built on gRPC with full AOT compatibility.</Description>
+		<Copyright>Copyright 2025-2026 BugBytes, Inc. All Rights Reserved.</Copyright>
 		<PackageProjectUrl>https://hashgraph.bugbytes.com/</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/bugbytesinc/Hiero.git</RepositoryUrl>
 		<PublishRepositoryUrl>true</PublishRepositoryUrl>
 		<EmbedUntrackedSources>true</EmbedUntrackedSources>
 		<IncludeSymbols>true</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
-		<PackageTags>Hiero;Hedera;Hashgraph;web3</PackageTags>
+		<PackageTags>Hiero;Hedera;Hashgraph;HBAR;web3;blockchain;DLT;distributed-ledger;cryptocurrency;smart-contracts;NFT;HCS;consensus;token;airdrop;EVM;dApp;decentralized;protobuf;gRPC;staking;mirror-node;SDK;dotnet</PackageTags>
 		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
 		<RepositoryType>GitHub</RepositoryType>
 		<PackageIcon>icon.png</PackageIcon>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<PackageReleaseNotes>https://github.com/bugbytesinc/Hiero/releases</PackageReleaseNotes>
+		<NeutralLanguage>en-US</NeutralLanguage>
 	</PropertyGroup>
 	<ItemGroup>
-		<None Include="..\Reference\Images\icon.png" Pack="true" PackagePath="\" />
-		<None Include="..\README.md" Pack="true" PackagePath="\" />
+		<None Include="..\..\reference\Images\icon.png" Pack="true" PackagePath="\" />
+		<None Include="..\..\README.md" Pack="true" PackagePath="\" />
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="Portable.BouncyCastle" Version="1.9.0" />
@@ -40,10 +42,10 @@
 		</PackageReference>
 	</ItemGroup>
 	<ItemGroup>
-		<Protobuf Include="..\Reference\hedera-protobufs\**\*.proto" GrpcServices="Client" ProtoRoot="..\Reference\hedera-protobufs">
+		<Protobuf Include="..\..\reference\hedera-protobufs\**\*.proto" GrpcServices="Client" ProtoRoot="..\..\reference\hedera-protobufs">
 			<Link>Proto\%(RecursiveDir)%(Filename)%(Extension)</Link>
 		</Protobuf>
-		<Protobuf Include="..\Reference\hedera-mirror\proto\ConsensusService-Mirror.proto" GrpcServices="Client">
+		<Protobuf Include="..\..\reference\hedera-mirror\proto\ConsensusService-Mirror.proto" GrpcServices="Client">
 			<Link>Proto\%(RecursiveDir)%(Filename)%(Extension)</Link>
 		</Protobuf>
 	</ItemGroup>

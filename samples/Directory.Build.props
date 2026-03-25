@@ -6,6 +6,6 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="$(MSBuildThisFileDirectory)..\Hiero\Hiero.csproj" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\src\Hiero\Hiero.csproj" />
   </ItemGroup>
 </Project>

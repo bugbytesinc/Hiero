@@ -4,7 +4,8 @@
 
 Hiero is a .NET 10 SDK that provides idiomatic async access to the full Hedera
 public network: cryptocurrency, consensus messaging, tokens, NFTs, smart
-contracts, file storage, scheduled transactions, airdrops, and more.
+contracts, file storage, scheduled transactions, airdrops, atomic batches,
+hooks, address book management, key derivation, and more.
 
 - NuGet: https://www.nuget.org/packages/Hiero/
 - Source: https://github.com/bugbytesinc/Hiero

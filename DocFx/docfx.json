@@ -10,7 +10,7 @@
             "**/bin/**",
             "**/obj/**"
           ],
-          "src": "../Hiero"
+          "src": "../src/Hiero"
         }
       ],
       "dest": "obj/temp/apiyml",

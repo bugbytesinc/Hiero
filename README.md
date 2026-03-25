@@ -129,28 +129,29 @@ dotnet build Hiero.slnx
 
 ```sh
 dotnet tool restore
-dotnet docfx DocFx/docfx.json --serve
+dotnet docfx docfx/docfx.json --serve
 ```
 
 ## Project Structure
 
 ```
-Hiero/                     Source library
-├── Consensus/             HCS topic operations
-├── Contract/              Smart contract operations
-├── Crypto/                Account and transfer operations
-├── Token/                 Fungible token operations
-├── Nft/                   Non-fungible token operations
-├── File/                  File service operations
-├── Schedule/              Scheduled transaction operations
-├── AddressBook/           Consensus node management
-├── Root/                  System/network admin operations
-├── Mirror/                Mirror Node REST query types
-├── Utilities/             Network queries and helpers
-├── Converters/            JSON serialization
-└── Implementation/        Internal machinery
-Reference/                 Upstream protobuf definitions (do not modify)
-DocFx/                     DocFX documentation site
+src/
+└── Hiero/                 Source library
+    ├── Consensus/         HCS topic operations
+    ├── Contract/          Smart contract operations
+    ├── Crypto/            Account and transfer operations
+    ├── Token/             Fungible token operations
+    ├── Nft/               Non-fungible token operations
+    ├── File/              File service operations
+    ├── Schedule/          Scheduled transaction operations
+    ├── AddressBook/       Consensus node management
+    ├── Root/              System/network admin operations
+    ├── Mirror/            Mirror Node REST query types
+    ├── Utilities/         Network queries and helpers
+    ├── Converters/        JSON serialization
+    └── Implementation/    Internal machinery
+reference/                 Upstream protobuf definitions (do not modify)
+docfx/                     DocFX documentation site
 docs/                      API cookbook and reference
 samples/                   Runnable sample console apps
 ```
