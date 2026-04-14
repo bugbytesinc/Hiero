@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="TUnit" Version="*" />
+    <ProjectReference Include="..\..\src\Hiero\Hiero.csproj" />
+    <ProjectReference Include="..\Hiero.Test.Helpers\Hiero.Test.Helpers.csproj" />
+  </ItemGroup>
+</Project>

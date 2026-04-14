@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Hiero\Hiero.csproj" />
+    <PackageReference Include="TUnit.Core" Version="*" />
+  </ItemGroup>
+</Project>

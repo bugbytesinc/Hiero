@@ -1,3 +1,6 @@
 <Solution>
   <Project Path="src/Hiero/Hiero.csproj" />
+  <Project Path="test/Hiero.Test.Helpers/Hiero.Test.Helpers.csproj" />
+  <Project Path="test/Hiero.Test.Unit/Hiero.Test.Unit.csproj" />
+  <Project Path="test/Hiero.Test.Integration/Hiero.Test.Integration.csproj" />
 </Solution>

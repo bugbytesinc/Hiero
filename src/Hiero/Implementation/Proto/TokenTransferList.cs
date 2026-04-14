@@ -6,12 +6,13 @@ namespace Proto;
 
 internal static class TokenTransferExtensions
 {
-    internal static (IReadOnlyList<TokenTransfer>, IReadOnlyList<Hiero.NftTransfer>) AsTokenAndAssetTransferLists(this RepeatedField<TokenTransferList> list)
+    internal static (IReadOnlyList<TokenTransfer>, IReadOnlyList<Hiero.NftTransfer>, Hiero.TreasuryTransfer?) AsTransferLists(this RepeatedField<TokenTransferList> list)
     {
         if (list is { Count: > 0 })
         {
             var tokenList = new List<TokenTransfer>(list.Count);
-            var assetList = new List<Hiero.NftTransfer>(list.Count);
+            var nftList = new List<Hiero.NftTransfer>(list.Count);
+            Hiero.TreasuryTransfer? treasuryTransfer = null;
             foreach (var exchanges in list)
             {
                 var token = exchanges.Token.AsAddress();
@@ -21,11 +22,18 @@ internal static class TokenTransferExtensions
                 }
                 foreach (var xfer in exchanges.NftTransfers)
                 {
-                    assetList.Add(new Hiero.NftTransfer(new Hiero.Nft(token, xfer.SerialNumber), xfer.SenderAccountID.AsAddress(), xfer.ReceiverAccountID.AsAddress()));
+                    if (xfer.SerialNumber == -1)
+                    {
+                        treasuryTransfer = new Hiero.TreasuryTransfer(token, xfer.SenderAccountID.AsAddress(), xfer.ReceiverAccountID.AsAddress());
+                    }
+                    else
+                    {
+                        nftList.Add(new Hiero.NftTransfer(new Hiero.Nft(token, xfer.SerialNumber), xfer.SenderAccountID.AsAddress(), xfer.ReceiverAccountID.AsAddress()));
+                    }
                 }
             }
-            return (tokenList, assetList);
+            return (tokenList, nftList, treasuryTransfer);
         }
-        return ([], []);
+        return ([], [], null);
     }
 }

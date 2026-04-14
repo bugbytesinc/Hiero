@@ -4,7 +4,9 @@ using Hiero.Implementation;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
-[assembly: InternalsVisibleTo("Hashgraph.Test")]
+[assembly: InternalsVisibleTo("Hiero.Test.Helpers")]
+[assembly: InternalsVisibleTo("Hiero.Test.Unit")]
+[assembly: InternalsVisibleTo("Hiero.Test.Integration")]
 
 namespace Hiero;
 /// <summary>

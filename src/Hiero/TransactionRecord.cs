@@ -47,6 +47,14 @@ public record TransactionRecord : TransactionReceipt
     /// </summary>
     public IReadOnlyList<NftTransfer> NftTransfers { get; internal init; }
     /// <summary>
+    /// If the transaction affected a change in treasury for an NFT token
+    /// it will be identified here.  It does not indicate which serial 
+    /// numbers of NFTs were transferred to the new treasury, just that
+    /// all of NFTs held by the previously designated treasury are new
+    /// owned by the new treasury.
+    /// </summary>
+    public TreasuryTransfer? TreasuryTransfer { get; internal init; }
+    /// <summary>
     /// A list of token transfers applied by the network as royalties
     /// for executing the original transaction.  Typically in the form
     /// of royalties for transferring custom tokens and assets as defined
@@ -73,7 +81,7 @@ public record TransactionRecord : TransactionReceipt
     /// </summary>
     internal TransactionRecord(Proto.TransactionRecord record) : base(record.TransactionID, record.Receipt)
     {
-        var (tokenTransfers, assetTransfers) = record.TokenTransferLists.AsTokenAndAssetTransferLists();
+        var (tokenTransfers, assetTransfers, treasuryTransfer) = record.TokenTransferLists.AsTransferLists();
         Hash = record.TransactionHash.Memory;
         Consensus = record.ConsensusTimestamp?.ToConsensusTimeStamp();
         Memo = record.Memo;
@@ -81,6 +89,7 @@ public record TransactionRecord : TransactionReceipt
         Transfers = record.TransferList?.ToTransfers() ?? new ReadOnlyDictionary<EntityId, long>(new Dictionary<EntityId, long>());
         TokenTransfers = tokenTransfers;
         NftTransfers = assetTransfers;
+        TreasuryTransfer = treasuryTransfer;
         Royalties = record.AssessedCustomFees.AsRoyaltyTransferList();
         Associations = record.AutomaticTokenAssociations.AsAssociationList();
         ParentTransactionConsensus = record.ParentConsensusTimestamp?.ToConsensusTimeStamp();
