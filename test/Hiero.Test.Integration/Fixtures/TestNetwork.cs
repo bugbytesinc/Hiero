@@ -14,6 +14,7 @@ internal class TestNetwork
     private static Uri _mirrorGrpcUri = default!;
     private static AccountData _rootPayer = default!;
     private static ReadOnlyMemory<byte> _privateKey;
+    private static ConsensusNodeEndpoint? _fixedEndpoint;
     private static TransactionId _latestKnownMutatingTransaction = TransactionId.None;
     private static ConsensusTimeStamp _latestKnownMirrorTimestamp = ConsensusTimeStamp.MinValue;
 
@@ -35,18 +36,40 @@ internal class TestNetwork
     {
         var configuration = new ConfigurationBuilder()
             .AddJsonFile("appsettings.json", true)
-            .AddEnvironmentVariables()
             .AddUserSecrets<TestNetwork>(true)
+            .AddEnvironmentVariables()
             .Build();
         var mirrorRestUrl = configuration["MirrorRestUrl"] ?? throw new InvalidOperationException("Mirror REST Endpoint URL [MirrorRestUrl] is missing from configuration.");
         var mirrorGrpcUrl = configuration["MirrorGrpcUrl"] ?? throw new InvalidOperationException("Mirror gRPC Endpoint URL [MirrorGrpcUrl] is missing from configuration.");
         var payerPrivateKey = configuration["PayerPrivateKey"] ?? throw new InvalidOperationException("Payer Private Key [PayerPrivateKey] is missing from configuration.");
+        var consensusEndpoint = configuration["ConsensusEndpoint"];
+        var consensusNodeId = configuration["ConsensusNodeId"] ?? "0.0.3";
+        if (!string.IsNullOrWhiteSpace(consensusEndpoint))
+        {
+            var parts = consensusNodeId.Split('.');
+            _fixedEndpoint = new ConsensusNodeEndpoint(
+                new EntityId(long.Parse(parts[0]), long.Parse(parts[1]), long.Parse(parts[2])),
+                new Uri(consensusEndpoint));
+        }
         _mirrorClient = new MirrorRestClient(new HttpClient() { BaseAddress = new Uri(mirrorRestUrl) });
         _mirrorGrpcUri = new Uri(mirrorGrpcUrl);
         _privateKey = Hex.ToBytes(payerPrivateKey);
         var signatory = new Signatory(_privateKey);
         var endorsement = signatory.GetEndorsements()[0];
-        _rootPayer = await LookupPayerAsync(endorsement);
+        var payerAccountId = configuration["PayerAccountId"];
+        if (!string.IsNullOrWhiteSpace(payerAccountId))
+        {
+            var idParts = payerAccountId.Split('.');
+            _rootPayer = new AccountData
+            {
+                Account = new EntityId(long.Parse(idParts[0]), long.Parse(idParts[1]), long.Parse(idParts[2])),
+                Endorsement = endorsement
+            };
+        }
+        else
+        {
+            _rootPayer = await LookupPayerAsync(endorsement);
+        }
         _rootClient = new ConsensusClient(ctx =>
         {
             ctx.Payer = _rootPayer.Account;
@@ -90,6 +113,10 @@ internal class TestNetwork
     }
     private static async Task<ConsensusNodeEndpoint> PickConsensusNodeAsync()
     {
+        if (_fixedEndpoint is not null)
+        {
+            return _fixedEndpoint;
+        }
         try
         {
             var list = (await _mirrorClient.GetActiveConsensusNodesAsync(2000)).Keys.ToArray();

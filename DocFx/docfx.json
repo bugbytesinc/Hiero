@@ -13,7 +13,7 @@
           "src": "../src/Hiero"
         }
       ],
-      "dest": "obj/temp/apiyml",
+      "dest": "api",
       "disableGitFeatures": false,
       "disableDefaultFilter": false,
       "filter": "./filter.yml"
@@ -25,7 +25,7 @@
         "files": [
           "**/*.yml"
         ],
-        "src": "obj/temp/apiyml",
+        "src": "api",
         "dest": "api"
       },
       {

@@ -1,0 +1,13 @@
+services:
+  solo:
+    build:
+      context: .
+    network_mode: host
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - solo-output:/output
+    stop_grace_period: 60s
+    restart: "no"
+
+volumes:
+  solo-output:

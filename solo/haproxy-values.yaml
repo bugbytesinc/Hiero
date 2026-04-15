@@ -1,0 +1,40 @@
+config: |
+  global
+    log stdout format raw local0
+    maxconn 1024
+
+  defaults
+    log global
+    timeout client 60s
+    timeout connect 60s
+    timeout server 60s
+
+  frontend fe_mn_rest_svc
+    bind :80
+    mode http
+    option httplog
+
+    use_backend be_mn_web3 if { path_beg /api/v1/contracts/call }
+    default_backend be_mn_rest_node
+
+  backend be_mn_rest_node
+    mode http
+    http-response set-header X-Answer-From mirror-1-rest
+    server mirror-1-rest mirror-1-rest:80 check
+
+  backend be_mn_rest_java
+    mode http
+    http-response set-header X-Answer-From mirror-1-restjava
+    server mirror-1-restjava mirror-1-restjava:80 check init-addr none
+
+  backend be_mn_web3
+    mode http
+    http-response set-header X-Answer-From mirror-1-web3
+    server mirror-1-web3 mirror-1-web3:80 check
+
+  frontend stats
+    bind :1024
+    mode http
+    stats enable
+    stats uri /
+    stats refresh 10s

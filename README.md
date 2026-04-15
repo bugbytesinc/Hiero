@@ -7,8 +7,6 @@
 
 Hiero provides idiomatic .NET access to the full [Hedera](https://www.hedera.com/) public network — cryptocurrency, consensus messaging, tokens, NFTs, smart contracts, file storage, scheduled transactions, airdrops, and more.
 
-> **Alpha Software** — This library is under active development. The API surface is subject to change in later versions without notice. Use at your own risk.
-
 ## Quick Start
 
 ### Install
@@ -125,6 +123,24 @@ dotnet restore Hiero.slnx
 dotnet build Hiero.slnx
 ```
 
+### Run Tests
+
+Unit tests (no network required):
+
+```sh
+dotnet test --project test/Hiero.Test.Unit/
+```
+
+Integration tests against a local Solo network (requires Docker with 12GB+ RAM):
+
+```sh
+./solo/up.sh                # Start local Hiero network
+./solo/test.sh              # Run integration tests
+./solo/down.sh              # Tear down when done
+```
+
+See [`solo/`](solo/) for details.
+
 ### Build Documentation
 
 ```sh
@@ -150,6 +166,8 @@ src/
     ├── Utilities/         Network queries and helpers
     ├── Converters/        JSON serialization
     └── Implementation/    Internal machinery
+test/                      Unit and integration tests (TUnit)
+solo/                      Local Solo network for testing (Docker only)
 reference/                 Upstream protobuf definitions (do not modify)
 docfx/                     DocFX documentation site
 docs/                      API cookbook and reference
@@ -172,4 +190,4 @@ samples/                   Runnable sample console apps
 
 This project is licensed under the [Apache-2.0](LICENSE).
 
-Copyright 2025 [BugBytes, Inc.](https://bugbytes.com/) All Rights Reserved.
+Copyright 2025-2026 [BugBytes, Inc.](https://bugbytes.com/) All Rights Reserved.

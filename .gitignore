@@ -416,3 +416,9 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# Test results
+test-results/
+
+# DocFX generated API metadata
+docfx/api/
