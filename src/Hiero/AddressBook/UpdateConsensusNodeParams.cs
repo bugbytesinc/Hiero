@@ -10,6 +10,11 @@ namespace Hiero;
 /// <summary>
 /// Transaction Parameters for updating an existing consensus node in the network address book.
 /// </summary>
+/// <example>
+/// Rotate a node's description and opt out of rewards. Target by
+/// <c>NodeId</c> (ulong, assigned by AddConsensusNodeAsync), not EntityId:
+/// <code source="../../../samples/DocSnippets/GovernanceSnippets.cs" region="UpdateConsensusNode" language="csharp"/>
+/// </example>
 /// <remarks>
 /// Any property left as <c>null</c> will remain unchanged on the node.
 /// This transaction must be signed by the node's current <c>admin_key</c>.
@@ -161,6 +166,9 @@ public static class UpdateConsensusNodeExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/GovernanceSnippets.cs" region="UpdateConsensusNode" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> UpdateConsensusNodeAsync(this ConsensusClient client, UpdateConsensusNodeParams updateParams, Action<IConsensusContext>? configure = null)
     {

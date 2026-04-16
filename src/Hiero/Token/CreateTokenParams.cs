@@ -9,19 +9,24 @@ namespace Hiero;
 /// Token Creation Parameters.
 /// </summary>
 /// <remarks>
-/// The specified Treasury Address is receiving the initial supply of tokens as-well 
-/// as the tokens from Token Mint operations when executed.  The balance of the treasury 
+/// The specified Treasury Address is receiving the initial supply of tokens as-well
+/// as the tokens from Token Mint operations when executed.  The balance of the treasury
 /// account is decreased when the Token Burn operation is executed.
-/// 
+///
 /// The supply that is going to be put in circulation is going to be <code>S*(10^D)</code>,
-/// where <code>S</code> is initial supply and <code>D</code> is Decimals. The maximum supply 
+/// where <code>S</code> is initial supply and <code>D</code> is Decimals. The maximum supply
 /// a token can have is <code>S* (10^D) &lt; 2^63</code>.
-/// 
+///
 /// The token can be created as immutable if the <code>Administrator</code> endorsement is omitted
 /// or set to <code>None</code>.  In this case, the name, symbol, treasury, management keys, Expiration
-/// and renew properties cannot be updated. If a token is created as immutable, any account is able to 
+/// and renew properties cannot be updated. If a token is created as immutable, any account is able to
 /// extend the expiration time by paying the fee.
 /// </remarks>
+/// <example>
+/// Create a fungible token with a capped supply, naming the payer as treasury
+/// and reusing the payer's key as both administrator and supply endorsement:
+/// <code source="../../../samples/CreateToken/Program.cs" region="CreateToken" language="csharp"/>
+/// </example>
 public sealed class CreateTokenParams : TransactionParams<CreateTokenReceipt>, INetworkParams<CreateTokenReceipt>
 {
     /// <summary>

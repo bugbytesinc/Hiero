@@ -9,17 +9,23 @@ namespace Hiero;
 
 /// <summary>
 /// Submit Message Parameters, optionally including
-/// message segment information. 
+/// message segment information.
 /// </summary>
 /// <remarks>
 /// The hedera network does not validate
-/// the segment information submitted to 
+/// the segment information submitted to
 /// a consensus topic.  This metadata must
 /// be validated upon consumption and there
 /// can be gaps and inconsistencies in the
 /// resulting mirror HCS stream for the
 /// related topic.
 /// </remarks>
+/// <example>
+/// Split a large payload across multiple segments. The SDK fills in the
+/// <c>ParentTransactionId</c> for segment 1 from the returned receipt —
+/// pass that id on each subsequent segment:
+/// <code source="../../../samples/DocSnippets/ConsensusSnippets.cs" region="SubmitMessageSegmented" language="csharp"/>
+/// </example>
 public sealed class SubmitMessageParams : TransactionParams<SubmitMessageReceipt>, INetworkParams<SubmitMessageReceipt>
 {
     /// <summary>
@@ -163,6 +169,9 @@ public static class SubmitMessageExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/ConsensusService/Program.cs" region="SubmitMessage" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<SubmitMessageReceipt> SubmitMessageAsync(this ConsensusClient client, EntityId topic, ReadOnlyMemory<byte> message, Action<IConsensusContext>? configure = null)
     {
@@ -194,6 +203,10 @@ public static class SubmitMessageExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
+    /// <example>
+    /// Submit to a submit-key-gated topic by attaching the key via params:
+    /// <code source="../../../samples/DocSnippets/ConsensusSnippets.cs" region="SubmitMessageWithSubmitKey" language="csharp"/>
+    /// </example>
     public static async Task<SubmitMessageReceipt> SubmitMessageAsync(this ConsensusClient client, SubmitMessageParams submitParams, Action<IConsensusContext>? configure = null)
     {
         // We have a special case when the segment index

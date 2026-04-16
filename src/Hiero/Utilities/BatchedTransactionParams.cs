@@ -8,6 +8,11 @@ namespace Hiero;
 /// <summary>
 /// Submits a batch of transactions to the network for processing.
 /// </summary>
+/// <example>
+/// Atomically execute a mix of transactions — either every inner transaction
+/// succeeds or the whole batch reverts:
+/// <code source="../../../samples/DocSnippets/UtilitiesSnippets.cs" region="BatchedExecute" language="csharp"/>
+/// </example>
 public sealed class BatchedTransactionParams
 {
     /// <summary>
@@ -280,6 +285,9 @@ public static class TransactionBatchParamsExtensions
     /// <exception cref="ConsensusException">
     /// Under heavy load, the network may not process the transaction before it expires.
     /// </exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/UtilitiesSnippets.cs" region="BatchedExecute" language="csharp"/>
+    /// </example>
     public async static Task<TransactionReceipt> ExecuteAsync(this ConsensusClient client, BatchedTransactionParams batchParams, Action<IConsensusContext>? configure = null)
     {
         await using var configuredClient = client.Clone(configure);
@@ -313,6 +321,10 @@ public static class TransactionBatchParamsExtensions
     /// The precheck <see cref="ResponseCode"/> returned from the request
     /// after waiting for submission retries if applicable.
     /// </returns>
+    /// <example>
+    /// Precheck-only submission — returns as soon as the gateway responds:
+    /// <code source="../../../samples/DocSnippets/UtilitiesSnippets.cs" region="BatchedSubmit" language="csharp"/>
+    /// </example>
     public async static Task<ResponseCode> SubmitAsync(this ConsensusClient client, BatchedTransactionParams batchParams, Action<IConsensusContext>? configure = null)
     {
         await using var configuredClient = client.Clone(configure);

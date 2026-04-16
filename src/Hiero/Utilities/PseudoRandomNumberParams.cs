@@ -8,6 +8,13 @@ namespace Hiero;
 /// <summary>
 /// Creates a Pseudo Random Number request from the Hedera Network.
 /// </summary>
+/// <example>
+/// Ask the network for a bounded integer (returned as
+/// <see cref="RangedPseudoRandomNumberRecord"/> in the mirror record);
+/// omit <c>MaxValue</c> to get 48 raw bytes
+/// (<see cref="BytesPseudoRandomNumberRecord"/>) instead:
+/// <code source="../../../samples/DocSnippets/UtilitiesSnippets.cs" region="GenerateBoundedPrng" language="csharp"/>
+/// </example>
 public sealed class PseudoRandomNumberParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
@@ -67,6 +74,9 @@ public static class PseudoRandomNumberExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/UtilitiesSnippets.cs" region="GeneratePrng" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> GeneratePseudoRandomNumberAsync(this ConsensusClient client, PseudoRandomNumberParams randomParams, Action<IConsensusContext>? configure = null)
     {

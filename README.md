@@ -4,6 +4,7 @@
 
 [![NuGet](https://img.shields.io/nuget/v/Hiero.svg)](https://www.nuget.org/packages/Hiero/)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
+[![llms.txt](https://img.shields.io/badge/AI%20docs-llms.txt-blue)](https://hashgraph.bugbytes.com/llms.txt)
 
 Hiero provides idiomatic .NET access to the full [Hedera](https://www.hedera.com/) public network — cryptocurrency, consensus messaging, tokens, NFTs, smart contracts, file storage, scheduled transactions, airdrops, and more.
 
@@ -94,6 +95,17 @@ var child = client.Clone(ctx => ctx.FeeLimit = 500_000_000);
 // child inherits parent's Endpoint, Payer, Signatory — but has its own FeeLimit
 ```
 
+## Connecting to Testnet vs. Mainnet
+
+| Network | Node address | Purpose |
+|---------|-------------|---------|
+| Testnet | `https://0.testnet.hedera.com:50211` (node `0.0.3`) | Development; free test HBAR from [portal.hedera.com](https://portal.hedera.com) |
+| Testnet | `https://1.testnet.hedera.com:50211` (node `0.0.4`) | Development |
+| Mainnet | `https://35.237.200.180:50211` (node `0.0.3`) | Production; real HBAR required |
+| Mainnet | See [full node list](https://docs.hedera.com/hedera/networks/mainnet/mainnet-nodes) | Production |
+
+Get a free testnet account and credentials at [portal.hedera.com](https://portal.hedera.com). See the [network configuration guide](https://hashgraph.bugbytes.com/tutorials/network.html) for node rotation patterns and mirror node endpoints.
+
 ## Supported Network Services
 
 - **Cryptocurrency** — Create, transfer, update, and delete accounts; multi-party transfers; allowances
@@ -174,6 +186,45 @@ docs/                      API cookbook and reference
 samples/                   Runnable sample console apps
 ```
 
+### Query Historical Data from the Mirror Node
+
+```csharp
+var mirror = new MirrorRestClient(new HttpClient
+{
+    BaseAddress = new Uri("https://testnet.mirrornode.hedera.com")
+});
+
+await foreach (var tx in mirror.GetTransactionsForAccountAsync(
+    new EntityId(0, 0, 12345),
+    new LimitFilter(10),
+    new OrderByFilter("desc")))
+{
+    Console.WriteLine($"{tx.ConsensusTimestamp}: {tx.Name}");
+}
+```
+
+### Subscribe to a Real-Time HCS Topic Stream
+
+```csharp
+await using var stream = new MirrorGrpcClient(ctx =>
+{
+    ctx.Uri = new Uri("https://hcs.testnet.mirrornode.hedera.com:5600");
+});
+
+var channel = Channel.CreateUnbounded<TopicMessage>();
+_ = stream.SubscribeTopicAsync(new SubscribeTopicParams
+{
+    Topic = new EntityId(0, 0, topicId),
+    MessageWriter = channel.Writer,
+    Starting = ConsensusTimeStamp.MinValue
+});
+
+await foreach (var msg in channel.Reader.ReadAllAsync())
+{
+    Console.WriteLine(Encoding.UTF8.GetString(msg.Message.Span));
+}
+```
+
 ## Dependencies
 
 - [Google.Protobuf](https://www.nuget.org/packages/Google.Protobuf/) + [Grpc.Net.Client](https://www.nuget.org/packages/Grpc.Net.Client/) — Protocol Buffers and gRPC
@@ -185,6 +236,15 @@ samples/                   Runnable sample console apps
 - **[Tutorials](https://hashgraph.bugbytes.com/tutorials/)** — Getting started guides with code examples
 - **[API Cookbook](docs/api-cookbook.md)** — Quick reference for all SDK operations
 - **[Samples](samples/)** — Runnable console apps for every major workflow
+
+### AI and Code Assistant Support
+
+Hiero provides machine-readable documentation for AI tools and code assistants:
+
+- **[llms.txt](https://hashgraph.bugbytes.com/llms.txt)** — Structured index of documentation for AI agents (follows the [llms.txt standard](https://llmstxt.org/))
+- **[llms-full.txt](https://hashgraph.bugbytes.com/llms-full.txt)** — Complete documentation in a single file, suitable for pasting into AI context windows
+
+To use with Cursor, Windsurf, or similar editors: add `https://hashgraph.bugbytes.com/llms-full.txt` as a documentation source in your project settings.
 
 ## License
 

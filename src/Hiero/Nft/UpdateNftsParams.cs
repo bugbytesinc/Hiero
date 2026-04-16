@@ -9,6 +9,10 @@ namespace Hiero;
 /// <summary>
 /// Transaction Parameters for updating the metadata of one or more NFT instances.
 /// </summary>
+/// <example>
+/// Apply shared metadata to several serials from the same collection:
+/// <code source="../../../samples/DocSnippets/NftSnippets.cs" region="UpdateNftMetadataBatch" language="csharp"/>
+/// </example>
 public sealed class UpdateNftsParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
@@ -94,6 +98,9 @@ public static class UpdateNftsExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/NftSnippets.cs" region="UpdateNftMetadataSingle" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> UpdateNftMetadataAsync(this ConsensusClient client, Nft nft, ReadOnlyMemory<byte> metadata, Action<IConsensusContext>? configure = null)
     {
@@ -121,6 +128,9 @@ public static class UpdateNftsExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/NftSnippets.cs" region="UpdateNftMetadataBatch" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> UpdateNftsMetadataAsync(this ConsensusClient client, UpdateNftsParams updateParams, Action<IConsensusContext>? configure = null)
     {

@@ -16,6 +16,12 @@ namespace Hiero;
 /// to make changes.  If there is no administrator endorsement specified,
 /// the contract is immutable and cannot be changed.
 /// </summary>
+/// <example>
+/// Update mutable contract properties (admin key, memo, renew period).
+/// Null properties are left unchanged; contracts created without an
+/// Administrator are immutable:
+/// <code source="../../../samples/DocSnippets/ContractSnippets.cs" region="UpdateContract" language="csharp"/>
+/// </example>
 public sealed class UpdateContractParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
@@ -237,6 +243,9 @@ public static class UpdateContractExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the update request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/ContractSnippets.cs" region="UpdateContract" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> UpdateContractAsync(this ConsensusClient client, UpdateContractParams updateParameters, Action<IConsensusContext>? configure = null)
     {

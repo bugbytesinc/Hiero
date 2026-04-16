@@ -11,6 +11,12 @@ namespace Hiero;
 /// when all required signatures are collected, or optionally
 /// delayed until the specified expiration time.
 /// </summary>
+/// <example>
+/// Schedule a HBAR transfer with a 1-hour expiration. The schedule executes
+/// automatically as soon as the inner transfer's signing requirements are
+/// satisfied; otherwise it drops at <c>Expiration</c>:
+/// <code source="../../../samples/ScheduleTransaction/Program.cs" region="ScheduleTransfer" language="csharp"/>
+/// </example>
 public sealed class ScheduleParams
 {
     /// <summary>
@@ -143,6 +149,11 @@ public static class ScheduleExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    /// <example>
+    /// Convenience overload: schedule a transaction directly without wrapping
+    /// it in <see cref="ScheduleParams"/>:
+    /// <code source="../../../samples/DocSnippets/ScheduleSnippets.cs" region="ScheduleConvenience" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<ScheduleReceipt> ScheduleAsync(this ConsensusClient client, TransactionParams transactionParams, Action<IConsensusContext>? configure = null)
     {
@@ -173,6 +184,11 @@ public static class ScheduleExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    /// <example>
+    /// Full <see cref="ScheduleParams"/> overload — use when you need an
+    /// administrator key, expiration time, payer override, or delayed execution:
+    /// <code source="../../../samples/ScheduleTransaction/Program.cs" region="ScheduleTransfer" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static async Task<ScheduleReceipt> ScheduleAsync(this ConsensusClient client, ScheduleParams scheduleParams, Action<IConsensusContext>? configure = null)
     {

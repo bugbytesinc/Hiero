@@ -8,6 +8,10 @@ namespace Hiero;
 /// <summary>
 /// Transaction Parameters for Token and NFT Association Requests.
 /// </summary>
+/// <example>
+/// Associate several tokens with an account in one transaction:
+/// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="AssociateMultiple" language="csharp"/>
+/// </example>
 public sealed class AssociateTokenParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
@@ -101,6 +105,9 @@ public static class AssociateTokenExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission, for example, if the token has already been associated.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="AssociateToken" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> AssociateTokenAsync(this ConsensusClient client, EntityId account, EntityId token, Action<IConsensusContext>? configure = null)
     {
@@ -137,6 +144,9 @@ public static class AssociateTokenExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission, for example, if the token has already been associated.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="AssociateMultiple" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> AssociateTokensAsync(this ConsensusClient client, AssociateTokenParams associateParams, Action<IConsensusContext>? configure = null)
     {

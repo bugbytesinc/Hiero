@@ -21,6 +21,7 @@ Console.CancelKeyPress += (_, e) =>
     cts.Cancel();
 };
 
+#region SubscribeTopic
 await using var stream = new MirrorGrpcClient(ctx =>
 {
     ctx.Uri = new Uri(mirrorEndpoint);
@@ -32,7 +33,8 @@ var topic = new EntityId(0, 0, topicNum);
 Console.WriteLine($"Subscribing to topic 0.0.{topicNum}...");
 Console.WriteLine("Waiting for messages (Ctrl+C to stop)...");
 
-// Start subscription in the background
+// Start subscription in the background. Messages arrive via channel.Writer
+// so this task runs independently of the consumer loop below.
 var subscribeTask = stream.SubscribeTopicAsync(new SubscribeTopicParams
 {
     Topic = topic,
@@ -57,4 +59,5 @@ catch (OperationCanceledException)
 }
 
 await subscribeTask;
+#endregion
 Console.WriteLine("Done.");

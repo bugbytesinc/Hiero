@@ -26,6 +26,7 @@ var adminEndorsement = new Signatory(payerKey).GetEndorsements().First();
 
 // 1. Create a fungible token
 Console.WriteLine("Creating token...");
+#region CreateToken
 var createReceipt = await client.CreateTokenAsync(new CreateTokenParams
 {
     Name = "Sample Token",
@@ -39,6 +40,7 @@ var createReceipt = await client.CreateTokenAsync(new CreateTokenParams
     Memo = "Hiero SDK sample token"
 });
 Console.WriteLine($"Token created: {createReceipt.Token}");
+#endregion
 
 // 2. Mint additional supply
 Console.WriteLine("Minting 500,000 additional tokens...");

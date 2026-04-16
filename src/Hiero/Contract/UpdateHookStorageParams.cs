@@ -10,6 +10,11 @@ namespace Hiero;
 /// Represents the parameters required to update the storage
 /// of an EVM hook on the Hedera network.
 /// </summary>
+/// <example>
+/// Rewrite one or more storage slots on an EVM hook. Useful for maintaining
+/// allow/deny lists or other state consumed by hook logic:
+/// <code source="../../../samples/DocSnippets/ContractSnippets.cs" region="UpdateHookStorage" language="csharp"/>
+/// </example>
 public sealed class UpdateHookStorageParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
@@ -89,6 +94,9 @@ public static class UpdateHookStorageExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the update request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/ContractSnippets.cs" region="UpdateHookStorage" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> UpdateHookStorageAsync(this ConsensusClient client, UpdateHookStorageParams updateParameters, Action<IConsensusContext>? configure = null)
     {

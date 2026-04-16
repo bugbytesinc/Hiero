@@ -8,6 +8,11 @@ namespace Hiero;
 /// <summary>
 /// Transaction Parameters for Burning One or More NFT instances.
 /// </summary>
+/// <example>
+/// Burn several NFTs from the same collection in a single transaction. The
+/// NFTs must currently be held by the treasury account:
+/// <code source="../../../samples/DocSnippets/NftSnippets.cs" region="BurnNftBatch" language="csharp"/>
+/// </example>
 public sealed class BurnNftParams : TransactionParams<TokenReceipt>, INetworkParams<TokenReceipt>
 {
     /// <summary>
@@ -92,6 +97,9 @@ public static class BurnNftExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission, for example if the nft is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the burn request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/NftSnippets.cs" region="BurnNftSingle" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TokenReceipt> BurnNftAsync(this ConsensusClient client, Nft asset, Action<IConsensusContext>? configure = null)
     {
@@ -119,6 +127,9 @@ public static class BurnNftExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission, for example if the nft is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the burn request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/NftSnippets.cs" region="BurnNftBatch" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TokenReceipt> BurnNftsAsync(this ConsensusClient client, BurnNftParams burnParams, Action<IConsensusContext>? configure = null)
     {

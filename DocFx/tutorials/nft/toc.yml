@@ -1,0 +1,6 @@
+- name: Create an NFT Collection
+  href: create.md
+- name: Mint an NFT
+  href: mint.md
+- name: Transfer an NFT
+  href: transfer.md

@@ -1,9 +1,28 @@
 ﻿// SPDX-License-Identifier: Apache-2.0
 namespace Hiero;
 /// <summary>
-/// Represents an error with a transaction that passed the gateway node 
+/// Represents an error with a transaction that passed the gateway node
 /// pre-check and was processed by the network but did not succeed.
 /// </summary>
+/// <remarks>
+/// <para>
+/// Unlike <see cref="PrecheckException"/>, a <c>TransactionException</c>
+/// means the transaction <em>did</em> reach consensus and fees were charged,
+/// but the resulting status indicates failure. The full receipt — including
+/// the exchange rate at the time of execution — is available via
+/// <see cref="Receipt"/>.
+/// </para>
+/// <para><strong>Common permanent failures:</strong>
+/// <see cref="ResponseCode.InsufficientAccountBalance"/>,
+/// <see cref="ResponseCode.InvalidSignature"/>,
+/// <see cref="ResponseCode.AccountDeleted"/>,
+/// <see cref="ResponseCode.TokenNotAssociatedToAccount"/>.
+/// These indicate a configuration or state error — do not retry.</para>
+/// <para><strong>Suppression:</strong> set
+/// <c>IConsensusContext.ThrowIfNotSuccess = false</c> to prevent this
+/// exception from being thrown. When suppressed, the caller is responsible
+/// for inspecting <c>receipt.Status</c> on every returned receipt.</para>
+/// </remarks>
 public sealed class TransactionException : Exception
 {
     /// <summary>

@@ -9,6 +9,11 @@ namespace Hiero;
 /// <summary>
 /// File content append parameters.
 /// </summary>
+/// <example>
+/// Append bytes to an existing file. Transactions are capped at about 4KB,
+/// so large payloads should be chunked across several AppendFile calls:
+/// <code source="../../../samples/FileService/Program.cs" region="AppendFile" language="csharp"/>
+/// </example>
 public sealed class AppendFileParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
@@ -80,6 +85,9 @@ public static class AppendFileExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the append request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/FileService/Program.cs" region="AppendFile" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> AppendFileAsync(this ConsensusClient client, AppendFileParams appendParameters, Action<IConsensusContext>? configure = null)
     {

@@ -9,6 +9,11 @@ namespace Hiero;
 /// <summary>
 /// Transaction parameters for administratively deleting a file from the network.
 /// </summary>
+/// <example>
+/// Superuser-only: remove a file that would otherwise be undeletable.
+/// Restorable via <see cref="SystemRestoreFileParams"/>:
+/// <code source="../../../samples/DocSnippets/GovernanceSnippets.cs" region="SystemDeleteFile" language="csharp"/>
+/// </example>
 public sealed class SystemDeleteFileParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
@@ -64,6 +69,9 @@ public static class SystemDeleteFileExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the delete request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/GovernanceSnippets.cs" region="SystemDeleteFile" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> SystemDeleteFileAsync(this ConsensusClient client, SystemDeleteFileParams deleteParams, Action<IConsensusContext>? configure = null)
     {

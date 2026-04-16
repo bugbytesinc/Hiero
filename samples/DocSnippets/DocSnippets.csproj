@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Host project for compile-backed documentation snippets. Snippets live as
+    #region blocks inside stub static methods. They compile against the real
+    Hiero surface; any API drift fails the build. DocFX pulls them into XML
+    docs via <code source="..." region="..."/>.
+
+    This project is a library (no Main entry point) — it never runs, only
+    compiles. See docs/remediation-progress.md for the correctness strategy.
+  -->
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <!--
+      Snippets intentionally declare parameters/variables that aren't used in
+      the excerpted region. Suppress CS0219 (variable assigned but never used)
+      and CS8321 (local function never used) so authoring stays natural.
+    -->
+    <NoWarn>$(NoWarn);CS0219;CS8321</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Hiero\Hiero.csproj" />
+  </ItemGroup>
+</Project>

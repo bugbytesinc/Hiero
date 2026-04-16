@@ -6,9 +6,14 @@ using System.Runtime.CompilerServices;
 
 namespace Hiero;
 /// <summary>
-/// Transaction Parameters for Granting KYC status to an account 
+/// Transaction Parameters for Granting KYC status to an account
 /// associated with a Token.
 /// </summary>
+/// <example>
+/// Approve a holder for KYC on a KYC-gated token — transfers by or to this
+/// holder are rejected until KYC is granted:
+/// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="GrantKyc" language="csharp"/>
+/// </example>
 public sealed class GrantTokenKycParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
@@ -81,6 +86,9 @@ public static class GrantTokenKycExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission, for example, if the token is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="GrantKyc" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> GrantTokenKycAsync(this ConsensusClient client, EntityId token, EntityId holder, Action<IConsensusContext>? configure = null)
     {
@@ -108,6 +116,9 @@ public static class GrantTokenKycExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission, for example, if the token is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="GrantKyc" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> GrantTokenKycAsync(this ConsensusClient client, GrantTokenKycParams grantTokenKycParams, Action<IConsensusContext>? configure = null)
     {

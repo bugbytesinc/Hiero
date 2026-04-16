@@ -1,10 +1,25 @@
 ﻿// SPDX-License-Identifier: Apache-2.0
 namespace Hiero;
 /// <summary>
-/// Exception thrown when a network call was accepted by the gateway 
-/// node but did not achieve network consensus before the expiration 
+/// Exception thrown when a network call was accepted by the gateway
+/// node but did not achieve network consensus before the expiration
 /// timeout of the transaction request occurred.
 /// </summary>
+/// <remarks>
+/// <para>
+/// This exception is <strong>always transient</strong> — the transaction
+/// simply timed out before enough nodes agreed. It is safe to retry with
+/// the same parameters; the SDK will generate a new
+/// <see cref="TransactionId"/> for the retry.
+/// </para>
+/// <para>
+/// The default transaction validity window is controlled by
+/// <c>IConsensusContext.TransactionDuration</c> (typically 120 seconds).
+/// If you are consistently hitting this exception on a healthy network,
+/// consider increasing <c>TransactionDuration</c> or checking whether the
+/// target gossip node is reachable.
+/// </para>
+/// </remarks>
 public sealed class ConsensusException : Exception
 {
     /// <summary>

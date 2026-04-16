@@ -10,6 +10,11 @@ namespace Hiero;
 /// <summary>
 /// Transaction Parameters for adding a new consensus node to the network address book.
 /// </summary>
+/// <example>
+/// Register a new node. The receipt carries the network-assigned NodeId
+/// which every later UpdateConsensusNode/RemoveConsensusNode call needs:
+/// <code source="../../../samples/DocSnippets/GovernanceSnippets.cs" region="AddConsensusNode" language="csharp"/>
+/// </example>
 /// <remarks>
 /// This is a privileged transaction requiring Hedera governing council authorization.
 /// The node will be added to network state but will not participate in consensus
@@ -160,6 +165,9 @@ public static class AddConsensusNodeExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/GovernanceSnippets.cs" region="AddConsensusNode" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<ConsensusNodeReceipt> AddConsensusNodeAsync(this ConsensusClient client, AddConsensusNodeParams createParams, Action<IConsensusContext>? configure = null)
     {

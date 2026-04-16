@@ -13,30 +13,26 @@ The next step is to identify the account to debit (send funds from) and the acco
 class Program
 {
     static async Task Main(string[] args)
-    {                                                 // For Example:
-        var endpointUrl = args[0];                    //   https://2.testnet.hedera.com:50211
-        var nodeAccountNo = long.Parse(args[1]);      //   5 (node 0.0.5)
-        var payerAccountNo = long.Parse(args[2]);     //   20 (account 0.0.20)
-        var payerPrivateKey = Hex.ToBytes(args[3]);   //   302e0201... (48 byte Ed25519 private in hex)
-        var fromAccountNo = long.Parse(args[4]);      //   2300 (account 0.0.2300)
-        var fromPrivateKey = Hex.ToBytes(args[5]);    //   302e0201... (48 byte Ed25519 private in hex)
-        var toAccountNo = long.Parse(args[6]);        //   4500 (account 0.0.4500)
+    {
+        // Usage: dotnet run -- https://2.testnet.hedera.com:50211 0.0.5 0.0.20 302e... 0.0.2300 302e... 0.0.4500 100000000
+        var endpointUrl = args[0];
+        EntityId.TryParseShardRealmNum(args[1], out var nodeAccount);
+        EntityId.TryParseShardRealmNum(args[2], out var payerAccount);
+        var payerPrivateKey = Hex.ToBytes(args[3]);
+        EntityId.TryParseShardRealmNum(args[4], out var fromAccount);
+        var fromPrivateKey = Hex.ToBytes(args[5]);
+        EntityId.TryParseShardRealmNum(args[6], out var toAccount);
         var amount = long.Parse(args[7]);             //   100000000 (1 hBar)
         try
         {
-            var fromAccount = new EntityId(0, 0, fromAccountNo);
-            var toAccount = new EntityId(0, 0, toAccountNo);
-
             await using var client = new ConsensusClient(ctx =>
             {
-                ctx.Endpoint = new ConsensusNodeEndpoint(
-                    new EntityId(0, 0, nodeAccountNo),
-                    new Uri(endpointUrl));
-                ctx.Payer = new EntityId(0, 0, payerAccountNo);
+                ctx.Endpoint = new ConsensusNodeEndpoint(nodeAccount!, new Uri(endpointUrl));
+                ctx.Payer = payerAccount;
                 ctx.Signatory = new Signatory(payerPrivateKey, new Signatory(fromPrivateKey));
             });
 
-            var receipt = await client.TransferAsync(fromAccount, toAccount, amount);
+            var receipt = await client.TransferAsync(fromAccount!, toAccount!, amount);
             Console.WriteLine($"Status: {receipt.Status}");
         }
         catch (Exception ex)

@@ -10,6 +10,12 @@ namespace Hiero;
 /// Represents a transaction submitted to the hedera network through the
 /// native HAPI Ethereum gateway feature.
 /// </summary>
+/// <example>
+/// Submit a pre-signed RLP-encoded Ethereum transaction (type 0, 1, or 2).
+/// <c>AdditionalGasAllowance</c> lets the HAPI payer cover fees if the
+/// ethereum sender's authorized amount falls short:
+/// <code source="../../../samples/DocSnippets/ContractSnippets.cs" region="EvmTransaction" language="csharp"/>
+/// </example>
 public sealed class EvmTransactionParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
@@ -124,6 +130,9 @@ public static class EvmTransactionExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/ContractSnippets.cs" region="EvmTransaction" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> ExecuteEvmTransactionAsync(this ConsensusClient client, EvmTransactionParams transactionParams, Action<IConsensusContext>? configure = null)
     {

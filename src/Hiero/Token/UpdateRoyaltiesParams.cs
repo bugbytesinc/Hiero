@@ -8,6 +8,10 @@ namespace Hiero;
 /// <summary>
 /// Transaction Parameters for updating the royalties (custom fees) associated with a token.
 /// </summary>
+/// <example>
+/// Replace the royalty schedule on a token — a 2.5% fungible-transfer fee:
+/// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="UpdateRoyalties" language="csharp"/>
+/// </example>
 public sealed class UpdateRoyaltiesParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
@@ -93,6 +97,9 @@ public static class UpdateRoyaltiesExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission, for example if the token is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="UpdateRoyalties" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> UpdateRoyaltiesAsync(this ConsensusClient client, EntityId token, IReadOnlyList<IRoyalty>? royalties, Action<IConsensusContext>? configure = null)
     {
@@ -121,6 +128,9 @@ public static class UpdateRoyaltiesExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission, for example if the token is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="UpdateRoyalties" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> UpdateRoyaltiesAsync(this ConsensusClient client, UpdateRoyaltiesParams updateRoyaltiesParams, Action<IConsensusContext>? configure = null)
     {

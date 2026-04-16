@@ -8,6 +8,11 @@ namespace Hiero;
 /// <summary>
 /// Transaction Parameters for Deleting a Token.
 /// </summary>
+/// <example>
+/// Permanently delete a token. Requires the Administrator key; immutable
+/// tokens cannot be deleted:
+/// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="DeleteToken" language="csharp"/>
+/// </example>
 public sealed class DeleteTokenParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
@@ -73,6 +78,9 @@ public static class DeleteTokenExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission, for example, if the token is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="DeleteToken" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> DeleteTokenAsync(this ConsensusClient client, EntityId token, Action<IConsensusContext>? configure = null)
     {
@@ -101,6 +109,9 @@ public static class DeleteTokenExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission, for example, if the token is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="DeleteToken" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> DeleteTokenAsync(this ConsensusClient client, DeleteTokenParams deleteParams, Action<IConsensusContext>? configure = null)
     {

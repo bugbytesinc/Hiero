@@ -8,6 +8,11 @@ namespace Hiero;
 /// <summary>
 /// File deletion parameters.
 /// </summary>
+/// <example>
+/// Permanently delete a network file. At least one of the file's key-list
+/// endorsements must sign:
+/// <code source="../../../samples/DocSnippets/FileSnippets.cs" region="DeleteFile" language="csharp"/>
+/// </example>
 public sealed class DeleteFileParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
@@ -70,6 +75,9 @@ public static class DeleteFileExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the delete request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/FileSnippets.cs" region="DeleteFile" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> DeleteFileAsync(this ConsensusClient client, DeleteFileParams deleteParams, Action<IConsensusContext>? configure = null)
     {

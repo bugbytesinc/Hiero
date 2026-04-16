@@ -28,6 +28,7 @@ var recipient = new EntityId(0, 0, recipientNum);
 
 // Schedule a transfer for deferred execution
 Console.WriteLine("Scheduling transfer...");
+#region ScheduleTransfer
 var receipt = await client.ScheduleAsync(new ScheduleParams
 {
     Transaction = new TransferParams
@@ -42,6 +43,7 @@ var receipt = await client.ScheduleAsync(new ScheduleParams
     Expiration = new ConsensusTimeStamp(DateTime.UtcNow.AddHours(1))
 });
 Console.WriteLine($"Schedule created: {receipt.Schedule}");
+#endregion
 
 // Query the schedule
 var info = await client.GetScheduleInfoAsync(receipt.Schedule);

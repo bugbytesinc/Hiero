@@ -8,6 +8,11 @@ namespace Hiero;
 /// <summary>
 /// Transaction Parameters for Burning Tokens from the treasury account.
 /// </summary>
+/// <example>
+/// Burn units of a fungible token from its treasury, reducing circulation.
+/// Requires the supply key to sign:
+/// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="BurnToken" language="csharp"/>
+/// </example>
 public sealed class BurnTokenParams : TransactionParams<TokenReceipt>, INetworkParams<TokenReceipt>
 {
     /// <summary>
@@ -84,6 +89,9 @@ public static class BurnTokenExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission, for example, if the token is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="BurnToken" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TokenReceipt> BurnTokensAsync(this ConsensusClient client, EntityId token, ulong amount, Action<IConsensusContext>? configure = null)
     {
@@ -111,6 +119,9 @@ public static class BurnTokenExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission, for example, if the token is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="BurnToken" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TokenReceipt> BurnTokensAsync(this ConsensusClient client, BurnTokenParams burnParams, Action<IConsensusContext>? configure = null)
     {

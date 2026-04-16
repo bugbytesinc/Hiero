@@ -46,6 +46,15 @@ documentType: homepage
     <div class="row">
         <div class="col-md-10 col-md-offset-1 text-center">
         <section>
+            <h2>For AI Tools and Code Assistants</h2>
+            <p class="lead">Hiero documentation is available in AI-friendly formats:</p>
+            <p><a href="https://hashgraph.bugbytes.com/llms.txt"><code>llms.txt</code></a> — structured index &nbsp;|&nbsp; <a href="https://hashgraph.bugbytes.com/llms-full.txt"><code>llms-full.txt</code></a> — complete docs in one file</p>
+        </section>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-10 col-md-offset-1 text-center">
+        <section>
             <h2>Open Source</h2>
             <p class="lead">Hiero is released under the <a href="https://github.com/bugbytesinc/Hiero/blob/main/LICENSE">Apache-2.0 License</a>, the source code is available on <a href="https://github.com/bugbytesinc/Hiero">GitHub</a>.</p>
         </section>

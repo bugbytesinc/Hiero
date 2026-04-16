@@ -8,6 +8,11 @@ namespace Hiero;
 /// <summary>
 /// Represents the parameters required to delete a contract from the hedera network.
 /// </summary>
+/// <example>
+/// Delete a contract, sending its remaining HBAR balance to another account.
+/// Requires the contract's Administrator key:
+/// <code source="../../../samples/DocSnippets/ContractSnippets.cs" region="DeleteContract" language="csharp"/>
+/// </example>
 public sealed class DeleteContractParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
@@ -86,6 +91,9 @@ public static class DeleteContractExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission, for example if the contract is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the delete request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/ContractSnippets.cs" region="DeleteContract" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> DeleteContractAsync(this ConsensusClient client, DeleteContractParams deleteParams, Action<IConsensusContext>? configure = null)
     {

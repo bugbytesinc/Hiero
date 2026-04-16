@@ -6,9 +6,14 @@ using System.ComponentModel;
 
 namespace Hiero;
 /// <summary>
-/// Transaction Parameters for Sending an Externally Created Transaction 
+/// Transaction Parameters for Sending an Externally Created Transaction
 /// to the network for processing and optionally waiting for a receipt.
 /// </summary>
+/// <example>
+/// Relay a pre-built signed transaction, adding an extra signatory through
+/// the params object without reconstructing the body bytes:
+/// <code source="../../../samples/DocSnippets/UtilitiesSnippets.cs" region="SubmitExternalWithParams" language="csharp"/>
+/// </example>
 public sealed class ExternalTransactionParams : TransactionParams<TransactionReceipt>
 {
     /// <summary>
@@ -151,6 +156,9 @@ public static class ExternalTransactionParamsExtensions
     /// This behavior is different from most other API calls that throw a PrecheckException for any precheck value
     /// returned that is not <code>OK</code>.  The PrecheckException is thrown because there is no true response
     /// code to return and the method should divulge some information as to the nature of the network error.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/UtilitiesSnippets.cs" region="SendExternal" language="csharp"/>
+    /// </example>
     public static Task<ResponseCode> SendExternalTransactionAsync(this ConsensusClient client, ReadOnlyMemory<byte> signedTransactionBytes, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
     {
         return SendExternalTransactionAsync(client, new ExternalTransactionParams { SignedTransactionBytes = signedTransactionBytes }, configure);
@@ -201,6 +209,9 @@ public static class ExternalTransactionParamsExtensions
     /// This behavior is different from most other API calls that throw a PrecheckException for any precheck value
     /// returned that is not <code>OK</code>.  The PrecheckException is thrown because there is no true response
     /// code to return and the method should divulge some information as to the nature of the network error.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/UtilitiesSnippets.cs" region="SubmitExternalWithParams" language="csharp"/>
+    /// </example>
     public static async Task<ResponseCode> SendExternalTransactionAsync(this ConsensusClient client, ExternalTransactionParams externalParams, Action<IConsensusContext>? configure = null)
     {
         await using var context = client.BuildChildContext(configure);
@@ -250,6 +261,9 @@ public static class ExternalTransactionParamsExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/UtilitiesSnippets.cs" region="SubmitExternal" language="csharp"/>
+    /// </example>
     public static Task<TransactionReceipt> SubmitExternalTransactionAsync(this ConsensusClient client, ReadOnlyMemory<byte> signedTransactionBytes, Action<IConsensusContext>? configure = null)
     {
         return SubmitExternalTransactionAsync(client, new ExternalTransactionParams { SignedTransactionBytes = signedTransactionBytes }, configure);
@@ -295,6 +309,9 @@ public static class ExternalTransactionParamsExtensions
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the networkTransaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/UtilitiesSnippets.cs" region="SubmitExternalWithParams" language="csharp"/>
+    /// </example>
     public static async Task<TransactionReceipt> SubmitExternalTransactionAsync(this ConsensusClient client, ExternalTransactionParams externalParams, Action<IConsensusContext>? configure = null)
     {
         await using var context = client.BuildChildContext(configure);

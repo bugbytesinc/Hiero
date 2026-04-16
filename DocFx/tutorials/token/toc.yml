@@ -1,0 +1,8 @@
+- name: Create a Fungible Token
+  href: create.md
+- name: Mint Tokens
+  href: mint.md
+- name: Transfer Tokens
+  href: transfer.md
+- name: Associate and Dissociate
+  href: associate.md

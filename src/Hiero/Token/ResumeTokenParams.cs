@@ -6,9 +6,13 @@ using System.Runtime.CompilerServices;
 
 namespace Hiero;
 /// <summary>
-/// Token parameters for resuming an account's ability to 
+/// Token parameters for resuming an account's ability to
 /// send or receive the specified token.
 /// </summary>
+/// <example>
+/// Un-freeze a previously-suspended holder:
+/// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="ResumeToken" language="csharp"/>
+/// </example>
 public sealed class ResumeTokenParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
@@ -83,6 +87,9 @@ public static class ResumeTokenExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission, for example, if the token is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="ResumeToken" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> ResumeTokenAsync(this ConsensusClient client, EntityId token, EntityId holder, Action<IConsensusContext>? configure = null)
     {
@@ -111,6 +118,9 @@ public static class ResumeTokenExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission, for example, if the token is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="ResumeToken" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> ResumeTokenAsync(this ConsensusClient client, ResumeTokenParams resumeParams, Action<IConsensusContext>? configure = null)
     {

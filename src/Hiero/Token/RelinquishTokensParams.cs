@@ -9,6 +9,11 @@ namespace Hiero;
 /// Transaction Parameters for relinquishing one or more tokens, returning
 /// their full balance (or specific NFT instances) to the token treasury.
 /// </summary>
+/// <example>
+/// Surrender several fungible tokens and an NFT back to their treasuries
+/// in one transaction:
+/// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="RelinquishBatch" language="csharp"/>
+/// </example>
 public sealed class RelinquishTokensParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
@@ -112,6 +117,9 @@ public static class RelinquishTokenExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="RelinquishToken" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> RelinquishTokenAsync(this ConsensusClient client, EntityId token, Action<IConsensusContext>? configure = null)
     {
@@ -143,6 +151,9 @@ public static class RelinquishTokenExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="RelinquishNft" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> RelinquishNftAsync(this ConsensusClient client, Nft nft, Action<IConsensusContext>? configure = null)
     {
@@ -174,6 +185,9 @@ public static class RelinquishTokenExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="RelinquishBatch" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> RelinquishAsync(this ConsensusClient client, RelinquishTokensParams relinquishParams, Action<IConsensusContext>? configure = null)
     {

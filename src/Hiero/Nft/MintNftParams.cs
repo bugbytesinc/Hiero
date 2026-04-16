@@ -10,6 +10,11 @@ namespace Hiero;
 /// Transaction Parameters for Minting (Creating) a new NFT for
 /// a given class of NFTs.
 /// </summary>
+/// <example>
+/// Mint three NFTs with different JSON metadata in one transaction. The
+/// receipt's <c>SerialNumbers</c> lists the newly issued serials in order:
+/// <code source="../../../samples/CreateNft/Program.cs" region="MintNftBatch" language="csharp"/>
+/// </example>
 public sealed class MintNftParams : TransactionParams<NftMintReceipt>, INetworkParams<NftMintReceipt>
 {
     /// <summary>
@@ -91,6 +96,9 @@ public static class MintNftExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission, for example, if the token is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/NftSnippets.cs" region="MintNftSingle" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<NftMintReceipt> MintNftAsync(this ConsensusClient client, EntityId token, ReadOnlyMemory<byte> metadata, Action<IConsensusContext>? configure = null)
     {
@@ -119,6 +127,9 @@ public static class MintNftExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission, for example, if the token is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/CreateNft/Program.cs" region="MintNftBatch" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<NftMintReceipt> MintNftsAsync(this ConsensusClient client, MintNftParams mintParams, Action<IConsensusContext>? configure = null)
     {

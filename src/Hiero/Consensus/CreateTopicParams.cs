@@ -8,6 +8,11 @@ namespace Hiero;
 /// <summary>
 /// Consensus Topics Creation Parameters.
 /// </summary>
+/// <example>
+/// Create a plain public topic — anyone can submit messages, but only the
+/// payer can pay auto-renewal fees:
+/// <code source="../../../samples/ConsensusService/Program.cs" region="CreateTopic" language="csharp"/>
+/// </example>
 public sealed class CreateTopicParams : TransactionParams<CreateTopicReceipt>, INetworkParams<CreateTopicReceipt>
 {
     /// <summary>
@@ -121,6 +126,10 @@ public static class CreateTopicExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
+    /// <example>
+    /// Create a topic gated by separate admin and submit keys:
+    /// <code source="../../../samples/DocSnippets/ConsensusSnippets.cs" region="CreateTopicWithKeys" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<CreateTopicReceipt> CreateTopicAsync(this ConsensusClient client, CreateTopicParams createParameters, Action<IConsensusContext>? configure = null)
     {

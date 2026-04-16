@@ -9,6 +9,10 @@ namespace Hiero;
 /// <summary>
 /// Transaction parameters for aborting a previously scheduled network upgrade.
 /// </summary>
+/// <example>
+/// Cancel a pending upgrade. Superuser payer only:
+/// <code source="../../../samples/DocSnippets/GovernanceSnippets.cs" region="AbortNetworkUpgrade" language="csharp"/>
+/// </example>
 public sealed class AbortNetworkUpgradeParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
@@ -64,6 +68,9 @@ public static class AbortNetworkUpgradeExtensions
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <param name="abortParams">The parameters for aborting the scheduled network upgrade.</param>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/GovernanceSnippets.cs" region="AbortNetworkUpgrade" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> AbortNetworkUpgradeAsync(this ConsensusClient client, AbortNetworkUpgradeParams abortParams, Action<IConsensusContext>? configure = null)
     {

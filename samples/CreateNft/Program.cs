@@ -26,6 +26,7 @@ var adminEndorsement = new Signatory(payerKey).GetEndorsements().First();
 
 // 1. Create NFT collection
 Console.WriteLine("Creating NFT collection...");
+#region CreateNft
 var createReceipt = await client.CreateNftAsync(new CreateNftParams
 {
     Name = "Sample NFTs",
@@ -37,9 +38,11 @@ var createReceipt = await client.CreateNftAsync(new CreateNftParams
     Memo = "Hiero SDK sample NFT collection"
 });
 Console.WriteLine($"NFT collection created: {createReceipt.Token}");
+#endregion
 
 // 2. Mint NFTs with metadata
 Console.WriteLine("Minting 3 NFTs...");
+#region MintNftBatch
 var mintReceipt = await client.MintNftsAsync(new MintNftParams
 {
     Token = createReceipt.Token,
@@ -51,6 +54,7 @@ var mintReceipt = await client.MintNftsAsync(new MintNftParams
     }
 });
 Console.WriteLine($"Minted serial numbers: {string.Join(", ", mintReceipt.SerialNumbers)}");
+#endregion
 
 // 3. Query NFT info
 foreach (var serial in mintReceipt.SerialNumbers)

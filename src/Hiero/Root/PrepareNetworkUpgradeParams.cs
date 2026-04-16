@@ -10,6 +10,11 @@ namespace Hiero;
 /// <summary>
 /// Transaction parameters for preparing the network for a software upgrade.
 /// </summary>
+/// <example>
+/// Step 1 of the upgrade flow: stage an upgrade image and its hash so every
+/// node can validate the file before the scheduled switchover:
+/// <code source="../../../samples/DocSnippets/GovernanceSnippets.cs" region="PrepareNetworkUpgrade" language="csharp"/>
+/// </example>
 public sealed class PrepareNetworkUpgradeParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
@@ -87,6 +92,9 @@ public static class PrepareNetworkUpgradeExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/GovernanceSnippets.cs" region="PrepareNetworkUpgrade" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> PrepareNetworkUpgradeAsync(this ConsensusClient client, PrepareNetworkUpgradeParams prepareParams, Action<IConsensusContext>? configure = null)
     {

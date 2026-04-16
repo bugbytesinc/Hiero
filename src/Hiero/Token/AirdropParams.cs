@@ -15,6 +15,10 @@ namespace Hiero;
 /// the transfer completes immediately. Otherwise, a pending airdrop is created
 /// that the recipient must claim with a <c>ClaimAirdrop</c> transaction.
 /// </remarks>
+/// <example>
+/// Airdrop the same token to multiple recipients in a single atomic transaction:
+/// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="AirdropMulti" language="csharp"/>
+/// </example>
 public sealed class AirdropParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
@@ -180,6 +184,9 @@ public static class AirdropExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="AirdropToken" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> AirdropTokenAsync(this ConsensusClient client, EntityId token, EntityId fromAddress, EntityId toAddress, long amount, Action<IConsensusContext>? configure = null)
     {
@@ -229,6 +236,9 @@ public static class AirdropExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="AirdropNft" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> AirdropNftAsync(this ConsensusClient client, Nft nft, EntityId fromAddress, EntityId toAddress, Action<IConsensusContext>? configure = null)
     {
@@ -259,6 +269,9 @@ public static class AirdropExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="AirdropMulti" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> AirdropAsync(this ConsensusClient client, AirdropParams airdropParams, Action<IConsensusContext>? configure = null)
     {

@@ -9,6 +9,11 @@ namespace Hiero;
 /// Transaction Parameters for adding signatures to an
 /// existing scheduled transaction.
 /// </summary>
+/// <example>
+/// Add a co-signer's signature to a pending schedule when that key is not
+/// already in the client's context:
+/// <code source="../../../samples/DocSnippets/ScheduleSnippets.cs" region="SignScheduleCoSigner" language="csharp"/>
+/// </example>
 public sealed class SignScheduleParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
@@ -74,6 +79,9 @@ public static class SignScheduleExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/ScheduleSnippets.cs" region="SignSchedule" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> SignScheduleAsync(this ConsensusClient client, EntityId schedule, Action<IConsensusContext>? configure = null)
     {
@@ -104,6 +112,9 @@ public static class SignScheduleExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/ScheduleSnippets.cs" region="SignScheduleCoSigner" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> SignScheduleAsync(this ConsensusClient client, SignScheduleParams signParams, Action<IConsensusContext>? configure = null)
     {

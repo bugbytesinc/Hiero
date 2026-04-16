@@ -1,4 +1,11 @@
 apiRules:
+# Force-include Hiero *Extensions classes even though they carry
+# [EditorBrowsable(EditorBrowsableState.Never)]. Without this, the per-overload
+# <example> blocks on extension methods (TransferAsync, CreateAccountAsync, etc.)
+# are dropped from the rendered site — they still land in Hiero.xml for
+# IntelliSense, but human readers of the doc site never see them.
+- include:
+    uidRegex: ^Hiero(\.[A-Za-z]+)*\.[\w]+Extensions(\.|$)
 - exclude:
     uidRegex: ^Com\.Hedera\.
 - exclude:

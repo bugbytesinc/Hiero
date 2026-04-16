@@ -27,6 +27,7 @@ var contract = new EntityId(0, 0, contractNum);
 
 // Query the contract (read-only, no state change)
 Console.WriteLine($"Querying contract 0.0.{contractNum} method '{methodName}'...");
+#region QueryContract
 var result = await client.QueryContractAsync(new QueryContractParams
 {
     Contract = contract,
@@ -34,6 +35,7 @@ var result = await client.QueryContractAsync(new QueryContractParams
     MethodName = methodName
 });
 Console.WriteLine($"Result: {result}");
+#endregion
 
 // Also get contract info
 var info = await client.GetContractInfoAsync(contract);

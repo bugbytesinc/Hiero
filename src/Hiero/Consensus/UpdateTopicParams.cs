@@ -15,6 +15,10 @@ namespace Hiero;
 /// to make changes.  If there is no administrator endorsement specified,
 /// the topic is immutable and cannot be changed.
 /// </summary>
+/// <example>
+/// Update the memo on an existing topic. Null properties are left unchanged:
+/// <code source="../../../samples/DocSnippets/ConsensusSnippets.cs" region="UpdateTopic" language="csharp"/>
+/// </example>
 public sealed class UpdateTopicParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
@@ -167,6 +171,9 @@ public static class UpdateTopicExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the update request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/ConsensusSnippets.cs" region="UpdateTopic" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> UpdateTopicAsync(this ConsensusClient client, UpdateTopicParams updateParameters, Action<IConsensusContext>? configure = null)
     {

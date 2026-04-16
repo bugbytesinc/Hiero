@@ -8,6 +8,11 @@ namespace Hiero;
 /// <summary>
 /// Provides the details of the request to the client when invoking a contract local query function.
 /// </summary>
+/// <example>
+/// Query a read-only method on an existing contract. No transaction, no
+/// state change, no consensus timestamp — executed locally on the gateway:
+/// <code source="../../../samples/SmartContract/Program.cs" region="QueryContract" language="csharp"/>
+/// </example>
 public sealed class QueryContractParams
 {
     /// <summary>
@@ -91,6 +96,10 @@ public static class QueryContractExtensions
     /// some reason.  Contains additional information returned from the contract virtual machine.  Only thrown if
     /// the <see cref="QueryContractParams.ThrowOnFail"/> is set to <code>true</code>, the default, otherwise
     /// the method returns a <see cref="ContractCallResult"/> with the same information.</exception>
+    /// <example>
+    /// Query a view method with ABI arguments and decode a typed return:
+    /// <code source="../../../samples/DocSnippets/ContractSnippets.cs" region="QueryContractWithArgs" language="csharp"/>
+    /// </example>
     public static async Task<ContractCallResult> QueryContractAsync(this ConsensusClient client, QueryContractParams queryContractParams, Action<IConsensusContext>? configure = null)
     {
         var query = new ContractCallLocalQuery

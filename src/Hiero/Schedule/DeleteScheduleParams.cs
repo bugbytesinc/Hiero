@@ -9,6 +9,11 @@ namespace Hiero;
 /// Transaction Parameters for deleting an existing
 /// scheduled transaction from the network.
 /// </summary>
+/// <example>
+/// Cancel a pending schedule. Only schedules that were created with an
+/// Administrator key can be deleted, and only by that admin:
+/// <code source="../../../samples/DocSnippets/ScheduleSnippets.cs" region="DeleteSchedule" language="csharp"/>
+/// </example>
 public sealed class DeleteScheduleParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
@@ -74,6 +79,9 @@ public static class DeleteScheduleExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/ScheduleSnippets.cs" region="DeleteSchedule" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> DeleteScheduleAsync(this ConsensusClient client, EntityId schedule, Action<IConsensusContext>? configure = null)
     {
@@ -102,6 +110,9 @@ public static class DeleteScheduleExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/ScheduleSnippets.cs" region="DeleteSchedule" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> DeleteScheduleAsync(this ConsensusClient client, DeleteScheduleParams deleteParams, Action<IConsensusContext>? configure = null)
     {

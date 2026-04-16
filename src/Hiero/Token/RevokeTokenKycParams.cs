@@ -6,9 +6,14 @@ using System.Runtime.CompilerServices;
 
 namespace Hiero;
 /// <summary>
-/// Transaction Parameters for Revoking KYC status from an account 
+/// Transaction Parameters for Revoking KYC status from an account
 /// associated with a Token.
 /// </summary>
+/// <example>
+/// Clear a holder's KYC-approved flag; future transfers by or to this
+/// holder will fail until KYC is re-granted:
+/// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="RevokeKyc" language="csharp"/>
+/// </example>
 public sealed class RevokeTokenKycParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
@@ -81,6 +86,9 @@ public static class RevokeTokenKycExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission, for example, if the token is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="RevokeKyc" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> RevokeTokenKycAsync(this ConsensusClient client, EntityId token, EntityId holder, Action<IConsensusContext>? configure = null)
     {
@@ -108,6 +116,9 @@ public static class RevokeTokenKycExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission, for example, if the token is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="RevokeKyc" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> RevokeTokenKycAsync(this ConsensusClient client, RevokeTokenKycParams revokeKycParams, Action<IConsensusContext>? configure = null)
     {

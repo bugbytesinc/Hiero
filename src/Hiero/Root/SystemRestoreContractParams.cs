@@ -9,6 +9,11 @@ namespace Hiero;
 /// <summary>
 /// Transaction parameters for administratively restoring a previously deleted contract.
 /// </summary>
+/// <example>
+/// Undo a previous <see cref="SystemDeleteContractParams"/> within the
+/// network's grace window:
+/// <code source="../../../samples/DocSnippets/GovernanceSnippets.cs" region="SystemRestoreContract" language="csharp"/>
+/// </example>
 public sealed class SystemRestoreContractParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
@@ -64,6 +69,9 @@ public static class SystemRestoreContractExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the restore request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/GovernanceSnippets.cs" region="SystemRestoreContract" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> SystemRestoreContractAsync(this ConsensusClient client, SystemRestoreContractParams restoreParams, Action<IConsensusContext>? configure = null)
     {

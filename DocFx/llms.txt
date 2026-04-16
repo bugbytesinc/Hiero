@@ -1,35 +1,59 @@
 # Hiero
 
-> .NET Client Library for the Hiero Network and Hedera Hashgraph
+> Hiero is an idiomatic .NET 10 client library for the Hedera Hashgraph public network.
+> It provides async access to all Hedera network services -- cryptocurrency transfers,
+> the Hedera Consensus Service (HCS), fungible tokens, NFTs, smart contracts, file
+> storage, scheduled transactions, and airdrops -- through three typed client objects:
+> `ConsensusClient` (gRPC, for submitting transactions and queries),
+> `MirrorRestClient` (REST/JSON, for querying historical state), and
+> `MirrorGrpcClient` (gRPC streaming, for real-time topic subscriptions).
+> All state-changing operations follow the pattern:
+> create a `*Params` object, configure a `ConsensusClient`, call the async method, receive a typed `*Receipt`.
 
-Hiero is a .NET 10 SDK that provides idiomatic async access to the full Hedera
-public network: cryptocurrency, consensus messaging, tokens, NFTs, smart
-contracts, file storage, scheduled transactions, airdrops, atomic batches,
-hooks, address book management, key derivation, and more.
+## Getting Started
 
-- NuGet: https://www.nuget.org/packages/Hiero/
-- Source: https://github.com/bugbytesinc/Hiero
-- API Reference: https://hashgraph.bugbytes.com/
-- License: Apache-2.0
+- [Installation and Hello World](https://hashgraph.bugbytes.com/tutorials/index.html): Install via `dotnet add package Hiero`, connect to testnet, query an account balance.
+- [Network configuration](https://hashgraph.bugbytes.com/tutorials/network.html): Testnet vs mainnet endpoints, node rotation patterns.
+- [NuGet package](https://www.nuget.org/packages/Hiero/): Install instructions for all package managers.
+- [GitHub source](https://github.com/bugbytesinc/Hiero): Source code, issue tracker, and contribution guide.
 
-## Quick Install
+## Key Concepts
 
-```sh
-dotnet add package Hiero
-```
+- [Client architecture](https://hashgraph.bugbytes.com/tutorials/index.html): The three client types and when to use each.
+- [Key management](https://hashgraph.bugbytes.com/tutorials/security/keymanagement.html): Loading keys safely, async Signatory for HSM/vault, mnemonic derivation.
+- [Dependency injection](https://hashgraph.bugbytes.com/tutorials/di.html): Registering clients with IServiceCollection.
+- [Error handling](https://hashgraph.bugbytes.com/tutorials/errorhandling.html): Exception hierarchy, transient vs permanent codes, retry patterns.
+- [EntityId](https://hashgraph.bugbytes.com/api/Hiero.EntityId.html): Hedera shard.realm.num addressing, key aliases, EVM addresses.
+- [Endorsement and Signatory](https://hashgraph.bugbytes.com/api/Hiero.Endorsement.html): Public key / N-of-M key lists and private key signing.
 
-Requires .NET 10 SDK.
+## Tutorials
 
-## Clients
+- [Get account balance](https://hashgraph.bugbytes.com/tutorials/crypto/balance.html)
+- [Transfer crypto](https://hashgraph.bugbytes.com/tutorials/crypto/transfer.html)
+- [Create account](https://hashgraph.bugbytes.com/tutorials/crypto/create.html)
+- [Create a fungible token](https://hashgraph.bugbytes.com/tutorials/token/create.html)
+- [Mint tokens](https://hashgraph.bugbytes.com/tutorials/token/mint.html)
+- [Transfer tokens](https://hashgraph.bugbytes.com/tutorials/token/transfer.html)
+- [Associate / dissociate tokens](https://hashgraph.bugbytes.com/tutorials/token/associate.html)
+- [Create an NFT collection](https://hashgraph.bugbytes.com/tutorials/nft/create.html)
+- [Mint an NFT](https://hashgraph.bugbytes.com/tutorials/nft/mint.html)
+- [Transfer an NFT](https://hashgraph.bugbytes.com/tutorials/nft/transfer.html)
+- [Create HCS topic](https://hashgraph.bugbytes.com/tutorials/consensus/createtopic.html)
+- [Submit HCS message](https://hashgraph.bugbytes.com/tutorials/consensus/submit.html)
+- [Subscribe to HCS topic](https://hashgraph.bugbytes.com/tutorials/consensus/subscribe.html)
+- [Deploy and call smart contract](https://hashgraph.bugbytes.com/tutorials/contract/deploy.html)
+- [Schedule a transaction](https://hashgraph.bugbytes.com/tutorials/schedule/create.html)
+- [Airdrop tokens](https://hashgraph.bugbytes.com/tutorials/airdrop/send.html)
+- [Query mirror node](https://hashgraph.bugbytes.com/tutorials/mirror/query.html)
 
-| Client | Purpose | Protocol |
-|--------|---------|----------|
-| `ConsensusClient` | Transactions and queries to gossip nodes | gRPC |
-| `MirrorRestClient` | Historical data and state from Mirror Nodes | REST/JSON |
-| `MirrorGrpcClient` | Real-time HCS topic subscriptions | gRPC streaming |
+## API Reference
 
-## Detailed Documentation
+- [Full API reference](https://hashgraph.bugbytes.com/api/Hiero.html)
+- [ConsensusClient](https://hashgraph.bugbytes.com/api/Hiero.ConsensusClient.html)
+- [MirrorRestClient](https://hashgraph.bugbytes.com/api/Hiero.MirrorRestClient.html)
+- [MirrorGrpcClient](https://hashgraph.bugbytes.com/api/Hiero.MirrorGrpcClient.html)
 
-- [Full AI-readable reference](llms-full.txt): Complete API surface, all operations, types, and code examples
-- [Tutorials](https://hashgraph.bugbytes.com/tutorials/): Getting started guides
-- [API Docs](https://hashgraph.bugbytes.com/api/): Generated API reference
+## Optional
+
+- [Full documentation in a single file](https://hashgraph.bugbytes.com/llms-full.txt)
+- [API Cookbook](https://github.com/bugbytesinc/Hiero/blob/main/docs/api-cookbook.md): Quick reference for all SDK operations

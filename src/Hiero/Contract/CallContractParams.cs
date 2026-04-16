@@ -9,6 +9,12 @@ namespace Hiero;
 /// <summary>
 /// Represents the parameters required to call a smart contract on the Hedera network.
 /// </summary>
+/// <example>
+/// Call a state-changing method on a deployed contract. The receipt confirms
+/// consensus but does not carry the return data — fetch it from the mirror
+/// node if you need it:
+/// <code source="../../../samples/DocSnippets/ContractSnippets.cs" region="CallContract" language="csharp"/>
+/// </example>
 public sealed class CallContractParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
@@ -99,6 +105,11 @@ public static class CallContractExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    /// <example>
+    /// Call a payable method — <c>PayableAmount</c> in tinybars is debited
+    /// from the Payer and credited to the contract's crypto account:
+    /// <code source="../../../samples/DocSnippets/ContractSnippets.cs" region="CallContractPayable" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> CallContractAsync(this ConsensusClient client, CallContractParams callParameters, Action<IConsensusContext>? configure = null)
     {

@@ -10,6 +10,12 @@ namespace Hiero;
 /// <summary>
 /// Smart Contract creation properties.
 /// </summary>
+/// <example>
+/// Deploy a small contract from inline bytecode. For contracts too large to
+/// fit in a single transaction, upload the bytecode via the file service
+/// first and set <c>File</c> instead of <c>ByteCode</c>:
+/// <code source="../../../samples/DocSnippets/ContractSnippets.cs" region="CreateContractInline" language="csharp"/>
+/// </example>
 public sealed class CreateContractParams : TransactionParams<CreateContractReceipt>, INetworkParams<CreateContractReceipt>
 {
     /// <summary>
@@ -221,6 +227,10 @@ public static class CreateContractExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    /// <example>
+    /// Deploy from bytecode already uploaded to the file service:
+    /// <code source="../../../samples/DocSnippets/ContractSnippets.cs" region="CreateContractFromFile" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<CreateContractReceipt> CreateContractAsync(this ConsensusClient client, CreateContractParams createParameters, Action<IConsensusContext>? configure = null)
     {

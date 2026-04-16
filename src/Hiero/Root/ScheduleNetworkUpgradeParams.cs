@@ -9,6 +9,11 @@ namespace Hiero;
 /// <summary>
 /// Transaction parameters for scheduling a previously prepared network upgrade.
 /// </summary>
+/// <example>
+/// Step 2 of the upgrade flow: commit to the consensus timestamp at which
+/// every node will bounce and load the staged upgrade:
+/// <code source="../../../samples/DocSnippets/GovernanceSnippets.cs" region="ScheduleNetworkUpgrade" language="csharp"/>
+/// </example>
 public sealed class ScheduleNetworkUpgradeParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
@@ -74,6 +79,9 @@ public static class ScheduleNetworkUpgradeExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/GovernanceSnippets.cs" region="ScheduleNetworkUpgrade" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> ScheduleNetworkUpgradeAsync(this ConsensusClient client, ScheduleNetworkUpgradeParams scheduleParams, Action<IConsensusContext>? configure = null)
     {

@@ -9,6 +9,10 @@ namespace Hiero;
 /// <summary>
 /// Transaction Parameters for removing a consensus node from the network address book.
 /// </summary>
+/// <example>
+/// Retire a node by NodeId. Effective at the next address-book rebalance:
+/// <code source="../../../samples/DocSnippets/GovernanceSnippets.cs" region="RemoveConsensusNode" language="csharp"/>
+/// </example>
 /// <remarks>
 /// This is a privileged transaction requiring Hedera governing council authorization.
 /// The node enters a "pending delete" state immediately, but is fully removed from the
@@ -77,6 +81,9 @@ public static class RemoveConsensusNodeExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/GovernanceSnippets.cs" region="RemoveConsensusNode" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> RemoveConsensusNodeAsync(this ConsensusClient client, ulong nodeId, Action<IConsensusContext>? configure = null)
     {
@@ -104,6 +111,9 @@ public static class RemoveConsensusNodeExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/GovernanceSnippets.cs" region="RemoveConsensusNode" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> RemoveConsensusNodeAsync(this ConsensusClient client, RemoveConsensusNodeParams deleteParams, Action<IConsensusContext>? configure = null)
     {

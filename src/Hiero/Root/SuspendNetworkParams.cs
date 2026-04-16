@@ -9,6 +9,11 @@ namespace Hiero;
 /// <summary>
 /// Transaction parameters for suspending network operations at a specified consensus time.
 /// </summary>
+/// <example>
+/// Emergency freeze — halts every node at the given consensus timestamp.
+/// Superuser payer only:
+/// <code source="../../../samples/DocSnippets/GovernanceSnippets.cs" region="SuspendNetwork" language="csharp"/>
+/// </example>
 public sealed class SuspendNetworkParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
@@ -74,6 +79,9 @@ public static class SuspendNetworkExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/GovernanceSnippets.cs" region="SuspendNetwork" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> SuspendNetworkAsync(this ConsensusClient client, SuspendNetworkParams suspendParams, Action<IConsensusContext>? configure = null)
     {

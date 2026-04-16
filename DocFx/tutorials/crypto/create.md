@@ -18,21 +18,20 @@ Finally, to create the Hedera account, invoke the client's [`CreateAccountAsync`
 class Program
 {
     static async Task Main(string[] args)
-    {                                                 // For Example:
-        var endpointUrl = args[0];                    //   https://2.testnet.hedera.com:50211
-        var nodeAccountNo = long.Parse(args[1]);      //   5 (node 0.0.5)
-        var payerAccountNo = long.Parse(args[2]);     //   20 (account 0.0.20)
-        var payerPrivateKey = Hex.ToBytes(args[3]);   //   302e0201... (48 byte Ed25519 private in hex)
+    {
+        // Usage: dotnet run -- https://2.testnet.hedera.com:50211 0.0.5 0.0.20 302e... 302a... 100000000
+        var endpointUrl = args[0];
+        EntityId.TryParseShardRealmNum(args[1], out var nodeAccount);
+        EntityId.TryParseShardRealmNum(args[2], out var payerAccount);
+        var payerPrivateKey = Hex.ToBytes(args[3]);
         var newPublicKey = Hex.ToBytes(args[4]);      //   302a3005... (44 byte Ed25519 public in hex)
-        var initialBalance = ulong.Parse(args[5]);    //   100_000_000 (1ℏ initial balance)
+        var initialBalance = ulong.Parse(args[5]);    //   100_000_000 (1 hbar initial balance)
         try
         {
             await using var client = new ConsensusClient(ctx =>
             {
-                ctx.Endpoint = new ConsensusNodeEndpoint(
-                    new EntityId(0, 0, nodeAccountNo),
-                    new Uri(endpointUrl));
-                ctx.Payer = new EntityId(0, 0, payerAccountNo);
+                ctx.Endpoint = new ConsensusNodeEndpoint(nodeAccount!, new Uri(endpointUrl));
+                ctx.Payer = payerAccount;
                 ctx.Signatory = new Signatory(payerPrivateKey);
             });
             var createParams = new CreateAccountParams

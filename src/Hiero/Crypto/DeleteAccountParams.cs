@@ -8,6 +8,11 @@ namespace Hiero;
 /// <summary>
 /// Represents the parameters required to delete an account from the hedera network.
 /// </summary>
+/// <example>
+/// Delete an account and sweep its remaining HBAR to a funds receiver. The
+/// deleted account must sign the transaction:
+/// <code source="../../../samples/DocSnippets/CryptoSnippets.cs" region="DeleteAccount" language="csharp"/>
+/// </example>
 public class DeleteAccountParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
@@ -86,6 +91,9 @@ public static class DeleteAccountExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the delete request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/CryptoSnippets.cs" region="DeleteAccount" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> DeleteAccountAsync(this ConsensusClient client, DeleteAccountParams deleteAccountParams, Action<IConsensusContext>? configure = null)
     {

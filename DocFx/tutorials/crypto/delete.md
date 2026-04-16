@@ -12,30 +12,27 @@ Example:
 class Program
 {
     static async Task Main(string[] args)
-    {                                                 // For Example:
-        var endpointUrl = args[0];                    //   https://2.testnet.hedera.com:50211
-        var nodeAccountNo = long.Parse(args[1]);      //   5 (node 0.0.5)
-        var payerAccountNo = long.Parse(args[2]);     //   20 (account 0.0.20)
-        var payerPrivateKey = Hex.ToBytes(args[3]);   //   302e0201... (Ed25519 private in hex)
-        var deleteAccountNo = long.Parse(args[4]);    //   2300 (account 0.0.2300)
-        var deleteAccountKey = Hex.ToBytes(args[5]);  //   302e0201... (Ed25519 private in hex)
+    {
+        // Usage: dotnet run -- https://2.testnet.hedera.com:50211 0.0.5 0.0.20 302e... 0.0.2300 302e...
+        var endpointUrl = args[0];
+        EntityId.TryParseShardRealmNum(args[1], out var nodeAccount);
+        EntityId.TryParseShardRealmNum(args[2], out var payerAccount);
+        var payerPrivateKey = Hex.ToBytes(args[3]);
+        EntityId.TryParseShardRealmNum(args[4], out var deleteAccount);
+        var deleteAccountKey = Hex.ToBytes(args[5]);
         try
         {
-            var payerAccount = new EntityId(0, 0, payerAccountNo);
-
             await using var client = new ConsensusClient(ctx =>
             {
-                ctx.Endpoint = new ConsensusNodeEndpoint(
-                    new EntityId(0, 0, nodeAccountNo),
-                    new Uri(endpointUrl));
+                ctx.Endpoint = new ConsensusNodeEndpoint(nodeAccount!, new Uri(endpointUrl));
                 ctx.Payer = payerAccount;
                 ctx.Signatory = new Signatory(payerPrivateKey);
             });
 
             var deleteParams = new DeleteAccountParams
             {
-                Account = new EntityId(0, 0, deleteAccountNo),
-                FundsReceiver = payerAccount,
+                Account = deleteAccount!,
+                FundsReceiver = payerAccount!,
                 Signatory = new Signatory(deleteAccountKey)
             };
 

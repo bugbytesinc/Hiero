@@ -48,6 +48,30 @@ queries and transactions also require `Payer` and `Signatory`.
 | `RetryDelay` | `TimeSpan` | 200ms | Delay between retries |
 | `AdjustForLocalClockDrift` | `bool` | true | Compensate for clock skew |
 | `SignaturePrefixTrimLimit` | `int` | 6 | Trim prefix on key matching |
+| `ThrowIfNotSuccess` | `bool` | true | Set false to suppress TransactionException |
+| `OnSendingRequest` | `Action<IMessage>?` | null | Callback invoked with the raw protobuf just before sending to the network |
+| `OnResponseReceived` | `Action<int, IMessage>?` | null | Callback invoked with (retryAttempt, response) after each network response |
+
+#### HAPI request/response logging
+
+The `OnSendingRequest` and `OnResponseReceived` hooks give full visibility
+into every protobuf message exchanged with the network:
+
+```csharp
+using Google.Protobuf;
+var formatter = new JsonFormatter(JsonFormatter.Settings.Default);
+
+await using var client = new ConsensusClient(ctx =>
+{
+    ctx.Endpoint = endpoint;
+    ctx.Payer = payer;
+    ctx.Signatory = signatory;
+    ctx.OnSendingRequest = msg =>
+        Console.WriteLine($"[TX] {msg.Descriptor.Name}\n{formatter.Format(msg)}");
+    ctx.OnResponseReceived = (retry, msg) =>
+        Console.WriteLine($"[RX #{retry}] {msg.Descriptor.Name}\n{formatter.Format(msg)}");
+});
+```
 
 Configuration can be overridden per-call:
 
@@ -100,10 +124,16 @@ Hedera entity address in `shard.realm.num` format.
 var account = new EntityId(0, 0, 1234);          // by number
 var alias = new EntityId(0, 0, endorsement);      // by key alias
 var evm = new EntityId(0, 0, evmAddress);         // by EVM address
+
+// Parse from the standard "0.0.12345" string format (e.g. from the Hedera portal)
+if (EntityId.TryParseShardRealmNum("0.0.12345", out var parsed))
+    Console.WriteLine(parsed);
 ```
 
 Properties: `ShardNum`, `RealmNum`, `AccountNum`, `IsShardRealmNum`,
 `IsEvmAddress`, `IsKeyAlias`. Static: `EntityId.None`.
+Parsing: `EntityId.TryParseShardRealmNum(string, out EntityId?)` -- accepts the
+`shard.realm.num` format and is preferred over `new EntityId(0, 0, long.Parse(...))`.
 
 ### Endorsement
 
@@ -528,8 +558,9 @@ auto-association slots, a pending airdrop is created.
 ### Claim / Cancel Pending Airdrops
 
 ```csharp
-await client.ClaimAirdropAsync(new Airdrop(token, sender, receiver));
-await client.CancelAirdropAsync(new Airdrop(token, sender, receiver));
+// Constructor order: sender, receiver, token (NOT token first)
+await client.ClaimAirdropAsync(new Airdrop(sender, receiver, token));
+await client.CancelAirdropAsync(new Airdrop(sender, receiver, token));
 
 // Batch
 await client.ClaimAirdropsAsync(new ClaimAirdropParams { ... });
@@ -547,7 +578,7 @@ var receipt = await client.CreateTopicAsync(new CreateTopicParams
 {
     Memo = "My Topic",
     Administrator = new Endorsement(adminKey),
-    Participant = new Endorsement(submitKey),
+    Submitter = new Endorsement(submitKey),
     RenewPeriod = TimeSpan.FromDays(90),
     RenewAccount = renewAccount
 });
@@ -610,7 +641,7 @@ await client.DeleteTopicAsync(topic);
 ```csharp
 TopicInfo info = await client.GetTopicInfoAsync(topic);
 // info.Memo, info.RunningHash, info.SequenceNumber, info.Administrator,
-// info.Participant, info.AutoRenewPeriod, info.Expiration
+// info.Submitter, info.AutoRenewPeriod, info.Expiration
 ```
 
 ---
@@ -787,7 +818,7 @@ ScheduleInfo info = await client.GetScheduleInfoAsync(scheduleId);
 
 ## 12. Batched/Atomic Transactions
 
-Submit multiple transactions as a single atomic batch — either all succeed or
+Submit multiple transactions as a single atomic batch -- either all succeed or
 all fail together.
 
 ```csharp
@@ -839,6 +870,32 @@ A fire-and-forget variant returns only the precheck code:
 ```csharp
 ResponseCode code = await client.SubmitAsync(batchParams);
 ```
+
+### External Transaction Relay
+
+Forward a pre-built, pre-signed Hedera transaction (protobuf `SignedTransaction`
+bytes) to the network. Useful for hardware wallets, multi-party signing flows,
+or interop with other SDKs that construct the transaction externally.
+
+```csharp
+// Precheck only -- returns the gateway's ResponseCode without waiting for consensus
+ResponseCode code = await client.SendExternalTransactionAsync(signedTransactionBytes);
+
+// Full flow -- waits for consensus and returns a TransactionReceipt
+TransactionReceipt receipt = await client.SubmitExternalTransactionAsync(signedTransactionBytes);
+
+// Add extra signatures before relaying (e.g. co-signer on this node)
+var receipt = await client.SubmitExternalTransactionAsync(new ExternalTransactionParams
+{
+    SignedTransactionBytes = signedTransactionBytes,
+    Signatory = new Signatory(coSignerKey)
+});
+```
+
+Note: `SendExternalTransactionAsync` returns `ResponseCode` (precheck only),
+while `SubmitExternalTransactionAsync` returns `TransactionReceipt` (waits for
+consensus). This is the inverse of the usual SDK verb convention where `Submit`
+is precheck-only and `Execute` waits.
 
 ---
 
@@ -905,8 +962,8 @@ ulong nodeId = receipt.NodeId;
 AddConsensusNodeParams properties:
 - `Account` (EntityId) - account to associate with the node (required)
 - `AdminKey` (Endorsement) - administrative key for the node (required)
-- `GossipEndpoints` (IEnumerable\<Uri\>) - gossip endpoints, 1–10 (required)
-- `ServiceEndpoints` (IEnumerable\<Uri\>) - gRPC endpoints, 1–8 (required)
+- `GossipEndpoints` (IEnumerable\<Uri\>) - gossip endpoints, 1-10 (required)
+- `ServiceEndpoints` (IEnumerable\<Uri\>) - gRPC endpoints, 1-8 (required)
 - `GossipCaCertificate` (ReadOnlyMemory\<byte\>) - DER-encoded CA cert (required)
 - `Description` (string?) - up to 100 UTF-8 bytes
 - `GrpcCertificateHash` (ReadOnlyMemory\<byte\>?) - SHA-384 of TLS cert
@@ -1271,7 +1328,45 @@ if (receipt.Status != ResponseCode.Success)
 
 ---
 
-## 21. Hedera Network Endpoints
+## 21. Common Mistakes
+
+These compile but fail at runtime -- check for them before submitting code:
+
+- **Forgetting token association.** An account must call `AssociateTokenAsync`
+  (or have free auto-association slots) before it can receive a token. Without
+  it, transfers fail with `TokenNotAssociatedToAccount`. Use `AirdropTokenAsync`
+  instead if you want the network to create a pending airdrop for unassociated
+  receivers.
+
+- **Confusing tinybars and HBAR.** 1 HBAR = 100,000,000 tinybars. Every
+  amount in the SDK is in tinybars. Passing `1` when you mean 1 HBAR transfers
+  one hundred-millionth of a cent.
+
+- **Signing with the wrong key.** Each operation requires a specific key:
+  - Transfers: the *sender's* key (not just the payer's)
+  - Minting/burning: the token's *supply* key (not the admin key)
+  - Token admin ops (pause, freeze, KYC): each has its own dedicated key
+  - Topic submission: the *submit* key (if the topic has one)
+  - Updating/deleting: the *administrator* key
+
+- **Missing the sender's signatory on transfers.** If the sender differs from
+  the payer, you must provide the sender's key explicitly:
+  ```csharp
+  ctx.Signatory = new Signatory(payerKey, new Signatory(senderKey));
+  ```
+  or via `TransferParams.Signatory`.
+
+- **Operating on immutable entities.** Tokens, topics, contracts, and files
+  created without an `Administrator` key cannot be updated or deleted by anyone.
+  `DeleteTokenAsync` on an immutable token fails with `TokenIsImmutable`.
+
+- **`DissociateTokenAsync` argument order.** It takes `(token, account)` --
+  opposite of `AssociateTokenAsync(account, token)`. Both compile since both
+  args are `EntityId`, but reversing them targets the wrong entity.
+
+---
+
+## 22. Hedera Network Endpoints
 
 ### Testnet
 
@@ -1295,3 +1390,46 @@ Mirror gRPC: `https://hcs.testnet.mirrornode.hedera.com:5600`
 
 Mirror REST: `https://mainnet-public.mirrornode.hedera.com`
 Mirror gRPC: `https://mainnet-public.mirrornode.hedera.com:443`
+
+---
+
+## 23. Tutorials and Guides
+
+Step-by-step guides with working code for every major workflow:
+
+### Cryptocurrency
+- [Get Account Balance](https://hashgraph.bugbytes.com/tutorials/crypto/balance.html)
+- [Transfer Crypto](https://hashgraph.bugbytes.com/tutorials/crypto/transfer.html)
+- [Create Account](https://hashgraph.bugbytes.com/tutorials/crypto/create.html)
+
+### Fungible Tokens
+- [Create a Token](https://hashgraph.bugbytes.com/tutorials/token/create.html)
+- [Mint Tokens](https://hashgraph.bugbytes.com/tutorials/token/mint.html)
+- [Transfer Tokens](https://hashgraph.bugbytes.com/tutorials/token/transfer.html)
+- [Associate / Dissociate](https://hashgraph.bugbytes.com/tutorials/token/associate.html)
+
+### NFTs
+- [Create Collection](https://hashgraph.bugbytes.com/tutorials/nft/create.html)
+- [Mint NFT](https://hashgraph.bugbytes.com/tutorials/nft/mint.html)
+- [Transfer NFT](https://hashgraph.bugbytes.com/tutorials/nft/transfer.html)
+
+### Consensus Service (HCS)
+- [Create Topic](https://hashgraph.bugbytes.com/tutorials/consensus/createtopic.html)
+- [Submit Message](https://hashgraph.bugbytes.com/tutorials/consensus/submit.html)
+- [Subscribe to Topic](https://hashgraph.bugbytes.com/tutorials/consensus/subscribe.html)
+
+### Other Services
+- [Deploy and Call Smart Contract](https://hashgraph.bugbytes.com/tutorials/contract/deploy.html)
+- [Schedule a Transaction](https://hashgraph.bugbytes.com/tutorials/schedule/create.html)
+- [Airdrop Tokens](https://hashgraph.bugbytes.com/tutorials/airdrop/send.html)
+- [Query Mirror Node](https://hashgraph.bugbytes.com/tutorials/mirror/query.html)
+
+### Developer Guides
+- [Network Configuration](https://hashgraph.bugbytes.com/tutorials/network.html) -- testnet/mainnet endpoints, node rotation
+- [Key Management](https://hashgraph.bugbytes.com/tutorials/security/keymanagement.html) -- env vars, vaults, async signing
+- [Dependency Injection](https://hashgraph.bugbytes.com/tutorials/di.html) -- IServiceCollection registration
+- [Error Handling](https://hashgraph.bugbytes.com/tutorials/errorhandling.html) -- exception hierarchy, retry patterns
+- [Logging](https://hashgraph.bugbytes.com/tutorials/logging.html) -- gRPC diagnostics
+
+### Quick Reference
+- [API Cookbook](https://github.com/bugbytesinc/Hiero/blob/main/docs/api-cookbook.md) -- one code block per operation, every SDK method

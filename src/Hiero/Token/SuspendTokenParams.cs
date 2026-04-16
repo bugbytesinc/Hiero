@@ -6,9 +6,14 @@ using System.Runtime.CompilerServices;
 
 namespace Hiero;
 /// <summary>
-/// Token parameters for suspending an account's ability to 
+/// Token parameters for suspending an account's ability to
 /// send or receive the specified token.
 /// </summary>
+/// <example>
+/// Freeze a single holder's ability to move this token. Contrast with
+/// <see cref="PauseTokenParams"/> which halts all holders at once:
+/// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="SuspendToken" language="csharp"/>
+/// </example>
 public sealed class SuspendTokenParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
@@ -83,6 +88,9 @@ public static class SuspendTokenExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission, for example, if the token is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="SuspendToken" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> SuspendTokenAsync(this ConsensusClient client, EntityId token, EntityId holder, Action<IConsensusContext>? configure = null)
     {
@@ -111,6 +119,9 @@ public static class SuspendTokenExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission, for example, if the token is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="SuspendToken" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> SuspendTokenAsync(this ConsensusClient client, SuspendTokenParams suspendParams, Action<IConsensusContext>? configure = null)
     {

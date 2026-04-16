@@ -176,6 +176,15 @@ public sealed class MirrorGrpcClient : IAsyncDisposable
     /// <exception cref="ArgumentNullException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing or a parameter is invalid.</exception>
     /// <exception cref="MirrorGrpcException">If the mirror node stream faulted during request processing or upon submission.</exception>
+    /// <example>
+    /// Live stream from the current time forward — reads keep pace with the
+    /// incoming mirror messages via a <c>Channel</c>:
+    /// <code source="../../samples/TopicSubscription/Program.cs" region="SubscribeTopic" language="csharp"/>
+    /// </example>
+    /// <example>
+    /// Replay a bounded historical time range instead of tailing:
+    /// <code source="../../samples/DocSnippets/ConsensusSnippets.cs" region="SubscribeBoundedRange" language="csharp"/>
+    /// </example>
     public async Task SubscribeTopicAsync(SubscribeTopicParams subscribeParameters, Action<IMirrorGrpcContext>? configure = null)
     {
         if (subscribeParameters is null)

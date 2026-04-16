@@ -10,21 +10,22 @@ In preparation for querying an account for its crypto balance, the first step is
 class Program
 {
     static async Task Main(string[] args)
-    {                                                 // For Example:
-        var endpointUrl = args[0];                    //   https://2.testnet.hedera.com:50211
-        var nodeAccountNo = long.Parse(args[1]);      //   5 (node 0.0.5)
-        var queryAccountNo = long.Parse(args[2]);     //   2300 (account 0.0.2300)
+    {
+        // Usage: dotnet run -- https://2.testnet.hedera.com:50211 0.0.5 0.0.98
+        var endpointUrl = args[0];
+        if (!EntityId.TryParseShardRealmNum(args[1], out var nodeAccount))
+            throw new ArgumentException($"Invalid node account: {args[1]}");
+        if (!EntityId.TryParseShardRealmNum(args[2], out var queryAccount))
+            throw new ArgumentException($"Invalid query account: {args[2]}");
+
         try
         {
             await using var client = new ConsensusClient(ctx =>
             {
-                ctx.Endpoint = new ConsensusNodeEndpoint(
-                    new EntityId(0, 0, nodeAccountNo),
-                    new Uri(endpointUrl));
+                ctx.Endpoint = new ConsensusNodeEndpoint(nodeAccount, new Uri(endpointUrl));
             });
-            var account = new EntityId(0, 0, queryAccountNo);
-            var balance = await client.GetAccountBalanceAsync(account);
-            Console.WriteLine($"Account Balance for 0.0.{queryAccountNo} is {balance:#,#} tinybars.");
+            var balance = await client.GetAccountBalanceAsync(queryAccount);
+            Console.WriteLine($"Account Balance for {queryAccount} is {balance:#,#} tinybars.");
         }
         catch (Exception ex)
         {

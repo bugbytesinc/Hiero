@@ -1,11 +1,37 @@
 ﻿// SPDX-License-Identifier: Apache-2.0
 namespace Hiero;
 /// <summary>
-/// Represents an error with a contract query that passed the gateway node 
-/// pre-check and was processed by the gossip node but did not succeed.  It
-/// includes additional information returned by the hedera contract 
-/// virtual machine.  Transaction fees will have been spent.
+/// Represents an error with a contract query that passed the gateway node
+/// pre-check and was processed by the gossip node but did not succeed. It
+/// includes additional information returned by the hedera contract
+/// virtual machine. Transaction fees will have been spent.
 /// </summary>
+/// <remarks>
+/// <para>
+/// Contract exceptions are <strong>generally permanent</strong> — they
+/// represent EVM-level failures (revert, out-of-gas, invalid opcode) that
+/// will produce the same result if retried with identical inputs.
+/// </para>
+/// <para>
+/// Inspect <see cref="CallResult"/> for EVM-level details: the revert
+/// reason string (if the contract emitted one), gas consumption, and any
+/// events that fired before the revert. The <see cref="Status"/> property
+/// carries the Hedera-level response code
+/// (e.g. <see cref="ResponseCode.ContractRevertExecuted"/>).
+/// </para>
+/// <para>
+/// For <see cref="ResponseCode.InsufficientGas"/>, increase the
+/// <c>Gas</c> property on your <see cref="CallContractParams"/> or
+/// <see cref="QueryContractParams"/> and retry. For other codes, review
+/// the contract's Solidity logic and the inputs that caused the revert.
+/// </para>
+/// <para>
+/// When using <see cref="QueryContractParams"/>, you can suppress this
+/// exception by setting <see cref="QueryContractParams.ThrowOnFail"/> to
+/// <c>false</c> — the <see cref="ContractCallResult"/> is then returned
+/// directly so you can inspect the failure without a try/catch.
+/// </para>
+/// </remarks>
 public sealed class ContractException : Exception
 {
     /// <summary>

@@ -10,6 +10,11 @@ namespace Hiero;
 /// <summary>
 /// Address creation parameters.
 /// </summary>
+/// <example>
+/// Create a new account funded with 1 HBAR from the client's Payer and
+/// authorized by the supplied endorsement:
+/// <code source="../../../samples/DocSnippets/CryptoSnippets.cs" region="CreateAccount" language="csharp"/>
+/// </example>
 public sealed class CreateAccountParams : TransactionParams<CreateAccountReceipt>, INetworkParams<CreateAccountReceipt>
 {
     /// <summary>
@@ -182,6 +187,9 @@ public static class CreateAccountExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/CryptoSnippets.cs" region="CreateAccount" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<CreateAccountReceipt> CreateAccountAsync(this ConsensusClient client, CreateAccountParams createParameters, Action<IConsensusContext>? configure = null)
     {

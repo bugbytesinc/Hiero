@@ -8,6 +8,11 @@ namespace Hiero;
 /// <summary>
 /// Transaction Parameters for Deleting a Consensus Topic.
 /// </summary>
+/// <example>
+/// Permanently delete a topic. Requires the Administrator key; immutable
+/// topics cannot be deleted:
+/// <code source="../../../samples/DocSnippets/ConsensusSnippets.cs" region="DeleteTopic" language="csharp"/>
+/// </example>
 public sealed class DeleteTopicParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
@@ -73,6 +78,9 @@ public static class DeleteTopicExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission, for example if the topic is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the delete request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/ConsensusSnippets.cs" region="DeleteTopic" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> DeleteTopicAsync(this ConsensusClient client, EntityId topic, Action<IConsensusContext>? configure = null)
     {
@@ -101,6 +109,9 @@ public static class DeleteTopicExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission, for example if the topic is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the delete request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/ConsensusSnippets.cs" region="DeleteTopic" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> DeleteTopicAsync(this ConsensusClient client, DeleteTopicParams deleteParams, Action<IConsensusContext>? configure = null)
     {

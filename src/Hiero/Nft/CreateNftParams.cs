@@ -12,6 +12,12 @@ namespace Hiero;
 /// These parameters are used to create a new NFT token type on the Hedera network.
 /// To create instances of an NFT, use the mint functionality.
 /// </remarks>
+/// <example>
+/// Create an NFT collection with the payer as treasury and a capped max-supply.
+/// Separate <c>Administrator</c> and <c>SupplyEndorsement</c> keys are typical
+/// in production; reusing one key is fine for getting started:
+/// <code source="../../../samples/CreateNft/Program.cs" region="CreateNft" language="csharp"/>
+/// </example>
 public sealed class CreateNftParams : TransactionParams<CreateTokenReceipt>, INetworkParams<CreateTokenReceipt>
 {
     /// <summary>
@@ -280,6 +286,9 @@ public static class CreateNftExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/CreateNft/Program.cs" region="CreateNft" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<CreateTokenReceipt> CreateNftAsync(this ConsensusClient client, CreateNftParams createParameters, Action<IConsensusContext>? configure = null)
     {

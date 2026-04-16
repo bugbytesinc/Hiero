@@ -10,24 +10,22 @@ In preparation for querying detailed information about an account, the first ste
 class Program
 {
     static async Task Main(string[] args)
-    {                                                 // For Example:
-        var endpointUrl = args[0];                    //   https://2.testnet.hedera.com:50211
-        var nodeAccountNo = long.Parse(args[1]);      //   5 (node 0.0.5)
-        var payerAccountNo = long.Parse(args[2]);     //   20 (account 0.0.20)
-        var payerPrivateKey = Hex.ToBytes(args[3]);   //   302e0201... (48 byte Ed25519 private in hex)
-        var queryAccountNo = long.Parse(args[4]);     //   2300 (account 0.0.2300)
+    {
+        // Usage: dotnet run -- https://2.testnet.hedera.com:50211 0.0.5 0.0.20 302e... 0.0.2300
+        var endpointUrl = args[0];
+        EntityId.TryParseShardRealmNum(args[1], out var nodeAccount);
+        EntityId.TryParseShardRealmNum(args[2], out var payerAccount);
+        var payerPrivateKey = Hex.ToBytes(args[3]);
+        EntityId.TryParseShardRealmNum(args[4], out var queryAccount);
         try
         {
             await using var client = new ConsensusClient(ctx =>
             {
-                ctx.Endpoint = new ConsensusNodeEndpoint(
-                    new EntityId(0, 0, nodeAccountNo),
-                    new Uri(endpointUrl));
-                ctx.Payer = new EntityId(0, 0, payerAccountNo);
+                ctx.Endpoint = new ConsensusNodeEndpoint(nodeAccount!, new Uri(endpointUrl));
+                ctx.Payer = payerAccount;
                 ctx.Signatory = new Signatory(payerPrivateKey);
             });
-            var account = new EntityId(0, 0, queryAccountNo);
-            var info = await client.GetAccountInfoAsync(account);
+            var info = await client.GetAccountInfoAsync(queryAccount!);
             Console.WriteLine($"Account:               {info.Address}");
             Console.WriteLine($"EVM Address:           {info.EvmAddress}");
             Console.WriteLine($"Balance:               {info.Balance:#,#} tb");

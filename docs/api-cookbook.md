@@ -208,6 +208,25 @@ await client.RevokeTokenKycAsync(token, holder);
 TokenReceipt r = await client.ConfiscateTokensAsync(token, holder, amount);
 ```
 
+### Update Token
+```csharp
+await client.UpdateTokenAsync(new UpdateTokenParams
+{
+    Token = token,
+    Name = "Renamed Token",
+    Memo = "Updated description"
+});
+```
+
+### Update Royalties (Custom Fees)
+```csharp
+await client.UpdateRoyaltiesAsync(token, new IRoyalty[]
+{
+    new TokenRoyalty(feeReceiver, numerator: 25, denominator: 1000,
+                     minimum: 0, maximum: 0)
+});
+```
+
 ### Delete Token
 ```csharp
 await client.DeleteTokenAsync(token);
@@ -298,8 +317,15 @@ await client.AirdropNftAsync(new Nft(nftToken, serial), from, to);
 
 ### Claim / Cancel Pending Airdrops
 ```csharp
-await client.ClaimAirdropAsync(new Airdrop(token, sender, receiver));
-await client.CancelAirdropAsync(new Airdrop(token, sender, receiver));
+// Constructor order: sender, receiver, token (NOT token first)
+await client.ClaimAirdropAsync(new Airdrop(sender, receiver, token));
+await client.CancelAirdropAsync(new Airdrop(sender, receiver, token));
+```
+
+### Relinquish Tokens (Return to Treasury)
+```csharp
+await client.RelinquishTokenAsync(token);          // fungible: return full balance
+await client.RelinquishNftAsync(new Nft(nft, 1));  // NFT: return one serial
 ```
 
 ---
@@ -312,7 +338,7 @@ var receipt = await client.CreateTopicAsync(new CreateTopicParams
 {
     Memo = "My Topic",
     Administrator = new Endorsement(adminKey),
-    Participant = new Endorsement(submitKey),   // key required to submit messages
+    Submitter = new Endorsement(submitKey),      // key required to submit messages
     RenewPeriod = TimeSpan.FromDays(90),
     RenewAccount = renewAccount
 });
@@ -496,12 +522,85 @@ ScheduleInfo info = await client.GetScheduleInfoAsync(scheduleId);
 
 ## Network Utilities
 
+### Query Network State
 ```csharp
 ExchangeRates rates = await client.GetExchangeRatesAsync();
 FeeSchedules fees = await client.GetFeeScheduleAsync();
 VersionInfo version = await client.GetVersionInfoAsync();
 ConsensusNodeInfo[] book = await client.GetAddressBookAsync();
 long pingMs = await client.PingAsync();
+```
+
+### Pseudo-Random Number
+```csharp
+// Unbounded: 48 bytes of randomness (retrieve via mirror record)
+var receipt = await client.GeneratePseudoRandomNumberAsync(new PseudoRandomNumberParams());
+
+// Bounded: integer in [0, maxValue)
+var receipt = await client.GeneratePseudoRandomNumberAsync(new PseudoRandomNumberParams
+{
+    MaxValue = 100
+});
+```
+
+### Atomic Batched Transactions
+```csharp
+// All-or-nothing: every inner transaction succeeds or they all revert
+var receipt = await client.ExecuteAsync(new BatchedTransactionParams
+{
+    TransactionParams = new TransactionParams[]
+    {
+        new TransferParams { CryptoTransfers = new[] {
+            new CryptoTransfer(sender, -100_000_000),
+            new CryptoTransfer(receiver, 100_000_000)
+        }},
+        new CreateAccountParams {
+            Endorsement = new Endorsement(publicKey),
+            InitialBalance = 10_000_000
+        }
+    }
+});
+```
+
+### External Transaction Relay
+```csharp
+// Forward a pre-built signed transaction to the network (precheck only)
+ResponseCode code = await client.SendExternalTransactionAsync(signedTransactionBytes);
+
+// Full flow — wait for receipt
+TransactionReceipt receipt = await client.SubmitExternalTransactionAsync(signedTransactionBytes);
+```
+
+### Mnemonic / Key Derivation
+```csharp
+var mnemonic = new Mnemonic(words, passphrase);
+var (publicKey, privateKey) = mnemonic.GenerateKeyPair(KeyDerivationPath.HashPack);
+```
+
+---
+
+## Address Book (Privileged)
+
+```csharp
+// Add a new consensus node (council-authorized payer required)
+var receipt = await client.AddConsensusNodeAsync(new AddConsensusNodeParams
+{
+    Account = nodeAccount,
+    Description = "Operator node",
+    GossipEndpoints = new[] { new Uri("tcp://10.0.0.1:50111") },
+    ServiceEndpoints = new[] { new Uri("https://rpc.example.com:50211") },
+    GossipCaCertificate = caCertBytes,
+    AdminKey = new Endorsement(adminKey)
+});
+ulong nodeId = receipt.NodeId;
+
+// Update node
+await client.UpdateConsensusNodeAsync(new UpdateConsensusNodeParams
+{
+    NodeId = nodeId, Description = "Renamed" });
+
+// Remove node
+await client.RemoveConsensusNodeAsync(nodeId);
 ```
 
 ---
@@ -552,9 +651,9 @@ var mirror = new MirrorRestClient(new HttpClient
 // Queries return typed data objects
 var account = await mirror.GetAccountAsync(accountId);
 var token = await mirror.GetTokenAsync(tokenId);
-var nft = await mirror.GetNftAsync(tokenId, serialNo);
-var contract = await mirror.GetContractAsync(contractId);
-var tx = await mirror.GetTransactionAsync(txIdString);
+var nft = await mirror.GetNftAsync(new Nft(tokenId, serialNo));
+var contract = await mirror.GetContractDataAsync(contractId);
+var tx = await mirror.GetTransactionAsync(consensusTimestamp);
 ```
 
 ---

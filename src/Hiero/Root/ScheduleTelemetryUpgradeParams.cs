@@ -9,6 +9,11 @@ namespace Hiero;
 /// <summary>
 /// Transaction parameters for scheduling a telemetry services upgrade.
 /// </summary>
+/// <example>
+/// Roll out a telemetry-config refresh across the node fleet without a full
+/// software upgrade:
+/// <code source="../../../samples/DocSnippets/GovernanceSnippets.cs" region="ScheduleTelemetryUpgrade" language="csharp"/>
+/// </example>
 public sealed class ScheduleTelemetryUpgradeParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
@@ -66,6 +71,9 @@ public static class ScheduleTelemetryUpgradeExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/GovernanceSnippets.cs" region="ScheduleTelemetryUpgrade" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> ScheduleTelemetryUpgradeAsync(this ConsensusClient client, ScheduleTelemetryUpgradeParams scheduleParams, Action<IConsensusContext>? configure = null)
     {

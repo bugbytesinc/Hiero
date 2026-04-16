@@ -12,6 +12,11 @@ namespace Hiero;
 /// This transaction must be signed by the sender account for each pending airdrop
 /// to be cancelled. Cancelled pending airdrops are permanently removed from state.
 /// </remarks>
+/// <example>
+/// Cancel multiple pending airdrops in one transaction. The sender signs.
+/// Cancelled airdrops return tokens to the sender:
+/// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="CancelAirdropsBatch" language="csharp"/>
+/// </example>
 public sealed class CancelAirdropParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
@@ -82,6 +87,9 @@ public static class CancelAirdropExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="CancelAirdrop" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> CancelAirdropAsync(this ConsensusClient client, Airdrop pendingAirdrop, Action<IConsensusContext>? configure = null)
     {
@@ -109,6 +117,9 @@ public static class CancelAirdropExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="CancelAirdropsBatch" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> CancelAirdropsAsync(this ConsensusClient client, CancelAirdropParams cancelParams, Action<IConsensusContext>? configure = null)
     {

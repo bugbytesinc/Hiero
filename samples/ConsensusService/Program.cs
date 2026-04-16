@@ -23,6 +23,7 @@ await using var client = new ConsensusClient(ctx =>
 
 // 1. Create a topic
 Console.WriteLine("Creating HCS topic...");
+#region CreateTopic
 var createReceipt = await client.CreateTopicAsync(new CreateTopicParams
 {
     Memo = "Hiero SDK Sample Topic",
@@ -30,13 +31,16 @@ var createReceipt = await client.CreateTopicAsync(new CreateTopicParams
     RenewAccount = new EntityId(0, 0, payerNum)
 });
 Console.WriteLine($"Topic created: {createReceipt.Topic}");
+#endregion
 
 // 2. Submit a message
 Console.WriteLine("Submitting message...");
+#region SubmitMessage
 var message = Encoding.UTF8.GetBytes("Hello from Hiero SDK!");
 var submitReceipt = await client.SubmitMessageAsync(createReceipt.Topic, message);
 Console.WriteLine($"Message submitted - Sequence: {submitReceipt.SequenceNumber}");
 Console.WriteLine($"Status: {submitReceipt.Status}");
+#endregion
 
 // 3. Query topic info
 var info = await client.GetTopicInfoAsync(createReceipt.Topic);

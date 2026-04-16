@@ -14,6 +14,11 @@ namespace Hiero;
 /// Successfully claimed airdrops are removed from state and tokens are transferred
 /// to the receiver's balance.
 /// </remarks>
+/// <example>
+/// Claim several pending airdrops (mixing fungible and NFT is allowed) in
+/// one transaction:
+/// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="ClaimAirdropsBatch" language="csharp"/>
+/// </example>
 public sealed class ClaimAirdropParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
@@ -84,6 +89,9 @@ public static class ClaimAirdropExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="ClaimAirdrop" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> ClaimAirdropAsync(this ConsensusClient client, Airdrop pendingAirdrop, Action<IConsensusContext>? configure = null)
     {
@@ -111,6 +119,9 @@ public static class ClaimAirdropExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="ClaimAirdropsBatch" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> ClaimAirdropsAsync(this ConsensusClient client, ClaimAirdropParams claimParams, Action<IConsensusContext>? configure = null)
     {

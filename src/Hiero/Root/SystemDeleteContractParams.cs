@@ -9,6 +9,11 @@ namespace Hiero;
 /// <summary>
 /// Transaction parameters for administratively deleting a contract from the network.
 /// </summary>
+/// <example>
+/// Superuser-only: remove a contract even if it's immutable. Restorable via
+/// <see cref="SystemRestoreContractParams"/> within a grace window:
+/// <code source="../../../samples/DocSnippets/GovernanceSnippets.cs" region="SystemDeleteContract" language="csharp"/>
+/// </example>
 public sealed class SystemDeleteContractParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
@@ -64,6 +69,9 @@ public static class SystemDeleteContractExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the delete request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/GovernanceSnippets.cs" region="SystemDeleteContract" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> SystemDeleteContractAsync(this ConsensusClient client, SystemDeleteContractParams deleteParams, Action<IConsensusContext>? configure = null)
     {

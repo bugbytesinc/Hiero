@@ -5,6 +5,25 @@ namespace Hiero.Mirror;
 /// <summary>
 /// Exception raised when a mirror request or simulated evm call has failed.
 /// </summary>
+/// <remarks>
+/// <para>
+/// Thrown by <see cref="MirrorRestClient"/> extension methods when the
+/// mirror node REST API returns an HTTP error response. The
+/// <see cref="StatusCode"/> property carries the HTTP status and
+/// <see cref="Details"/> contains the structured error payload returned
+/// by the mirror node (if any).
+/// </para>
+/// <para><strong>Transient codes (safe to retry):</strong>
+/// <see cref="HttpStatusCode.TooManyRequests"/> (429),
+/// <see cref="HttpStatusCode.ServiceUnavailable"/> (503),
+/// <see cref="HttpStatusCode.GatewayTimeout"/> (504). Mirror nodes
+/// enforce rate limits; back off and retry.</para>
+/// <para><strong>Permanent codes (do not retry):</strong>
+/// <see cref="HttpStatusCode.NotFound"/> (404) — the entity does not
+/// exist (or has not yet propagated to the mirror); verify the EntityId.
+/// <see cref="HttpStatusCode.BadRequest"/> (400) — the query was
+/// malformed; check filter parameters.</para>
+/// </remarks>
 public class MirrorException : Exception
 {
     /// <summary>

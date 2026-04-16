@@ -8,6 +8,11 @@ namespace Hiero;
 /// <summary>
 /// Allowance Creation and Adjustment Parameters
 /// </summary>
+/// <example>
+/// Grant another account the right to spend up to a fixed amount of HBAR
+/// from the owning account (who must be the transaction Payer):
+/// <code source="../../../samples/DocSnippets/CryptoSnippets.cs" region="AllocateAllowance" language="csharp"/>
+/// </example>
 public sealed class AllowanceParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
@@ -148,6 +153,9 @@ public static class AllowanceExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/CryptoSnippets.cs" region="AllocateAllowance" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> AllocateAllowanceAsync(this ConsensusClient client, AllowanceParams allowanceParams, Action<IConsensusContext>? configure = null)
     {

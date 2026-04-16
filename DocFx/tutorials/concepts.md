@@ -6,13 +6,13 @@ title: Concepts
 
 ## Entity ID
 
-The first concept is the **Entity ID**.  An entity ID is an identifier for an account, contract, file, consensus topic or Hedera token.  The identifier consists of three parts: Shard, Realm and Number.  Currently, the Hedera network only has one instance of a shard and realm; for the time being, these values will be zero.  The third identifier is the entity number.  The network generates this number upon item creation.
+The first concept is the [`EntityId`](xref:Hiero.EntityId).  An entity ID is an identifier for an account, contract, file, consensus topic or Hedera token.  The identifier consists of three parts: Shard, Realm and Number in the format `shard.realm.num` (e.g. `0.0.98`).  Currently, the Hedera network only has one instance of a shard and realm; for the time being, these values will be zero.  The third identifier is the entity number.  The network generates this number upon item creation.  Use [`EntityId.TryParseShardRealmNum`](xref:Hiero.EntityId.TryParseShardRealmNum*) to parse the standard string format.
 
-Entity IDs can also take two alternate forms: a **Key Alias** (referencing an account by its public key endorsement) and an **EVM Address** (a 20-byte address compatible with Ethereum tooling).
+Entity IDs can also take two alternate forms: a **Key Alias** (referencing an account by its public key endorsement) and an **EVM Address** (a 20-byte [`EvmAddress`](xref:Hiero.EvmAddress) compatible with Ethereum tooling).
 
 ## Consensus Node Endpoint
 
-The **Consensus Node Endpoint** is an object provided by the library for identifying a Hedera gossip network node.  Each Hedera node has a public addressable internet endpoint and linked network account address.  The internet endpoint represents the publicly available gRPC service hosted by the network node, this is the service the .NET library will connect to when making requests.  The account address represents the Hedera crypto account paired with the node that receives funds from transaction requests requiring payment.  Hedera lists the address book of endpoints for the test networks at https://docs.hedera.com/hedera/networks/testnet/testnet-nodes.
+The [`ConsensusNodeEndpoint`](xref:Hiero.ConsensusNodeEndpoint) is an object provided by the library for identifying a Hedera gossip network node.  Each Hedera node has a public addressable internet endpoint and linked network account address.  The internet endpoint represents the publicly available gRPC service hosted by the network node, this is the service the .NET library will connect to when making requests.  The account address represents the Hedera crypto account paired with the node that receives funds from transaction requests requiring payment.  Hedera lists the address book of endpoints for the test networks at https://docs.hedera.com/hedera/networks/testnet/testnet-nodes. See the [Network Configuration](network.md) guide for endpoint tables and node-rotation patterns.
 
 ## Consensus Client
 
@@ -22,13 +22,13 @@ The library also provides a [`MirrorRestClient`](xref:Hiero.MirrorRestClient) fo
 
 ## Context
 
-Some initial configuration is required when creating a Consensus Client object.  For example, for balance queries, the client must know which endpoint to contact to ask for the information.  Each client instance maintains a **Context** representing the client's configuration.  The client provides methods such as _Configure_ and _Clone_ enabling calling code to modify the client's configuration.  These methods accept a callback method, that when called, receives the context represented as an [`IConsensusContext`](xref:Hiero.IConsensusContext) interface containing properties that may be changed.
+Some initial configuration is required when creating a Consensus Client object.  For example, for balance queries, the client must know which endpoint to contact to ask for the information.  Each client instance maintains a **Context** representing the client's configuration.  The client provides methods such as [`Configure`](xref:Hiero.ConsensusClient.Configure*) and [`Clone`](xref:Hiero.ConsensusClient.Clone*) enabling calling code to modify the client's configuration.  These methods accept a callback method, that when called, receives the context represented as an [`IConsensusContext`](xref:Hiero.IConsensusContext) interface containing properties that may be changed.
 
 The context follows a hierarchical **stack** pattern: when a client is cloned, the child inherits the parent's configuration, and any changes to the child do not affect the parent.  Properties not set in the child context fall back to the parent's value.
 
 ## Payer
 
-Whereas querying the Hedera network for balances is presently free (note: balance queries on gossip nodes are being deprecated in favor of the Mirror Node), other actions, particularly those changing network state, require the payment of a small fee to execute.  The .NET library refers to the account paying these transaction fees as the **Payer** (also known as the "Operator").  The payer consists of two pieces of information: the _Entity ID_ identifying the payer, and a _Signatory_ authorizing the spending of funds from the account.
+Whereas querying the Hedera network for balances is presently free (note: balance queries on gossip nodes are being deprecated in favor of the Mirror Node), other actions, particularly those changing network state, require the payment of a small fee to execute.  The .NET library refers to the account paying these transaction fees as the **Payer** (also known as the "Operator").  The payer consists of two pieces of information: the [`EntityId`](xref:Hiero.EntityId) identifying the payer, and a [`Signatory`](xref:Hiero.Signatory) authorizing the spending of funds from the account.
 
 ## Signatory
 

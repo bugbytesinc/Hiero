@@ -6,10 +6,14 @@ using System.Runtime.CompilerServices;
 
 namespace Hiero;
 /// <summary>
-/// Removes the holdings of given asset from the associated 
-/// account and destroys them. Must be signed by 
+/// Removes the holdings of given asset from the associated
+/// account and destroys them. Must be signed by
 /// the confiscate/wipe admin key.
 /// </summary>
+/// <example>
+/// Forcibly reclaim multiple NFTs from a holder in one transaction:
+/// <code source="../../../samples/DocSnippets/NftSnippets.cs" region="ConfiscateNftBatch" language="csharp"/>
+/// </example>
 public sealed class ConfiscateNftParams : TransactionParams<TokenReceipt>, INetworkParams<TokenReceipt>
 {
     /// <summary>
@@ -98,6 +102,9 @@ public static class ConfiscateNftExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission, for example if the nft is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the confiscate request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/NftSnippets.cs" region="ConfiscateNftSingle" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TokenReceipt> ConfiscateNftAsync(this ConsensusClient client, Nft nft, EntityId account, Action<IConsensusContext>? configure = null)
     {
@@ -126,6 +133,9 @@ public static class ConfiscateNftExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission, for example if the nft is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the confiscate request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/NftSnippets.cs" region="ConfiscateNftBatch" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TokenReceipt> ConfiscateNftsAsync(this ConsensusClient client, ConfiscateNftParams confiscateParams, Action<IConsensusContext>? configure = null)
     {

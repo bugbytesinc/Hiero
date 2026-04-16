@@ -25,21 +25,22 @@ The most simple thing one can ask of the Hedera network is the balance of an acc
 class Program
 {
     static async Task Main(string[] args)
-    {                                                 // For Example:
-        var endpointUrl = args[0];                    //   https://2.testnet.hedera.com:50211
-        var nodeAccountNo = long.Parse(args[1]);      //   5 (node 0.0.5)
-        var queryAccountNo = long.Parse(args[2]);     //   2300 (account 0.0.2300)
+    {
+        // Usage: dotnet run -- https://2.testnet.hedera.com:50211 0.0.5 0.0.98
+        var endpointUrl = args[0];
+        if (!EntityId.TryParseShardRealmNum(args[1], out var nodeAccount))
+            throw new ArgumentException($"Invalid node account: {args[1]}");
+        if (!EntityId.TryParseShardRealmNum(args[2], out var queryAccount))
+            throw new ArgumentException($"Invalid query account: {args[2]}");
+
         try
         {
             await using var client = new ConsensusClient(ctx =>
             {
-                ctx.Endpoint = new ConsensusNodeEndpoint(
-                    new EntityId(0, 0, nodeAccountNo),
-                    new Uri(endpointUrl));
+                ctx.Endpoint = new ConsensusNodeEndpoint(nodeAccount, new Uri(endpointUrl));
             });
-            var account = new EntityId(0, 0, queryAccountNo);
-            var balance = await client.GetAccountBalanceAsync(account);
-            Console.WriteLine($"Account Balance for 0.0.{queryAccountNo} is {balance:#,#} tinybars.");
+            var balance = await client.GetAccountBalanceAsync(queryAccount);
+            Console.WriteLine($"Account Balance for {queryAccount} is {balance:#,#} tinybars.");
         }
         catch (Exception ex)
         {
@@ -50,11 +51,11 @@ class Program
 }
 ```
 
-Hiero provides access to the Hedera network via the [`ConsensusClient`](xref:Hiero.ConsensusClient) object.  The [`ConsensusClient`](xref:Hiero.ConsensusClient) object orchestrates the request construction and communication with the Hedera network.  During creation, it requires a small amount of configuration.  At a minimum to retrieve an account balance, the client must be configured with an [`Endpoint`](xref:Hiero.IConsensusContext.Endpoint).  The [`ConsensusNodeEndpoint`](xref:Hiero.ConsensusNodeEndpoint) object represents the internet network address and account for the node processing requests.  The [`EntityId`](xref:Hiero.EntityId) is the identifier of the account to be queried.
+Hiero provides access to the Hedera network via the [`ConsensusClient`](xref:Hiero.ConsensusClient) object.  The [`ConsensusClient`](xref:Hiero.ConsensusClient) object orchestrates the request construction and communication with the Hedera network.  During creation, it requires a small amount of configuration.  At a minimum to retrieve an account balance, the client must be configured with an [`Endpoint`](xref:Hiero.IConsensusContext.Endpoint).  The [`ConsensusNodeEndpoint`](xref:Hiero.ConsensusNodeEndpoint) object represents the internet network address and account for the node processing requests.  The [`EntityId`](xref:Hiero.EntityId) identifies accounts, tokens, topics, and other entities using the standard `shard.realm.num` format (e.g. `0.0.98`). Use [`EntityId.TryParseShardRealmNum`](xref:Hiero.EntityId.TryParseShardRealmNum*) to parse them from strings — this accepts the same format the Hedera portal gives you.
 
 ## How do I learn more?
 
-* [Examples](crypto/balance.md):  If you prefer to start with code you can copy then modify, we are working up simple examples for the major ways to interact with the network. So far we have examples for the following:
+* **Tutorials**: Step-by-step guides with code for every major workflow:
   * Crypto Transactions
     * [Get Account Balance](crypto/balance.md)
     * [Transfer Crypto](crypto/transfer.md)
@@ -62,16 +63,44 @@ Hiero provides access to the Hedera network via the [`ConsensusClient`](xref:Hie
     * [Create New Account](crypto/create.md)
     * [Update Account](crypto/update.md)
     * [Delete Account](crypto/delete.md)
+  * Fungible Tokens
+    * [Create a Token](token/create.md)
+    * [Mint Tokens](token/mint.md)
+    * [Transfer Tokens](token/transfer.md)
+    * [Associate and Dissociate](token/associate.md)
+  * Non-Fungible Tokens (NFTs)
+    * [Create an NFT Collection](nft/create.md)
+    * [Mint an NFT](nft/mint.md)
+    * [Transfer an NFT](nft/transfer.md)
+  * Consensus Service (HCS)
+    * [Create a Topic](consensus/createtopic.md)
+    * [Submit a Message](consensus/submit.md)
+    * [Subscribe to a Topic](consensus/subscribe.md)
+  * Smart Contracts
+    * [Deploy and Call a Contract](contract/deploy.md)
   * File Manipulation
     * [Create File](file/createfile.md)
+  * Scheduled Transactions
+    * [Schedule a Transaction](schedule/create.md)
+  * Airdrops
+    * [Airdrop Tokens](airdrop/send.md)
+  * Mirror Node
+    * [Query Historical State](mirror/query.md)
   * Miscellaneous
     * [Fee Schedule](misc/fees.md)
     * [Exchange Rates](misc/rate.md)
     * [Suspend Network](misc/suspend.md)
 
-* [API Documentation](~/api/Hiero.yml): We have API Documentation generated from the source code itself.  This is useful if you are looking for a low-level understanding of the moving pieces.
+* **Developer Guides**:
+  * [Network Configuration](network.md) — testnet vs mainnet, node rotation patterns
+  * [Key Management](security/keymanagement.md) — environment variables, vaults, async signing
+  * [Dependency Injection](di.md) — registering clients with IServiceCollection
+  * [Error Handling](errorhandling.md) — exception hierarchy, transient vs permanent codes, retry patterns
+  * [Logging](logging.md) — gRPC-level diagnostics
 
-Our documentation is a work in progress and will be adding to it and improving over time as bandwidth permits.
+* [API Documentation](~/api/Hiero.yml): Generated API reference with code examples for every type and method.
+
+* [API Cookbook](https://github.com/bugbytesinc/Hiero/blob/main/docs/api-cookbook.md): Quick reference for all SDK operations in one flat list.
 
 ## Is this project Open Source?
 

@@ -10,9 +10,14 @@ namespace Hiero;
 /// Supports complex atomic multi-party multi-token and crypto transfers requests.
 /// Can support multi-account crypto transfers and/or multi-account token transfers
 /// in the same transaction.  The crypto transfer list or token transfer list may
-/// be null if not used, however at least one transfer of some type must be defined 
-/// to be valid.  
+/// be null if not used, however at least one transfer of some type must be defined
+/// to be valid.
 /// </summary>
+/// <example>
+/// Atomic multi-party HBAR transfer. Each negative amount is debited from the
+/// corresponding account and the sum across the list must net to zero:
+/// <code source="../../../samples/DocSnippets/CryptoSnippets.cs" region="TransferMultiparty" language="csharp"/>
+/// </example>
 public sealed class TransferParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
@@ -403,6 +408,9 @@ public static class TransferExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the transfer request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/CryptoSnippets.cs" region="Transfer" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> TransferAsync(this ConsensusClient client, EntityId fromAddress, EntityId toAddress, long amount, Action<IConsensusContext>? configure = null)
     {
@@ -445,6 +453,9 @@ public static class TransferExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the transfer request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/CryptoSnippets.cs" region="TransferNft" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> TransferNftAsync(this ConsensusClient client, Nft nft, EntityId fromAddress, EntityId toAddress, Action<IConsensusContext>? configure = null)
     {
@@ -472,6 +483,9 @@ public static class TransferExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the transfer request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/CryptoSnippets.cs" region="TransferMultiparty" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> TransferAsync(this ConsensusClient client, TransferParams transfers, Action<IConsensusContext>? configure = null)
     {
@@ -520,6 +534,9 @@ public static class TransferExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the transfer request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/CryptoSnippets.cs" region="TransferToken" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> TransferTokensAsync(this ConsensusClient client, EntityId token, EntityId fromAddress, EntityId toAddress, long amount, Action<IConsensusContext>? configure = null)
     {

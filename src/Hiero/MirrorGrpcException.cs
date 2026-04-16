@@ -5,6 +5,30 @@ namespace Hiero;
 /// Represents an unexpected termination or exception received
 /// from a mirror stream.
 /// </summary>
+/// <remarks>
+/// <para>
+/// Thrown by <see cref="MirrorGrpcClient.SubscribeTopicAsync"/> when the
+/// mirror node's gRPC stream terminates unexpectedly. Messages that were
+/// already delivered to the <c>ChannelWriter&lt;TopicMessage&gt;</c> before
+/// the fault are still valid — only the stream itself is broken.
+/// </para>
+/// <para>
+/// Inspect <see cref="Code"/> to decide how to recover:
+/// </para>
+/// <list type="bullet">
+///   <item><see cref="MirrorGrpcExceptionCode.Unavailable"/> — the mirror
+///   node is temporarily down. <strong>Transient</strong> — retry after a
+///   delay, resuming from the last received
+///   <c>TopicMessage.SequenceNumber</c>.</item>
+///   <item><see cref="MirrorGrpcExceptionCode.CommunicationError"/> — a
+///   network-level gRPC failure. <strong>Transient</strong> — retry.</item>
+///   <item><see cref="MirrorGrpcExceptionCode.TopicNotFound"/> — the topic
+///   address does not exist. <strong>Permanent</strong> — verify the
+///   topic EntityId.</item>
+///   <item><see cref="MirrorGrpcExceptionCode.InvalidTopicAddress"/> — the
+///   address exists but is not a topic. <strong>Permanent</strong>.</item>
+/// </list>
+/// </remarks>
 public sealed class MirrorGrpcException : Exception
 {
     /// <summary>

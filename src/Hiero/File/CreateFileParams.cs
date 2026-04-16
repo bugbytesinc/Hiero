@@ -9,6 +9,11 @@ namespace Hiero;
 /// <summary>
 /// File creation parameters.
 /// </summary>
+/// <example>
+/// Create a file with a single-key endorsement and a small payload. The
+/// same endorsement is required to update, append to, or delete the file:
+/// <code source="../../../samples/FileService/Program.cs" region="CreateFile" language="csharp"/>
+/// </example>
 public sealed class CreateFileParams : TransactionParams<FileReceipt>, INetworkParams<FileReceipt>
 {
     /// <summary>
@@ -92,6 +97,9 @@ public static class CreateFileExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/FileService/Program.cs" region="CreateFile" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<FileReceipt> CreateFileAsync(this ConsensusClient client, CreateFileParams createParameters, Action<IConsensusContext>? configure = null)
     {

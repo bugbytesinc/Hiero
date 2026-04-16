@@ -2,9 +2,32 @@
 namespace Hiero;
 
 /// <summary>
-/// Represents the condition where a submitted transaction 
+/// Represents the condition where a submitted transaction
 /// failed the pre-check validation by the network gateway node.
 /// </summary>
+/// <remarks>
+/// <para>
+/// A precheck failure means the transaction never reached consensus — no fees
+/// were charged and no state was changed. Inspect <see cref="Status"/> to
+/// determine why the gateway rejected it.
+/// </para>
+/// <para><strong>Transient codes (safe to retry with back-off):</strong>
+/// <see cref="ResponseCode.Busy"/>,
+/// <see cref="ResponseCode.PlatformTransactionNotCreated"/>. The SDK
+/// auto-retries these based on <c>IConsensusContext.RetryCount</c> and
+/// <c>RetryDelay</c>; if you see a <c>PrecheckException</c> with one of
+/// these codes it means the retry budget was exhausted.</para>
+/// <para><strong>Permanent codes (do not retry):</strong>
+/// <see cref="ResponseCode.InvalidSignature"/>,
+/// <see cref="ResponseCode.InsufficientAccountBalance"/>,
+/// <see cref="ResponseCode.InvalidTransactionBody"/> — fix the request
+/// configuration before resubmitting.</para>
+/// <para>If <see cref="Status"/> is
+/// <see cref="ResponseCode.InsufficientTxFee"/>, the
+/// <see cref="RequiredFee"/> property contains the minimum fee (in tinybars)
+/// the gateway expects — increase <c>IConsensusContext.FeeLimit</c> to at
+/// least this amount and retry.</para>
+/// </remarks>
 public sealed class PrecheckException : Exception
 {
     /// <summary>

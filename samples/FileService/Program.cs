@@ -26,6 +26,7 @@ var payerEndorsement = new Signatory(payerKey).GetEndorsements().First();
 
 // 1. Create a file
 Console.WriteLine("Creating file...");
+#region CreateFile
 var createReceipt = await client.CreateFileAsync(new CreateFileParams
 {
     Contents = Encoding.UTF8.GetBytes("Hello from Hiero SDK!"),
@@ -33,6 +34,7 @@ var createReceipt = await client.CreateFileAsync(new CreateFileParams
     Memo = "Sample file"
 });
 Console.WriteLine($"File created: {createReceipt.File}");
+#endregion
 
 // 2. Read file contents
 var contents = await client.GetFileContentAsync(createReceipt.File);
@@ -40,11 +42,13 @@ Console.WriteLine($"File contents: {Encoding.UTF8.GetString(contents.Span)}");
 
 // 3. Append to file
 Console.WriteLine("Appending to file...");
+#region AppendFile
 await client.AppendFileAsync(new AppendFileParams
 {
     File = createReceipt.File,
     Contents = Encoding.UTF8.GetBytes(" More content appended.")
 });
+#endregion
 
 // 4. Read updated contents
 var updated = await client.GetFileContentAsync(createReceipt.File);

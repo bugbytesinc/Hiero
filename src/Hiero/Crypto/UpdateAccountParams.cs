@@ -8,11 +8,16 @@ using System.Runtime.CompilerServices;
 namespace Hiero;
 /// <summary>
 /// Represents the properties on an account that can be changed.
-/// Any property set to <code>null</code> on this object when submitted to the 
+/// Any property set to <code>null</code> on this object when submitted to the
 /// <see cref="UpdateAccountExtensions.UpdateAccountAsync"/>
 /// method will be left unchanged by the system.  Certain additional conditions
 /// apply to certain properties such as the signing key are described below.
 /// </summary>
+/// <example>
+/// Rotate the signing key on an account. Both the current key (from the client
+/// context) and the new key (from the params <c>Signatory</c>) must sign:
+/// <code source="../../../samples/DocSnippets/CryptoSnippets.cs" region="UpdateAccount" language="csharp"/>
+/// </example>
 public sealed class UpdateAccountParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
@@ -229,6 +234,9 @@ public static class UpdateAccountExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the update request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/CryptoSnippets.cs" region="UpdateAccount" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> UpdateAccountAsync(this ConsensusClient client, UpdateAccountParams updateParameters, Action<IConsensusContext>? configure = null)
     {

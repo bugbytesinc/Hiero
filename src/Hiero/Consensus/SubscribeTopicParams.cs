@@ -7,6 +7,11 @@ namespace Hiero;
 /// Parameters for subscribing to a consensus topic message stream
 /// from a mirror node.
 /// </summary>
+/// <example>
+/// Stream messages from the current time forward into a <c>Channel&lt;TopicMessage&gt;</c>.
+/// The subscription runs in the background; the consumer reads from the channel:
+/// <code source="../../../samples/TopicSubscription/Program.cs" region="SubscribeTopic" language="csharp"/>
+/// </example>
 public sealed class SubscribeTopicParams
 {
     /// <summary>

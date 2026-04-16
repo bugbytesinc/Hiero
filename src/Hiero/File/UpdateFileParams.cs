@@ -9,6 +9,11 @@ namespace Hiero;
 /// <summary>
 /// Input parameters describing how to update a network file.
 /// </summary>
+/// <example>
+/// Update mutable file properties (memo, expiration). Any null property is
+/// left unchanged:
+/// <code source="../../../samples/DocSnippets/FileSnippets.cs" region="UpdateFile" language="csharp"/>
+/// </example>
 public sealed class UpdateFileParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
@@ -120,6 +125,10 @@ public static class UpdateFileExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the update request as invalid or had missing data.</exception>
+    /// <example>
+    /// Replace file contents (the 4KB cap applies — chunk larger writes):
+    /// <code source="../../../samples/DocSnippets/FileSnippets.cs" region="UpdateFileContents" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> UpdateFileAsync(this ConsensusClient client, UpdateFileParams updateParameters, Action<IConsensusContext>? configure = null)
     {

@@ -8,6 +8,10 @@ namespace Hiero;
 /// <summary>
 /// Transaction Parameters for Continuing (Un-Pausing) a Token.
 /// </summary>
+/// <example>
+/// Reverse a previous <see cref="PauseTokenParams"/>:
+/// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="ContinueToken" language="csharp"/>
+/// </example>
 public sealed class ContinueTokenParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
@@ -75,6 +79,9 @@ public static class ContinueTokenExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission, for example, if the token is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="ContinueToken" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> ContinueTokenAsync(this ConsensusClient client, EntityId token, Action<IConsensusContext>? configure = null)
     {
@@ -104,6 +111,9 @@ public static class ContinueTokenExtensions
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission, for example, if the token is already deleted.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
+    /// <example>
+    /// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="ContinueToken" language="csharp"/>
+    /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> ContinueTokenAsync(this ConsensusClient client, ContinueTokenParams continueParams, Action<IConsensusContext>? configure = null)
     {
