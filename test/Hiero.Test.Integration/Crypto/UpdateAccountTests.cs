@@ -24,7 +24,7 @@ public class UpdateAccountTests
 
         var updateResult = await client.UpdateAccountAsync(new UpdateAccountParams
         {
-            Address = createResult.Address,
+            Account = createResult.Address,
             Endorsement = new Endorsement(updatedKeyPair.publicKey),
             Signatory = new Signatory(privateKey, updatedKeyPair.privateKey)
         });
@@ -53,7 +53,7 @@ public class UpdateAccountTests
 
         var receipt = await client.UpdateAccountAsync(new UpdateAccountParams
         {
-            Address = createRecord.Address,
+            Account = createRecord.Address,
             Endorsement = new Endorsement(updatedPublicKey),
             Signatory = new Signatory(originalPrivateKey, updatedPrivateKey)
         });
@@ -80,7 +80,7 @@ public class UpdateAccountTests
         await using var client = await TestNetwork.CreateClientAsync();
         var receipt = await client.UpdateAccountAsync(new UpdateAccountParams
         {
-            Address = fxAccount,
+            Account = fxAccount,
             Memo = newMemo,
             Signatory = fxAccount
         });
@@ -107,7 +107,7 @@ public class UpdateAccountTests
         await using var client = await TestNetwork.CreateClientAsync();
         var receipt = await client.UpdateAccountAsync(new UpdateAccountParams
         {
-            Address = fxAccount,
+            Account = fxAccount,
             AutoAssociationLimit = newLimit,
             Signatory = fxAccount
         });
@@ -139,7 +139,7 @@ public class UpdateAccountTests
         {
             var receipt = await client.UpdateAccountAsync(new UpdateAccountParams
             {
-                Address = fxAccount.Alias,
+                Account = fxAccount.Alias,
                 Memo = newMemo,
                 Signatory = fxAccount
             });
@@ -161,7 +161,7 @@ public class UpdateAccountTests
         await using var client = await TestNetwork.CreateClientAsync();
         var receipt = await client.UpdateAccountAsync(new UpdateAccountParams
         {
-            Address = fxAccount,
+            Account = fxAccount,
             Memo = string.Empty,
             Signatory = fxAccount
         });
@@ -201,7 +201,7 @@ public class UpdateAccountTests
         var newValue = !originalValue;
         var updateResult = await client.UpdateAccountAsync(new UpdateAccountParams
         {
-            Address = createResult.Address,
+            Account = createResult.Address,
             Signatory = privateKey,
             RequireReceiveSignature = newValue
         });
@@ -234,7 +234,7 @@ public class UpdateAccountTests
         {
             var updateResult = await client.UpdateAccountAsync(new UpdateAccountParams
             {
-                Address = createResult.Address,
+                Account = createResult.Address,
                 Signatory = privateKey,
                 AutoRenewPeriod = newValue
             });
@@ -270,7 +270,7 @@ public class UpdateAccountTests
         {
             await client.UpdateAccountAsync(new UpdateAccountParams
             {
-                Address = createResult.Address,
+                Account = createResult.Address,
                 Signatory = privateKey,
                 RequireReceiveSignature = false,
             }, ctx =>
@@ -286,7 +286,7 @@ public class UpdateAccountTests
         {
             await client.UpdateAccountAsync(new UpdateAccountParams
             {
-                Address = createResult.Address,
+                Account = createResult.Address,
                 Signatory = privateKey,
                 RequireReceiveSignature = false
             }, ctx =>
@@ -322,7 +322,7 @@ public class UpdateAccountTests
         {
             await client.UpdateAccountAsync(new UpdateAccountParams
             {
-                Address = createResult.Address,
+                Account = createResult.Address,
                 Endorsement = Endorsement.None,
                 Signatory = new Signatory(originalPrivateKey)
             });
@@ -360,7 +360,7 @@ public class UpdateAccountTests
         var nestedEndorsement = new Endorsement(new Endorsement(new Endorsement(new Endorsement(new Endorsement(new Endorsement(originalPublicKey))))));
         var updateResult = await client.UpdateAccountAsync(new UpdateAccountParams
         {
-            Address = createResult.Address,
+            Account = createResult.Address,
             Endorsement = nestedEndorsement,
             Signatory = new Signatory(originalPrivateKey)
         });
@@ -384,7 +384,7 @@ public class UpdateAccountTests
         await using var client = await TestNetwork.CreateClientAsync();
         var receipt = await client.UpdateAccountAsync(new UpdateAccountParams
         {
-            Address = fxAccount,
+            Account = fxAccount,
             AutoAssociationLimit = newLimit,
             Signatory = fxAccount
         });
@@ -410,7 +410,7 @@ public class UpdateAccountTests
         await using var client = await TestNetwork.CreateClientAsync();
         var receipt = await client.UpdateAccountAsync(new UpdateAccountParams
         {
-            Address = fxAccount,
+            Account = fxAccount,
             AutoAssociationLimit = 0,
             Signatory = fxAccount
         });
@@ -438,7 +438,7 @@ public class UpdateAccountTests
         {
             var receipt = await client.UpdateAccountAsync(new UpdateAccountParams
             {
-                Address = fxAccount,
+                Account = fxAccount,
                 AutoAssociationLimit = -5,
                 Signatory = fxAccount
             });
@@ -461,7 +461,7 @@ public class UpdateAccountTests
         await using var client = await TestNetwork.CreateClientAsync();
         var receipt = await client.UpdateAccountAsync(new UpdateAccountParams
         {
-            Address = fxAccount,
+            Account = fxAccount,
             AutoAssociationLimit = limit,
             Signatory = fxAccount
         }, ctx =>
@@ -481,7 +481,7 @@ public class UpdateAccountTests
         await using var client = await TestNetwork.CreateClientAsync();
         var receipt = await client.UpdateAccountAsync(new UpdateAccountParams
         {
-            Address = fxAccount,
+            Account = fxAccount,
             AutoAssociationLimit = -1,
             Signatory = fxAccount
         });
@@ -503,7 +503,7 @@ public class UpdateAccountTests
         {
             Transaction = new UpdateAccountParams
             {
-                Address = fxAccount,
+                Account = fxAccount,
                 RequireReceiveSignature = newValue,
                 Signatory = fxAccount
             },
@@ -517,7 +517,7 @@ public class UpdateAccountTests
             ctx.Signatory = fxPayer;
         });
         var executionReceipt = await payerClient.SignScheduleAsync(scheduledReceipt.Schedule);
-        var pendingReceipt = await payerClient.GetReceiptAsync(scheduledReceipt.ScheduledTxId);
+        var pendingReceipt = await payerClient.GetReceiptAsync(scheduledReceipt.ScheduledTransactionId);
         await Assert.That(pendingReceipt.Status).IsEqualTo(ResponseCode.Success);
 
         var info = await client.GetAccountInfoAsync(fxAccount);
@@ -536,7 +536,7 @@ public class UpdateAccountTests
         {
             Transaction = new UpdateAccountParams
             {
-                Address = fxAccount,
+                Account = fxAccount,
                 Memo = newMemo,
             },
             Payer = fxPayer,
@@ -560,7 +560,7 @@ public class UpdateAccountTests
         await using var client = await TestNetwork.CreateClientAsync();
         var receipt = await client.UpdateAccountAsync(new UpdateAccountParams
         {
-            Address = fxAccount,
+            Account = fxAccount,
             Signatory = new Signatory(fxAccount, fxTemplate),
             Endorsement = fxTemplate.CreateParams.Endorsement,
             RequireReceiveSignature = fxTemplate.CreateParams.RequireReceiveSignature,
@@ -619,7 +619,7 @@ public class UpdateAccountTests
         {
             await client.UpdateAccountAsync(new UpdateAccountParams
             {
-                Address = fxAccount.Alias,
+                Account = fxAccount.Alias,
                 Endorsement = new Endorsement(publicKey),
                 Signatory = new Signatory(fxAccount.PrivateKey, privateKey)
             });
@@ -653,7 +653,7 @@ public class UpdateAccountTests
         var nodeId = (await client.GetAddressBookAsync()).Select(n => n.Id).Max();
         await client.UpdateAccountAsync(new UpdateAccountParams
         {
-            Address = fxAccount,
+            Account = fxAccount,
             StakedNode = nodeId,
             Signatory = fxAccount
         });
@@ -674,7 +674,7 @@ public class UpdateAccountTests
         await using var client = await TestNetwork.CreateClientAsync();
         await client.UpdateAccountAsync(new UpdateAccountParams
         {
-            Address = fxAccount,
+            Account = fxAccount,
             ProxyAccount = fxProxied.CreateReceipt!.Address,
             Signatory = fxAccount
         });
@@ -694,7 +694,7 @@ public class UpdateAccountTests
         await using var client = await TestNetwork.CreateClientAsync();
         await client.UpdateAccountAsync(new UpdateAccountParams
         {
-            Address = fxAccount,
+            Account = fxAccount,
             DeclineStakeReward = true,
             Signatory = fxAccount
         });

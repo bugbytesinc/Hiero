@@ -212,8 +212,8 @@ public static class TransactionRecordExtensions
     /// <param name="client">
     /// The Consensus Node Client to query.
     /// </param>
-    /// <param name="address">
-    /// The Hedera Network address to retrieve associated records.
+    /// <param name="account">
+    /// The Hedera account to retrieve associated records for.
     /// </param>
     /// <param name="cancellationToken">Optional cancellation token.</param>
     /// <param name="configure">
@@ -227,9 +227,9 @@ public static class TransactionRecordExtensions
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
     /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
-    public static async Task<TransactionRecord[]> GetAccountRecordsAsync(this ConsensusClient client, EntityId address, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
+    public static async Task<TransactionRecord[]> GetAccountRecordsAsync(this ConsensusClient client, EntityId account, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
     {
-        var records = (await Engine.QueryAsync(client, new CryptoGetAccountRecordsQuery { AccountID = new AccountID(address) }, cancellationToken, configure).ConfigureAwait(false)).CryptoGetAccountRecords;
+        var records = (await Engine.QueryAsync(client, new CryptoGetAccountRecordsQuery { AccountID = new AccountID(account) }, cancellationToken, configure).ConfigureAwait(false)).CryptoGetAccountRecords;
         if (records.Records.Count != 0)
         {
             return [.. records.Records.Select(FromProtobuf)];

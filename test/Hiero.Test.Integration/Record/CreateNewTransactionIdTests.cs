@@ -3,7 +3,7 @@ using Hiero.Test.Integration.Fixtures;
 
 namespace Hiero.Test.Integration.Record;
 
-public class CreateNewTxIdTests
+public class CreateNewTransactionIdTests
 {
     [Test]
     public async Task Can_Create_Transaction_Id()

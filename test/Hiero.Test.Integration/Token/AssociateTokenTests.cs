@@ -100,7 +100,7 @@ public class AssociateTokenTests
         await AssertHg.TokenNotAssociatedAsync(fxToken, fxAccount);
 
         await using var client = await TestNetwork.CreateClientAsync();
-        var receipt = await client.AssociateTokenAsync(fxAccount.CreateReceipt!.Address, fxToken.CreateReceipt!.Token, ctx =>
+        var receipt = await client.AssociateTokenAsync(fxToken.CreateReceipt!.Token, fxAccount.CreateReceipt!.Address, ctx =>
         {
             ctx.Payer = fxAccount.CreateReceipt!.Address;
             ctx.Signatory = fxAccount.PrivateKey;
@@ -359,7 +359,7 @@ public class AssociateTokenTests
         await using var client = await TestNetwork.CreateClientAsync();
         var ex = await Assert.That(async () =>
         {
-            await client.AssociateTokenAsync(fxAccount.CreateReceipt!.Address, fxToken.CreateReceipt!.Token);
+            await client.AssociateTokenAsync(fxToken.CreateReceipt!.Token, fxAccount.CreateReceipt!.Address);
         }).ThrowsException();
         var tex = ex as TransactionException;
         await Assert.That(tex).IsNotNull();
@@ -377,7 +377,7 @@ public class AssociateTokenTests
         await using var client = await TestNetwork.CreateClientAsync();
         var ex = await Assert.That(async () =>
         {
-            await client.AssociateTokenAsync(fxAccount.CreateReceipt!.Address, EntityId.None);
+            await client.AssociateTokenAsync(EntityId.None, fxAccount.CreateReceipt!.Address);
         }).ThrowsException();
         var ane = ex as ArgumentNullException;
         await Assert.That(ane).IsNotNull();
@@ -386,7 +386,7 @@ public class AssociateTokenTests
 
         ex = await Assert.That(async () =>
         {
-            await client.AssociateTokenAsync(fxAccount.CreateReceipt!.Address, null!);
+            await client.AssociateTokenAsync(null!, fxAccount.CreateReceipt!.Address);
         }).ThrowsException();
         ane = ex as ArgumentNullException;
         await Assert.That(ane).IsNotNull();
@@ -429,7 +429,7 @@ public class AssociateTokenTests
         await using var client = await TestNetwork.CreateClientAsync();
         var ex = await Assert.That(async () =>
         {
-            await client.AssociateTokenAsync(null!, fxToken.CreateReceipt!.Token);
+            await client.AssociateTokenAsync(fxToken.CreateReceipt!.Token, null!);
         }).ThrowsException();
         var ane = ex as ArgumentNullException;
         await Assert.That(ane).IsNotNull();
@@ -438,7 +438,7 @@ public class AssociateTokenTests
 
         ex = await Assert.That(async () =>
         {
-            await client.AssociateTokenAsync(EntityId.None, fxToken.CreateReceipt!.Token);
+            await client.AssociateTokenAsync(fxToken.CreateReceipt!.Token, EntityId.None);
         }).ThrowsException();
         var pex = ex as PrecheckException;
         await Assert.That(pex).IsNotNull();

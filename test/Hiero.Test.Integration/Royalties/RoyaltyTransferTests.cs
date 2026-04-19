@@ -27,15 +27,15 @@ public class RoyaltyTransferTests
         await using var client = await TestNetwork.CreateClientAsync();
 
         // Associate comToken with the token's treasury so it can receive
-        await client.AssociateTokenAsync(fxToken.TreasuryAccount.CreateReceipt!.Address, fxComToken.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxComToken.CreateReceipt!.Token, fxToken.TreasuryAccount.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey));
 
         // Associate accounts with both tokens
-        await client.AssociateTokenAsync(fxAccount1.CreateReceipt!.Address, fxToken.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxToken.CreateReceipt!.Token, fxAccount1.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount1.PrivateKey));
-        await client.AssociateTokenAsync(fxAccount1.CreateReceipt!.Address, fxComToken.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxComToken.CreateReceipt!.Token, fxAccount1.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount1.PrivateKey));
-        await client.AssociateTokenAsync(fxAccount2.CreateReceipt!.Address, fxToken.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxToken.CreateReceipt!.Token, fxAccount2.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount2.PrivateKey));
 
         // Transfer comTokens and tokens from treasury to account1
@@ -100,15 +100,15 @@ public class RoyaltyTransferTests
         }, ctx => ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.RoyaltiesPrivateKey, fxComAccount.PrivateKey));
 
         // Associate comToken with the token's treasury
-        await client.AssociateTokenAsync(fxToken.TreasuryAccount.CreateReceipt!.Address, fxComToken.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxComToken.CreateReceipt!.Token, fxToken.TreasuryAccount.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey));
 
         // Associate accounts with both tokens
-        await client.AssociateTokenAsync(fxAccount1.CreateReceipt!.Address, fxToken.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxToken.CreateReceipt!.Token, fxAccount1.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount1.PrivateKey));
-        await client.AssociateTokenAsync(fxAccount1.CreateReceipt!.Address, fxComToken.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxComToken.CreateReceipt!.Token, fxAccount1.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount1.PrivateKey));
-        await client.AssociateTokenAsync(fxAccount2.CreateReceipt!.Address, fxToken.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxToken.CreateReceipt!.Token, fxAccount2.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount2.PrivateKey));
 
         // Transfer comTokens and tokens from treasury to account1
@@ -163,9 +163,9 @@ public class RoyaltyTransferTests
         await using var fxAccount2 = await TestAccount.CreateAsync();
         await using var client = await TestNetwork.CreateClientAsync();
 
-        await client.AssociateTokenAsync(fxAccount1.CreateReceipt!.Address, fxToken.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxToken.CreateReceipt!.Token, fxAccount1.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount1.PrivateKey));
-        await client.AssociateTokenAsync(fxAccount2.CreateReceipt!.Address, fxToken.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxToken.CreateReceipt!.Token, fxAccount2.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount2.PrivateKey));
 
         // Transfer tokens from treasury to account1
@@ -212,9 +212,9 @@ public class RoyaltyTransferTests
         await using var fxAccount2 = await TestAccount.CreateAsync();
         await using var client = await TestNetwork.CreateClientAsync();
 
-        await client.AssociateTokenAsync(fxAccount1.CreateReceipt!.Address, fxToken.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxToken.CreateReceipt!.Token, fxAccount1.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount1.PrivateKey));
-        await client.AssociateTokenAsync(fxAccount2.CreateReceipt!.Address, fxToken.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxToken.CreateReceipt!.Token, fxAccount2.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount2.PrivateKey));
 
         // Transfer tokens from treasury to account1
@@ -262,9 +262,9 @@ public class RoyaltyTransferTests
         await using var fxAccount2 = await TestAccount.CreateAsync();
         await using var client = await TestNetwork.CreateClientAsync();
 
-        await client.AssociateTokenAsync(fxAccount1.CreateReceipt!.Address, fxToken.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxToken.CreateReceipt!.Token, fxAccount1.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount1.PrivateKey));
-        await client.AssociateTokenAsync(fxAccount2.CreateReceipt!.Address, fxToken.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxToken.CreateReceipt!.Token, fxAccount2.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount2.PrivateKey));
 
         // Transfer tokens from treasury to account1
@@ -310,9 +310,9 @@ public class RoyaltyTransferTests
         await using var fxAccount2 = await TestAccount.CreateAsync();
         await using var client = await TestNetwork.CreateClientAsync();
 
-        await client.AssociateTokenAsync(fxAccount1.CreateReceipt!.Address, fxToken.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxToken.CreateReceipt!.Token, fxAccount1.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount1.PrivateKey));
-        await client.AssociateTokenAsync(fxAccount2.CreateReceipt!.Address, fxToken.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxToken.CreateReceipt!.Token, fxAccount2.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount2.PrivateKey));
 
         // Treasury -> account1: no royalty applied
@@ -374,8 +374,8 @@ public class RoyaltyTransferTests
 
         var token = receipt.Token;
 
-        await client.AssociateTokenAsync(fxAccount1, token, ctx => ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount1.PrivateKey));
-        await client.AssociateTokenAsync(fxAccount2, token, ctx => ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount2.PrivateKey));
+        await client.AssociateTokenAsync(token, fxAccount1, ctx => ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount1.PrivateKey));
+        await client.AssociateTokenAsync(token, fxAccount2, ctx => ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount2.PrivateKey));
 
         // Transfer tokens from treasury to account1
         await client.TransferAsync(new TransferParams
@@ -422,9 +422,9 @@ public class RoyaltyTransferTests
         await using var fxAccount2 = await TestAccount.CreateAsync();
         await using var client = await TestNetwork.CreateClientAsync();
 
-        await client.AssociateTokenAsync(fxAccount1.CreateReceipt!.Address, fxToken.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxToken.CreateReceipt!.Token, fxAccount1.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount1.PrivateKey));
-        await client.AssociateTokenAsync(fxAccount2.CreateReceipt!.Address, fxToken.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxToken.CreateReceipt!.Token, fxAccount2.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount2.PrivateKey));
 
         // Transfer tokens from treasury to account1
@@ -439,7 +439,7 @@ public class RoyaltyTransferTests
         });
 
         // Transfer with payer == sender
-        await client.TransferTokensAsync(fxToken.CreateReceipt!.Token, fxAccount1.CreateReceipt!.Address, fxAccount2.CreateReceipt!.Address, 50, ctx =>
+        await client.TransferTokenAsync(fxToken.CreateReceipt!.Token, fxAccount1.CreateReceipt!.Address, fxAccount2.CreateReceipt!.Address, 50, ctx =>
         {
             ctx.Payer = fxAccount1.CreateReceipt!.Address;
             ctx.Signatory = new Signatory(fxAccount1.PrivateKey);
@@ -471,13 +471,13 @@ public class RoyaltyTransferTests
         await using var fxAccount2 = await TestAccount.CreateAsync();
         await using var client = await TestNetwork.CreateClientAsync();
 
-        await client.AssociateTokenAsync(fxToken.TreasuryAccount.CreateReceipt!.Address, fxComToken.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxComToken.CreateReceipt!.Token, fxToken.TreasuryAccount.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey));
-        await client.AssociateTokenAsync(fxAccount1.CreateReceipt!.Address, fxToken.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxToken.CreateReceipt!.Token, fxAccount1.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount1.PrivateKey));
-        await client.AssociateTokenAsync(fxAccount1.CreateReceipt!.Address, fxComToken.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxComToken.CreateReceipt!.Token, fxAccount1.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount1.PrivateKey));
-        await client.AssociateTokenAsync(fxAccount2.CreateReceipt!.Address, fxToken.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxToken.CreateReceipt!.Token, fxAccount2.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount2.PrivateKey));
 
         // Only give account1 100 comTokens, but royalty requires 200
@@ -531,11 +531,11 @@ public class RoyaltyTransferTests
         await using var fxAccount2 = await TestAccount.CreateAsync();
         await using var client = await TestNetwork.CreateClientAsync();
 
-        await client.AssociateTokenAsync(fxAccount1.CreateReceipt!.Address, fxToken.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxToken.CreateReceipt!.Token, fxAccount1.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount1.PrivateKey));
-        await client.AssociateTokenAsync(fxAccount2.CreateReceipt!.Address, fxToken.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxToken.CreateReceipt!.Token, fxAccount2.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount2.PrivateKey));
-        await client.AssociateTokenAsync(fxComAccount.CreateReceipt!.Address, fxToken.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxToken.CreateReceipt!.Token, fxComAccount.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxComAccount.PrivateKey));
 
         // Transfer from treasury to account1
@@ -616,13 +616,13 @@ public class RoyaltyTransferTests
         await using var fxAccount2 = await TestAccount.CreateAsync();
         await using var client = await TestNetwork.CreateClientAsync();
 
-        await client.AssociateTokenAsync(fxToken.TreasuryAccount.CreateReceipt!.Address, fxComToken.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxComToken.CreateReceipt!.Token, fxToken.TreasuryAccount.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey));
-        await client.AssociateTokenAsync(fxAccount1.CreateReceipt!.Address, fxToken.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxToken.CreateReceipt!.Token, fxAccount1.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount1.PrivateKey));
-        await client.AssociateTokenAsync(fxAccount1.CreateReceipt!.Address, fxComToken.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxComToken.CreateReceipt!.Token, fxAccount1.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount1.PrivateKey));
-        await client.AssociateTokenAsync(fxAccount2.CreateReceipt!.Address, fxToken.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxToken.CreateReceipt!.Token, fxAccount2.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount2.PrivateKey));
 
         // Transfer comTokens and tokens from treasury to account1
@@ -697,17 +697,17 @@ public class RoyaltyTransferTests
         await using var client = await TestNetwork.CreateClientAsync();
 
         // Associate treasury with comTokens
-        await client.AssociateTokenAsync(fxToken.TreasuryAccount.CreateReceipt!.Address, fxComToken1.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxComToken1.CreateReceipt!.Token, fxToken.TreasuryAccount.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey));
-        await client.AssociateTokenAsync(fxToken.TreasuryAccount.CreateReceipt!.Address, fxComToken2.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxComToken2.CreateReceipt!.Token, fxToken.TreasuryAccount.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey));
 
         // Associate account1 with all tokens
-        await client.AssociateTokenAsync(fxAccount1.CreateReceipt!.Address, fxToken.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxToken.CreateReceipt!.Token, fxAccount1.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount1.PrivateKey));
-        await client.AssociateTokenAsync(fxAccount1.CreateReceipt!.Address, fxComToken1.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxComToken1.CreateReceipt!.Token, fxAccount1.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount1.PrivateKey));
-        await client.AssociateTokenAsync(fxAccount1.CreateReceipt!.Address, fxComToken2.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxComToken2.CreateReceipt!.Token, fxAccount1.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount1.PrivateKey));
 
         // Transfer from treasury - no royalties should apply
@@ -751,13 +751,13 @@ public class RoyaltyTransferTests
         }, ctx => ctx.Signatory = new Signatory(ctx.Signatory!, fxNft.RoyaltiesPrivateKey, fxComAccount.PrivateKey));
 
         // Associate accounts
-        await client.AssociateTokenAsync(fxNft.TreasuryAccount.CreateReceipt!.Address, fxComToken.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxComToken.CreateReceipt!.Token, fxNft.TreasuryAccount.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxNft.TreasuryAccount.PrivateKey));
-        await client.AssociateTokenAsync(fxAccount1.CreateReceipt!.Address, fxNft.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxNft.CreateReceipt!.Token, fxAccount1.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount1.PrivateKey));
-        await client.AssociateTokenAsync(fxAccount1.CreateReceipt!.Address, fxComToken.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxComToken.CreateReceipt!.Token, fxAccount1.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount1.PrivateKey));
-        await client.AssociateTokenAsync(fxAccount2.CreateReceipt!.Address, fxNft.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxNft.CreateReceipt!.Token, fxAccount2.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount2.PrivateKey));
 
         // Give account1 comTokens
@@ -805,13 +805,13 @@ public class RoyaltyTransferTests
         await using var fxAccount2 = await TestAccount.CreateAsync();
         await using var client = await TestNetwork.CreateClientAsync();
 
-        await client.AssociateTokenAsync(fxNft.TreasuryAccount.CreateReceipt!.Address, fxComToken.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxComToken.CreateReceipt!.Token, fxNft.TreasuryAccount.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxNft.TreasuryAccount.PrivateKey));
-        await client.AssociateTokenAsync(fxAccount1.CreateReceipt!.Address, fxNft.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxNft.CreateReceipt!.Token, fxAccount1.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount1.PrivateKey));
-        await client.AssociateTokenAsync(fxAccount1.CreateReceipt!.Address, fxComToken.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxComToken.CreateReceipt!.Token, fxAccount1.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount1.PrivateKey));
-        await client.AssociateTokenAsync(fxAccount2.CreateReceipt!.Address, fxNft.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxNft.CreateReceipt!.Token, fxAccount2.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount2.PrivateKey));
 
         // Give account1 comTokens
@@ -879,25 +879,25 @@ public class RoyaltyTransferTests
         await using var client = await TestNetwork.CreateClientAsync();
 
         // Associate treasury accounts with needed tokens
-        await client.AssociateTokenAsync(fxToken.TreasuryAccount.CreateReceipt!.Address, fxComToken1.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxComToken1.CreateReceipt!.Token, fxToken.TreasuryAccount.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey));
-        await client.AssociateTokenAsync(fxToken.TreasuryAccount.CreateReceipt!.Address, fxComToken2.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxComToken2.CreateReceipt!.Token, fxToken.TreasuryAccount.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey));
 
         // Associate account1 with all tokens
-        await client.AssociateTokenAsync(fxAccount1.CreateReceipt!.Address, fxToken.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxToken.CreateReceipt!.Token, fxAccount1.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount1.PrivateKey));
-        await client.AssociateTokenAsync(fxAccount1.CreateReceipt!.Address, fxComToken1.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxComToken1.CreateReceipt!.Token, fxAccount1.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount1.PrivateKey));
-        await client.AssociateTokenAsync(fxAccount1.CreateReceipt!.Address, fxComToken2.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxComToken2.CreateReceipt!.Token, fxAccount1.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount1.PrivateKey));
 
         // Associate account2 with primary token
-        await client.AssociateTokenAsync(fxAccount2.CreateReceipt!.Address, fxToken.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxToken.CreateReceipt!.Token, fxAccount2.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount2.PrivateKey));
 
         // Associate comAccounts
-        await client.AssociateTokenAsync(fxComAccount1.CreateReceipt!.Address, fxComToken2.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxComToken2.CreateReceipt!.Token, fxComAccount1.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxComAccount1.PrivateKey));
 
         // Fund account1 with tokens
@@ -986,23 +986,23 @@ public class RoyaltyTransferTests
         await using var client = await TestNetwork.CreateClientAsync();
 
         // Associate accounts with NFT and comTokens
-        await client.AssociateTokenAsync(fxNft.TreasuryAccount.CreateReceipt!.Address, fxComToken1.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxComToken1.CreateReceipt!.Token, fxNft.TreasuryAccount.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxNft.TreasuryAccount.PrivateKey));
-        await client.AssociateTokenAsync(fxNft.TreasuryAccount.CreateReceipt!.Address, fxComToken2.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxComToken2.CreateReceipt!.Token, fxNft.TreasuryAccount.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxNft.TreasuryAccount.PrivateKey));
-        await client.AssociateTokenAsync(fxNft.TreasuryAccount.CreateReceipt!.Address, fxComToken3.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxComToken3.CreateReceipt!.Token, fxNft.TreasuryAccount.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxNft.TreasuryAccount.PrivateKey));
 
-        await client.AssociateTokenAsync(fxAccount1.CreateReceipt!.Address, fxNft.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxNft.CreateReceipt!.Token, fxAccount1.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount1.PrivateKey));
-        await client.AssociateTokenAsync(fxAccount1.CreateReceipt!.Address, fxComToken1.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxComToken1.CreateReceipt!.Token, fxAccount1.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount1.PrivateKey));
-        await client.AssociateTokenAsync(fxAccount1.CreateReceipt!.Address, fxComToken2.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxComToken2.CreateReceipt!.Token, fxAccount1.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount1.PrivateKey));
-        await client.AssociateTokenAsync(fxAccount1.CreateReceipt!.Address, fxComToken3.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxComToken3.CreateReceipt!.Token, fxAccount1.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount1.PrivateKey));
 
-        await client.AssociateTokenAsync(fxAccount2.CreateReceipt!.Address, fxNft.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxNft.CreateReceipt!.Token, fxAccount2.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount2.PrivateKey));
 
         // Fund account1 with comTokens
@@ -1149,7 +1149,7 @@ public class RoyaltyTransferTests
         }, fxAccount1, fxAccount2);
         
         await using var client = await TestNetwork.CreateClientAsync();
-        //await client.AssociateTokenAsync(fxToken.TreasuryAccount, fxComToken, ctx => ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount));
+        //await client.AssociateTokenAsync(fxComToken, fxToken.TreasuryAccount, ctx => ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount));
         await client.TransferAsync(new TransferParams
         {
             TokenTransfers = [
@@ -1211,13 +1211,13 @@ public class RoyaltyTransferTests
         await using var fxAccount2 = await TestAccount.CreateAsync();
         await using var client = await TestNetwork.CreateClientAsync();
 
-        await client.AssociateTokenAsync(fxToken.TreasuryAccount.CreateReceipt!.Address, fxComToken.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxComToken.CreateReceipt!.Token, fxToken.TreasuryAccount.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey));
-        await client.AssociateTokenAsync(fxAccount1.CreateReceipt!.Address, fxToken.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxToken.CreateReceipt!.Token, fxAccount1.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount1.PrivateKey));
-        await client.AssociateTokenAsync(fxAccount1.CreateReceipt!.Address, fxComToken.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxComToken.CreateReceipt!.Token, fxAccount1.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount1.PrivateKey));
-        await client.AssociateTokenAsync(fxAccount2.CreateReceipt!.Address, fxToken.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxToken.CreateReceipt!.Token, fxAccount2.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount2.PrivateKey));
 
         // Fund account1

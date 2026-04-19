@@ -31,22 +31,22 @@ public sealed record Airdrop
     /// <summary>
     /// Creates a pending airdrop identifier for a fungible token.
     /// </summary>
+    /// <param name="token">The fungible token type being airdropped.</param>
     /// <param name="sender">The account sending the airdrop.</param>
     /// <param name="receiver">The account receiving the airdrop.</param>
-    /// <param name="fungibleToken">The fungible token type being airdropped.</param>
-    public Airdrop(EntityId sender, EntityId receiver, EntityId fungibleToken)
+    public Airdrop(EntityId token, EntityId sender, EntityId receiver)
     {
         Sender = sender;
         Receiver = receiver;
-        Token = fungibleToken;
+        Token = token;
     }
     /// <summary>
     /// Creates a pending airdrop identifier for a non-fungible token.
     /// </summary>
+    /// <param name="nft">The specific NFT instance being airdropped.</param>
     /// <param name="sender">The account sending the airdrop.</param>
     /// <param name="receiver">The account receiving the airdrop.</param>
-    /// <param name="nft">The specific NFT instance being airdropped.</param>
-    public Airdrop(EntityId sender, EntityId receiver, Nft nft)
+    public Airdrop(Nft nft, EntityId sender, EntityId receiver)
     {
         Sender = sender;
         Receiver = receiver;

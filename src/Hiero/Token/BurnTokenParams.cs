@@ -93,7 +93,7 @@ public static class BurnTokenExtensions
     /// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="BurnToken" language="csharp"/>
     /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Task<TokenReceipt> BurnTokensAsync(this ConsensusClient client, EntityId token, ulong amount, Action<IConsensusContext>? configure = null)
+    public static Task<TokenReceipt> BurnTokenAsync(this ConsensusClient client, EntityId token, ulong amount, Action<IConsensusContext>? configure = null)
     {
         return client.ExecuteAsync(new BurnTokenParams { Token = token, Amount = amount }, configure);
     }
@@ -123,7 +123,7 @@ public static class BurnTokenExtensions
     /// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="BurnToken" language="csharp"/>
     /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Task<TokenReceipt> BurnTokensAsync(this ConsensusClient client, BurnTokenParams burnParams, Action<IConsensusContext>? configure = null)
+    public static Task<TokenReceipt> BurnTokenAsync(this ConsensusClient client, BurnTokenParams burnParams, Action<IConsensusContext>? configure = null)
     {
         return client.ExecuteAsync(burnParams, configure);
     }

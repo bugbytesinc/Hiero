@@ -95,7 +95,7 @@ public sealed record ScheduleInfo
     {
         var info = response.ScheduleGetInfo.ScheduleInfo;
         Schedule = info.ScheduleID.ToAddress();
-        TransactionId = info.ScheduledTransactionID.AsTxId();
+        TransactionId = info.ScheduledTransactionID.AsTransactionId();
         Creator = info.CreatorAccountID.AsAddress();
         Payer = info.PayerAccountID.AsAddress();
         Endorsements = info.Signers.ToEndorsements();

@@ -15,7 +15,7 @@ public class AutoAssociateTokenTests
 
         await using var client = await TestNetwork.CreateClientAsync();
         var xferAmount = fxToken.CreateParams.Circulation / 2;
-        var receipt = await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount.CreateReceipt!.Address, fxAccount.CreateReceipt!.Address, (long)xferAmount, ctx =>
+        var receipt = await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount.CreateReceipt!.Address, fxAccount.CreateReceipt!.Address, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
@@ -123,7 +123,7 @@ public class AutoAssociateTokenTests
 
         await using var client = await TestNetwork.CreateClientAsync();
         var xferAmount1 = fxToken1.CreateParams.Circulation / 2;
-        var receipt = await client.TransferTokensAsync(fxToken1, fxToken1.TreasuryAccount.CreateReceipt!.Address, fxAccount.CreateReceipt!.Address, (long)xferAmount1, ctx =>
+        var receipt = await client.TransferTokenAsync(fxToken1, fxToken1.TreasuryAccount.CreateReceipt!.Address, fxAccount.CreateReceipt!.Address, (long)xferAmount1, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken1.TreasuryAccount.PrivateKey);
         });
@@ -132,7 +132,7 @@ public class AutoAssociateTokenTests
         var ex = await Assert.That(async () =>
         {
             var xferAmount2 = fxToken2.CreateParams.Circulation / 2;
-            await client.TransferTokensAsync(fxToken2, fxToken2.TreasuryAccount.CreateReceipt!.Address, fxAccount.CreateReceipt!.Address, (long)xferAmount2, ctx =>
+            await client.TransferTokenAsync(fxToken2, fxToken2.TreasuryAccount.CreateReceipt!.Address, fxAccount.CreateReceipt!.Address, (long)xferAmount2, ctx =>
             {
                 ctx.Signatory = new Signatory(ctx.Signatory!, fxToken2.TreasuryAccount.PrivateKey);
             });
@@ -222,7 +222,7 @@ public class AutoAssociateTokenTests
         var ex = await Assert.That(async () =>
         {
             var xferAmount2 = fxToken.CreateParams.Circulation / 2;
-            await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount.CreateReceipt!.Address, fxAccount.CreateReceipt!.Address, (long)xferAmount2, ctx =>
+            await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount.CreateReceipt!.Address, fxAccount.CreateReceipt!.Address, (long)xferAmount2, ctx =>
             {
                 ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
             });
@@ -271,7 +271,7 @@ public class AutoAssociateTokenTests
 
         await using var client = await TestNetwork.CreateClientAsync();
         var xferAmount1 = fxToken1.CreateParams.Circulation / 2;
-        var receipt = await client.TransferTokensAsync(fxToken1, fxToken1.TreasuryAccount.CreateReceipt!.Address, fxAccount.CreateReceipt!.Address, (long)xferAmount1, ctx =>
+        var receipt = await client.TransferTokenAsync(fxToken1, fxToken1.TreasuryAccount.CreateReceipt!.Address, fxAccount.CreateReceipt!.Address, (long)xferAmount1, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken1.TreasuryAccount.PrivateKey);
         });
@@ -279,7 +279,7 @@ public class AutoAssociateTokenTests
 
         await client.UpdateAccountAsync(new UpdateAccountParams
         {
-            Address = fxAccount,
+            Account = fxAccount,
             AutoAssociationLimit = 1,
             Signatory = fxAccount
         });
@@ -287,7 +287,7 @@ public class AutoAssociateTokenTests
         var ex = await Assert.That(async () =>
         {
             var xferAmount2 = fxToken2.CreateParams.Circulation / 2;
-            await client.TransferTokensAsync(fxToken2, fxToken2.TreasuryAccount.CreateReceipt!.Address, fxAccount.CreateReceipt!.Address, (long)xferAmount2, ctx =>
+            await client.TransferTokenAsync(fxToken2, fxToken2.TreasuryAccount.CreateReceipt!.Address, fxAccount.CreateReceipt!.Address, (long)xferAmount2, ctx =>
             {
                 ctx.Signatory = new Signatory(ctx.Signatory!, fxToken2.TreasuryAccount.PrivateKey);
             });
@@ -321,7 +321,7 @@ public class AutoAssociateTokenTests
 
         await client.UpdateAccountAsync(new UpdateAccountParams
         {
-            Address = fxAccount,
+            Account = fxAccount,
             AutoAssociationLimit = 1,
             Signatory = fxAccount
         });
@@ -355,7 +355,7 @@ public class AutoAssociateTokenTests
 
         await using var client = await TestNetwork.CreateClientAsync();
         var xferAmount1 = fxToken1.CreateParams.Circulation / 2;
-        var receipt = await client.TransferTokensAsync(fxToken1, fxToken1.TreasuryAccount.CreateReceipt!.Address, fxAccount.CreateReceipt!.Address, (long)xferAmount1, ctx =>
+        var receipt = await client.TransferTokenAsync(fxToken1, fxToken1.TreasuryAccount.CreateReceipt!.Address, fxAccount.CreateReceipt!.Address, (long)xferAmount1, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken1.TreasuryAccount.PrivateKey);
         });
@@ -363,13 +363,13 @@ public class AutoAssociateTokenTests
 
         await client.UpdateAccountAsync(new UpdateAccountParams
         {
-            Address = fxAccount,
+            Account = fxAccount,
             AutoAssociationLimit = 2,
             Signatory = fxAccount
         });
 
         var xferAmount2 = fxToken2.CreateParams.Circulation / 2;
-        var receipt2 = await client.TransferTokensAsync(fxToken2, fxToken2.TreasuryAccount.CreateReceipt!.Address, fxAccount.CreateReceipt!.Address, (long)xferAmount2, ctx =>
+        var receipt2 = await client.TransferTokenAsync(fxToken2, fxToken2.TreasuryAccount.CreateReceipt!.Address, fxAccount.CreateReceipt!.Address, (long)xferAmount2, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken2.TreasuryAccount.PrivateKey);
         });
@@ -400,7 +400,7 @@ public class AutoAssociateTokenTests
 
         await client.UpdateAccountAsync(new UpdateAccountParams
         {
-            Address = fxAccount,
+            Account = fxAccount,
             AutoAssociationLimit = 2,
             Signatory = fxAccount
         });
@@ -436,7 +436,7 @@ public class AutoAssociateTokenTests
 
         await client.UpdateAccountAsync(new UpdateAccountParams
         {
-            Address = fxAccount,
+            Account = fxAccount,
             AutoAssociationLimit = -1,
             Signatory = fxAccount
         });

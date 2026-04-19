@@ -288,7 +288,7 @@ public class SubmitMessageTests
         var counterReceipt = await payerClient.SignScheduleAsync(schedulingReceipt.Schedule);
 
         var noThrowClient = baseClient.Clone(ctx => ctx.ThrowIfNotSuccess = false);
-        var pendingReceipt = await noThrowClient.GetReceiptAsync(schedulingReceipt.ScheduledTxId);
+        var pendingReceipt = await noThrowClient.GetReceiptAsync(schedulingReceipt.ScheduledTransactionId);
         await Assert.That(pendingReceipt.Status).IsEqualTo(ResponseCode.Success);
 
         var messageReceipt = pendingReceipt as SubmitMessageReceipt;
@@ -330,7 +330,7 @@ public class SubmitMessageTests
             }
             catch (PrecheckException pex) when (pex.Status == ResponseCode.DuplicateTransaction)
             {
-                return await client.GetReceiptAsync(pex.TxId) as SubmitMessageReceipt;
+                return await client.GetReceiptAsync(pex.TransactionId) as SubmitMessageReceipt;
             }
             catch (PrecheckException)
             {

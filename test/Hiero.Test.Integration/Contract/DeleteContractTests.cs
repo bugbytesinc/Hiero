@@ -311,7 +311,7 @@ public class DeleteContractTests
             ctx.Payer = fxPayer;
             ctx.Signatory = fxPayer;
         });
-        var pendingReceipt = await client.GetReceiptAsync(scheduledReceipt.ScheduledTxId);
+        var pendingReceipt = await client.GetReceiptAsync(scheduledReceipt.ScheduledTransactionId);
         await Assert.That(pendingReceipt.Status).IsEqualTo(ResponseCode.Success);
 
         var infoAfter = await client.GetContractInfoAsync(fxContract.ContractReceipt.Contract);

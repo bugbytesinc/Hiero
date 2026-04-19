@@ -14,7 +14,7 @@ public class RelinquishTokenTests
         // Transfer tokens to the account so it has a balance to relinquish.
         var xferAmount = (long)(fxToken.CreateParams.Circulation / 3);
         await using var client = await TestNetwork.CreateClientAsync();
-        await client.TransferTokensAsync(fxToken.CreateReceipt!.Token, fxToken.TreasuryAccount.CreateReceipt!.Address, fxAccount.CreateReceipt!.Address, xferAmount, ctx =>
+        await client.TransferTokenAsync(fxToken.CreateReceipt!.Token, fxToken.TreasuryAccount.CreateReceipt!.Address, fxAccount.CreateReceipt!.Address, xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
@@ -24,7 +24,7 @@ public class RelinquishTokenTests
         {
             await client.ScheduleAsync(new ScheduleParams
             {
-                Transaction = new RelinquishTokensParams
+                Transaction = new RelinquishTokenParams
                 {
                     Owner = fxAccount.CreateReceipt!.Address,
                     Tokens = [fxToken.CreateReceipt!.Token],

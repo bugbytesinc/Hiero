@@ -13,7 +13,7 @@ public class UpdateNftTests
         await using var fxTemplate = await TestNft.CreateAsync();
         await using var client = await TestNetwork.CreateClientAsync();
 
-        await client.AssociateTokenAsync(fxTemplate.TreasuryAccount.CreateReceipt!.Address, fxNft.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxNft.CreateReceipt!.Token, fxTemplate.TreasuryAccount.CreateReceipt!.Address, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxTemplate.TreasuryAccount.PrivateKey);
         });
@@ -80,7 +80,7 @@ public class UpdateNftTests
         // It looks like changing the treasury requires the receiving account to be
         // associated first, since it still has to sign the update transaction anyway,
         // this seems unecessary.
-        await client.AssociateTokenAsync(fxTemplate.TreasuryAccount.CreateReceipt!.Address, fxNft.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxNft.CreateReceipt!.Token, fxTemplate.TreasuryAccount.CreateReceipt!.Address, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxTemplate.TreasuryAccount.PrivateKey);
         });
@@ -1131,7 +1131,7 @@ public class UpdateNftTests
         await using var client = await TestNetwork.CreateClientAsync();
 
         // Note: Contract did not need to sign.
-        await client.AssociateTokenAsync(fxContract.ContractReceipt!.Contract, fxNft.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxNft.CreateReceipt!.Token, fxContract.ContractReceipt!.Contract, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxContract.PrivateKey);
         });
@@ -1283,7 +1283,7 @@ public class UpdateNftTests
             ctx.Payer = fxPayer;
             ctx.Signatory = fxPayer;
         });
-        var pendingReceipt = await client.GetReceiptAsync(scheduledReceipt.ScheduledTxId);
+        var pendingReceipt = await client.GetReceiptAsync(scheduledReceipt.ScheduledTransactionId);
         await Assert.That(pendingReceipt.Status).IsEqualTo(ResponseCode.Success);
 
         var infoAfter = await client.GetTokenInfoAsync(fxNft.CreateReceipt!.Token);
@@ -1302,7 +1302,7 @@ public class UpdateNftTests
         {
             await client.ScheduleAsync(new ScheduleParams
             {
-                Transaction = new UpdateNftsParams
+                Transaction = new UpdateNftMetadataParams
                 {
                     Token = fxNft.CreateReceipt!.Token,
                     SerialNumbers = new[] { serialNumber },

@@ -51,6 +51,6 @@ public static class AccountBalanceDataExtensions
     public static IAsyncEnumerable<AccountBalanceData> GetTokenBalancesAsync(this MirrorRestClient client, EntityId token, params IMirrorQueryFilter[] filters)
     {
         var path = GenerateInitialPath($"tokens/{token}/balances", [new LimitFilter(100), .. filters]);
-        return client.GetPagedItemsAsync<AccountBalancePage, AccountBalanceData>(path, MirrorJsonContext.Default.AccountBalancePage);
+        return client.GetPagedItemsAsync<AccountBalanceDataPage, AccountBalanceData>(path, MirrorJsonContext.Default.AccountBalanceDataPage);
     }
 }

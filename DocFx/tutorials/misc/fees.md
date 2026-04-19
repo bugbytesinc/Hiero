@@ -25,7 +25,7 @@ class Program
                 ctx.Signatory = new Signatory(payerPrivateKey);
             });
 
-            var schedules = await client.GetFeeScheduleAsync();
+            var schedules = await client.GetFeeSchedulesAsync();
 
             if (schedules.Current is not null)
             {

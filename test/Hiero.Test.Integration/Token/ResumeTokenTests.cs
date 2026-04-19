@@ -28,7 +28,7 @@ public class ResumeTokenTests
 
         await AssertHg.TokenTradableStatusAsync(fxToken, fxAccount, TokenTradableStatus.Tradable);
 
-        await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
+        await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
@@ -47,7 +47,7 @@ public class ResumeTokenTests
         });
         await using var client = await TestNetwork.CreateClientAsync();
 
-        await client.AssociateTokenAsync(fxAccount.CreateReceipt!.Address, fxToken.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxToken.CreateReceipt!.Token, fxAccount.CreateReceipt!.Address, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount.PrivateKey);
         });
@@ -108,7 +108,7 @@ public class ResumeTokenTests
 
         await AssertHg.TokenTradableStatusAsync(fxToken, fxAccount, TokenTradableStatus.Tradable);
 
-        await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
+        await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
@@ -145,7 +145,7 @@ public class ResumeTokenTests
 
         await AssertHg.TokenTradableStatusAsync(fxToken, fxAccount, TokenTradableStatus.Tradable);
 
-        await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
+        await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
@@ -182,7 +182,7 @@ public class ResumeTokenTests
 
         await AssertHg.TokenTradableStatusAsync(fxToken, fxAccount, TokenTradableStatus.Tradable);
 
-        await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
+        await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
@@ -217,7 +217,7 @@ public class ResumeTokenTests
         await Assert.That(info.FreezeStatus).IsEqualTo(TokenTradableStatus.Tradable);
         await Assert.That(info.AutoAssociated).IsFalse();
 
-        await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
+        await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
@@ -261,7 +261,7 @@ public class ResumeTokenTests
 
         await AssertHg.TokenTradableStatusAsync(fxToken, fxAccount, TokenTradableStatus.Tradable);
 
-        await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
+        await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
@@ -300,7 +300,7 @@ public class ResumeTokenTests
 
         ex = await Assert.That(async () =>
         {
-            await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
+            await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
             {
                 ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
             });
@@ -346,7 +346,7 @@ public class ResumeTokenTests
         await Assert.That(info.FreezeStatus).IsEqualTo(TokenTradableStatus.NotApplicable);
         await Assert.That(info.AutoAssociated).IsFalse();
 
-        await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
+        await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });

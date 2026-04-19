@@ -24,7 +24,7 @@ public sealed partial class TransactionID
 
 internal static class TransactionIDExtensions
 {
-    internal static TransactionId AsTxId(this TransactionID? id)
+    internal static TransactionId AsTransactionId(this TransactionID? id)
     {
         if (id is not null)
         {

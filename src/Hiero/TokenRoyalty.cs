@@ -62,8 +62,8 @@ public sealed record TokenRoyalty : IRoyalty
     /// <summary>
     /// Public Constructor, an <code>TokenRoyalty</code> is immutable after creation.
     /// </summary>
-    /// <param name="account">
-    /// Address receiving the royalty assessment.
+    /// <param name="receiver">
+    /// Account receiving the royalty assessment.
     /// </param>
     /// <param name="numerator">
     /// The numerator portion of the fraction of the 
@@ -90,9 +90,9 @@ public sealed record TokenRoyalty : IRoyalty
     /// assessment computed from the total amount of the associated
     /// fungible token sent by the sender.
     /// </param>
-    public TokenRoyalty(EntityId account, long numerator, long denominator, long minimum, long maximum, bool assessAsSurcharge = false)
+    public TokenRoyalty(EntityId receiver, long numerator, long denominator, long minimum, long maximum, bool assessAsSurcharge = false)
     {
-        Receiver = account;
+        Receiver = receiver;
         Numerator = numerator;
         Denominator = denominator;
         Minimum = minimum;

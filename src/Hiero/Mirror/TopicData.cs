@@ -8,9 +8,9 @@ using static Hiero.Mirror.Implementation.MirrorRestClientUtils;
 
 namespace Hiero.Mirror;
 /// <summary>
-/// HCS Topics information retrieved from a mirror node.
+/// Topic information retrieved from a mirror node.
 /// </summary>
-public class HcsTopicData
+public class TopicData
 {
     /// <summary>
     /// The ID of the topic
@@ -62,13 +62,13 @@ public class HcsTopicData
     public TimestampRangeData TimestampRange { get; set; } = default!;
 }
 /// <summary>
-/// Extension methods for querying HCS topic data from the mirror node.
+/// Extension methods for querying topic data from the mirror node.
 /// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
-public static class HcsTopicDataExtensions
+public static class TopicDataExtensions
 {
     /// <summary>
-    /// Retrieves the information regarding a HCS topic.
+    /// Retrieves the information regarding a topic.
     /// </summary>
     /// <param name="client">
     /// Mirror Rest Client to use for the request.
@@ -82,9 +82,9 @@ public static class HcsTopicDataExtensions
     /// <returns>
     /// The information for the specified topic, or null if not found.
     /// </returns>
-    public static Task<HcsTopicData?> GetHcsTopicAsync(this MirrorRestClient client, EntityId topic, params IMirrorQueryFilter[] filters)
+    public static Task<TopicData?> GetTopicAsync(this MirrorRestClient client, EntityId topic, params IMirrorQueryFilter[] filters)
     {
         var path = GenerateInitialPath($"topics/{MirrorFormat(topic)}", filters);
-        return client.GetSingleItemAsync<HcsTopicData>(path, MirrorJsonContext.Default.HcsTopicData);
+        return client.GetSingleItemAsync<TopicData>(path, MirrorJsonContext.Default.TopicData);
     }
 }

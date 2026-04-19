@@ -12,13 +12,9 @@ Accounts with `AutoAssociationLimit > 0` can skip this step — the first incomi
 
 ```csharp
 // The account's signing key must authorize this.
-// Argument order: (account, token) — NOT (token, account).
-var receipt = await client.AssociateTokenAsync(account, token);
+var receipt = await client.AssociateTokenAsync(token, account);
 Console.WriteLine($"Status: {receipt.Status}");
 ```
-
-> [!IMPORTANT]
-> `AssociateTokenAsync` takes `(account, token)`. Its counterpart `DissociateTokenAsync` takes `(token, account)` — the argument order is **reversed**. This is a known inconsistency in the SDK API.
 
 ## Associate multiple tokens at once
 
@@ -37,7 +33,6 @@ One transaction, one fee — cheaper than three separate associations.
 Dissociating removes the token-balance storage slot. The account **must hold a zero balance** of the token before dissociating; otherwise the network rejects the transaction.
 
 ```csharp
-// Argument order: (token, account) — opposite of AssociateTokenAsync.
 var receipt = await client.DissociateTokenAsync(token, account);
 ```
 

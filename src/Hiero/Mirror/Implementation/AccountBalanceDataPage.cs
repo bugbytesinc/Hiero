@@ -6,7 +6,7 @@ namespace Hiero.Mirror.Implementation;
 /// <summary>
 /// Paged list of balance objects returned from the mirror node.
 /// </summary>
-internal class AccountBalancePage : Page<AccountBalanceData>
+internal class AccountBalanceDataPage : Page<AccountBalanceData>
 {
     /// <summary>
     /// The timestamp at which this information was valid.

@@ -413,7 +413,7 @@ public class UpdateFileTests
             ctx.Payer = fxPayer;
             ctx.Signatory = fxPayer;
         });
-        var pendingReceipt = await client.GetReceiptAsync(scheduledReceipt.ScheduledTxId);
+        var pendingReceipt = await client.GetReceiptAsync(scheduledReceipt.ScheduledTransactionId);
         await Assert.That(pendingReceipt.Status).IsEqualTo(ResponseCode.Success);
 
         var retrievedContents = await client.GetFileContentAsync(fxFile.CreateReceipt.File);

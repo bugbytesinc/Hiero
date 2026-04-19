@@ -98,7 +98,7 @@ internal class TestNetwork
     }
     public static async Task<long> EstimateGasFromCentsAsync(int cents)
     {
-        var fees = await _mirrorClient.GetNetworkFees(ConsensusTimeStamp.Now);
+        var fees = await _mirrorClient.GetNetworkFeesAsync(ConsensusTimeStamp.Now);
         var rates = (await _mirrorClient.GetExchangeRateAsync())!.CurrentRate;
         return (long)BigInteger.Divide(BigInteger.Multiply(BigInteger.Multiply(cents, rates.HbarEquivalent), 1_00_000_000), BigInteger.Multiply(rates.CentEquivalent, fees!.Fees[0].GasPrice));
     }
@@ -137,7 +137,7 @@ internal class TestNetwork
         {
             throw new InvalidOperationException("Invalid private key type [PayerPrivateKey] in configuration.");
         }
-        await foreach (var account in _mirrorClient.GetAccountsFromEndorsementAsync(endorsement))
+        await foreach (var account in _mirrorClient.GetAccountsByEndorsementAsync(endorsement))
         {
             return account;
         }
@@ -168,7 +168,7 @@ internal class TestNetwork
             writer.WriteLine($"{timestamp}  ├─ HEAD   {JsonFormatter.Default.Format(transactionHeader)}");
             writer.WriteLine($"{timestamp}  ├─ SIG    {JsonFormatter.Default.Format(signedTransaction.SigMap)}");
             writer.WriteLine($"{timestamp}  └─ BODY   {JsonFormatter.Default.Format(transactionContents)}");
-            _latestKnownMutatingTransaction = transactionId.AsTxId();
+            _latestKnownMutatingTransaction = transactionId.AsTransactionId();
         }
         else if (message is Query query && TryGetQueryTransaction(query, out Transaction? payment) && payment.SignedTransactionBytes != null)
         {
@@ -183,7 +183,7 @@ internal class TestNetwork
                 writer.WriteLine($"{timestamp}  QX PYMT → {JsonFormatter.Default.Format(transactionBody)}");
                 writer.WriteLine($"{timestamp}  ├─ SIG    {JsonFormatter.Default.Format(signedTransaction.SigMap)}");
                 writer.WriteLine($"{timestamp}  └─ QRY    {JsonFormatter.Default.Format(query)}");
-                _latestKnownMutatingTransaction = transactionBody.TransactionID.AsTxId();
+                _latestKnownMutatingTransaction = transactionBody.TransactionID.AsTransactionId();
             }
         }
         else if (message is Query queryReceipt && queryReceipt.QueryCase == Query.QueryOneofCase.TransactionGetReceipt)

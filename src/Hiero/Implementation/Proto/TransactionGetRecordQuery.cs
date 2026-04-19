@@ -32,7 +32,7 @@ public sealed partial class TransactionGetRecordQuery : INetworkQuery
         var header = response.ResponseHeader;
         if (header == null)
         {
-            throw new PrecheckException($"The Network failed to produce a response while retrieving the record.", TransactionID.AsTxId(), ResponseCode.Unknown, 0);
+            throw new PrecheckException($"The Network failed to produce a response while retrieving the record.", TransactionID.AsTransactionId(), ResponseCode.Unknown, 0);
         }
         else
         {

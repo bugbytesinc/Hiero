@@ -208,7 +208,7 @@ public static class ContractResultDataExtensions
     /// all of the associated HAPI transaction data, to retrieve that
     /// data, additional calls retrieving transaction data may be required.
     /// </returns>
-    public static IAsyncEnumerable<ContractResultData> GetResultsForContractAsync(this MirrorRestClient client, EntityId contract, params IMirrorQueryFilter[] filters)
+    public static IAsyncEnumerable<ContractResultData> GetContractResultsAsync(this MirrorRestClient client, EntityId contract, params IMirrorQueryFilter[] filters)
     {
         var path = GenerateInitialPath($"contracts/{MirrorFormat(contract)}/results", [new LimitFilter(100), .. filters]);
         return client.GetPagedItemsAsync<ContractResultDataPage, ContractResultData>(path, MirrorJsonContext.Default.ContractResultDataPage);
@@ -225,7 +225,7 @@ public static class ContractResultDataExtensions
     /// <returns>
     /// The contract results data, or null if not found.
     /// </returns>
-    public static Task<ContractResultData?> GetContractResultsFromTransactionHashAsync(this MirrorRestClient client, ReadOnlyMemory<byte> evmTransactionHash)
+    public static Task<ContractResultData?> GetContractResultByTransactionHashAsync(this MirrorRestClient client, ReadOnlyMemory<byte> evmTransactionHash)
     {
         return client.GetSingleItemAsync<ContractResultData>($"contracts/results/0x{Hex.FromBytes(evmTransactionHash)}", MirrorJsonContext.Default.ContractResultData);
     }
@@ -241,7 +241,7 @@ public static class ContractResultDataExtensions
     /// <returns>
     /// The contract results data or null if not found
     /// </returns>
-    public static async Task<ContractResultData?> GetContractResultsFromTxIdAsync(this MirrorRestClient client, TransactionId transactionId)
+    public static async Task<ContractResultData?> GetContractResultByTransactionIdAsync(this MirrorRestClient client, TransactionId transactionId)
     {
         return await client.GetSingleItemAsync<ContractResultData>($"contracts/results/{MirrorFormat(transactionId)}", MirrorJsonContext.Default.ContractResultData);
     }
@@ -261,7 +261,7 @@ public static class ContractResultDataExtensions
     /// <returns>
     /// The contract results data or null if not found.
     /// </returns>
-    public static async Task<ContractResultData?> GetContractResultsFromBlockAndPosition(this MirrorRestClient client, ReadOnlyMemory<byte> blockHash, long position)
+    public static async Task<ContractResultData?> GetContractResultByBlockAndPositionAsync(this MirrorRestClient client, ReadOnlyMemory<byte> blockHash, long position)
     {
         var path = $"contracts/results?block.hash=0x{Hex.FromBytes(blockHash)}&transaction.index={position}";
         var list = await client.GetSingleItemAsync<ContractResultDataPage>(path, MirrorJsonContext.Default.ContractResultDataPage).ConfigureAwait(false);
@@ -279,7 +279,7 @@ public static class ContractResultDataExtensions
     /// <returns>
     /// Enumerator of contract results data, can be an empty list.
     /// </returns>
-    public static IAsyncEnumerable<ContractResultData> GetContractResultsFromBlockHashAsync(this MirrorRestClient client, ReadOnlyMemory<byte> blockHash)
+    public static IAsyncEnumerable<ContractResultData> GetContractResultsByBlockHashAsync(this MirrorRestClient client, ReadOnlyMemory<byte> blockHash)
     {
         var path = $"contracts/results?block.hash=0x{Hex.FromBytes(blockHash)}&limit=100&order=asc";
         return client.GetPagedItemsAsync<ContractResultDataPage, ContractResultData>(path, MirrorJsonContext.Default.ContractResultDataPage);

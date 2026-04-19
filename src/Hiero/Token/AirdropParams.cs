@@ -96,18 +96,18 @@ public sealed class AirdropParams : TransactionParams<TransactionReceipt>, INetw
                 {
                     throw new ArgumentException("Nft", "The list of NFT transfers cannot contain a null or empty NFT address.");
                 }
-                if (xfer.From.IsNullOrNone())
+                if (xfer.Sender.IsNullOrNone())
                 {
-                    throw new ArgumentException(nameof(xfer.From), "The list of NFT transfers cannot contain a null or empty from account value.");
+                    throw new ArgumentException(nameof(xfer.Sender), "The list of NFT transfers cannot contain a null or empty sender account value.");
                 }
-                if (xfer.To.IsNullOrNone())
+                if (xfer.Receiver.IsNullOrNone())
                 {
-                    throw new ArgumentException(nameof(xfer.To), "The list of NFT transfers cannot contain a null or empty to account value.");
+                    throw new ArgumentException(nameof(xfer.Receiver), "The list of NFT transfers cannot contain a null or empty receiver account value.");
                 }
                 if (!nftXferList.TryAdd(xfer.Nft, new Proto.NftTransfer
                 {
-                    SenderAccountID = new AccountID(xfer.From),
-                    ReceiverAccountID = new AccountID(xfer.To),
+                    SenderAccountID = new AccountID(xfer.Sender),
+                    ReceiverAccountID = new AccountID(xfer.Receiver),
                     SerialNumber = xfer.Nft.SerialNumber,
                     IsApproval = xfer.Delegated
                 }))
@@ -162,10 +162,10 @@ public static class AirdropExtensions
     /// <param name="token">
     /// The fungible token type to airdrop.
     /// </param>
-    /// <param name="fromAddress">
+    /// <param name="sender">
     /// The account sending the tokens.
     /// </param>
-    /// <param name="toAddress">
+    /// <param name="receiver">
     /// The account receiving the tokens.
     /// </param>
     /// <param name="amount">
@@ -188,7 +188,7 @@ public static class AirdropExtensions
     /// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="AirdropToken" language="csharp"/>
     /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Task<TransactionReceipt> AirdropTokenAsync(this ConsensusClient client, EntityId token, EntityId fromAddress, EntityId toAddress, long amount, Action<IConsensusContext>? configure = null)
+    public static Task<TransactionReceipt> AirdropTokenAsync(this ConsensusClient client, EntityId token, EntityId sender, EntityId receiver, long amount, Action<IConsensusContext>? configure = null)
     {
         if (amount < 1)
         {
@@ -198,8 +198,8 @@ public static class AirdropExtensions
         {
             TokenTransfers =
             [
-                new TokenTransfer(token, fromAddress, -amount),
-                new TokenTransfer(token, toAddress, amount)
+                new TokenTransfer(token, sender, -amount),
+                new TokenTransfer(token, receiver, amount)
             ]
         }, configure);
     }
@@ -217,10 +217,10 @@ public static class AirdropExtensions
     /// <param name="nft">
     /// The NFT instance to airdrop.
     /// </param>
-    /// <param name="fromAddress">
+    /// <param name="sender">
     /// The account sending the NFT.
     /// </param>
-    /// <param name="toAddress">
+    /// <param name="receiver">
     /// The account receiving the NFT.
     /// </param>
     /// <param name="configure">
@@ -240,11 +240,11 @@ public static class AirdropExtensions
     /// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="AirdropNft" language="csharp"/>
     /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Task<TransactionReceipt> AirdropNftAsync(this ConsensusClient client, Nft nft, EntityId fromAddress, EntityId toAddress, Action<IConsensusContext>? configure = null)
+    public static Task<TransactionReceipt> AirdropNftAsync(this ConsensusClient client, Nft nft, EntityId sender, EntityId receiver, Action<IConsensusContext>? configure = null)
     {
         return client.ExecuteAsync(new AirdropParams
         {
-            NftTransfers = [new NftTransfer(nft, fromAddress, toAddress)]
+            NftTransfers = [new NftTransfer(nft, sender, receiver)]
         }, configure);
     }
     /// <summary>

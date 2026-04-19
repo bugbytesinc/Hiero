@@ -158,7 +158,7 @@ public class AccountMultisigTests
         await using var client = await TestNetwork.CreateClientAsync();
         var receipt = await client.UpdateAccountAsync(new UpdateAccountParams
         {
-            Address = fx.CreateReceipt!.Address,
+            Account = fx.CreateReceipt!.Address,
             Endorsement = endorsement,
             Signatory = new Signatory(fx.PrivateKey, privateKey1a, privateKey1b, privateKey2a, privateKey2b)
         });
@@ -208,7 +208,7 @@ public class AccountMultisigTests
 
         await client.UpdateAccountAsync(new UpdateAccountParams
         {
-            Address = createResult.Address,
+            Account = createResult.Address,
             Endorsement = publicKey3,
             Signatory = privateKey3,
         }, ctx =>
@@ -253,7 +253,7 @@ public class AccountMultisigTests
 
         await client.UpdateAccountAsync(new UpdateAccountParams
         {
-            Address = createResult.Address,
+            Account = createResult.Address,
             Endorsement = new Endorsement(1, publicKey3a, publicKey3b, publicKey3c),
             Signatory = privateKey3a,
         }, ctx =>

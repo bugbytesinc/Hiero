@@ -247,10 +247,10 @@ public class MirrorDataTests
         var record = await client.GetTransactionRecordAsync(submitReceipt.TransactionId) as SubmitMessageRecord;
         await Assert.That(record).IsNotNull();
 
-        var data = await (await TestNetwork.GetMirrorRestClientAsync()).GetHcsMessageAsync(fxTopic, 11);
+        var data = await (await TestNetwork.GetMirrorRestClientAsync()).GetTopicMessageAsync(fxTopic, 11);
 
         await Assert.That(data).IsNotNull();
-        await Assert.That(data!.ChunkInfo).IsNull();
+        await Assert.That(data!.Chunk).IsNull();
         await Assert.That(data.TimeStamp == record!.Consensus).IsTrue();
         await Assert.That(data.Message).IsEqualTo(Convert.ToBase64String(expectedMessage));
         await Assert.That(data.Payer).IsEqualTo(record.TransactionId.Payer);
@@ -280,10 +280,10 @@ public class MirrorDataTests
         }
 
         var index = 0;
-        await foreach (var data in (await TestNetwork.GetMirrorRestClientAsync()).GetHcsMessagesAsync(fxTopic))
+        await foreach (var data in (await TestNetwork.GetMirrorRestClientAsync()).GetTopicMessagesAsync(fxTopic))
         {
             await Assert.That(data).IsNotNull();
-            await Assert.That(data.ChunkInfo).IsNull();
+            await Assert.That(data.Chunk).IsNull();
             await Assert.That(data.TimeStamp == records[index].Consensus).IsTrue();
             await Assert.That(data.Message).IsEqualTo(Convert.ToBase64String(messages[index]));
             await Assert.That(data.Payer).IsEqualTo(records[index].TransactionId.Payer);
@@ -306,7 +306,7 @@ public class MirrorDataTests
         for (int i = 0; i < xferAmounts.Length; i++)
         {
             fxTokens[i] = await TestToken.CreateAsync(fx => fx.CreateParams.GrantKycEndorsement = null);
-            var assocReceipt = await client.AssociateTokenAsync(fxAccount.CreateReceipt!.Address, fxTokens[i].CreateReceipt!.Token, ctx =>
+            var assocReceipt = await client.AssociateTokenAsync(fxTokens[i].CreateReceipt!.Token, fxAccount.CreateReceipt!.Address, ctx =>
             {
                 ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount.PrivateKey);
             });
@@ -371,7 +371,7 @@ public class MirrorDataTests
         for (int i = 0; i < xferAmounts.Length; i++)
         {
             fxTokens[i] = await TestToken.CreateAsync(fx => fx.CreateParams.GrantKycEndorsement = null);
-            await client.AssociateTokenAsync(fxAccount.CreateReceipt!.Address, fxTokens[i].CreateReceipt!.Token, ctx =>
+            await client.AssociateTokenAsync(fxTokens[i].CreateReceipt!.Token, fxAccount.CreateReceipt!.Address, ctx =>
             {
                 ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount.PrivateKey);
             });

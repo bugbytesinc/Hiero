@@ -41,8 +41,7 @@ Per-token amounts must sum to zero, just like regular transfers.
 The receiver calls `ClaimAirdropAsync` to accept:
 
 ```csharp
-// Constructor order: sender, receiver, token
-var pending = new Airdrop(sender, receiver, token);
+var pending = new Airdrop(token, sender, receiver);
 await client.ClaimAirdropAsync(pending);
 ```
 
@@ -51,13 +50,13 @@ await client.ClaimAirdropAsync(pending);
 The original sender calls `CancelAirdropAsync` to take back:
 
 ```csharp
-var pending = new Airdrop(sender, receiver, token);
+var pending = new Airdrop(token, sender, receiver);
 await client.CancelAirdropAsync(pending);
 ```
 
 ## Key points
 
-- The [`Airdrop`](xref:Hiero.Airdrop) record identifies a pending airdrop by `(Sender, Receiver, Token)` or `(Sender, Receiver, Nft)`.
+- The [`Airdrop`](xref:Hiero.Airdrop) record identifies a pending airdrop by its `Token` (or `Nft`), `Sender`, and `Receiver`.
 - Airdrops that settle immediately (associated receivers) behave identically to a regular transfer — there is no "pending" state.
 - Use [`RelinquishTokenAsync`](xref:Hiero.RelinquishTokenExtensions.RelinquishTokenAsync*) if a recipient later wants to return unwanted airdropped tokens to the treasury.
 

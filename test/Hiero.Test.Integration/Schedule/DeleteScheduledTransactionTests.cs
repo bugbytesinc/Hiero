@@ -25,7 +25,7 @@ public class DeleteScheduledTransactionTests
 
         var info = await client.GetScheduleInfoAsync(fx.ScheduleReceipt.Schedule);
         await Assert.That(info.Schedule).IsEqualTo(fx.ScheduleReceipt.Schedule);
-        await Assert.That(info.TransactionId).IsEqualTo(fx.ScheduleReceipt.ScheduledTxId);
+        await Assert.That(info.TransactionId).IsEqualTo(fx.ScheduleReceipt.ScheduledTransactionId);
         await Assert.That(info.Creator).IsEqualTo(TestNetwork.Payer);
         await Assert.That(info.Payer).IsEqualTo(fx.PayingAccount.CreateReceipt!.Address);
         await Assert.That(info.Endorsements.Length).IsEqualTo(1);
@@ -54,7 +54,7 @@ public class DeleteScheduledTransactionTests
 
         var info = await client.GetScheduleInfoAsync(fx.ScheduleReceipt.Schedule);
         await Assert.That(info.Schedule).IsEqualTo(fx.ScheduleReceipt.Schedule);
-        await Assert.That(info.TransactionId).IsEqualTo(fx.ScheduleReceipt.ScheduledTxId);
+        await Assert.That(info.TransactionId).IsEqualTo(fx.ScheduleReceipt.ScheduledTransactionId);
         await Assert.That(info.Creator).IsEqualTo(TestNetwork.Payer);
         await Assert.That(info.Payer).IsEqualTo(fx.PayingAccount.CreateReceipt!.Address);
         await Assert.That(info.Endorsements.Length).IsEqualTo(1);

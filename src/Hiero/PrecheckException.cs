@@ -37,7 +37,7 @@ public sealed class PrecheckException : Exception
     /// <summary>
     /// The transaction ID corresponding to the request that failed.
     /// </summary>
-    public TransactionId TxId { get; private set; }
+    public TransactionId TransactionId { get; private set; }
     /// <summary>
     /// If the returned status is <see cref="ResponseCode.InsufficientTxFee"/>
     /// this value will contain the transaction fee necessary to execute the transaction.
@@ -61,7 +61,7 @@ public sealed class PrecheckException : Exception
     public PrecheckException(string message, TransactionId transaction, ResponseCode code, ulong requiredFee) : base(message)
     {
         Status = code;
-        TxId = transaction;
+        TransactionId = transaction;
         RequiredFee = requiredFee;
     }
     /// <summary>
@@ -86,7 +86,7 @@ public sealed class PrecheckException : Exception
     public PrecheckException(string message, TransactionId transaction, ResponseCode code, ulong requiredFee, Exception innerException) : base(message, innerException)
     {
         Status = code;
-        TxId = transaction;
+        TransactionId = transaction;
         RequiredFee = requiredFee;
     }
 }

@@ -1051,7 +1051,7 @@ public class CreateNftTests
             ctx.Payer = fxPayer;
             ctx.Signatory = fxPayer;
         });
-        var pendingReceipt = await client.GetReceiptAsync(scheduledReceipt.ScheduledTxId);
+        var pendingReceipt = await client.GetReceiptAsync(scheduledReceipt.ScheduledTransactionId);
         await Assert.That(pendingReceipt.Status).IsEqualTo(ResponseCode.Success);
 
         var createReceipt = pendingReceipt as CreateTokenReceipt;
@@ -1114,7 +1114,7 @@ public class CreateNftTests
         });
         await Assert.That(signReceipt.Status).IsEqualTo(ResponseCode.Success);
 
-        var pendingReceipt = await client.GetReceiptAsync(scheduledReceipt.ScheduledTxId) as CreateTokenReceipt;
+        var pendingReceipt = await client.GetReceiptAsync(scheduledReceipt.ScheduledTransactionId) as CreateTokenReceipt;
         await Assert.That(pendingReceipt).IsNotNull();
         await Assert.That(pendingReceipt!.Status).IsEqualTo(ResponseCode.Success);
         await Assert.That(pendingReceipt.Token.AccountNum > 0).IsTrue();

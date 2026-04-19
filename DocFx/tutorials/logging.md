@@ -123,7 +123,7 @@ Every SDK call returns a receipt with a `TransactionId`. Log it to correlate app
 
 ```csharp
 var receipt = await client.TransferAsync(from, to, amount);
-logger.LogInformation("Transfer {Status} -- TxId: {TxId}",
+logger.LogInformation("Transfer {Status} -- TransactionId: {TransactionId}",
     receipt.Status, receipt.TransactionId);
 ```
 

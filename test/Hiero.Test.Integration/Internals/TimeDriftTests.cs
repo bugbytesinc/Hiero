@@ -18,7 +18,7 @@ public class TimeDriftTests
             {
                 AccountID = new AccountID(TestNetwork.Payer),
                 TransactionValidStart = new Timestamp(new ConsensusTimeStamp(DateTime.UtcNow.AddSeconds(16)))
-            }.AsTxId();
+            }.AsTransactionId();
         });
         var duration = Epoch.UniqueClockNanos() - startInstant;
         await Assert.That(duration).IsBetween(500_000L, 240_000_000_000L);

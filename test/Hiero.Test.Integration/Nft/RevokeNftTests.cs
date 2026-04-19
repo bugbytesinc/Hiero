@@ -55,7 +55,7 @@ public class RevokeNftTests
         await using var fxAccount = await TestAliasAccount.CreateAsync();
         await using var fxNft = await TestNft.CreateAsync();
         await using var client = await TestNetwork.CreateClientAsync();
-        await client.AssociateTokenAsync(fxAccount, fxNft.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxNft.CreateReceipt!.Token, fxAccount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount.PrivateKey);
         });

@@ -21,9 +21,9 @@ public sealed class ConfiscateNftParams : TransactionParams<TokenReceipt>, INetw
     /// </summary>
     public EntityId Token { get; set; } = default!;
     /// <summary>
-    /// The Holder Holding the NFT(s) to confiscate and destroy.
+    /// The Holder currently holding the NFT(s) to confiscate and destroy.
     /// </summary>
-    public EntityId Account { get; set; } = default!;
+    public EntityId Holder { get; set; } = default!;
     /// <summary>
     /// The Serial Numbers of the NFTs to confiscate and destroy.
     /// </summary>
@@ -51,14 +51,14 @@ public sealed class ConfiscateNftParams : TransactionParams<TokenReceipt>, INetw
         {
             throw new ArgumentOutOfRangeException(nameof(Token), "The asset token type to confiscate is missing.");
         }
-        if (Account.IsNullOrNone())
+        if (Holder.IsNullOrNone())
         {
-            throw new ArgumentOutOfRangeException(nameof(Account), "The account Address can not be empty or None.  Please provide a valid value.");
+            throw new ArgumentOutOfRangeException(nameof(Holder), "The holder address can not be empty or None.  Please provide a valid value.");
         }
         var result = new TokenWipeAccountTransactionBody
         {
             Token = new TokenID(Token),
-            Account = new AccountID(Account),
+            Account = new AccountID(Holder),
         };
         result.SerialNumbers.AddRange(SerialNumbers);
         return result;
@@ -86,8 +86,8 @@ public static class ConfiscateNftExtensions
     /// <param name="nft">
     /// The identifier of the NFT to confiscate and destroy.
     /// </param>
-    /// <param name="account">
-    /// The account holding the NFT to confiscate and destroy.
+    /// <param name="holder">
+    /// The account currently holding the NFT to confiscate and destroy.
     /// </param>
     /// <param name="configure">
     /// Optional callback method providing an opportunity to modify 
@@ -106,9 +106,9 @@ public static class ConfiscateNftExtensions
     /// <code source="../../../samples/DocSnippets/NftSnippets.cs" region="ConfiscateNftSingle" language="csharp"/>
     /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Task<TokenReceipt> ConfiscateNftAsync(this ConsensusClient client, Nft nft, EntityId account, Action<IConsensusContext>? configure = null)
+    public static Task<TokenReceipt> ConfiscateNftAsync(this ConsensusClient client, Nft nft, EntityId holder, Action<IConsensusContext>? configure = null)
     {
-        return client.ExecuteAsync(new ConfiscateNftParams { Token = nft.Token, Account = account, SerialNumbers = [nft.SerialNumber] }, configure);
+        return client.ExecuteAsync(new ConfiscateNftParams { Token = nft.Token, Holder = holder, SerialNumbers = [nft.SerialNumber] }, configure);
     }
     /// <summary>
     /// Confiscates and destroys multiple NFT instances.

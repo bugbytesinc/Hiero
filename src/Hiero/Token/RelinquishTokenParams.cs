@@ -14,7 +14,7 @@ namespace Hiero;
 /// in one transaction:
 /// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="RelinquishBatch" language="csharp"/>
 /// </example>
-public sealed class RelinquishTokensParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
+public sealed class RelinquishTokenParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
     /// Optional account holding the tokens to relinquish.
@@ -127,7 +127,7 @@ public static class RelinquishTokenExtensions
         {
             throw new ArgumentNullException(nameof(token), "Token is missing. Please check that it is not null or empty.");
         }
-        return client.ExecuteAsync(new RelinquishTokensParams { Tokens = [token] }, configure);
+        return client.ExecuteAsync(new RelinquishTokenParams { Tokens = [token] }, configure);
     }
     /// <summary>
     /// Relinquishes a specific NFT instance, returning it to the token treasury.
@@ -161,7 +161,7 @@ public static class RelinquishTokenExtensions
         {
             throw new ArgumentNullException(nameof(nft), "NFT is missing. Please check that it is not null or empty.");
         }
-        return client.ExecuteAsync(new RelinquishTokensParams { Nfts = [nft] }, configure);
+        return client.ExecuteAsync(new RelinquishTokenParams { Nfts = [nft] }, configure);
     }
     /// <summary>
     /// Relinquishes one or more tokens and/or NFTs using detailed parameters.
@@ -189,7 +189,7 @@ public static class RelinquishTokenExtensions
     /// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="RelinquishBatch" language="csharp"/>
     /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Task<TransactionReceipt> RelinquishAsync(this ConsensusClient client, RelinquishTokensParams relinquishParams, Action<IConsensusContext>? configure = null)
+    public static Task<TransactionReceipt> RelinquishTokensAsync(this ConsensusClient client, RelinquishTokenParams relinquishParams, Action<IConsensusContext>? configure = null)
     {
         return client.ExecuteAsync(relinquishParams, configure);
     }

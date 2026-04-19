@@ -89,7 +89,7 @@ public static class TransactionDetailDataExtensions
     /// A list of transactions (which may be child transactions) that
     /// involve the specified account (regardless of payer status).
     /// </returns>
-    public static IAsyncEnumerable<TransactionDetailData> GetTransactionsForAccountAsync(this MirrorRestClient client, EntityId account, params IMirrorQueryFilter[] filters)
+    public static IAsyncEnumerable<TransactionDetailData> GetAccountTransactionsAsync(this MirrorRestClient client, EntityId account, params IMirrorQueryFilter[] filters)
     {
         var path = GenerateInitialPath($"transactions", [new LimitFilter(100), new AccountIsFilter(account), .. filters]);
         return client.GetPagedItemsAsync<TransactionDetailDataPage, TransactionDetailData>(path, MirrorJsonContext.Default.TransactionDetailDataPage);

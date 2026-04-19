@@ -4,7 +4,7 @@ using System.Numerics;
 
 namespace Hiero.Test.Integration.Crypto;
 
-public class GetDetailTests
+public class GetDetailsTests
 {
     [Test]
     [Skip("Requires elevated system account access.")]
@@ -13,7 +13,7 @@ public class GetDetailTests
         await using var client = await TestNetwork.CreateClientAsync();
         var account = TestNetwork.Payer;
 
-        var detail = await client.GetAccountDetailAsync(account);
+        var detail = await client.GetAccountDetailsAsync(account);
         await Assert.That(detail.Address).IsNotNull();
         await Assert.That(detail.Address.RealmNum).IsEqualTo(account.RealmNum);
         await Assert.That(detail.Address.ShardNum).IsEqualTo(account.ShardNum);
@@ -42,7 +42,7 @@ public class GetDetailTests
         await using var fxAccount = await TestAccount.CreateAsync();
         await using var client = await TestNetwork.CreateClientAsync();
 
-        var detail = await client.GetAccountDetailAsync(fxAccount);
+        var detail = await client.GetAccountDetailsAsync(fxAccount);
         await Assert.That(detail.Address).IsEqualTo(fxAccount.CreateReceipt!.Address);
         await Assert.That(detail.EvmAddress).IsNotNull();
         await Assert.That(detail.Deleted).IsFalse();
@@ -69,7 +69,7 @@ public class GetDetailTests
         await using var fxAccount = await TestAliasAccount.CreateAsync();
         await using var client = await TestNetwork.CreateClientAsync();
 
-        var detailFromAddress = await client.GetAccountDetailAsync(fxAccount.CreateReceipt!.Address);
+        var detailFromAddress = await client.GetAccountDetailsAsync(fxAccount.CreateReceipt!.Address);
         await Assert.That(detailFromAddress.Address).IsEqualTo(fxAccount.CreateReceipt!.Address);
         await Assert.That(detailFromAddress.EvmAddress).IsNotNull();
         await Assert.That(detailFromAddress.Deleted).IsFalse();
@@ -88,7 +88,7 @@ public class GetDetailTests
         await Assert.That(detailFromAddress.TokenAllowances).IsEmpty();
         await Assert.That(detailFromAddress.NftAllowances).IsEmpty();
 
-        var detailFromAlias = await client.GetAccountDetailAsync(fxAccount.Alias);
+        var detailFromAlias = await client.GetAccountDetailsAsync(fxAccount.Alias);
         await Assert.That(detailFromAlias.Address).IsEqualTo(fxAccount.CreateReceipt!.Address);
         await Assert.That(detailFromAlias.EvmAddress).IsNotNull();
         await Assert.That(detailFromAlias.Deleted).IsFalse();
@@ -116,7 +116,7 @@ public class GetDetailTests
         await using var client = await TestNetwork.CreateClientAsync();
         var account = await TestNetwork.GetConsensusNodeEndpointAsync();
 
-        var detail = await client.GetAccountDetailAsync(account);
+        var detail = await client.GetAccountDetailsAsync(account);
         await Assert.That(detail.Address).IsNotNull();
         await Assert.That(detail.Address.ShardNum).IsEqualTo(account.Node.ShardNum);
         await Assert.That(detail.Address.RealmNum).IsEqualTo(account.Node.RealmNum);
@@ -144,7 +144,7 @@ public class GetDetailTests
         var account = TestNetwork.Payer;
         var ex = await Assert.That(async () =>
         {
-            await client.GetAccountDetailAsync(account);
+            await client.GetAccountDetailsAsync(account);
         }).ThrowsException();
         var ioe = ex as InvalidOperationException;
         await Assert.That(ioe).IsNotNull();
@@ -158,7 +158,7 @@ public class GetDetailTests
         await using var fxAsset = await TestNft.CreateAsync();
         await using var client = await TestNetwork.CreateClientAsync();
 
-        var detail = await client.GetAccountDetailAsync(fxAsset.TreasuryAccount.CreateReceipt!.Address);
+        var detail = await client.GetAccountDetailsAsync(fxAsset.TreasuryAccount.CreateReceipt!.Address);
         await Assert.That(detail.Address).IsEqualTo(fxAsset.TreasuryAccount.CreateReceipt!.Address);
         await Assert.That(detail.EvmAddress).IsNotNull();
         await Assert.That(detail.Deleted).IsFalse();

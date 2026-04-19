@@ -81,7 +81,7 @@ public static class BurnNftExtensions
     /// <param name="client">
     /// The Consensus Node Client orchestrating the burn.
     /// </param>
-    /// <param name="asset">
+    /// <param name="nft">
     /// The identifier of the NFT to destroy.
     /// </param>
     /// <param name="configure">
@@ -101,9 +101,9 @@ public static class BurnNftExtensions
     /// <code source="../../../samples/DocSnippets/NftSnippets.cs" region="BurnNftSingle" language="csharp"/>
     /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Task<TokenReceipt> BurnNftAsync(this ConsensusClient client, Nft asset, Action<IConsensusContext>? configure = null)
+    public static Task<TokenReceipt> BurnNftAsync(this ConsensusClient client, Nft nft, Action<IConsensusContext>? configure = null)
     {
-        return client.ExecuteAsync(new BurnNftParams { Token = asset.Token, SerialNumbers = [asset.SerialNumber] }, configure);
+        return client.ExecuteAsync(new BurnNftParams { Token = nft.Token, SerialNumbers = [nft.SerialNumber] }, configure);
     }
     /// <summary>
     /// Destroys multiple NFT instances.

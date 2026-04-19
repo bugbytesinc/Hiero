@@ -1,14 +1,15 @@
-﻿// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: Apache-2.0
 #pragma warning disable CS8618
 using Hiero.Converters;
 using System.Text.Json.Serialization;
 
-namespace Hiero.Mirror.Implementation;
+namespace Hiero.Mirror;
 
 /// <summary>
-/// HCS Chunk Information that may or may not be part of this message.
+/// Chunk metadata for a segmented HCS submit message, when the payload
+/// was split across multiple chunk transactions.
 /// </summary>
-public class ChunkInfo
+public class ChunkData
 {
     /// <summary>
     /// Corresponding initial transaction id.
@@ -26,5 +27,4 @@ public class ChunkInfo
     /// </summary>
     [JsonPropertyName("total")]
     public int Total { get; set; }
-
 }

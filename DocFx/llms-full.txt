@@ -187,7 +187,8 @@ Unique transaction identifier combining payer account and valid-start timestamp.
 
 ```csharp
 TransactionId txId = receipt.TransactionId;
-// txId.Address (payer), txId.ValidStartSeconds, txId.ValidStartNanos
+// txId.Payer, txId.ValidStartSeconds, txId.ValidStartNanos,
+// txId.Scheduled, txId.ChildNonce
 ```
 
 ### EvmAddress
@@ -271,7 +272,7 @@ var receipt = await client.TransferAsync(new TransferParams
 });
 
 // Convenience: transfer fungible tokens
-await client.TransferTokensAsync(token, from, to, amount);
+await client.TransferTokenAsync(token, from, to, amount);
 
 // Convenience: transfer NFT
 await client.TransferNftAsync(new Nft(token, serial), from, to);
@@ -296,7 +297,7 @@ AccountInfo properties: `Address`, `EvmAddress`, `Balance`, `Endorsement`,
 `Tokens`, `NftCount`, `AutoAssociationLimit`, `Deleted`, `StakingInfo`.
 
 ```csharp
-AccountDetail detail = await client.GetAccountDetailAsync(account);
+AccountDetails detail = await client.GetAccountDetailsAsync(account);
 // Includes all AccountInfo fields plus:
 // CryptoAllowances, TokenAllowances, NftAllowances
 ```
@@ -306,7 +307,7 @@ AccountDetail detail = await client.GetAccountDetailAsync(account);
 ```csharp
 await client.UpdateAccountAsync(new UpdateAccountParams
 {
-    Address = account,
+    Account = account,
     Endorsement = new Endorsement(newKey),   // change key
     Memo = "New memo",
     Signatory = new Signatory(currentKey)
@@ -335,7 +336,7 @@ await client.AllocateAllowanceAsync(new AllowanceParams
     Signatory = new Signatory(ownerKey)
 });
 
-await client.RevokeNftAllowancesAsync(new RevokeNftAllowanceParams
+await client.RevokeNftAllowanceAsync(new RevokeNftAllowanceParams
 {
     Owner = owner, Token = token,
     SerialNumbers = new long[] { 1, 2, 3 },
@@ -390,8 +391,8 @@ CreateTokenParams key properties:
 TokenReceipt r = await client.MintTokenAsync(token, 500_000);
 TokenReceipt r = await client.MintTokenAsync(new MintTokenParams { ... });
 
-TokenReceipt r = await client.BurnTokensAsync(token, 100_000);
-TokenReceipt r = await client.BurnTokensAsync(new BurnTokenParams { ... });
+TokenReceipt r = await client.BurnTokenAsync(token, 100_000);
+TokenReceipt r = await client.BurnTokenAsync(new BurnTokenParams { ... });
 ```
 
 ### Associate / Dissociate
@@ -400,7 +401,7 @@ Accounts must be associated with a token before they can hold it
 (unless auto-association slots are available).
 
 ```csharp
-await client.AssociateTokenAsync(account, token);
+await client.AssociateTokenAsync(token, account);
 await client.DissociateTokenAsync(token, account);
 ```
 
@@ -428,7 +429,7 @@ await client.RevokeTokenKycAsync(token, holder);
 ### Confiscate (Wipe)
 
 ```csharp
-await client.ConfiscateTokensAsync(token, holder, amount);
+await client.ConfiscateTokenAsync(token, holder, amount);
 ```
 
 ### Relinquish (Return to Treasury)
@@ -444,7 +445,7 @@ await client.RelinquishTokenAsync(token);
 await client.RelinquishNftAsync(new Nft(nftToken, serial));
 
 // Batch relinquish with explicit owner
-await client.RelinquishAsync(new RelinquishTokensParams
+await client.RelinquishTokensAsync(new RelinquishTokenParams
 {
     Owner = holderAccount,
     Tokens = new[] { token1, token2 },
@@ -558,9 +559,8 @@ auto-association slots, a pending airdrop is created.
 ### Claim / Cancel Pending Airdrops
 
 ```csharp
-// Constructor order: sender, receiver, token (NOT token first)
-await client.ClaimAirdropAsync(new Airdrop(sender, receiver, token));
-await client.CancelAirdropAsync(new Airdrop(sender, receiver, token));
+await client.ClaimAirdropAsync(new Airdrop(token, sender, receiver));
+await client.CancelAirdropAsync(new Airdrop(token, sender, receiver));
 
 // Batch
 await client.ClaimAirdropsAsync(new ClaimAirdropParams { ... });
@@ -781,6 +781,9 @@ var receipt = await client.ScheduleAsync(new ScheduleParams
     DelayExecution = false
 });
 EntityId scheduleId = receipt.Schedule;
+TransactionId executionTxId = receipt.ScheduledTransactionId;
+// Use ScheduledTransactionId with GetReceiptAsync / GetTransactionRecordAsync
+// AFTER the schedule is executed (all signatures collected).
 ```
 
 ScheduleParams properties:
@@ -879,21 +882,21 @@ or interop with other SDKs that construct the transaction externally.
 
 ```csharp
 // Precheck only -- returns the gateway's ResponseCode without waiting for consensus
-ResponseCode code = await client.SendExternalTransactionAsync(signedTransactionBytes);
+ResponseCode code = await client.SubmitExternalTransactionAsync(signedTransactionBytes);
 
 // Full flow -- waits for consensus and returns a TransactionReceipt
-TransactionReceipt receipt = await client.SubmitExternalTransactionAsync(signedTransactionBytes);
+TransactionReceipt receipt = await client.ExecuteExternalTransactionAsync(signedTransactionBytes);
 
 // Add extra signatures before relaying (e.g. co-signer on this node)
-var receipt = await client.SubmitExternalTransactionAsync(new ExternalTransactionParams
+var receipt = await client.ExecuteExternalTransactionAsync(new ExternalTransactionParams
 {
     SignedTransactionBytes = signedTransactionBytes,
     Signatory = new Signatory(coSignerKey)
 });
 ```
 
-Note: `SendExternalTransactionAsync` returns `ResponseCode` (precheck only),
-while `SubmitExternalTransactionAsync` returns `TransactionReceipt` (waits for
+Note: `SubmitExternalTransactionAsync` returns `ResponseCode` (precheck only),
+while `ExecuteExternalTransactionAsync` returns `TransactionReceipt` (waits for
 consensus). This is the inverse of the usual SDK verb convention where `Submit`
 is precheck-only and `Execute` waits.
 
@@ -970,10 +973,10 @@ AddConsensusNodeParams properties:
 - `GrpcProxyEndpoint` (Uri?) - gRPC-Web proxy endpoint
 - `DeclineReward` (bool) - opt out of node rewards
 
-### Remove Consensus Node
+### Delete Consensus Node
 
 ```csharp
-await client.RemoveConsensusNodeAsync(nodeId);
+await client.DeleteConsensusNodeAsync(nodeId);
 ```
 
 ### Update Consensus Node
@@ -1033,7 +1036,7 @@ var receipt = await client.CreateAccountAsync(new CreateAccountParams
 // Add hooks to an existing account
 await client.UpdateAccountAsync(new UpdateAccountParams
 {
-    Address = account,
+    Account = account,
     AddHooks = new[] { new HookMetadata(2, hookContractId) }
 });
 ```
@@ -1136,7 +1139,7 @@ ExchangeRates rates = await client.GetExchangeRatesAsync();
 // rates.Current.Expiration, rates.Next
 
 // Fee schedules
-FeeSchedules fees = await client.GetFeeScheduleAsync();
+FeeSchedules fees = await client.GetFeeSchedulesAsync();
 // fees.Current.Data (Dictionary<string, string[]>), fees.Current.Expires
 
 // Network version
@@ -1167,7 +1170,7 @@ var mirror = new MirrorRestClient(new HttpClient
 
 ```csharp
 AccountData? data = await mirror.GetAccountAsync(accountId);
-IAsyncEnumerable<AccountData> accounts = mirror.GetAccountsFromEndorsementAsync(endorsement);
+IAsyncEnumerable<AccountData> accounts = mirror.GetAccountsByEndorsementAsync(endorsement);
 IAsyncEnumerable<CryptoAllowanceData> allowances = mirror.GetAccountCryptoAllowancesAsync(account);
 IAsyncEnumerable<TokenAllowanceData> tokenAllowances = mirror.GetAccountTokenAllowancesAsync(account);
 IAsyncEnumerable<TokenHoldingData> holdings = mirror.GetAccountTokenHoldingsAsync(account);
@@ -1187,26 +1190,26 @@ IAsyncEnumerable<AccountBalanceData> balances = mirror.GetTokenBalancesAsync(tok
 ```csharp
 TransactionDetailData[] group = await mirror.GetTransactionGroupAsync(txId);
 TransactionDetailData? tx = await mirror.GetTransactionAsync(consensusTimestamp);
-IAsyncEnumerable<TransactionDetailData> txs = mirror.GetTransactionsForAccountAsync(account);
+IAsyncEnumerable<TransactionDetailData> txs = mirror.GetAccountTransactionsAsync(account);
 ConsensusTimeStamp latest = await mirror.GetLatestConsensusTimestampAsync();
 ```
 
 ### HCS (Consensus Service)
 
 ```csharp
-HcsTopicData? topic = await mirror.GetHcsTopicAsync(topicId);
-HcsMessageData? msg = await mirror.GetHcsMessageAsync(topicId, sequenceNumber);
-IAsyncEnumerable<HcsMessageData> msgs = mirror.GetHcsMessagesAsync(topicId);
+TopicData? topic = await mirror.GetTopicAsync(topicId);
+TopicMessageData? msg = await mirror.GetTopicMessageAsync(topicId, sequenceNumber);
+IAsyncEnumerable<TopicMessageData> msgs = mirror.GetTopicMessagesAsync(topicId);
 ```
 
 ### Contracts
 
 ```csharp
-ContractData? data = await mirror.GetContractDataAsync(contractId);
-IAsyncEnumerable<ContractResultData> results = mirror.GetResultsForContractAsync(contractId);
-ContractResultData? result = await mirror.GetContractResultsFromTxIdAsync(txId);
-IAsyncEnumerable<ExtendedContractLogData> logs = mirror.GetLogEventsForContractAsync(contractId);
-ContractStateData? state = await mirror.GetContractState(contractId, position, filters);
+ContractData? data = await mirror.GetContractAsync(contractId);
+IAsyncEnumerable<ContractResultData> results = mirror.GetContractResultsAsync(contractId);
+ContractResultData? result = await mirror.GetContractResultByTransactionIdAsync(txId);
+IAsyncEnumerable<ExtendedContractLogData> logs = mirror.GetContractLogEventsAsync(contractId);
+ContractStateData? state = await mirror.GetContractStateAsync(contractId, position, filters);
 EncodedParams result = await mirror.CallEvmAsync(evmCallData);
 long gas = await mirror.EstimateGasAsync(fromEvmAddress, callParams);
 BigInteger chainId = await mirror.GetChainIdAsync();
@@ -1227,7 +1230,7 @@ IAsyncEnumerable<ConsensusNodeData> nodes = mirror.GetConsensusNodesAsync();
 IReadOnlyDictionary<ConsensusNodeEndpoint, long> active =
     await mirror.GetActiveConsensusNodesAsync(timeoutMs);
 ExchangeRateData? rate = await mirror.GetExchangeRateAsync();
-NetworkFeeData? fees = await mirror.GetLatestNetworkFeesAsync();
+NetworkFeesData? fees = await mirror.GetLatestNetworkFeesAsync();
 ```
 
 ### Query Filters
@@ -1235,7 +1238,7 @@ NetworkFeeData? fees = await mirror.GetLatestNetworkFeesAsync();
 Many methods accept `IMirrorQueryFilter` parameters for pagination and filtering:
 
 ```csharp
-var txs = mirror.GetTransactionsForAccountAsync(account,
+var txs = mirror.GetAccountTransactionsAsync(account,
     new LimitFilter(25),
     new OrderByFilter("desc"),
     new TimestampAfterFilter(timestamp));
@@ -1248,7 +1251,7 @@ var holdings = mirror.GetAccountTokenHoldingsAsync(account,
 Available filters: `LimitFilter`, `OrderByFilter`, `TimestampAfterFilter`,
 `TimestampEqualsFilter`, `TimestampOnOrBeforeFilter`, `SequenceAfterFilter`,
 `AccountIsFilter`, `ContractIsFilter`, `TokenIsFilter`, `SpenderIsFilter`,
-`SlotIsFilter`, `TopicFilter`.
+`SlotIsFilter`, `TopicIsFilter`.
 
 ---
 
@@ -1295,12 +1298,15 @@ try
 catch (PrecheckException ex)
 {
     // Rejected before consensus (bad fee, invalid account, etc.)
-    Console.WriteLine($"Precheck: {ex.Status}");
+    // Fields: ex.Status (ResponseCode), ex.TransactionId, ex.RequiredFee
+    // (RequiredFee is populated when Status == InsufficientTxFee)
+    Console.WriteLine($"Precheck: {ex.Status} (tx {ex.TransactionId})");
 }
 catch (TransactionException ex)
 {
     // Reached consensus but failed (insufficient balance, etc.)
-    Console.WriteLine($"Failed: {ex.Status}");
+    // Fields: ex.Status, ex.TransactionId, ex.Receipt (full receipt)
+    Console.WriteLine($"Failed: {ex.Status} (tx {ex.TransactionId})");
 }
 catch (ConsensusException ex)
 {
@@ -1359,10 +1365,6 @@ These compile but fail at runtime -- check for them before submitting code:
 - **Operating on immutable entities.** Tokens, topics, contracts, and files
   created without an `Administrator` key cannot be updated or deleted by anyone.
   `DeleteTokenAsync` on an immutable token fails with `TokenIsImmutable`.
-
-- **`DissociateTokenAsync` argument order.** It takes `(token, account)` --
-  opposite of `AssociateTokenAsync(account, token)`. Both compile since both
-  args are `EntityId`, but reversing them targets the wrong entity.
 
 ---
 

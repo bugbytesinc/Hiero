@@ -15,7 +15,7 @@ public class ClaimAirdropTokenTests
         // Transfer tokens to the sender so they have a balance to airdrop.
         var xferAmount = (long)(fxToken.CreateParams.Circulation / 3);
         await using var client = await TestNetwork.CreateClientAsync();
-        await client.TransferTokensAsync(fxToken.CreateReceipt!.Token, fxToken.TreasuryAccount.CreateReceipt!.Address, fxSender.CreateReceipt!.Address, xferAmount, ctx =>
+        await client.TransferTokenAsync(fxToken.CreateReceipt!.Token, fxToken.TreasuryAccount.CreateReceipt!.Address, fxSender.CreateReceipt!.Address, xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
@@ -33,20 +33,20 @@ public class ClaimAirdropTokenTests
         });
 
         // Associate the receiver with the token so the claim can succeed.
-        await client.AssociateTokenAsync(fxReceiver.CreateReceipt!.Address, fxToken.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxToken.CreateReceipt!.Token, fxReceiver.CreateReceipt!.Address, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxReceiver.PrivateKey);
         });
 
         // Schedule a claim airdrop WITHOUT the receiver signing.
-        var pendingAirdrop = new Airdrop(fxSender.CreateReceipt!.Address, fxReceiver.CreateReceipt!.Address, fxToken.CreateReceipt!.Token);
+        var airdrop = new Airdrop(fxToken.CreateReceipt!.Token, fxSender.CreateReceipt!.Address, fxReceiver.CreateReceipt!.Address);
         var tex = await Assert.That(async () =>
         {
             await client.ScheduleAsync(new ScheduleParams
             {
                 Transaction = new ClaimAirdropParams
                 {
-                    Airdrops = [pendingAirdrop],
+                    Airdrops = [airdrop],
                 },
                 Memo = Generator.Memo(20),
             });

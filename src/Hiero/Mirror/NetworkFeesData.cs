@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: Apache-2.0
 using Hiero.Converters;
 using Hiero.Mirror.Filters;
 using Hiero.Mirror.Implementation;
@@ -8,9 +8,9 @@ using static Hiero.Mirror.Implementation.MirrorRestClientUtils;
 
 namespace Hiero.Mirror;
 /// <summary>
-/// Fee Info
+/// A single network fee entry: gas price paired with a transaction type.
 /// </summary>
-public class NetworkFee
+public class NetworkFeeData
 {
     /// <summary>
     /// The basic charge in gas for the paired transaction type.
@@ -25,15 +25,15 @@ public class NetworkFee
     public string TransactionType { get; set; } = default!;
 }
 /// <summary>
-/// Represents Network Fees
+/// Snapshot of the network fee schedule at a given timestamp.
 /// </summary>
-public class NetworkFeeData
+public class NetworkFeesData
 {
     /// <summary>
-    /// The list of fees and basic gas charged.
+    /// The list of fees and basic gas charged per transaction type.
     /// </summary>
     [JsonPropertyName("fees")]
-    public NetworkFee[] Fees { get; set; } = default!;
+    public NetworkFeeData[] Fees { get; set; } = default!;
     /// <summary>
     /// Timestamp at which this information
     /// was generated.
@@ -45,7 +45,7 @@ public class NetworkFeeData
 /// Extension methods for querying network fee data from the mirror node.
 /// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
-public static class NetworkFeeExtensions
+public static class NetworkFeesExtensions
 {
     /// <summary>
     /// Retrieves the network fee data for the given timestamp.
@@ -59,10 +59,10 @@ public static class NetworkFeeExtensions
     /// <returns>
     /// Network fee data for the timestamp, or null if not found.
     /// </returns>
-    public static Task<NetworkFeeData?> GetNetworkFees(this MirrorRestClient client, ConsensusTimeStamp consensus)
+    public static Task<NetworkFeesData?> GetNetworkFeesAsync(this MirrorRestClient client, ConsensusTimeStamp consensus)
     {
         var path = GenerateInitialPath($"network/fees", [new TimestampOnOrBeforeFilter(consensus)]);
-        return client.GetSingleItemAsync<NetworkFeeData>(path, MirrorJsonContext.Default.NetworkFeeData);
+        return client.GetSingleItemAsync<NetworkFeesData>(path, MirrorJsonContext.Default.NetworkFeesData);
     }
     /// <summary>
     /// Retrieves the latest network fee data from the ledger.
@@ -73,8 +73,8 @@ public static class NetworkFeeExtensions
     /// <returns>
     /// The current Network fee data or null if not found.
     /// </returns>
-    public static Task<NetworkFeeData?> GetLatestNetworkFeesAsync(this MirrorRestClient client)
+    public static Task<NetworkFeesData?> GetLatestNetworkFeesAsync(this MirrorRestClient client)
     {
-        return client.GetSingleItemAsync<NetworkFeeData>("network/fees", MirrorJsonContext.Default.NetworkFeeData);
+        return client.GetSingleItemAsync<NetworkFeesData>("network/fees", MirrorJsonContext.Default.NetworkFeesData);
     }
 }

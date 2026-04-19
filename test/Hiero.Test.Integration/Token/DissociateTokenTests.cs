@@ -19,7 +19,7 @@ public class DissociateTokenTests
         await Assert.That(association.AutoAssociated).IsFalse();
 
         await using var client = await TestNetwork.CreateClientAsync();
-        var receipt = await client.DissociateTokenAsync(new DissociateTokenParams
+        var receipt = await client.DissociateTokensAsync(new DissociateTokenParams
         {
             Account = fxAccount.CreateReceipt!.Address,
             Tokens = [fxToken.CreateReceipt!.Token],
@@ -52,7 +52,7 @@ public class DissociateTokenTests
 
         var ex = await Assert.That(async () =>
         {
-            await client.DissociateTokenAsync(new DissociateTokenParams
+            await client.DissociateTokensAsync(new DissociateTokenParams
             {
                 Account = fxAccount.Alias,
                 Tokens = [fxToken.CreateReceipt!.Token],
@@ -81,7 +81,7 @@ public class DissociateTokenTests
         await Assert.That(association.AutoAssociated).IsFalse();
 
         await using var client = await TestNetwork.CreateClientAsync();
-        var receipt = await client.DissociateTokenAsync(new DissociateTokenParams
+        var receipt = await client.DissociateTokensAsync(new DissociateTokenParams
         {
             Account = fxAccount.CreateReceipt!.Address,
             Tokens = [fxToken.CreateReceipt!.Token],
@@ -140,7 +140,7 @@ public class DissociateTokenTests
         await Assert.That(association.AutoAssociated).IsFalse();
 
         await using var client = await TestNetwork.CreateClientAsync();
-        var receipt = await client.DissociateTokenAsync(new DissociateTokenParams
+        var receipt = await client.DissociateTokensAsync(new DissociateTokenParams
         {
             Account = fxAccount.CreateReceipt!.Address,
             Tokens = [fxToken.CreateReceipt!.Token],
@@ -177,7 +177,7 @@ public class DissociateTokenTests
         await AssertHg.TokenIsAssociatedAsync(fxToken2, fxAccount);
 
         await using var client = await TestNetwork.CreateClientAsync();
-        var receipt = await client.DissociateTokenAsync(new DissociateTokenParams
+        var receipt = await client.DissociateTokensAsync(new DissociateTokenParams
         {
             Account = fxAccount.CreateReceipt!.Address,
             Tokens = tokens,
@@ -202,7 +202,7 @@ public class DissociateTokenTests
         await AssertHg.TokenIsAssociatedAsync(fxToken2, fxAccount);
 
         await using var client = await TestNetwork.CreateClientAsync();
-        var receipt = await client.DissociateTokenAsync(new DissociateTokenParams
+        var receipt = await client.DissociateTokensAsync(new DissociateTokenParams
         {
             Account = fxAccount.CreateReceipt!.Address,
             Tokens = tokens,
@@ -237,7 +237,7 @@ public class DissociateTokenTests
         await AssertHg.TokenIsAssociatedAsync(fxToken2, fxAccount);
 
         await using var client = await TestNetwork.CreateClientAsync();
-        var receipt = await client.DissociateTokenAsync(new DissociateTokenParams
+        var receipt = await client.DissociateTokensAsync(new DissociateTokenParams
         {
             Account = fxAccount.CreateReceipt!.Address,
             Tokens = tokens,
@@ -265,7 +265,7 @@ public class DissociateTokenTests
         await AssertHg.TokenIsAssociatedAsync(fxToken2, fxAccount);
 
         await using var client = await TestNetwork.CreateClientAsync();
-        var receipt = await client.DissociateTokenAsync(new DissociateTokenParams
+        var receipt = await client.DissociateTokensAsync(new DissociateTokenParams
         {
             Account = fxAccount.CreateReceipt!.Address,
             Tokens = tokens,
@@ -304,7 +304,7 @@ public class DissociateTokenTests
         await Assert.That(association.AutoAssociated).IsFalse();
 
         await using var client = await TestNetwork.CreateClientAsync();
-        var receipt = await client.DissociateTokenAsync(new DissociateTokenParams
+        var receipt = await client.DissociateTokensAsync(new DissociateTokenParams
         {
             Account = fxAccount.CreateReceipt!.Address,
             Tokens = [fxToken.CreateReceipt!.Token],
@@ -372,7 +372,7 @@ public class DissociateTokenTests
 
         ex = await Assert.That(async () =>
         {
-            await client.DissociateTokenAsync(new DissociateTokenParams
+            await client.DissociateTokensAsync(new DissociateTokenParams
             {
                 Account = fxAccount.CreateReceipt!.Address,
                 Tokens = null!,
@@ -385,7 +385,7 @@ public class DissociateTokenTests
 
         ex = await Assert.That(async () =>
         {
-            await client.DissociateTokenAsync(new DissociateTokenParams
+            await client.DissociateTokensAsync(new DissociateTokenParams
             {
                 Account = fxAccount.CreateReceipt!.Address,
                 Tokens = new EntityId[] { null! },
@@ -439,7 +439,7 @@ public class DissociateTokenTests
 
         var ex = await Assert.That(async () =>
         {
-            await client.DissociateTokenAsync(new DissociateTokenParams
+            await client.DissociateTokensAsync(new DissociateTokenParams
             {
                 Account = fxAccount.CreateReceipt!.Address,
                 Tokens = [fxToken.CreateReceipt!.Token],
@@ -462,7 +462,7 @@ public class DissociateTokenTests
         var ex = await Assert.That(async () =>
         {
             var tokens = new EntityId[] { fxToken.CreateReceipt!.Token, fxToken.CreateReceipt!.Token };
-            await client.DissociateTokenAsync(new DissociateTokenParams
+            await client.DissociateTokensAsync(new DissociateTokenParams
             {
                 Account = fxAccount.CreateReceipt!.Address,
                 Tokens = tokens,
@@ -486,7 +486,7 @@ public class DissociateTokenTests
         var ex = await Assert.That(async () =>
         {
             var tokens = new EntityId[] { fxToken1.CreateReceipt!.Token, fxToken2.CreateReceipt!.Token };
-            await client.DissociateTokenAsync(new DissociateTokenParams
+            await client.DissociateTokensAsync(new DissociateTokenParams
             {
                 Account = fxAccount.CreateReceipt!.Address,
                 Tokens = tokens,
@@ -527,7 +527,7 @@ public class DissociateTokenTests
         await Assert.That(association.FreezeStatus).IsEqualTo(TokenTradableStatus.Tradable);
         await Assert.That(association.AutoAssociated).IsFalse();
 
-        receipt = await client.DissociateTokenAsync(new DissociateTokenParams
+        receipt = await client.DissociateTokensAsync(new DissociateTokenParams
         {
             Account = fxContract.ContractReceipt!.Contract,
             Tokens = [fxToken.CreateReceipt!.Token],
@@ -541,7 +541,7 @@ public class DissociateTokenTests
 
         var ex = await Assert.That(async () =>
         {
-            await client.TransferTokensAsync(fxToken.CreateReceipt!.Token, fxToken.TreasuryAccount.CreateReceipt!.Address, fxContract.ContractReceipt!.Contract, (long)xferAmount, ctx =>
+            await client.TransferTokenAsync(fxToken.CreateReceipt!.Token, fxToken.TreasuryAccount.CreateReceipt!.Address, fxContract.ContractReceipt!.Contract, (long)xferAmount, ctx =>
             {
                 ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
             });
@@ -567,7 +567,7 @@ public class DissociateTokenTests
         await AssertHg.TokenBalanceAsync(fxToken, fxAccount2, 0);
         await AssertHg.TokenBalanceAsync(fxToken, fxToken.TreasuryAccount, fxToken.CreateParams.Circulation);
 
-        var receipt = await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount1, xferAmount, ctx =>
+        var receipt = await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount1, xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
@@ -595,7 +595,7 @@ public class DissociateTokenTests
         await AssertHg.TokenBalanceAsync(fxToken, fxAccount2, 0);
         await AssertHg.TokenBalanceAsync(fxToken, fxToken.TreasuryAccount, 0);
 
-        await client.TransferTokensAsync(fxToken, fxAccount1, fxAccount2, xferAmount, ctx =>
+        await client.TransferTokenAsync(fxToken, fxAccount1, fxAccount2, xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount1.PrivateKey);
         });

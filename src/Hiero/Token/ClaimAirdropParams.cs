@@ -73,7 +73,7 @@ public static class ClaimAirdropExtensions
     /// <param name="client">
     /// The Consensus Node Client orchestrating the claim.
     /// </param>
-    /// <param name="pendingAirdrop">
+    /// <param name="airdrop">
     /// The pending airdrop to claim.
     /// </param>
     /// <param name="configure">
@@ -93,9 +93,9 @@ public static class ClaimAirdropExtensions
     /// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="ClaimAirdrop" language="csharp"/>
     /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Task<TransactionReceipt> ClaimAirdropAsync(this ConsensusClient client, Airdrop pendingAirdrop, Action<IConsensusContext>? configure = null)
+    public static Task<TransactionReceipt> ClaimAirdropAsync(this ConsensusClient client, Airdrop airdrop, Action<IConsensusContext>? configure = null)
     {
-        return client.ExecuteAsync(new ClaimAirdropParams { Airdrops = [pendingAirdrop] }, configure);
+        return client.ExecuteAsync(new ClaimAirdropParams { Airdrops = [airdrop] }, configure);
     }
     /// <summary>
     /// Claims one or more pending airdrops.

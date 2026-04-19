@@ -19,7 +19,7 @@ public class BurnTokenTests
         var expectedCirculation = fxToken.CreateParams.Circulation - amountToDestory;
 
         await using var client = await TestNetwork.CreateClientAsync();
-        var receipt = await client.BurnTokensAsync(fxToken, amountToDestory, ctx =>
+        var receipt = await client.BurnTokenAsync(fxToken, amountToDestory, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.SupplyPrivateKey);
         });
@@ -64,7 +64,7 @@ public class BurnTokenTests
         var expectedCirculation = fxToken.CreateParams.Circulation - amountToDestory;
 
         await using var client = await TestNetwork.CreateClientAsync();
-        var receipt = await client.BurnTokensAsync(fxToken, amountToDestory, ctx =>
+        var receipt = await client.BurnTokenAsync(fxToken, amountToDestory, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.SupplyPrivateKey);
         });
@@ -118,7 +118,7 @@ public class BurnTokenTests
         var expectedCirculation = fxToken.CreateParams.Circulation - amountToDestory;
 
         await using var client = await TestNetwork.CreateClientAsync();
-        var receipt = await client.BurnTokensAsync(fxToken, amountToDestory, ctx => ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.SupplyPrivateKey));
+        var receipt = await client.BurnTokenAsync(fxToken, amountToDestory, ctx => ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.SupplyPrivateKey));
         var record = await client.GetTransactionRecordAsync(receipt.TransactionId) as TokenRecord;
         await Assert.That(record).IsNotNull();
         await Assert.That(record!.Status).IsEqualTo(ResponseCode.Success);
@@ -171,7 +171,7 @@ public class BurnTokenTests
         var expectedCirculation = fxToken.CreateParams.Circulation - amountToDestory;
 
         await using var client = await TestNetwork.CreateClientAsync();
-        var receipt = await client.BurnTokensAsync(fxToken, amountToDestory, ctx =>
+        var receipt = await client.BurnTokenAsync(fxToken, amountToDestory, ctx =>
         {
             ctx.Payer = fxAccount.CreateReceipt!.Address;
             ctx.Signatory = new Signatory(fxAccount.PrivateKey, fxToken.SupplyPrivateKey);
@@ -192,7 +192,7 @@ public class BurnTokenTests
         var expectedCirculation = fxToken.CreateParams.Circulation - amountToDestory;
 
         await using var client = await TestNetwork.CreateClientAsync();
-        var receipt = await client.BurnTokensAsync(fxToken, amountToDestory, ctx =>
+        var receipt = await client.BurnTokenAsync(fxToken, amountToDestory, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.SupplyPrivateKey);
         });
@@ -226,7 +226,7 @@ public class BurnTokenTests
 
         var ex = await Assert.That(async () =>
         {
-            await client.BurnTokensAsync(fxToken, amountToDestory, ctx =>
+            await client.BurnTokenAsync(fxToken, amountToDestory, ctx =>
             {
                 ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.SupplyPrivateKey);
             });
@@ -253,7 +253,7 @@ public class BurnTokenTests
 
         var ex = await Assert.That(async () =>
         {
-            await client.BurnTokensAsync(fxToken, amountToDestory);
+            await client.BurnTokenAsync(fxToken, amountToDestory);
         }).ThrowsException();
         var tex = ex as TransactionException;
         await Assert.That(tex).IsNotNull();
@@ -275,7 +275,7 @@ public class BurnTokenTests
         var expectedTreasury = fxToken.CreateParams.Circulation - amountToTransfer;
 
         await using var client = await TestNetwork.CreateClientAsync();
-        var receipt = await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount.CreateReceipt!.Address, fxAccount.CreateReceipt!.Address, (long)amountToTransfer, ctx =>
+        var receipt = await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount.CreateReceipt!.Address, fxAccount.CreateReceipt!.Address, (long)amountToTransfer, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
@@ -286,7 +286,7 @@ public class BurnTokenTests
 
         var ex = await Assert.That(async () =>
         {
-            await client.BurnTokensAsync(fxToken, amountToDestory, ctx =>
+            await client.BurnTokenAsync(fxToken, amountToDestory, ctx =>
             {
                 ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.SupplyPrivateKey);
             });
@@ -309,7 +309,7 @@ public class BurnTokenTests
     //    var amountToDestory = fxToken.CreateParams.Circulation / 3 + 1;
     //    var expectedCirculation = fxToken.CreateParams.Circulation - amountToDestory;
     //    await using var client = await TestNetwork.CreateClientAsync();
-    //    var pendingReceipt = await client.BurnTokensAsync(
+    //    var pendingReceipt = await client.BurnTokenAsync(
     //            fxToken,
     //            amountToDestory,
     //            ctx => ctx.Signatory = new Signatory(

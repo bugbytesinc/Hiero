@@ -15,7 +15,7 @@ public class TransferTokenTests
         var xferAmount = 2 * fxToken.CreateParams.Circulation / 3;
         await using var client = await TestNetwork.CreateClientAsync();
 
-        var receipt = await client.TransferTokensAsync(fxToken.CreateReceipt!.Token, fxToken.TreasuryAccount.CreateReceipt!.Address, fxAccount.CreateReceipt!.Address, (long)xferAmount, ctx =>
+        var receipt = await client.TransferTokenAsync(fxToken.CreateReceipt!.Token, fxToken.TreasuryAccount.CreateReceipt!.Address, fxAccount.CreateReceipt!.Address, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
@@ -61,7 +61,7 @@ public class TransferTokenTests
         var xferAmount = 2 * fxToken.CreateParams.Circulation / 3;
         await using var client = await TestNetwork.CreateClientAsync();
 
-        var receipt = await client.TransferTokensAsync(fxToken.CreateReceipt!.Token, fxToken.TreasuryAccount.CreateReceipt!.Address, fxAccount.CreateReceipt!.Address, (long)xferAmount, ctx =>
+        var receipt = await client.TransferTokenAsync(fxToken.CreateReceipt!.Token, fxToken.TreasuryAccount.CreateReceipt!.Address, fxAccount.CreateReceipt!.Address, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
@@ -130,7 +130,7 @@ public class TransferTokenTests
         var xferAmount = 2 * fxToken.CreateParams.Circulation / 3;
         await using var client = await TestNetwork.CreateClientAsync();
 
-        var receipt = await client.TransferTokensAsync(fxToken.CreateReceipt!.Token, fxToken.TreasuryAccount.CreateReceipt!.Address, fxAccount.CreateReceipt!.Address, (long)xferAmount, ctx => ctx.Signatory = new Signatory(TestNetwork.PrivateKey, fxToken.TreasuryAccount.PrivateKey));
+        var receipt = await client.TransferTokenAsync(fxToken.CreateReceipt!.Token, fxToken.TreasuryAccount.CreateReceipt!.Address, fxAccount.CreateReceipt!.Address, (long)xferAmount, ctx => ctx.Signatory = new Signatory(TestNetwork.PrivateKey, fxToken.TreasuryAccount.PrivateKey));
         var record = await client.GetTransactionRecordAsync(receipt.TransactionId);
         await Assert.That(record.Status).IsEqualTo(ResponseCode.Success);
         await Assert.That(record.Hash.IsEmpty).IsFalse();
@@ -386,14 +386,14 @@ public class TransferTokenTests
         var xferAmount = fxToken.CreateParams.Circulation / 3;
         await using var client = await TestNetwork.CreateClientAsync();
 
-        var receipt = await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount1, (long)xferAmount, ctx =>
+        var receipt = await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount1, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
         await Assert.That(await fxAccount1.GetTokenBalanceAsync(fxToken)).IsEqualTo((long)xferAmount);
         await Assert.That(await fxAccount2.GetTokenBalanceAsync(fxToken)).IsEqualTo(0);
 
-        receipt = await client.TransferTokensAsync(fxToken, fxAccount1, fxAccount2, (long)xferAmount, ctx =>
+        receipt = await client.TransferTokenAsync(fxToken, fxAccount1, fxAccount2, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount1.PrivateKey);
         });
@@ -414,7 +414,7 @@ public class TransferTokenTests
         var xferAmount = fxToken.CreateParams.Circulation / 3;
         await using var client = await TestNetwork.CreateClientAsync();
 
-        var receipt = await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount1, (long)xferAmount, ctx =>
+        var receipt = await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount1, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
@@ -424,7 +424,7 @@ public class TransferTokenTests
 
         var ex = await Assert.That(async () =>
         {
-            await client.TransferTokensAsync(fxToken, fxAccount1, fxAccount2, (long)xferAmount, ctx =>
+            await client.TransferTokenAsync(fxToken, fxAccount1, fxAccount2, (long)xferAmount, ctx =>
             {
                 ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount1.PrivateKey);
             });
@@ -437,7 +437,7 @@ public class TransferTokenTests
         await Assert.That(await fxAccount1.GetTokenBalanceAsync(fxToken)).IsEqualTo((long)xferAmount);
         await Assert.That(await fxAccount2.GetTokenBalanceAsync(fxToken)).IsEqualTo(0);
 
-        receipt = await client.TransferTokensAsync(fxToken, fxAccount1, fxAccount2, (long)xferAmount, ctx =>
+        receipt = await client.TransferTokenAsync(fxToken, fxAccount1, fxAccount2, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount1.PrivateKey, fxAccount2.PrivateKey);
         });
@@ -462,7 +462,7 @@ public class TransferTokenTests
             Signatory = fxToken.SuspendPrivateKey
         });
 
-        var receipt = await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount1, (long)xferAmount, ctx =>
+        var receipt = await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount1, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
@@ -472,7 +472,7 @@ public class TransferTokenTests
 
         var ex = await Assert.That(async () =>
         {
-            await client.TransferTokensAsync(fxToken, fxAccount1, fxAccount2, (long)xferAmount, ctx =>
+            await client.TransferTokenAsync(fxToken, fxAccount1, fxAccount2, (long)xferAmount, ctx =>
             {
                 ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount1.PrivateKey);
             });
@@ -502,7 +502,7 @@ public class TransferTokenTests
             Signatory = fxToken.GrantPrivateKey
         });
 
-        var receipt = await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount1, (long)xferAmount, ctx =>
+        var receipt = await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount1, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
@@ -512,7 +512,7 @@ public class TransferTokenTests
 
         var ex = await Assert.That(async () =>
         {
-            await client.TransferTokensAsync(fxToken, fxAccount1, fxAccount2, (long)xferAmount, ctx =>
+            await client.TransferTokenAsync(fxToken, fxAccount1, fxAccount2, (long)xferAmount, ctx =>
             {
                 ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount1.PrivateKey);
             });
@@ -543,7 +543,7 @@ public class TransferTokenTests
         // Address one, by default should not recievie coins.
         var ex = await Assert.That(async () =>
         {
-            await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount1, (long)xferAmount, ctx =>
+            await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount1, (long)xferAmount, ctx =>
             {
                 ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
             });
@@ -568,11 +568,11 @@ public class TransferTokenTests
         });
 
         // Move coins to account 2 via 1
-        await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount1, (long)xferAmount, ctx =>
+        await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount1, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
-        var receipt = await client.TransferTokensAsync(fxToken, fxAccount1, fxAccount2, (long)xferAmount, ctx =>
+        var receipt = await client.TransferTokenAsync(fxToken, fxAccount1, fxAccount2, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount1.PrivateKey);
         });
@@ -591,7 +591,7 @@ public class TransferTokenTests
         });
         ex = await Assert.That(async () =>
         {
-            await client.TransferTokensAsync(fxToken, fxAccount2, fxAccount1, (long)xferAmount, ctx =>
+            await client.TransferTokenAsync(fxToken, fxAccount2, fxAccount1, (long)xferAmount, ctx =>
             {
                 ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount2.PrivateKey);
             });
@@ -610,7 +610,7 @@ public class TransferTokenTests
         });
         ex = await Assert.That(async () =>
         {
-            await client.TransferTokensAsync(fxToken, fxAccount2, fxToken.TreasuryAccount, (long)xferAmount, ctx =>
+            await client.TransferTokenAsync(fxToken, fxAccount2, fxToken.TreasuryAccount, (long)xferAmount, ctx =>
             {
                 ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount2.PrivateKey);
             });
@@ -623,7 +623,7 @@ public class TransferTokenTests
         // Double Check can't send from frozen treasury.
         ex = await Assert.That(async () =>
         {
-            await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount2, (long)xferAmount, ctx =>
+            await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount2, (long)xferAmount, ctx =>
             {
                 ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
             });
@@ -654,11 +654,11 @@ public class TransferTokenTests
         await using var client = await TestNetwork.CreateClientAsync();
 
         // Move coins to account 2 via 1
-        await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount1, (long)xferAmount, ctx =>
+        await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount1, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
-        var receipt = await client.TransferTokensAsync(fxToken, fxAccount1, fxAccount2, (long)xferAmount, ctx =>
+        var receipt = await client.TransferTokenAsync(fxToken, fxAccount1, fxAccount2, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount1.PrivateKey);
         });
@@ -677,7 +677,7 @@ public class TransferTokenTests
         });
         var ex = await Assert.That(async () =>
         {
-            await client.TransferTokensAsync(fxToken, fxAccount2, fxAccount1, (long)xferAmount, ctx =>
+            await client.TransferTokenAsync(fxToken, fxAccount2, fxAccount1, (long)xferAmount, ctx =>
             {
                 ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount2.PrivateKey);
             });
@@ -696,7 +696,7 @@ public class TransferTokenTests
         });
         ex = await Assert.That(async () =>
         {
-            await client.TransferTokensAsync(fxToken, fxAccount2, fxToken.TreasuryAccount, (long)xferAmount, ctx =>
+            await client.TransferTokenAsync(fxToken, fxAccount2, fxToken.TreasuryAccount, (long)xferAmount, ctx =>
             {
                 ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount2.PrivateKey);
             });
@@ -709,7 +709,7 @@ public class TransferTokenTests
         // Double Check can't send from frozen treasury.
         ex = await Assert.That(async () =>
         {
-            await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount2, (long)xferAmount, ctx =>
+            await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount2, (long)xferAmount, ctx =>
             {
                 ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
             });
@@ -740,11 +740,11 @@ public class TransferTokenTests
         });
 
         // Move coins to back via 1
-        await client.TransferTokensAsync(fxToken, fxAccount2, fxAccount1, (long)xferAmount, ctx =>
+        await client.TransferTokenAsync(fxToken, fxAccount2, fxAccount1, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount2.PrivateKey);
         });
-        receipt = await client.TransferTokensAsync(fxToken, fxAccount1, fxToken.TreasuryAccount, (long)xferAmount, ctx =>
+        receipt = await client.TransferTokenAsync(fxToken, fxAccount1, fxToken.TreasuryAccount, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount1.PrivateKey);
         });
@@ -773,7 +773,7 @@ public class TransferTokenTests
         });
         var xferAmount = fxToken.CreateParams.Circulation / 3;
 
-        var receipt = await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxContract.ContractReceipt!.Contract, (long)xferAmount, ctx =>
+        var receipt = await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxContract.ContractReceipt!.Contract, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
@@ -806,7 +806,7 @@ public class TransferTokenTests
             Signatory = fxContract.PrivateKey
         });
 
-        var receipt = await client.TransferTokensAsync(fxToken.CreateReceipt!.Token, fxToken.TreasuryAccount.CreateReceipt!.Address, fxContract.ContractReceipt!.Contract, (long)xferAmount, ctx =>
+        var receipt = await client.TransferTokenAsync(fxToken.CreateReceipt!.Token, fxToken.TreasuryAccount.CreateReceipt!.Address, fxContract.ContractReceipt!.Contract, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
@@ -820,7 +820,7 @@ public class TransferTokenTests
         await Assert.That(await fxToken.TreasuryAccount.GetTokenBalancesAsync()).HasSingleItem();
         await Assert.That(await fxToken.TreasuryAccount.GetTokenBalanceAsync(fxToken)).IsEqualTo((long)expectedTreasuryBalance);
 
-        receipt = await client.TransferTokensAsync(fxToken.CreateReceipt!.Token, fxContract.ContractReceipt!.Contract, fxToken.TreasuryAccount.CreateReceipt!.Address, (long)xferAmount, ctx =>
+        receipt = await client.TransferTokenAsync(fxToken.CreateReceipt!.Token, fxContract.ContractReceipt!.Contract, fxToken.TreasuryAccount.CreateReceipt!.Address, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxContract.PrivateKey);
         });
@@ -845,7 +845,7 @@ public class TransferTokenTests
         await using var client = await TestNetwork.CreateClientAsync();
 
         // Transfer a third of the treasury to the other account.
-        var receipt = await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
+        var receipt = await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
@@ -941,7 +941,7 @@ public class TransferTokenTests
         });
         await Assert.That(counterReceipt.Status).IsEqualTo(ResponseCode.Success);
 
-        var transferReceipt = await client.GetReceiptAsync(schedulingReceipt.ScheduledTxId);
+        var transferReceipt = await client.GetReceiptAsync(schedulingReceipt.ScheduledTransactionId);
         await Assert.That(transferReceipt.Status).IsEqualTo(ResponseCode.Success);
 
         await Assert.That(await fxAccount1.GetTokenBalanceAsync(fxToken)).IsEqualTo((long)xferAmount);
@@ -963,7 +963,7 @@ public class TransferTokenTests
         });
         var xferAmount = 2 * fxToken.CreateParams.Circulation / 3;
 
-        var receipt = await client.TransferTokensAsync(fxToken.CreateReceipt!.Token, fxToken.TreasuryAccount.CreateReceipt!.Address, fxAccount.Alias, (long)xferAmount, ctx =>
+        var receipt = await client.TransferTokenAsync(fxToken.CreateReceipt!.Token, fxToken.TreasuryAccount.CreateReceipt!.Address, fxAccount.Alias, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
@@ -1016,13 +1016,13 @@ public class TransferTokenTests
         });
         var xferAmount = 2 * fxToken.CreateParams.Circulation / 3;
 
-        var firstReceipt = await client.TransferTokensAsync(fxToken.CreateReceipt!.Token, fxToken.TreasuryAccount.CreateReceipt!.Address, fxFirstAccount.Alias, (long)xferAmount, ctx =>
+        var firstReceipt = await client.TransferTokenAsync(fxToken.CreateReceipt!.Token, fxToken.TreasuryAccount.CreateReceipt!.Address, fxFirstAccount.Alias, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
         await Assert.That(firstReceipt.Status).IsEqualTo(ResponseCode.Success);
 
-        var secondReceipt = await client.TransferTokensAsync(fxToken.CreateReceipt!.Token, fxFirstAccount.Alias, fxSecondAccount, (long)xferAmount, ctx =>
+        var secondReceipt = await client.TransferTokenAsync(fxToken.CreateReceipt!.Token, fxFirstAccount.Alias, fxSecondAccount, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxFirstAccount.PrivateKey);
         });
@@ -1429,7 +1429,7 @@ public class TransferTokenTests
         var senderEndorsement = new Endorsement(publicKey);
         var senderEvmAddress = new EvmAddress(senderEndorsement);
         await using var client = await TestNetwork.CreateClientAsync();
-        var receipt = await client.TransferTokensAsync(fxToken.CreateReceipt!.Token, fxToken.TreasuryAccount.CreateReceipt!.Address, senderEvmAddress, initialTransferAmount, ctx =>
+        var receipt = await client.TransferTokenAsync(fxToken.CreateReceipt!.Token, fxToken.TreasuryAccount.CreateReceipt!.Address, senderEvmAddress, initialTransferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });

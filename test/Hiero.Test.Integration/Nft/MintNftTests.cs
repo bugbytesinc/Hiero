@@ -241,8 +241,8 @@ public class MintNftTests
             var xfer = record.NftTransfers.FirstOrDefault(x => x.Nft.SerialNumber == ssn);
             await Assert.That(xfer).IsNotNull();
             await Assert.That((EntityId)xfer!.Nft).IsEqualTo(fxNft.CreateReceipt!.Token);
-            await Assert.That(xfer.From).IsEqualTo(EntityId.None);
-            await Assert.That(xfer.To).IsEqualTo(fxNft.TreasuryAccount.CreateReceipt!.Address);
+            await Assert.That(xfer.Sender).IsEqualTo(EntityId.None);
+            await Assert.That(xfer.Receiver).IsEqualTo(fxNft.TreasuryAccount.CreateReceipt!.Address);
         }
 
         await Assert.That(await fxNft.TreasuryAccount.GetTokenBalanceAsync(fxNft)).IsEqualTo(metadata.Length);
@@ -327,7 +327,7 @@ public class MintNftTests
         await Assert.That(schedulingReceipt.Status).IsEqualTo(ResponseCode.Success);
 
         // Can get receipt for original scheduled tx.
-        var executedReceipt = await client.GetReceiptAsync(pendingReceipt.ScheduledTxId) as NftMintReceipt;
+        var executedReceipt = await client.GetReceiptAsync(pendingReceipt.ScheduledTransactionId) as NftMintReceipt;
         await Assert.That(executedReceipt!.Status).IsEqualTo(ResponseCode.Success);
         await Assert.That(executedReceipt.SerialNumbers.Count).IsEqualTo(metadata.Length);
         foreach (var serialNumber in executedReceipt.SerialNumbers)
@@ -337,7 +337,7 @@ public class MintNftTests
         await Assert.That(executedReceipt.Circulation).IsEqualTo((ulong)(fxNft.Metadata.Length + metadata.Length));
 
         // Can get record for original scheduled tx.
-        var record = await client.GetTransactionRecordAsync(pendingReceipt.ScheduledTxId) as NftMintRecord;
+        var record = await client.GetTransactionRecordAsync(pendingReceipt.ScheduledTransactionId) as NftMintRecord;
         await Assert.That(record!.SerialNumbers.Count).IsEqualTo(metadata.Length);
         foreach (var serialNumber in record.SerialNumbers)
         {
@@ -397,7 +397,7 @@ public class MintNftTests
         });
         await Assert.That(signReceipt.Status).IsEqualTo(ResponseCode.Success);
 
-        var executedReceipt = await client.GetReceiptAsync(scheduledReceipt.ScheduledTxId) as NftMintReceipt;
+        var executedReceipt = await client.GetReceiptAsync(scheduledReceipt.ScheduledTransactionId) as NftMintReceipt;
         await Assert.That(executedReceipt).IsNotNull();
         await Assert.That(executedReceipt!.Status).IsEqualTo(ResponseCode.Success);
         await Assert.That(executedReceipt.SerialNumbers.Count).IsEqualTo(metadata.Length);

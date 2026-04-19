@@ -168,7 +168,7 @@ public static class AccountDataExtensions
     /// Array of account information objects with public keys matching the endorsement,
     /// or empty if no matches are found.
     /// </returns>
-    public static IAsyncEnumerable<AccountData> GetAccountsFromEndorsementAsync(this MirrorRestClient client, Endorsement endorsement)
+    public static IAsyncEnumerable<AccountData> GetAccountsByEndorsementAsync(this MirrorRestClient client, Endorsement endorsement)
     {
         var searchKey = Hex.FromBytes(endorsement.ToBytes(KeyFormat.Mirror));
         return client.GetPagedItemsAsync<AccountDataPage, AccountData>($"accounts?account.publickey={searchKey}&balance=true&limit=20&order=asc", MirrorJsonContext.Default.AccountDataPage);

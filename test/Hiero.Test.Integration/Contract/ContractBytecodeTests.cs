@@ -46,7 +46,7 @@ public class ContractBytecodeTests
         await Assert.That(grpcBytecode.IsEmpty).IsFalse();
 
         var mirror = await TestNetwork.GetMirrorRestClientAsync();
-        var mirrorBytecode = (await mirror.GetContractDataAsync(fx.ContractReceipt!.Contract))!.RuntimeBytecode;
+        var mirrorBytecode = (await mirror.GetContractAsync(fx.ContractReceipt!.Contract))!.RuntimeBytecode;
         await Assert.That(mirrorBytecode.ToArray()).IsEquivalentTo(grpcBytecode.ToArray(), TUnit.Assertions.Enums.CollectionOrdering.Matching);
     }
 
@@ -60,7 +60,7 @@ public class ContractBytecodeTests
         await Assert.That(grpcBytecode.IsEmpty).IsFalse();
 
         var mirror = await TestNetwork.GetMirrorRestClientAsync();
-        await Assert.That(await mirror.GetContractDataAsync(fx.CreateReceipt!.Token)).IsNull();
+        await Assert.That(await mirror.GetContractAsync(fx.CreateReceipt!.Token)).IsNull();
     }
 
     [Test]
@@ -73,7 +73,7 @@ public class ContractBytecodeTests
         await Assert.That(grpcBytecode.IsEmpty).IsFalse();
 
         var mirror = await TestNetwork.GetMirrorRestClientAsync();
-        await Assert.That(await mirror.GetContractDataAsync(fx.CreateReceipt!.Address)).IsNull();
+        await Assert.That(await mirror.GetContractAsync(fx.CreateReceipt!.Address)).IsNull();
     }
 
     [Test]
@@ -100,6 +100,6 @@ public class ContractBytecodeTests
         await Assert.That(grpcBytecode.IsEmpty).IsFalse();
 
         var mirror = await TestNetwork.GetMirrorRestClientAsync();
-        await Assert.That(await mirror.GetContractDataAsync(TestNetwork.Payer)).IsNull();
+        await Assert.That(await mirror.GetContractAsync(TestNetwork.Payer)).IsNull();
     }
 }

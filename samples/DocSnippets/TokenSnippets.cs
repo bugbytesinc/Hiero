@@ -29,9 +29,8 @@ public static class TokenSnippets
     {
         #region BurnToken
         // Burn 250,000 tokens from the treasury account. Like minting, burning
-        // requires the supply key signature. The method name is plural:
-        // BurnTokensAsync (not BurnTokenAsync).
-        var receipt = await client.BurnTokensAsync(token, 250_000);
+        // requires the supply key signature.
+        var receipt = await client.BurnTokenAsync(token, 250_000);
         Console.WriteLine($"Burn status: {receipt.Status}");
         Console.WriteLine($"New circulation: {receipt.Circulation}");
         #endregion
@@ -39,14 +38,14 @@ public static class TokenSnippets
 
     public static async Task AssociateToken(
         ConsensusClient client,
-        EntityId account,
-        EntityId token)
+        EntityId token,
+        EntityId account)
     {
         #region AssociateToken
         // Associate an account with a token so it can hold a balance. This
         // must be signed by the account's key (not the token's admin key).
         // Accounts with auto-association slots skip this step.
-        var receipt = await client.AssociateTokenAsync(account, token);
+        var receipt = await client.AssociateTokenAsync(token, account);
         Console.WriteLine($"Associate status: {receipt.Status}");
         #endregion
     }
@@ -77,8 +76,7 @@ public static class TokenSnippets
     {
         #region DissociateToken
         // Remove an account's token-balance storage slot. The account must
-        // hold zero balance of the token before dissociating. Argument order
-        // is (token, account) — opposite of AssociateTokenAsync.
+        // hold zero balance of the token before dissociating.
         var receipt = await client.DissociateTokenAsync(token, account);
         Console.WriteLine($"Dissociate status: {receipt.Status}");
         #endregion
@@ -188,8 +186,7 @@ public static class TokenSnippets
         #region ConfiscateTokens
         // Forcibly remove tokens from a holder's balance and send them to
         // nowhere (reduces total circulation). Requires the ConfiscateEndorsement.
-        // Method name is plural: ConfiscateTokensAsync.
-        var receipt = await client.ConfiscateTokensAsync(token, holder, amount);
+        var receipt = await client.ConfiscateTokenAsync(token, holder, amount);
         Console.WriteLine($"Confiscate status: {receipt.Status}");
         Console.WriteLine($"Remaining circulation: {receipt.Circulation}");
         #endregion
@@ -252,7 +249,7 @@ public static class TokenSnippets
         // Claim a single pending airdrop. The receiver calls this — their
         // payer account must be `receiver`, or their key must be provided
         // via the params overload.
-        var pending = new Airdrop(sender, receiver, token);
+        var pending = new Airdrop(token, sender, receiver);
         var receipt = await client.ClaimAirdropAsync(pending);
         Console.WriteLine($"Claim status: {receipt.Status}");
         #endregion
@@ -269,8 +266,8 @@ public static class TokenSnippets
         {
             Airdrops = new[]
             {
-                new Airdrop(sender, receiver, token1),
-                new Airdrop(sender, receiver, nft1)
+                new Airdrop(token1, sender, receiver),
+                new Airdrop(nft1, sender, receiver)
             }
         });
         Console.WriteLine($"Claim status: {receipt.Status}");
@@ -283,7 +280,7 @@ public static class TokenSnippets
         #region CancelAirdrop
         // Cancel a pending airdrop that hasn't been claimed yet. The sender
         // calls this — cancelling returns the tokens to the sender's balance.
-        var pending = new Airdrop(sender, receiver, token);
+        var pending = new Airdrop(token, sender, receiver);
         var receipt = await client.CancelAirdropAsync(pending);
         Console.WriteLine($"Cancel status: {receipt.Status}");
         #endregion
@@ -299,8 +296,8 @@ public static class TokenSnippets
         {
             Airdrops = new[]
             {
-                new Airdrop(sender, receiver1, token),
-                new Airdrop(sender, receiver2, token)
+                new Airdrop(token, sender, receiver1),
+                new Airdrop(token, sender, receiver2)
             }
         });
         Console.WriteLine($"Cancel status: {receipt.Status}");
@@ -337,7 +334,7 @@ public static class TokenSnippets
         #region RelinquishBatch
         // Surrender several tokens and NFTs in a single transaction. Any
         // mix of Tokens[] and Nfts[] is allowed.
-        var receipt = await client.RelinquishAsync(new RelinquishTokensParams
+        var receipt = await client.RelinquishTokensAsync(new RelinquishTokenParams
         {
             Tokens = new[] { token1, token2 },
             Nfts = new[] { nft1 }

@@ -71,7 +71,7 @@ public static class ExtendedContractLogDataExtensions
     /// Additional query filters if desired.
     /// </param>
     /// <returns>An async enumerable of contract log events meeting the given criteria.</returns>
-    public static IAsyncEnumerable<ExtendedContractLogData> GetLogEventsForContractAsync(this MirrorRestClient client, EntityId contract, params IMirrorQueryFilter[] filters)
+    public static IAsyncEnumerable<ExtendedContractLogData> GetContractLogEventsAsync(this MirrorRestClient client, EntityId contract, params IMirrorQueryFilter[] filters)
     {
         var path = GenerateInitialPath($"contracts/{MirrorFormat(contract)}/results/logs", [new LimitFilter(100), .. filters]);
         return client.GetPagedItemsAsync<ExtendedContractLogDataPage, ExtendedContractLogData>(path, MirrorJsonContext.Default.ExtendedContractLogDataPage);
@@ -87,7 +87,7 @@ public static class ExtendedContractLogDataExtensions
     /// Additional filters
     /// </param>
     /// <returns>An async enumerable of contract log events meeting the given criteria.</returns>
-    public static IAsyncEnumerable<ExtendedContractLogData> GetLogEventsForAllContractsAsync(this MirrorRestClient client, params IMirrorQueryFilter[] filters)
+    public static IAsyncEnumerable<ExtendedContractLogData> GetAllContractLogEventsAsync(this MirrorRestClient client, params IMirrorQueryFilter[] filters)
     {
         var path = GenerateInitialPath($"contracts/results/logs", [new LimitFilter(100), .. filters]);
         return client.GetPagedItemsAsync<ExtendedContractLogDataPage, ExtendedContractLogData>(path, MirrorJsonContext.Default.ExtendedContractLogDataPage);

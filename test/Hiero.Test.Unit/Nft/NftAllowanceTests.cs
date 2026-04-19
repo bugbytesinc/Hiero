@@ -93,13 +93,13 @@ public class NftAllowanceTests
     }
 
     [Test]
-    public async Task OwnersDelegate_Without_SerialNumbers_Throws_ArgumentException()
+    public async Task DelegatingSpender_Without_SerialNumbers_Throws_ArgumentException()
     {
         var token = new EntityId(0, 0, Generator.Integer(10, 200));
         var owner = new EntityId(0, 0, Generator.Integer(200, 400));
         var spender = new EntityId(0, 0, Generator.Integer(400, 600));
-        var delegateAccount = new EntityId(0, 0, Generator.Integer(600, 800));
-        var ex = Assert.Throws<ArgumentException>(() => { new NftAllowance(token, owner, spender, serialNumbers: null, ownersDelegate: delegateAccount); });
+        var delegatingSpender = new EntityId(0, 0, Generator.Integer(600, 800));
+        var ex = Assert.Throws<ArgumentException>(() => { new NftAllowance(token, owner, spender, serialNumbers: null, delegatingSpender: delegatingSpender); });
         await Assert.That(ex).IsNotNull();
     }
 
@@ -109,10 +109,10 @@ public class NftAllowanceTests
         var token = new EntityId(0, 0, Generator.Integer(10, 200));
         var owner = new EntityId(0, 0, Generator.Integer(200, 400));
         var spender = new EntityId(0, 0, Generator.Integer(400, 600));
-        var delegateAccount = new EntityId(0, 0, Generator.Integer(600, 800));
+        var delegatingSpender = new EntityId(0, 0, Generator.Integer(600, 800));
         var serials = new long[] { 1, 2 };
-        var allowance = new NftAllowance(token, owner, spender, serials, delegateAccount);
-        await Assert.That(allowance.OwnersDelegate).IsEqualTo(delegateAccount);
+        var allowance = new NftAllowance(token, owner, spender, serials, delegatingSpender);
+        await Assert.That(allowance.DelegatingSpender).IsEqualTo(delegatingSpender);
         await Assert.That(allowance.SerialNumbers).IsNotNull();
         await Assert.That(allowance.SerialNumbers!.Count).IsEqualTo(2);
     }

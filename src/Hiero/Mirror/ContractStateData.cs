@@ -69,7 +69,7 @@ public static class ContractStateDataExtensions
     /// <returns>
     /// The contract data (slot information) fulfilling the search criteria, or null if not found.
     /// </returns>
-    public static async Task<ContractStateData?> GetContractState(this MirrorRestClient client, EntityId contract, BigInteger position, IMirrorQueryFilter[] filters)
+    public static async Task<ContractStateData?> GetContractStateAsync(this MirrorRestClient client, EntityId contract, BigInteger position, IMirrorQueryFilter[] filters)
     {
         var path = GenerateInitialPath($"contracts/{MirrorFormat(contract)}/state", [new SlotIsFilter(position), .. filters]);
         var list = await client.GetSingleItemAsync<ContractStateDataPage>(path, MirrorJsonContext.Default.ContractStateDataPage).ConfigureAwait(false);

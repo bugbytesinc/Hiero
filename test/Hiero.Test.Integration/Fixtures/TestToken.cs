@@ -115,7 +115,7 @@ public class TestToken : IAsyncDisposable
         await using var client = await TestNetwork.CreateClientAsync();
         foreach (var account in accounts)
         {
-            await client.AssociateTokenAsync(account.CreateReceipt!.Address, CreateReceipt!.Token, ctx =>
+            await client.AssociateTokenAsync(CreateReceipt!.Token, account.CreateReceipt!.Address, ctx =>
             {
                 ctx.Signatory = new Signatory(ctx.Signatory!, account.PrivateKey);
             });

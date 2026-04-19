@@ -32,7 +32,7 @@ class Program
 
             var updateParams = new UpdateAccountParams
             {
-                Address = targetAccount!,
+                Account = targetAccount!,
                 Signatory = new Signatory(targetPrivateKey),
                 Memo = targetAccountNewMemo
             };

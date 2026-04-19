@@ -129,7 +129,7 @@ public static class ContractDataExtensions
     /// <returns>
     /// The contract information satisfying any additional filters, or null if not found.
     /// </returns>
-    public static Task<ContractData?> GetContractDataAsync(this MirrorRestClient client, EntityId contract, params IMirrorQueryFilter[] filters)
+    public static Task<ContractData?> GetContractAsync(this MirrorRestClient client, EntityId contract, params IMirrorQueryFilter[] filters)
     {
         var path = GenerateInitialPath($"contracts/{MirrorFormat(contract)}", filters);
         return client.GetSingleItemAsync<ContractData>(path, MirrorJsonContext.Default.ContractData);

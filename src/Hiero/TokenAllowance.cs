@@ -5,7 +5,7 @@ namespace Hiero;
 
 /// <summary>
 /// Represents an allowance allocation permitting a
-/// delegate account privileges of spending the specified
+/// spender account privileges of spending the specified
 /// amount of tokens from the owning account.
 /// </summary>
 public sealed record TokenAllowance
@@ -17,22 +17,22 @@ public sealed record TokenAllowance
     public EntityId Token { get; private init; }
     /// <summary>
     /// The Address owner holding the tokens that
-    /// may be spent by the delegate.
+    /// may be spent by the spender.
     /// </summary>
     public EntityId Owner { get; private init; }
     /// <summary>
     /// The account that may spend the allocated
     /// allowance of tokens.
     /// </summary>
-    public EntityId Agent { get; private init; }
+    public EntityId Spender { get; private init; }
     /// <summary>
     /// The increase or decrease of the amount of
-    /// tokens that the delegate may spend.
+    /// tokens that the spender may spend.
     /// </summary>
     public long Amount { get; private init; }
     /// <summary>
     /// Represents an allowance allocation permitting
-    /// an agent account privileges of spending the specified
+    /// a spender account privileges of spending the specified
     /// amount of tokens from the owning account.
     /// </summary>
     /// <param name="token">
@@ -41,15 +41,15 @@ public sealed record TokenAllowance
     /// </param>
     /// <param name="owner">
     /// The Address owner holding the tokens that
-    /// may be spent by the delegate.
+    /// may be spent by the spender.
     /// </param>
-    /// <param name="agent">
+    /// <param name="spender">
     /// The account that may spend the allocated
     /// allowance of tokens.
     /// </param>
     /// <param name="amount">
     /// The increase or decrease of the amount of
-    /// tokens that the delegate may spend.
+    /// tokens that the spender may spend.
     /// </param>
     /// <exception cref="ArgumentException">
     /// If any of the addresses are null or None.
@@ -57,7 +57,7 @@ public sealed record TokenAllowance
     /// <exception cref="ArgumentOutOfRangeException">
     /// If the amount is negative.
     /// </exception>
-    public TokenAllowance(EntityId token, EntityId owner, EntityId agent, long amount)
+    public TokenAllowance(EntityId token, EntityId owner, EntityId spender, long amount)
     {
         if (token.IsNullOrNone())
         {
@@ -67,9 +67,9 @@ public sealed record TokenAllowance
         {
             throw new ArgumentException(nameof(owner), "The allowance owner account cannot be null or empty.");
         }
-        if (agent.IsNullOrNone())
+        if (spender.IsNullOrNone())
         {
-            throw new ArgumentException(nameof(agent), "The allowance spender account cannot be null or empty.");
+            throw new ArgumentException(nameof(spender), "The allowance spender account cannot be null or empty.");
         }
         if (amount < 0)
         {
@@ -77,7 +77,7 @@ public sealed record TokenAllowance
         }
         Token = token;
         Owner = owner;
-        Agent = agent;
+        Spender = spender;
         Amount = amount;
     }
     /// <summary>
@@ -90,14 +90,14 @@ public sealed record TokenAllowance
         {
             Token = allowance.TokenId.AsAddress();
             Owner = owner;
-            Agent = allowance.Spender.AsAddress();
+            Spender = allowance.Spender.AsAddress();
             Amount = allowance.Amount;
         }
         else
         {
             Token = EntityId.None;
             Owner = owner;
-            Agent = EntityId.None;
+            Spender = EntityId.None;
             Amount = 0;
         }
     }

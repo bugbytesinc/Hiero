@@ -7,11 +7,11 @@ using System.Numerics;
 namespace Hiero;
 
 /// <summary>
-/// The information returned from the GetAccountDetailAsync ConsensusClient method call.  
+/// The information returned from the GetAccountDetailsAsync ConsensusClient method call.  
 /// It represents the details concerning a Hedera Network Address, including 
 /// the public key value to use in smart contract interaction.
 /// </summary>
-public sealed record AccountDetail
+public sealed record AccountDetails
 {
     /// <summary>
     /// The Hedera address of this account.
@@ -109,7 +109,7 @@ public sealed record AccountDetail
     /// <summary>
     /// Internal Constructor from Raw Response
     /// </summary>
-    internal AccountDetail(Response response)
+    internal AccountDetails(Response response)
     {
         var info = response.AccountDetails.AccountDetails;
         var address = Address = info.AccountId.AsAddress();
@@ -144,7 +144,7 @@ public static class AccountDetailExtensions
     /// <param name="client">
     /// The Consensus Node Client to query.
     /// </param>
-    /// <param name="address">
+    /// <param name="account">
     /// The Hedera account to retrieve details of.
     /// </param>
     /// <param name="cancellationToken">Optional cancellation token.</param>
@@ -159,8 +159,8 @@ public static class AccountDetailExtensions
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
-    public static async Task<AccountDetail> GetAccountDetailAsync(this ConsensusClient client, EntityId address, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
+    public static async Task<AccountDetails> GetAccountDetailsAsync(this ConsensusClient client, EntityId account, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
     {
-        return new AccountDetail(await Engine.QueryAsync(client, new GetAccountDetailsQuery { AccountId = new AccountID(address) }, cancellationToken, configure).ConfigureAwait(false));
+        return new AccountDetails(await Engine.QueryAsync(client, new GetAccountDetailsQuery { AccountId = new AccountID(account) }, cancellationToken, configure).ConfigureAwait(false));
     }
 }

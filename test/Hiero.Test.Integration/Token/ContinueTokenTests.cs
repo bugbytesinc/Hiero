@@ -33,7 +33,7 @@ public class ContinueTokenTests
 
         await AssertHg.TokenPausedAsync(fxToken, TokenTradableStatus.Tradable);
 
-        await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
+        await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
@@ -80,7 +80,7 @@ public class ContinueTokenTests
 
         await AssertHg.TokenPausedAsync(fxToken, TokenTradableStatus.Tradable);
 
-        await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
+        await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
@@ -123,7 +123,7 @@ public class ContinueTokenTests
 
         await AssertHg.TokenPausedAsync(fxToken, TokenTradableStatus.Tradable);
 
-        await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
+        await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
@@ -165,7 +165,7 @@ public class ContinueTokenTests
 
         await AssertHg.TokenPausedAsync(fxToken, TokenTradableStatus.Tradable);
 
-        await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
+        await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
@@ -198,7 +198,7 @@ public class ContinueTokenTests
         await Assert.That(info.FreezeStatus).IsEqualTo(TokenTradableStatus.Tradable);
         await Assert.That(info.AutoAssociated).IsFalse();
 
-        await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
+        await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
@@ -239,7 +239,7 @@ public class ContinueTokenTests
 
         await AssertHg.TokenPausedAsync(fxToken, TokenTradableStatus.Tradable);
 
-        await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
+        await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
@@ -283,7 +283,7 @@ public class ContinueTokenTests
 
         ex = await Assert.That(async () =>
         {
-            await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
+            await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
             {
                 ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
             });
@@ -322,7 +322,7 @@ public class ContinueTokenTests
         await Assert.That(tex!.Status).IsEqualTo(ResponseCode.TokenHasNoPauseKey);
         await Assert.That(tex.Message).StartsWith("Continue Token failed with status: TokenHasNoPauseKey");
 
-        await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
+        await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });

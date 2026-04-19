@@ -17,11 +17,11 @@ public class TransferTests
         long transferAmount = 10;
         await using var client = await TestNetwork.CreateClientAsync();
         client.Configure(ctx => fee = ctx.FeeLimit);
-        var fromAccount = TestNetwork.Payer;
-        var toAddress = await TestNetwork.GetConsensusNodeEndpointAsync();
-        var balanceBefore = await client.GetAccountBalanceAsync(fromAccount);
-        var receipt = await client.TransferAsync(fromAccount, toAddress, transferAmount);
-        var balanceAfter = await client.GetAccountBalanceAsync(fromAccount);
+        var sender = TestNetwork.Payer;
+        var receiver = await TestNetwork.GetConsensusNodeEndpointAsync();
+        var balanceBefore = await client.GetAccountBalanceAsync(sender);
+        var receipt = await client.TransferAsync(sender, receiver, transferAmount);
+        var balanceAfter = await client.GetAccountBalanceAsync(sender);
         var maxFee = (ulong)(3 * fee);
         await Assert.That(balanceAfter >= balanceBefore - (ulong)transferAmount - maxFee && balanceAfter <= balanceBefore - (ulong)transferAmount).IsTrue();
     }

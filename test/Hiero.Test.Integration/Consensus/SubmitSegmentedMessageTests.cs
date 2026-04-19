@@ -535,7 +535,7 @@ public class SubmitSegmentedMessageTests
         });
         var counterReceipt = await payerClient.SignScheduleAsync(schedulingReceipt.Schedule);
 
-        var pendingReceipt = await baseClient.GetReceiptAsync(schedulingReceipt.ScheduledTxId);
+        var pendingReceipt = await baseClient.GetReceiptAsync(schedulingReceipt.ScheduledTransactionId);
         await Assert.That(pendingReceipt.Status).IsEqualTo(ResponseCode.Success);
 
         var messageReceipt = pendingReceipt as SubmitMessageReceipt;

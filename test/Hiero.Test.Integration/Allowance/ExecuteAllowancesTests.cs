@@ -12,7 +12,7 @@ public class ExecuteAllowancesTests
         await using var fxDestination = await TestAccount.CreateAsync();
         await using var client = await TestNetwork.CreateClientAsync();
 
-        await client.AssociateTokenAsync(fxDestination, fxAllowances.TestNft, ctx =>
+        await client.AssociateTokenAsync(fxAllowances.TestNft, fxDestination, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxDestination);
         });
@@ -39,7 +39,7 @@ public class ExecuteAllowancesTests
         await using var fxDestination = await TestAccount.CreateAsync();
         await using var client = await TestNetwork.CreateClientAsync();
 
-        await client.AssociateTokenAsync(fxDestination, fxAllowances.TestToken, ctx =>
+        await client.AssociateTokenAsync(fxAllowances.TestToken, fxDestination, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxDestination);
         });
@@ -71,7 +71,7 @@ public class ExecuteAllowancesTests
         await using var fxDestination = await TestAccount.CreateAsync();
         await using var client = await TestNetwork.CreateClientAsync();
 
-        await client.AssociateTokenAsync(fxDestination, fxAllowances.TestToken, ctx =>
+        await client.AssociateTokenAsync(fxAllowances.TestToken, fxDestination, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxDestination);
         });
@@ -105,7 +105,7 @@ public class ExecuteAllowancesTests
         await using var fxDestination = await TestAccount.CreateAsync();
         await using var client = await TestNetwork.CreateClientAsync();
 
-        await client.AssociateTokenAsync(fxDestination, fxAllowances.TestToken, ctx =>
+        await client.AssociateTokenAsync(fxAllowances.TestToken, fxDestination, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxDestination);
         });
@@ -303,7 +303,7 @@ public class ExecuteAllowancesTests
         await using var fxDestination = await TestAccount.CreateAsync();
         await using var client = await TestNetwork.CreateClientAsync();
 
-        await client.AssociateTokenAsync(fxDestination, fxAllowances.TestNft, ctx =>
+        await client.AssociateTokenAsync(fxAllowances.TestNft, fxDestination, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxDestination);
         });
@@ -330,7 +330,7 @@ public class ExecuteAllowancesTests
         await using var fxDestination = await TestAccount.CreateAsync();
         await using var client = await TestNetwork.CreateClientAsync();
 
-        await client.AssociateTokenAsync(fxDestination, fxAllowances.TestNft, ctx =>
+        await client.AssociateTokenAsync(fxAllowances.TestNft, fxDestination, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxDestination);
         });
@@ -357,7 +357,7 @@ public class ExecuteAllowancesTests
         await using var fxDestination = await TestAccount.CreateAsync();
         await using var client = await TestNetwork.CreateClientAsync();
 
-        await client.AssociateTokenAsync(fxDestination, fxAllowances.TestNft, ctx =>
+        await client.AssociateTokenAsync(fxAllowances.TestNft, fxDestination, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxDestination);
         });
@@ -390,7 +390,7 @@ public class ExecuteAllowancesTests
         await using var fxDestination = await TestAccount.CreateAsync();
         await using var client = await TestNetwork.CreateClientAsync();
 
-        await client.AssociateTokenAsync(fxDestination, fxAllowances.TestToken, ctx =>
+        await client.AssociateTokenAsync(fxAllowances.TestToken, fxDestination, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxDestination);
         });

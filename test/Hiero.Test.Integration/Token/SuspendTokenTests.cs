@@ -30,7 +30,7 @@ public class SuspendTokenTests
 
         var ex = await Assert.That(async () =>
         {
-            await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
+            await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
             {
                 ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
             });
@@ -54,7 +54,7 @@ public class SuspendTokenTests
         });
         await using var client = await TestNetwork.CreateClientAsync();
 
-        await client.AssociateTokenAsync(fxAccount.CreateReceipt!.Address, fxToken.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxToken.CreateReceipt!.Token, fxAccount.CreateReceipt!.Address, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount.PrivateKey);
         });
@@ -117,7 +117,7 @@ public class SuspendTokenTests
 
         var ex = await Assert.That(async () =>
         {
-            await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
+            await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
             {
                 ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
             });
@@ -161,7 +161,7 @@ public class SuspendTokenTests
 
         var ex = await Assert.That(async () =>
         {
-            await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
+            await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
             {
                 ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
             });
@@ -205,7 +205,7 @@ public class SuspendTokenTests
 
         var ex = await Assert.That(async () =>
         {
-            await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
+            await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
             {
                 ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
             });
@@ -249,7 +249,7 @@ public class SuspendTokenTests
 
         ex = await Assert.That(async () =>
         {
-            await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
+            await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
             {
                 ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
             });
@@ -295,7 +295,7 @@ public class SuspendTokenTests
 
         var ex = await Assert.That(async () =>
         {
-            await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
+            await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
             {
                 ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
             });
@@ -367,7 +367,7 @@ public class SuspendTokenTests
 
         await AssertHg.TokenTradableStatusAsync(fxToken, fxAccount, TokenTradableStatus.NotApplicable);
 
-        await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
+        await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });

@@ -30,7 +30,7 @@ public class ConfiscateNftTests
         {
             Token = fxNft.CreateReceipt!.Token,
             SerialNumbers = serialNumbersToConfiscate.ToArray(),
-            Account = fxAccount,
+            Holder = fxAccount,
             Signatory = fxNft.ConfiscatePrivateKey
         });
 
@@ -82,7 +82,7 @@ public class ConfiscateNftTests
         await using var fxAccount = await TestAliasAccount.CreateAsync();
         await using var fxNft = await TestNft.CreateAsync(fx => fx.CreateParams.GrantKycEndorsement = null);
         await using var client = await TestNetwork.CreateClientAsync();
-        await client.AssociateTokenAsync(fxAccount, fxNft.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxNft.CreateReceipt!.Token, fxAccount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount.PrivateKey);
         });
@@ -105,7 +105,7 @@ public class ConfiscateNftTests
         {
             Token = fxNft.CreateReceipt!.Token,
             SerialNumbers = serialNumbersToConfiscate.ToArray(),
-            Account = fxAccount.Alias,
+            Holder = fxAccount.Alias,
             Signatory = fxNft.ConfiscatePrivateKey
         });
         await Assert.That(receipt.Status).IsEqualTo(ResponseCode.Success);
@@ -227,7 +227,7 @@ public class ConfiscateNftTests
         {
             Token = fxNft.CreateReceipt!.Token,
             SerialNumbers = serialNumbersTransfered.ToArray(),
-            Account = fxAccount,
+            Holder = fxAccount,
             Signatory = fxNft.ConfiscatePrivateKey
         });
         var record = (TokenRecord)await client.GetTransactionRecordAsync(receipt.TransactionId);
@@ -275,7 +275,7 @@ public class ConfiscateNftTests
         var receipt = await client.ConfiscateNftsAsync(new ConfiscateNftParams
         {
             Token = fxNft.CreateReceipt!.Token,
-            Account = fxAccount,
+            Holder = fxAccount,
             SerialNumbers = serialNumbersTransfered.ToArray(),
             Signatory = fxNft.ConfiscatePrivateKey
         });
@@ -407,7 +407,7 @@ public class ConfiscateNftTests
             {
                 Token = fxNft.CreateReceipt!.Token,
                 SerialNumbers = new long[] { 1, 2, 3 },
-                Account = fxAccount,
+                Holder = fxAccount,
                 Signatory = fxNft.ConfiscatePrivateKey
             });
         }).ThrowsException();
@@ -458,8 +458,8 @@ public class ConfiscateNftTests
 
         var xfer = record.NftTransfers[0];
         await Assert.That(xfer.Nft.Token).IsEqualTo(fxNft.CreateReceipt!.Token);
-        await Assert.That(xfer.From).IsEqualTo(fxAccount.CreateReceipt!.Address);
-        await Assert.That(xfer.To).IsEqualTo(EntityId.None);
+        await Assert.That(xfer.Sender).IsEqualTo(fxAccount.CreateReceipt!.Address);
+        await Assert.That(xfer.Receiver).IsEqualTo(EntityId.None);
     }
 
     [Test]
@@ -492,7 +492,7 @@ public class ConfiscateNftTests
             {
                 Token = fxNft.CreateReceipt!.Token,
                 SerialNumbers = new long[] { 1 },
-                Account = fxAccount,
+                Holder = fxAccount,
             });
         }).ThrowsException();
         var tex = ex as TransactionException;
@@ -583,7 +583,7 @@ public class ConfiscateNftTests
             {
                 Token = fxNft,
                 SerialNumbers = [1],
-                Account = fxAccount,
+                Holder = fxAccount,
                 Signatory = fxNft.ConfiscatePrivateKey
             });
         }).ThrowsException();
@@ -640,7 +640,7 @@ public class ConfiscateNftTests
                 {
                     Token = fxNft.CreateReceipt!.Token,
                     SerialNumbers = new[] { serialNumber },
-                    Account = fxAccount.CreateReceipt!.Address,
+                    Holder = fxAccount.CreateReceipt!.Address,
                     Signatory = fxNft.ConfiscatePrivateKey,
                 },
                 Payer = fxPayer

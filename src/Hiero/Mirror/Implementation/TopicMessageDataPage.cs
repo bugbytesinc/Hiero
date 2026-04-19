@@ -3,23 +3,23 @@ using System.Text.Json.Serialization;
 
 namespace Hiero.Mirror.Implementation;
 /// <summary>
-/// Contains a paged list of HCS Message information.
+/// Contains a paged list of topic message information.
 /// </summary>
-internal class HcsMessageDataPage : Page<HcsMessageData>
+internal class TopicMessageDataPage : Page<TopicMessageData>
 {
     /// <summary>
-    /// List of HCS Messages.
+    /// List of topic messages.
     /// </summary>
     [JsonPropertyName("messages")]
-    public HcsMessageData[]? Messages { get; set; }
+    public TopicMessageData[]? Messages { get; set; }
     /// <summary>
     /// Enumerates the list of messages.
     /// </summary>
     /// <returns>
     /// An enumerator listing the messages in the list.
     /// </returns>
-    public override IEnumerable<HcsMessageData> GetItems()
+    public override IEnumerable<TopicMessageData> GetItems()
     {
-        return Messages ?? Array.Empty<HcsMessageData>();
+        return Messages ?? Array.Empty<TopicMessageData>();
     }
 }

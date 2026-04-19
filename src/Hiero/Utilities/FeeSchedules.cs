@@ -71,7 +71,7 @@ public static class FeeSchedulesExtensions
     /// <returns>
     /// The structure representing the metrics of the Network's Fee Schedule.
     /// </returns>
-    public static async Task<FeeSchedules> GetFeeScheduleAsync(this ConsensusClient client, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
+    public static async Task<FeeSchedules> GetFeeSchedulesAsync(this ConsensusClient client, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
     {
         // Well known address of the fee schedule file is 0.0.111
         var file = await client.GetFileContentAsync(new EntityId(0, 0, 111), cancellationToken, configure).ConfigureAwait(false);

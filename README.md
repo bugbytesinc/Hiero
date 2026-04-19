@@ -58,7 +58,7 @@ var receipt = await client.CreateTokenAsync(new CreateTokenParams
     Name = "My Token",
     Symbol = "MTK",
     Decimals = 8,
-    InitialSupply = 1_000_000,
+    Circulation = 1_000_000,
     Treasury = treasuryAccount,
     Administrator = new Endorsement(adminPublicKey),
     Signatory = new Signatory(adminPrivateKey)
@@ -194,7 +194,7 @@ var mirror = new MirrorRestClient(new HttpClient
     BaseAddress = new Uri("https://testnet.mirrornode.hedera.com")
 });
 
-await foreach (var tx in mirror.GetTransactionsForAccountAsync(
+await foreach (var tx in mirror.GetAccountTransactionsAsync(
     new EntityId(0, 0, 12345),
     new LimitFilter(10),
     new OrderByFilter("desc")))

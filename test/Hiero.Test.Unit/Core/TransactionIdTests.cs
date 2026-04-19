@@ -261,7 +261,7 @@ public class TransactionIdTests
     }
 
     [Test]
-    public async Task Internal_Proto_AsTxId_Maps_Values()
+    public async Task Internal_Proto_AsTransactionId_Maps_Values()
     {
         var payer = new EntityId(0, 0, Generator.Integer(10, 200));
         var (seconds, nanos) = Epoch.UniqueSecondsAndNanos(false);
@@ -273,7 +273,7 @@ public class TransactionIdTests
             Scheduled = true,
             Nonce = nonce
         };
-        var txId = proto.AsTxId();
+        var txId = proto.AsTransactionId();
         await Assert.That(txId.Payer).IsEqualTo(payer);
         await Assert.That(txId.ValidStartSeconds).IsEqualTo(seconds);
         await Assert.That(txId.ValidStartNanos).IsEqualTo(nanos);
@@ -282,10 +282,10 @@ public class TransactionIdTests
     }
 
     [Test]
-    public async Task Internal_Proto_AsTxId_Null_Returns_None()
+    public async Task Internal_Proto_AsTransactionId_Null_Returns_None()
     {
         TransactionID proto = null;
-        var txId = proto.AsTxId();
+        var txId = proto.AsTransactionId();
         await Assert.That(txId).IsEqualTo(TransactionId.None);
     }
 }

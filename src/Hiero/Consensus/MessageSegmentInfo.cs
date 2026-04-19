@@ -31,7 +31,7 @@ public sealed record MessageSegmentInfo
     /// </summary>
     internal MessageSegmentInfo(ConsensusMessageChunkInfo info)
     {
-        ParentTransactionId = info.InitialTransactionID.AsTxId();
+        ParentTransactionId = info.InitialTransactionID.AsTransactionId();
         Index = info.Number;
         TotalSegmentCount = info.Total;
     }

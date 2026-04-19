@@ -71,7 +71,7 @@ public static class CancelAirdropExtensions
     /// <param name="client">
     /// The Consensus Node Client orchestrating the cancellation.
     /// </param>
-    /// <param name="pendingAirdrop">
+    /// <param name="airdrop">
     /// The pending airdrop to cancel.
     /// </param>
     /// <param name="configure">
@@ -91,9 +91,9 @@ public static class CancelAirdropExtensions
     /// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="CancelAirdrop" language="csharp"/>
     /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Task<TransactionReceipt> CancelAirdropAsync(this ConsensusClient client, Airdrop pendingAirdrop, Action<IConsensusContext>? configure = null)
+    public static Task<TransactionReceipt> CancelAirdropAsync(this ConsensusClient client, Airdrop airdrop, Action<IConsensusContext>? configure = null)
     {
-        return client.ExecuteAsync(new CancelAirdropParams { Airdrops = [pendingAirdrop] }, configure);
+        return client.ExecuteAsync(new CancelAirdropParams { Airdrops = [airdrop] }, configure);
     }
     /// <summary>
     /// Cancels one or more pending airdrops.

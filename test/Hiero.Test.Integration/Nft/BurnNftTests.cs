@@ -465,8 +465,8 @@ public class BurnNftTests
             var nft = new Hiero.Nft(fxNft.CreateReceipt!.Token, ssn);
             var xfer = record.NftTransfers.FirstOrDefault(x => x.Nft == nft);
             await Assert.That(xfer).IsNotNull();
-            await Assert.That(xfer!.From).IsEqualTo(fxNft.TreasuryAccount.CreateReceipt!.Address);
-            await Assert.That(xfer.To).IsEqualTo(EntityId.None);
+            await Assert.That(xfer!.Sender).IsEqualTo(fxNft.TreasuryAccount.CreateReceipt!.Address);
+            await Assert.That(xfer.Receiver).IsEqualTo(EntityId.None);
         }
 
         await Assert.That(await fxNft.TreasuryAccount.GetTokenBalanceAsync(fxNft)).IsEqualTo((long)expectedCirculation);
@@ -686,11 +686,11 @@ public class BurnNftTests
         });
         await Assert.That(signingReceipt.Status).IsEqualTo(ResponseCode.Success);
 
-        var executedReceipt = await client.GetReceiptAsync(pendingReceipt.ScheduledTxId) as TokenReceipt;
+        var executedReceipt = await client.GetReceiptAsync(pendingReceipt.ScheduledTransactionId) as TokenReceipt;
         await Assert.That(executedReceipt!.Status).IsEqualTo(ResponseCode.Success);
         await Assert.That(executedReceipt.Circulation).IsEqualTo(expectedCirculation);
 
-        var executedRecord = await client.GetTransactionRecordAsync(pendingReceipt.ScheduledTxId) as TokenRecord;
+        var executedRecord = await client.GetTransactionRecordAsync(pendingReceipt.ScheduledTransactionId) as TokenRecord;
         await Assert.That(executedRecord!.Status).IsEqualTo(ResponseCode.Success);
         await Assert.That(executedRecord.Circulation).IsEqualTo(expectedCirculation);
 
@@ -746,7 +746,7 @@ public class BurnNftTests
         });
         await Assert.That(signReceipt.Status).IsEqualTo(ResponseCode.Success);
 
-        var executedReceipt = await client.GetReceiptAsync(scheduledReceipt.ScheduledTxId) as TokenReceipt;
+        var executedReceipt = await client.GetReceiptAsync(scheduledReceipt.ScheduledTransactionId) as TokenReceipt;
         await Assert.That(executedReceipt).IsNotNull();
         await Assert.That(executedReceipt!.Status).IsEqualTo(ResponseCode.Success);
         await Assert.That(executedReceipt.Circulation).IsEqualTo((ulong)(fxNft.Metadata.Length - 1));

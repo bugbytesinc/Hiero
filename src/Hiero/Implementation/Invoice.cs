@@ -6,14 +6,14 @@ namespace Hiero.Implementation;
 
 internal sealed class Invoice : IInvoice
 {
-    private readonly TransactionId _txId;
+    private readonly TransactionId _transactionId;
     private readonly string _memo;
     private readonly ReadOnlyMemory<byte> _txBytes;
     private readonly int _prefixTrimLimit;
     private readonly Dictionary<ByteString, SignaturePair> _signatures;
     private readonly CancellationToken _cancellationToken;
 
-    TransactionId IInvoice.TransactionId => _txId;
+    TransactionId IInvoice.TransactionId => _transactionId;
     string IInvoice.Memo => _memo;
     ReadOnlyMemory<byte> IInvoice.TransactionBytes => _txBytes;
     int IInvoice.MinimumDesiredPrefixSize => _prefixTrimLimit;
@@ -21,7 +21,7 @@ internal sealed class Invoice : IInvoice
 
     internal Invoice(TransactionBody transactionBody, int prefixTrimLimit, CancellationToken cancellationToken)
     {
-        _txId = transactionBody.TransactionID.AsTxId();
+        _transactionId = transactionBody.TransactionID.AsTransactionId();
         _memo = transactionBody.Memo;
         _txBytes = transactionBody.ToByteArray();
         _prefixTrimLimit = prefixTrimLimit;
@@ -31,7 +31,7 @@ internal sealed class Invoice : IInvoice
     internal Invoice(ReadOnlyMemory<byte> transactionBodyBytes, int prefixTrimLimit, CancellationToken cancellationToken)
     {
         var transactionBody = TransactionBody.Parser.ParseFrom(transactionBodyBytes.Span);
-        _txId = transactionBody.TransactionID.AsTxId();
+        _transactionId = transactionBody.TransactionID.AsTransactionId();
         _memo = transactionBody.Memo;
         _txBytes = transactionBodyBytes;
         _prefixTrimLimit = prefixTrimLimit;

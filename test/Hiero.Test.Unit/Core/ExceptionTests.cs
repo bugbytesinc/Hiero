@@ -18,7 +18,7 @@ public class PrecheckExceptionTests
         var message = "Precheck failed";
         var ex = new PrecheckException(message, txId, code, fee);
         await Assert.That(ex.Message).IsEqualTo(message);
-        await Assert.That(ex.TxId).IsEqualTo(txId);
+        await Assert.That(ex.TransactionId).IsEqualTo(txId);
         await Assert.That(ex.Status).IsEqualTo(code);
         await Assert.That(ex.RequiredFee).IsEqualTo(fee);
     }
@@ -33,7 +33,7 @@ public class PrecheckExceptionTests
         var ex = new PrecheckException("Precheck failed", txId, code, fee, inner);
         await Assert.That(ex.InnerException).IsEqualTo(inner);
         await Assert.That(ex.Status).IsEqualTo(code);
-        await Assert.That(ex.TxId).IsEqualTo(txId);
+        await Assert.That(ex.TransactionId).IsEqualTo(txId);
         await Assert.That(ex.RequiredFee).IsEqualTo(fee);
     }
 
@@ -67,7 +67,7 @@ public class TransactionExceptionTests
         await Assert.That(ex.Message).IsEqualTo("Transaction failed");
         await Assert.That(ex.Receipt).IsEqualTo(receipt);
         await Assert.That(ex.Status).IsEqualTo(ResponseCode.AccountRepeatedInAccountAmounts);
-        await Assert.That(ex.TransactionId).IsEqualTo(protoTxId.AsTxId());
+        await Assert.That(ex.TransactionId).IsEqualTo(protoTxId.AsTransactionId());
     }
 
     [Test]

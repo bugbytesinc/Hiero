@@ -25,7 +25,7 @@ public class RevokeTokenTests
 
         await AssertHg.TokenKycStatusAsync(fxToken, fxAccount, TokenKycStatus.Granted);
 
-        await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
+        await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
@@ -41,7 +41,7 @@ public class RevokeTokenTests
 
         var ex = await Assert.That(async () =>
         {
-            await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
+            await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
             {
                 ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
             });
@@ -58,7 +58,7 @@ public class RevokeTokenTests
         await using var fxAccount = await TestAliasAccount.CreateAsync();
         await using var fxToken = await TestToken.CreateAsync();
         await using var client = await TestNetwork.CreateClientAsync();
-        await client.AssociateTokenAsync(fxAccount, fxToken.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxToken.CreateReceipt!.Token, fxAccount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount.PrivateKey);
         });
@@ -77,7 +77,7 @@ public class RevokeTokenTests
 
         await AssertHg.TokenKycStatusAsync(fxToken, fxAccount, TokenKycStatus.Granted);
 
-        await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
+        await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
@@ -119,7 +119,7 @@ public class RevokeTokenTests
 
         await AssertHg.TokenKycStatusAsync(fxToken, fxAccount, TokenKycStatus.Granted);
 
-        await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
+        await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
@@ -145,7 +145,7 @@ public class RevokeTokenTests
 
         var ex = await Assert.That(async () =>
         {
-            await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
+            await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
             {
                 ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
             });
@@ -176,7 +176,7 @@ public class RevokeTokenTests
 
         await AssertHg.TokenKycStatusAsync(fxToken, fxAccount, TokenKycStatus.Granted);
 
-        await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
+        await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
@@ -200,7 +200,7 @@ public class RevokeTokenTests
 
         var ex = await Assert.That(async () =>
         {
-            await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
+            await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
             {
                 ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
             });
@@ -232,7 +232,7 @@ public class RevokeTokenTests
 
         await AssertHg.TokenKycStatusAsync(fxToken, fxAccount, TokenKycStatus.Granted);
 
-        await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
+        await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
@@ -252,7 +252,7 @@ public class RevokeTokenTests
 
         var ex = await Assert.That(async () =>
         {
-            await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
+            await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
             {
                 ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
             });
@@ -283,7 +283,7 @@ public class RevokeTokenTests
 
         await AssertHg.TokenKycStatusAsync(fxToken, fxAccount, TokenKycStatus.Granted);
 
-        await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
+        await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });

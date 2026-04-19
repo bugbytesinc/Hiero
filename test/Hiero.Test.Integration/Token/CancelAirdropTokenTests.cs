@@ -15,7 +15,7 @@ public class CancelAirdropTokenTests
         // Transfer tokens to the sender so they have a balance to airdrop.
         var xferAmount = (long)(fxToken.CreateParams.Circulation / 3);
         await using var client = await TestNetwork.CreateClientAsync();
-        await client.TransferTokensAsync(fxToken.CreateReceipt!.Token, fxToken.TreasuryAccount.CreateReceipt!.Address, fxSender.CreateReceipt!.Address, xferAmount, ctx =>
+        await client.TransferTokenAsync(fxToken.CreateReceipt!.Token, fxToken.TreasuryAccount.CreateReceipt!.Address, fxSender.CreateReceipt!.Address, xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
@@ -33,14 +33,14 @@ public class CancelAirdropTokenTests
         });
 
         // Schedule a cancel airdrop WITHOUT the sender signing.
-        var pendingAirdrop = new Airdrop(fxSender.CreateReceipt!.Address, fxReceiver.CreateReceipt!.Address, fxToken.CreateReceipt!.Token);
+        var airdrop = new Airdrop(fxToken.CreateReceipt!.Token, fxSender.CreateReceipt!.Address, fxReceiver.CreateReceipt!.Address);
         var tex = await Assert.That(async () =>
         {
             await client.ScheduleAsync(new ScheduleParams
             {
                 Transaction = new CancelAirdropParams
                 {
-                    Airdrops = [pendingAirdrop],
+                    Airdrops = [airdrop],
                 },
                 Memo = Generator.Memo(20),
             });

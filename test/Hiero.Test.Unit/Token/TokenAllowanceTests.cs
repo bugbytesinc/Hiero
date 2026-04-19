@@ -11,12 +11,12 @@ public class TokenAllowanceTests
     {
         var token = new EntityId(0, 0, Generator.Integer(10, 200));
         var owner = new EntityId(0, 0, Generator.Integer(200, 400));
-        var agent = new EntityId(0, 0, Generator.Integer(400, 600));
+        var spender = new EntityId(0, 0, Generator.Integer(400, 600));
         long amount = Generator.Integer(500, 1000);
-        var allowance = new TokenAllowance(token, owner, agent, amount);
+        var allowance = new TokenAllowance(token, owner, spender, amount);
         await Assert.That(allowance.Token).IsEqualTo(token);
         await Assert.That(allowance.Owner).IsEqualTo(owner);
-        await Assert.That(allowance.Agent).IsEqualTo(agent);
+        await Assert.That(allowance.Spender).IsEqualTo(spender);
         await Assert.That(allowance.Amount).IsEqualTo(amount);
     }
 
@@ -24,9 +24,9 @@ public class TokenAllowanceTests
     public async Task Null_Token_Throws_ArgumentException()
     {
         var owner = new EntityId(0, 0, Generator.Integer(200, 400));
-        var agent = new EntityId(0, 0, Generator.Integer(400, 600));
+        var spender = new EntityId(0, 0, Generator.Integer(400, 600));
         long amount = Generator.Integer(500, 1000);
-        var ex = Assert.Throws<ArgumentException>(() => { new TokenAllowance(null, owner, agent, amount); });
+        var ex = Assert.Throws<ArgumentException>(() => { new TokenAllowance(null, owner, spender, amount); });
         await Assert.That(ex).IsNotNull();
     }
 
@@ -34,9 +34,9 @@ public class TokenAllowanceTests
     public async Task None_Token_Throws_ArgumentException()
     {
         var owner = new EntityId(0, 0, Generator.Integer(200, 400));
-        var agent = new EntityId(0, 0, Generator.Integer(400, 600));
+        var spender = new EntityId(0, 0, Generator.Integer(400, 600));
         long amount = Generator.Integer(500, 1000);
-        var ex = Assert.Throws<ArgumentException>(() => { new TokenAllowance(EntityId.None, owner, agent, amount); });
+        var ex = Assert.Throws<ArgumentException>(() => { new TokenAllowance(EntityId.None, owner, spender, amount); });
         await Assert.That(ex).IsNotNull();
     }
 
@@ -44,9 +44,9 @@ public class TokenAllowanceTests
     public async Task Null_Owner_Throws_ArgumentException()
     {
         var token = new EntityId(0, 0, Generator.Integer(10, 200));
-        var agent = new EntityId(0, 0, Generator.Integer(400, 600));
+        var spender = new EntityId(0, 0, Generator.Integer(400, 600));
         long amount = Generator.Integer(500, 1000);
-        var ex = Assert.Throws<ArgumentException>(() => { new TokenAllowance(token, null, agent, amount); });
+        var ex = Assert.Throws<ArgumentException>(() => { new TokenAllowance(token, null, spender, amount); });
         await Assert.That(ex).IsNotNull();
     }
 
@@ -54,14 +54,14 @@ public class TokenAllowanceTests
     public async Task None_Owner_Throws_ArgumentException()
     {
         var token = new EntityId(0, 0, Generator.Integer(10, 200));
-        var agent = new EntityId(0, 0, Generator.Integer(400, 600));
+        var spender = new EntityId(0, 0, Generator.Integer(400, 600));
         long amount = Generator.Integer(500, 1000);
-        var ex = Assert.Throws<ArgumentException>(() => { new TokenAllowance(token, EntityId.None, agent, amount); });
+        var ex = Assert.Throws<ArgumentException>(() => { new TokenAllowance(token, EntityId.None, spender, amount); });
         await Assert.That(ex).IsNotNull();
     }
 
     [Test]
-    public async Task Null_Agent_Throws_ArgumentException()
+    public async Task Null_Spender_Throws_ArgumentException()
     {
         var token = new EntityId(0, 0, Generator.Integer(10, 200));
         var owner = new EntityId(0, 0, Generator.Integer(200, 400));
@@ -71,7 +71,7 @@ public class TokenAllowanceTests
     }
 
     [Test]
-    public async Task None_Agent_Throws_ArgumentException()
+    public async Task None_Spender_Throws_ArgumentException()
     {
         var token = new EntityId(0, 0, Generator.Integer(10, 200));
         var owner = new EntityId(0, 0, Generator.Integer(200, 400));
@@ -85,8 +85,8 @@ public class TokenAllowanceTests
     {
         var token = new EntityId(0, 0, Generator.Integer(10, 200));
         var owner = new EntityId(0, 0, Generator.Integer(200, 400));
-        var agent = new EntityId(0, 0, Generator.Integer(400, 600));
-        var ex = Assert.Throws<ArgumentOutOfRangeException>(() => { new TokenAllowance(token, owner, agent, -1); });
+        var spender = new EntityId(0, 0, Generator.Integer(400, 600));
+        var ex = Assert.Throws<ArgumentOutOfRangeException>(() => { new TokenAllowance(token, owner, spender, -1); });
         await Assert.That(ex).IsNotNull();
     }
 
@@ -95,8 +95,8 @@ public class TokenAllowanceTests
     {
         var token = new EntityId(0, 0, Generator.Integer(10, 200));
         var owner = new EntityId(0, 0, Generator.Integer(200, 400));
-        var agent = new EntityId(0, 0, Generator.Integer(400, 600));
-        var allowance = new TokenAllowance(token, owner, agent, 0);
+        var spender = new EntityId(0, 0, Generator.Integer(400, 600));
+        var allowance = new TokenAllowance(token, owner, spender, 0);
         var expectedAmount = 0L;
         await Assert.That(allowance.Amount).IsEqualTo(expectedAmount);
     }
@@ -106,10 +106,10 @@ public class TokenAllowanceTests
     {
         var token = new EntityId(0, 0, Generator.Integer(10, 200));
         var owner = new EntityId(0, 0, Generator.Integer(200, 400));
-        var agent = new EntityId(0, 0, Generator.Integer(400, 600));
+        var spender = new EntityId(0, 0, Generator.Integer(400, 600));
         long amount = Generator.Integer(500, 1000);
-        var a1 = new TokenAllowance(token, owner, agent, amount);
-        var a2 = new TokenAllowance(token, owner, agent, amount);
+        var a1 = new TokenAllowance(token, owner, spender, amount);
+        var a2 = new TokenAllowance(token, owner, spender, amount);
         await Assert.That(a1).IsEqualTo(a2);
         await Assert.That(a1 == a2).IsTrue();
     }

@@ -38,7 +38,7 @@ public sealed record TokenTransfer
     /// <param name="token">
     /// The identifier of the Token whose coins were transferred.
     /// </param>
-    /// <param name="address">
+    /// <param name="account">
     /// The account receiving or sending the token's coins.
     /// </param>
     /// <param name="amount">
@@ -53,10 +53,10 @@ public sealed record TokenTransfer
     /// <param name="allowanceHook">
     /// Optional allowance hook call for this token transfer.
     /// </param>
-    public TokenTransfer(EntityId token, EntityId address, long amount, bool delegated = false, HookCall? allowanceHook = null)
+    public TokenTransfer(EntityId token, EntityId account, long amount, bool delegated = false, HookCall? allowanceHook = null)
     {
         Token = token;
-        Account = address;
+        Account = account;
         Amount = amount;
         Delegated = delegated;
         AllowanceHook = allowanceHook;

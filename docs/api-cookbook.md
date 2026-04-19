@@ -71,7 +71,7 @@ AccountInfo info = await client.GetAccountInfoAsync(account);
 // info.Address, info.Balance, info.Endorsement, info.Memo,
 // info.EvmAddress, info.AutoRenewPeriod, info.ReceiveSignatureRequired, ...
 
-AccountDetail detail = await client.GetAccountDetailAsync(account);
+AccountDetails detail = await client.GetAccountDetailsAsync(account);
 // All AccountInfo fields + CryptoAllowances, TokenAllowances, NftAllowances
 ```
 
@@ -106,7 +106,7 @@ var receipt = await client.TransferAsync(new TransferParams
 ### Transfer Tokens
 ```csharp
 // Simple fungible token transfer
-var receipt = await client.TransferTokensAsync(token, from, to, amount);
+var receipt = await client.TransferTokenAsync(token, from, to, amount);
 
 // Simple NFT transfer
 var receipt = await client.TransferNftAsync(new Nft(token, serial), from, to);
@@ -116,7 +116,7 @@ var receipt = await client.TransferNftAsync(new Nft(token, serial), from, to);
 ```csharp
 var receipt = await client.UpdateAccountAsync(new UpdateAccountParams
 {
-    Address = account,
+    Account = account,
     Memo = "Updated memo",
     Signatory = new Signatory(accountKey)
 });
@@ -144,7 +144,7 @@ var receipt = await client.AllocateAllowanceAsync(new AllowanceParams
 });
 
 // Revoke NFT allowances
-var receipt = await client.RevokeNftAllowancesAsync(new RevokeNftAllowanceParams
+var receipt = await client.RevokeNftAllowanceAsync(new RevokeNftAllowanceParams
 {
     Owner = owner, Token = token, SerialNumbers = new long[] { 1, 2, 3 },
     Signatory = new Signatory(ownerKey)
@@ -176,12 +176,12 @@ EntityId tokenId = receipt.Token;
 ### Mint / Burn
 ```csharp
 TokenReceipt r = await client.MintTokenAsync(token, 500_000);
-TokenReceipt r = await client.BurnTokensAsync(token, 100_000);
+TokenReceipt r = await client.BurnTokenAsync(token, 100_000);
 ```
 
 ### Associate / Dissociate
 ```csharp
-await client.AssociateTokenAsync(account, token);
+await client.AssociateTokenAsync(token, account);
 await client.DissociateTokenAsync(token, account);
 ```
 
@@ -205,7 +205,7 @@ await client.RevokeTokenKycAsync(token, holder);
 
 ### Confiscate (Wipe)
 ```csharp
-TokenReceipt r = await client.ConfiscateTokensAsync(token, holder, amount);
+TokenReceipt r = await client.ConfiscateTokenAsync(token, holder, amount);
 ```
 
 ### Update Token
@@ -317,9 +317,8 @@ await client.AirdropNftAsync(new Nft(nftToken, serial), from, to);
 
 ### Claim / Cancel Pending Airdrops
 ```csharp
-// Constructor order: sender, receiver, token (NOT token first)
-await client.ClaimAirdropAsync(new Airdrop(sender, receiver, token));
-await client.CancelAirdropAsync(new Airdrop(sender, receiver, token));
+await client.ClaimAirdropAsync(new Airdrop(token, sender, receiver));
+await client.CancelAirdropAsync(new Airdrop(token, sender, receiver));
 ```
 
 ### Relinquish Tokens (Return to Treasury)
@@ -502,6 +501,8 @@ var receipt = await client.ScheduleAsync(new ScheduleParams
     DelayExecution = false  // execute as soon as all sigs collected
 });
 EntityId scheduleId = receipt.Schedule;
+TransactionId executionTxId = receipt.ScheduledTransactionId; // id of the
+// deferred tx — use with GetReceiptAsync/GetTransactionRecordAsync after execution
 
 // Convenience: schedule any TransactionParams directly
 var receipt = await client.ScheduleAsync(someTransactionParams);
@@ -525,7 +526,7 @@ ScheduleInfo info = await client.GetScheduleInfoAsync(scheduleId);
 ### Query Network State
 ```csharp
 ExchangeRates rates = await client.GetExchangeRatesAsync();
-FeeSchedules fees = await client.GetFeeScheduleAsync();
+FeeSchedules fees = await client.GetFeeSchedulesAsync();
 VersionInfo version = await client.GetVersionInfoAsync();
 ConsensusNodeInfo[] book = await client.GetAddressBookAsync();
 long pingMs = await client.PingAsync();
@@ -565,10 +566,10 @@ var receipt = await client.ExecuteAsync(new BatchedTransactionParams
 ### External Transaction Relay
 ```csharp
 // Forward a pre-built signed transaction to the network (precheck only)
-ResponseCode code = await client.SendExternalTransactionAsync(signedTransactionBytes);
+ResponseCode code = await client.SubmitExternalTransactionAsync(signedTransactionBytes);
 
 // Full flow — wait for receipt
-TransactionReceipt receipt = await client.SubmitExternalTransactionAsync(signedTransactionBytes);
+TransactionReceipt receipt = await client.ExecuteExternalTransactionAsync(signedTransactionBytes);
 ```
 
 ### Mnemonic / Key Derivation
@@ -600,7 +601,7 @@ await client.UpdateConsensusNodeAsync(new UpdateConsensusNodeParams
     NodeId = nodeId, Description = "Renamed" });
 
 // Remove node
-await client.RemoveConsensusNodeAsync(nodeId);
+await client.DeleteConsensusNodeAsync(nodeId);
 ```
 
 ---
@@ -652,7 +653,7 @@ var mirror = new MirrorRestClient(new HttpClient
 var account = await mirror.GetAccountAsync(accountId);
 var token = await mirror.GetTokenAsync(tokenId);
 var nft = await mirror.GetNftAsync(new Nft(tokenId, serialNo));
-var contract = await mirror.GetContractDataAsync(contractId);
+var contract = await mirror.GetContractAsync(contractId);
 var tx = await mirror.GetTransactionAsync(consensusTimestamp);
 ```
 

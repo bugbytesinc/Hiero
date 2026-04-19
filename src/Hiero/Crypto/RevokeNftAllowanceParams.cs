@@ -92,7 +92,7 @@ public static class RevokeNftAllowanceExtensions
     /// It is executed prior to submitting the request to the network.
     /// </param>
     /// <returns>
-    /// A TransactionId record indicating success, or an exception is thrown.
+    /// A transaction receipt indicating success, or an exception is thrown.
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
@@ -100,7 +100,7 @@ public static class RevokeNftAllowanceExtensions
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the revoke request as invalid or had missing data.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Task<TransactionReceipt> RevokeNftAllowancesAsync(this ConsensusClient client, RevokeNftAllowanceParams revokeParams, Action<IConsensusContext>? configure = null)
+    public static Task<TransactionReceipt> RevokeNftAllowanceAsync(this ConsensusClient client, RevokeNftAllowanceParams revokeParams, Action<IConsensusContext>? configure = null)
     {
         return client.ExecuteAsync(revokeParams, configure);
     }

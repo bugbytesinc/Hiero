@@ -70,30 +70,17 @@ public static class UtilitiesSnippets
         #endregion
     }
 
-    public static async Task SendExternalRaw(
-        ConsensusClient client,
-        ReadOnlyMemory<byte> preBuiltSignedTransactionBytes)
-    {
-        #region SendExternal
-        // Forward a transaction built entirely by external tooling (e.g. a
-        // hardware wallet). Send returns the precheck ResponseCode without
-        // waiting for consensus. Use when you've already externally signed
-        // bytes and just need them relayed to a gossip node.
-        var code = await client.SendExternalTransactionAsync(preBuiltSignedTransactionBytes);
-        Console.WriteLine($"Precheck: {code}");
-        #endregion
-    }
-
     public static async Task SubmitExternalRaw(
         ConsensusClient client,
         ReadOnlyMemory<byte> preBuiltSignedTransactionBytes)
     {
         #region SubmitExternal
-        // Same as SendExternalTransactionAsync but waits for consensus and
-        // returns a full TransactionReceipt. Use when the caller needs the
-        // typed receipt (not just the precheck code).
-        var receipt = await client.SubmitExternalTransactionAsync(preBuiltSignedTransactionBytes);
-        Console.WriteLine($"Status: {receipt.Status}");
+        // Forward a transaction built entirely by external tooling (e.g. a
+        // hardware wallet). Submit returns the precheck ResponseCode without
+        // waiting for consensus. Use when you've already externally signed
+        // bytes and just need them relayed to a gossip node.
+        var code = await client.SubmitExternalTransactionAsync(preBuiltSignedTransactionBytes);
+        Console.WriteLine($"Precheck: {code}");
         #endregion
     }
 
@@ -103,10 +90,43 @@ public static class UtilitiesSnippets
         Signatory extraSignatory)
     {
         #region SubmitExternalWithParams
+        // Precheck-only variant with the params overload — layer additional
+        // signatures on top of an externally-signed transaction without
+        // re-building the body bytes. Returns the precheck ResponseCode;
+        // does not wait for consensus.
+        var code = await client.SubmitExternalTransactionAsync(new ExternalTransactionParams
+        {
+            SignedTransactionBytes = signedBytes,
+            Signatory = extraSignatory
+        });
+        Console.WriteLine($"Precheck: {code}");
+        #endregion
+    }
+
+    public static async Task ExecuteExternalRaw(
+        ConsensusClient client,
+        ReadOnlyMemory<byte> preBuiltSignedTransactionBytes)
+    {
+        #region ExecuteExternal
+        // Same as SubmitExternalTransactionAsync but waits for consensus and
+        // returns a full TransactionReceipt. Use when the caller needs the
+        // typed receipt (not just the precheck code).
+        var receipt = await client.ExecuteExternalTransactionAsync(preBuiltSignedTransactionBytes);
+        Console.WriteLine($"Status: {receipt.Status}");
+        #endregion
+    }
+
+    public static async Task ExecuteExternalWithExtraSignatory(
+        ConsensusClient client,
+        ReadOnlyMemory<byte> signedBytes,
+        Signatory extraSignatory)
+    {
+        #region ExecuteExternalWithParams
         // Use the params overload to layer additional signatures on top of
         // an externally-signed transaction without re-building the body.
-        // Any Signatory in the client's context is also applied.
-        var receipt = await client.SubmitExternalTransactionAsync(new ExternalTransactionParams
+        // Any Signatory in the client's context is also applied. Waits for
+        // consensus and returns the receipt.
+        var receipt = await client.ExecuteExternalTransactionAsync(new ExternalTransactionParams
         {
             SignedTransactionBytes = signedBytes,
             Signatory = extraSignatory

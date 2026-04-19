@@ -27,7 +27,7 @@ public class UpdateAccountTests
 
             var updateParams = new UpdateAccountParams
             {
-                Address = new EntityId(0, 0, targetAccountNo),
+                Account = new EntityId(0, 0, targetAccountNo),
                 Signatory = new Signatory(targetPrivateKey),
                 Memo = targetAccountNewMemo
             };

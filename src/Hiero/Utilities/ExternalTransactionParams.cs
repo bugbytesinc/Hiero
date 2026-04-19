@@ -12,7 +12,7 @@ namespace Hiero;
 /// <example>
 /// Relay a pre-built signed transaction, adding an extra signatory through
 /// the params object without reconstructing the body bytes:
-/// <code source="../../../samples/DocSnippets/UtilitiesSnippets.cs" region="SubmitExternalWithParams" language="csharp"/>
+/// <code source="../../../samples/DocSnippets/UtilitiesSnippets.cs" region="ExecuteExternalWithParams" language="csharp"/>
 /// </example>
 public sealed class ExternalTransactionParams : TransactionParams<TransactionReceipt>
 {
@@ -33,6 +33,23 @@ public sealed class ExternalTransactionParams : TransactionParams<TransactionRec
     /// Optional Cancellation token that interrupts the network transaction submission process.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
+    /// <summary>
+    /// Overridden to block the generic <see cref="ConsensusClient.ExecuteAsync{T}"/> /
+    /// <see cref="ConsensusClient.SubmitAsync{T}"/> path with a descriptive error.
+    /// </summary>
+    /// <remarks>
+    /// External-transaction inputs need a dedicated orchestrator to unwrap the
+    /// pre-signed bytes and cannot go through the standard <c>INetworkParams&lt;T&gt;</c>
+    /// path. Call <c>ExecuteExternalTransactionAsync</c> (wait for consensus) or
+    /// <c>SubmitExternalTransactionAsync</c> (precheck only) instead.
+    /// </remarks>
+    /// <exception cref="InvalidOperationException">Always.</exception>
+    internal override INetworkParams<TransactionReceipt> GetNetworkParams()
+    {
+        throw new InvalidOperationException(
+            "ExternalTransactionParams cannot be used with the generic ConsensusClient.ExecuteAsync or SubmitAsync methods. " +
+            "Call ExecuteExternalTransactionAsync (to wait for consensus) or SubmitExternalTransactionAsync (for precheck only) instead.");
+    }
 }
 internal sealed class ExternalTransactionParamsOrchestrator : INetworkParams<TransactionReceipt>
 {
@@ -108,7 +125,7 @@ internal sealed class ExternalTransactionParamsOrchestrator : INetworkParams<Tra
 public static class ExternalTransactionParamsExtensions
 {
     /// <summary>
-    /// Sends an arbitrary externally created Hedera Transaction to the network, 
+    /// Submits an arbitrary externally created Hedera Transaction to the network,
     /// but does not wait for a receipt, only returning the <code>PRECHECK</code>
     /// code returned from the network (as <code>ResponseCode</code>).
     /// The transaction is submitted as a <code>SignedTransaction</code> object, 
@@ -157,14 +174,14 @@ public static class ExternalTransactionParamsExtensions
     /// returned that is not <code>OK</code>.  The PrecheckException is thrown because there is no true response
     /// code to return and the method should divulge some information as to the nature of the network error.</exception>
     /// <example>
-    /// <code source="../../../samples/DocSnippets/UtilitiesSnippets.cs" region="SendExternal" language="csharp"/>
+    /// <code source="../../../samples/DocSnippets/UtilitiesSnippets.cs" region="SubmitExternal" language="csharp"/>
     /// </example>
-    public static Task<ResponseCode> SendExternalTransactionAsync(this ConsensusClient client, ReadOnlyMemory<byte> signedTransactionBytes, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
+    public static Task<ResponseCode> SubmitExternalTransactionAsync(this ConsensusClient client, ReadOnlyMemory<byte> signedTransactionBytes, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
     {
-        return SendExternalTransactionAsync(client, new ExternalTransactionParams { SignedTransactionBytes = signedTransactionBytes }, configure);
+        return SubmitExternalTransactionAsync(client, new ExternalTransactionParams { SignedTransactionBytes = signedTransactionBytes }, configure);
     }
     /// <summary>
-    /// Sends an arbitrary externally created Hedera Transaction to the network, 
+    /// Submits an arbitrary externally created Hedera Transaction to the network,
     /// but does not wait for a receipt, only returning the <code>PRECHECK</code>
     /// code returned from the network (as <code>ResponseCode</code>).
     /// The transaction is submitted as a <code>SignedTransaction</code> object, 
@@ -212,7 +229,7 @@ public static class ExternalTransactionParamsExtensions
     /// <example>
     /// <code source="../../../samples/DocSnippets/UtilitiesSnippets.cs" region="SubmitExternalWithParams" language="csharp"/>
     /// </example>
-    public static async Task<ResponseCode> SendExternalTransactionAsync(this ConsensusClient client, ExternalTransactionParams externalParams, Action<IConsensusContext>? configure = null)
+    public static async Task<ResponseCode> SubmitExternalTransactionAsync(this ConsensusClient client, ExternalTransactionParams externalParams, Action<IConsensusContext>? configure = null)
     {
         await using var context = client.BuildChildContext(configure);
         var (transactionParams, networkTransaction, signedTransactionBytes, transactionId, cancellationToken) = await ExternalTransactionParamsOrchestrator.CreateSignedTransactionBytesAsync(context, externalParams);
@@ -221,7 +238,7 @@ public static class ExternalTransactionParamsExtensions
         return (ResponseCode)precheck.NodeTransactionPrecheckCode;
     }
     /// <summary>
-    /// Submits an arbitrary externally created Hedera Transaction to the network.  
+    /// Executes an arbitrary externally created Hedera Transaction on the network and waits for consensus.  
     /// The transaction is submitted as a <code>SignedTransaction</code> object, 
     /// protobuf encoded, and may include signatures in the associated 
     /// <code>sigMap</code> field.  Any Signatories held in the client context 
@@ -262,14 +279,14 @@ public static class ExternalTransactionParamsExtensions
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
     /// <example>
-    /// <code source="../../../samples/DocSnippets/UtilitiesSnippets.cs" region="SubmitExternal" language="csharp"/>
+    /// <code source="../../../samples/DocSnippets/UtilitiesSnippets.cs" region="ExecuteExternal" language="csharp"/>
     /// </example>
-    public static Task<TransactionReceipt> SubmitExternalTransactionAsync(this ConsensusClient client, ReadOnlyMemory<byte> signedTransactionBytes, Action<IConsensusContext>? configure = null)
+    public static Task<TransactionReceipt> ExecuteExternalTransactionAsync(this ConsensusClient client, ReadOnlyMemory<byte> signedTransactionBytes, Action<IConsensusContext>? configure = null)
     {
-        return SubmitExternalTransactionAsync(client, new ExternalTransactionParams { SignedTransactionBytes = signedTransactionBytes }, configure);
+        return ExecuteExternalTransactionAsync(client, new ExternalTransactionParams { SignedTransactionBytes = signedTransactionBytes }, configure);
     }
     /// <summary>
-    /// Submits an arbitrary externally created Hedera Transaction to the network.  
+    /// Executes an arbitrary externally created Hedera Transaction on the network and waits for consensus.  
     /// The Transaction is submitted as a <code>SignedTransaction</code> object, 
     /// protobuf encoded, and may include signatures in the associated 
     /// <code>sigMap</code> field.  Any Signatories held in the client context 
@@ -310,9 +327,9 @@ public static class ExternalTransactionParamsExtensions
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the networkTransaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
     /// <example>
-    /// <code source="../../../samples/DocSnippets/UtilitiesSnippets.cs" region="SubmitExternalWithParams" language="csharp"/>
+    /// <code source="../../../samples/DocSnippets/UtilitiesSnippets.cs" region="ExecuteExternalWithParams" language="csharp"/>
     /// </example>
-    public static async Task<TransactionReceipt> SubmitExternalTransactionAsync(this ConsensusClient client, ExternalTransactionParams externalParams, Action<IConsensusContext>? configure = null)
+    public static async Task<TransactionReceipt> ExecuteExternalTransactionAsync(this ConsensusClient client, ExternalTransactionParams externalParams, Action<IConsensusContext>? configure = null)
     {
         await using var context = client.BuildChildContext(configure);
         var (transactionParams, networkTransaction, signedTransactionBytes, transactionId, cancellationToken) = await ExternalTransactionParamsOrchestrator.CreateSignedTransactionBytesAsync(context, externalParams);

@@ -1,8 +1,8 @@
 ﻿// SPDX-License-Identifier: Apache-2.0
 namespace Hiero.Mirror.Filters;
 /// <summary>
-/// Retrieve consensus messages for a topic after the
-/// given hcs consensus message number.
+/// Retrieve topic messages after the
+/// given consensus message number.
 /// </summary>
 public class SequenceAfterFilter : IMirrorQueryFilter
 {
@@ -15,7 +15,7 @@ public class SequenceAfterFilter : IMirrorQueryFilter
     /// Constructor requires the sequence number to filter by.
     /// </summary>
     /// <param name="sequenceNumber">
-    /// Return only hcs messages with sequence numbers larger
+    /// Return only topic messages with sequence numbers larger
     /// than this target value.
     /// </param>
     public SequenceAfterFilter(ulong sequenceNumber)

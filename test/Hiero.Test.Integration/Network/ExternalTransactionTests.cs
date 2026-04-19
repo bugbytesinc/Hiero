@@ -53,7 +53,7 @@ public class ExternalTransactionTests
         await senderSignatory.SignAsync(invoice);
         var signedTransaction = invoice.GenerateSignedTransactionFromSignatures(true).ToByteString().Memory;
 
-        var receipt = await noSignClient.SubmitExternalTransactionAsync(signedTransaction);
+        var receipt = await noSignClient.ExecuteExternalTransactionAsync(signedTransaction);
         await Assert.That(receipt.Status).IsEqualTo(ResponseCode.Success);
         await Assert.That(receipt.TransactionId).IsEqualTo(txid);
 
@@ -109,7 +109,7 @@ public class ExternalTransactionTests
             BodyBytes = body.ToByteString()
         };
 
-        var receipt = await senderClient.SubmitExternalTransactionAsync(signedTransaction.ToByteArray());
+        var receipt = await senderClient.ExecuteExternalTransactionAsync(signedTransaction.ToByteArray());
         await Assert.That(receipt.Status).IsEqualTo(ResponseCode.Success);
         await Assert.That(receipt.TransactionId).IsEqualTo(txid);
 
@@ -159,7 +159,7 @@ public class ExternalTransactionTests
         await senderSignatory.SignAsync(invoice);
         var signedTransaction = invoice.GenerateSignedTransactionFromSignatures(true).ToByteString().Memory;
 
-        var receipt = await client.SubmitExternalTransactionAsync(signedTransaction);
+        var receipt = await client.ExecuteExternalTransactionAsync(signedTransaction);
         await Assert.That(receipt.Status).IsEqualTo(ResponseCode.Success);
         await Assert.That(receipt.TransactionId).IsEqualTo(txid);
 
@@ -177,7 +177,7 @@ public class ExternalTransactionTests
 
         var ex = await Assert.That(async () =>
         {
-            await client.SubmitExternalTransactionAsync(ReadOnlyMemory<byte>.Empty);
+            await client.ExecuteExternalTransactionAsync(ReadOnlyMemory<byte>.Empty);
         }).ThrowsException();
         var ae = ex as ArgumentOutOfRangeException;
         await Assert.That(ae).IsNotNull();
@@ -193,7 +193,7 @@ public class ExternalTransactionTests
 
         var ex = await Assert.That(async () =>
         {
-            await client.SubmitExternalTransactionAsync(signedTx.ToByteArray());
+            await client.ExecuteExternalTransactionAsync(signedTx.ToByteArray());
         }).ThrowsException();
         var ae = ex as ArgumentOutOfRangeException;
         await Assert.That(ae).IsNotNull();
@@ -216,7 +216,7 @@ public class ExternalTransactionTests
 
         var ex = await Assert.That(async () =>
         {
-            await client.SubmitExternalTransactionAsync(signedTx.ToByteArray());
+            await client.ExecuteExternalTransactionAsync(signedTx.ToByteArray());
         }).ThrowsException();
         var ae = ex as ArgumentOutOfRangeException;
         await Assert.That(ae).IsNotNull();
@@ -260,13 +260,13 @@ public class ExternalTransactionTests
         await senderSignatory.SignAsync(invoice);
         var signedTransaction = invoice.GenerateSignedTransactionFromSignatures(true).ToByteString().Memory;
 
-        var receipt = await client.SubmitExternalTransactionAsync(signedTransaction, ctx => ctx.SignaturePrefixTrimLimit = 10);
+        var receipt = await client.ExecuteExternalTransactionAsync(signedTransaction, ctx => ctx.SignaturePrefixTrimLimit = 10);
         await Assert.That(receipt.Status).IsEqualTo(ResponseCode.Success);
         await Assert.That(receipt.TransactionId).IsEqualTo(txid);
 
         var ex = await Assert.That(async () =>
         {
-            await nullEndpointClient.SubmitExternalTransactionAsync(signedTransaction);
+            await nullEndpointClient.ExecuteExternalTransactionAsync(signedTransaction);
         }).ThrowsException();
         var ioe = ex as InvalidOperationException;
         await Assert.That(ioe).IsNotNull();
@@ -313,13 +313,13 @@ public class ExternalTransactionTests
         await senderSignatory.SignAsync(invoice);
         var signedTransaction = invoice.GenerateSignedTransactionFromSignatures(true).ToByteString().Memory;
 
-        var receipt = await client.SubmitExternalTransactionAsync(signedTransaction, ctx => ctx.SignaturePrefixTrimLimit = 10);
+        var receipt = await client.ExecuteExternalTransactionAsync(signedTransaction, ctx => ctx.SignaturePrefixTrimLimit = 10);
         await Assert.That(receipt.Status).IsEqualTo(ResponseCode.Success);
         await Assert.That(receipt.TransactionId).IsEqualTo(txid);
 
         var ex = await Assert.That(async () =>
         {
-            await mismatchClient.SubmitExternalTransactionAsync(signedTransaction);
+            await mismatchClient.ExecuteExternalTransactionAsync(signedTransaction);
         }).ThrowsException();
         var ae = ex as ArgumentException;
         await Assert.That(ae).IsNotNull();
@@ -367,7 +367,7 @@ public class ExternalTransactionTests
         };
         var ex = await Assert.That(async () =>
         {
-            await client.SubmitExternalTransactionAsync(signedTransaction.ToByteArray());
+            await client.ExecuteExternalTransactionAsync(signedTransaction.ToByteArray());
         }).ThrowsException();
         var tex = ex as TransactionException;
         await Assert.That(tex).IsNotNull();
@@ -383,7 +383,7 @@ public class ExternalTransactionTests
 
         var ex = await Assert.That(async () =>
         {
-            await client.SubmitExternalTransactionAsync(signedTx);
+            await client.ExecuteExternalTransactionAsync(signedTx);
         }).ThrowsException();
         var ae = ex as ArgumentException;
         await Assert.That(ae).IsNotNull();
@@ -485,7 +485,7 @@ public class ExternalTransactionTests
             ctx.Signatory = fxSender.PrivateKey;
         });
 
-        var receipt = await noSignClient.SubmitExternalTransactionAsync(signedBytes, ctx =>
+        var receipt = await noSignClient.ExecuteExternalTransactionAsync(signedBytes, ctx =>
         {
             ctx.Payer = null;
             ctx.Signatory = null;

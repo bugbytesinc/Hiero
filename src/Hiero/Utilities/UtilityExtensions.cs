@@ -32,7 +32,7 @@ public static class UtilityExtensions
         var context = client.BuildChildContext(configure);
         try
         {
-            return Engine.GetOrCreateTransactionID(context).AsTxId();
+            return Engine.GetOrCreateTransactionID(context).AsTransactionId();
         }
         finally
         {

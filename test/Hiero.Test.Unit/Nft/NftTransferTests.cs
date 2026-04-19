@@ -17,8 +17,8 @@ public class NftTransferTests
         var receiverHook = new HookCall(2, new byte[] { 0x02 }, 200);
         var transfer = new NftTransfer(nft, from, to, true, senderHook, receiverHook);
         await Assert.That(transfer.Nft).IsEqualTo(nft);
-        await Assert.That(transfer.From).IsEqualTo(from);
-        await Assert.That(transfer.To).IsEqualTo(to);
+        await Assert.That(transfer.Sender).IsEqualTo(from);
+        await Assert.That(transfer.Receiver).IsEqualTo(to);
         await Assert.That(transfer.Delegated).IsTrue();
         await Assert.That(transfer.SenderAllowanceHook).IsEqualTo(senderHook);
         await Assert.That(transfer.ReceiverAllowanceHook).IsEqualTo(receiverHook);

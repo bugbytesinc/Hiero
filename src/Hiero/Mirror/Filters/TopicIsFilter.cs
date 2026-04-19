@@ -9,7 +9,7 @@ namespace Hiero.Mirror.Filters;
 /// the mirror nodes.  Multiple filters may be added
 /// to the same mirror node query.
 /// </summary>
-public class TopicFilter : IMirrorQueryFilter
+public class TopicIsFilter : IMirrorQueryFilter
 {
     /// <summary>
     /// The topic index this query applies to.
@@ -28,7 +28,7 @@ public class TopicFilter : IMirrorQueryFilter
     /// <param name="topic">
     /// The topic value to filter by.
     /// </param>
-    public TopicFilter(int index, BigInteger topic)
+    public TopicIsFilter(int index, BigInteger topic)
     {
         if (index < 0 || index > 3)
         {

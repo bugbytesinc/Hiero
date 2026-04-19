@@ -311,7 +311,7 @@ public class CreateContractTests
             ctx.Payer = fxPayer;
             ctx.Signatory = fxPayer;
         });
-        var pendingReceipt = await payerClient.GetReceiptAsync(schedulingReceipt.ScheduledTxId);
+        var pendingReceipt = await payerClient.GetReceiptAsync(schedulingReceipt.ScheduledTransactionId);
         await Assert.That(pendingReceipt.Status).IsEqualTo(ResponseCode.Success);
 
         var createReceipt = pendingReceipt as CreateContractReceipt;

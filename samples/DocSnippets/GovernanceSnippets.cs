@@ -27,7 +27,7 @@ public static class GovernanceSnippets
         // Register a new consensus node in the network address book. Only
         // a council-privileged payer can invoke this. The receipt carries
         // the network-assigned NodeId which is required by all later
-        // UpdateConsensusNode / RemoveConsensusNode calls.
+        // UpdateConsensusNode / DeleteConsensusNode calls.
         var receipt = await client.AddConsensusNodeAsync(new AddConsensusNodeParams
         {
             Account = newNodeAccount,
@@ -59,13 +59,13 @@ public static class GovernanceSnippets
         #endregion
     }
 
-    public static async Task RemoveConsensusNode(ConsensusClient client, ulong nodeId)
+    public static async Task DeleteConsensusNode(ConsensusClient client, ulong nodeId)
     {
-        #region RemoveConsensusNode
-        // Remove a node from the address book. Effective at the next network
+        #region DeleteConsensusNode
+        // Delete a node from the address book. Effective at the next network
         // stake-weight rebalance. The node's AdminKey must sign.
-        var receipt = await client.RemoveConsensusNodeAsync(nodeId);
-        Console.WriteLine($"Remove status: {receipt.Status}");
+        var receipt = await client.DeleteConsensusNodeAsync(nodeId);
+        Console.WriteLine($"Delete status: {receipt.Status}");
         #endregion
     }
 

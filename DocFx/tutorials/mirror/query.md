@@ -31,7 +31,7 @@ if (account is not null)
 ## Query transaction history
 
 ```csharp
-await foreach (var tx in mirror.GetTransactionsForAccountAsync(
+await foreach (var tx in mirror.GetAccountTransactionsAsync(
     accountId,
     new LimitFilter(25),
     new OrderByFilter("desc")))
@@ -59,7 +59,7 @@ Console.WriteLine($"Owner: {nft?.AccountId}, Metadata: {nft?.Metadata}");
 ## Query HCS messages
 
 ```csharp
-await foreach (var msg in mirror.GetHcsMessagesAsync(
+await foreach (var msg in mirror.GetTopicMessagesAsync(
     topicId,
     new TimestampAfterFilter(since)))
 {

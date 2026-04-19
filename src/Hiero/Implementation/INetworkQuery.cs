@@ -15,15 +15,15 @@ internal interface INetworkQuery
         var header = response.ResponseHeader;
         if (header == null)
         {
-            throw new PrecheckException($"Query Failed to Produce a Response.", transactionId.AsTxId(), ResponseCode.Unknown, 0);
+            throw new PrecheckException($"Query Failed to Produce a Response.", transactionId.AsTransactionId(), ResponseCode.Unknown, 0);
         }
         if (header.NodeTransactionPrecheckCode == ResponseCodeEnum.InsufficientTxFee)
         {
-            throw new PrecheckException($"Query Failed because the network changed the published price of the Query before the paying transaction could be signed and submitted: {header.NodeTransactionPrecheckCode}", transactionId.AsTxId(), (ResponseCode)header.NodeTransactionPrecheckCode, header.Cost);
+            throw new PrecheckException($"Query Failed because the network changed the published price of the Query before the paying transaction could be signed and submitted: {header.NodeTransactionPrecheckCode}", transactionId.AsTransactionId(), (ResponseCode)header.NodeTransactionPrecheckCode, header.Cost);
         }
         if (header.NodeTransactionPrecheckCode != ResponseCodeEnum.Ok)
         {
-            throw new PrecheckException($"Query Transaction Failed Pre-Check: {header.NodeTransactionPrecheckCode}", transactionId.AsTxId(), (ResponseCode)header.NodeTransactionPrecheckCode, header.Cost);
+            throw new PrecheckException($"Query Transaction Failed Pre-Check: {header.NodeTransactionPrecheckCode}", transactionId.AsTransactionId(), (ResponseCode)header.NodeTransactionPrecheckCode, header.Cost);
         }
     }
 }

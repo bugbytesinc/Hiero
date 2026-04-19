@@ -13,7 +13,7 @@ namespace Hiero;
 /// Apply shared metadata to several serials from the same collection:
 /// <code source="../../../samples/DocSnippets/NftSnippets.cs" region="UpdateNftMetadataBatch" language="csharp"/>
 /// </example>
-public sealed class UpdateNftsParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
+public sealed class UpdateNftMetadataParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
     /// The Token ID of the NFT collection containing the instances to update.
@@ -71,7 +71,7 @@ public sealed class UpdateNftsParams : TransactionParams<TransactionReceipt>, IN
 /// Extension methods for updating NFT instance metadata on the network.
 /// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
-public static class UpdateNftsExtensions
+public static class UpdateNftMetadataExtensions
 {
     /// <summary>
     /// Updates the metadata of a single NFT instance.
@@ -104,7 +104,7 @@ public static class UpdateNftsExtensions
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<TransactionReceipt> UpdateNftMetadataAsync(this ConsensusClient client, Nft nft, ReadOnlyMemory<byte> metadata, Action<IConsensusContext>? configure = null)
     {
-        return client.ExecuteAsync(new UpdateNftsParams { Token = nft.Token, SerialNumbers = [nft.SerialNumber], Metadata = metadata }, configure);
+        return client.ExecuteAsync(new UpdateNftMetadataParams { Token = nft.Token, SerialNumbers = [nft.SerialNumber], Metadata = metadata }, configure);
     }
     /// <summary>
     /// Updates the metadata of one or more NFT instances.
@@ -132,7 +132,7 @@ public static class UpdateNftsExtensions
     /// <code source="../../../samples/DocSnippets/NftSnippets.cs" region="UpdateNftMetadataBatch" language="csharp"/>
     /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Task<TransactionReceipt> UpdateNftsMetadataAsync(this ConsensusClient client, UpdateNftsParams updateParams, Action<IConsensusContext>? configure = null)
+    public static Task<TransactionReceipt> UpdateNftsMetadataAsync(this ConsensusClient client, UpdateNftMetadataParams updateParams, Action<IConsensusContext>? configure = null)
     {
         return client.ExecuteAsync(updateParams, configure);
     }

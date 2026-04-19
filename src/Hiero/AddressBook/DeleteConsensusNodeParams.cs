@@ -7,11 +7,11 @@ using System.Runtime.CompilerServices;
 
 namespace Hiero;
 /// <summary>
-/// Transaction Parameters for removing a consensus node from the network address book.
+/// Transaction Parameters for deleting a consensus node from the network address book.
 /// </summary>
 /// <example>
 /// Retire a node by NodeId. Effective at the next address-book rebalance:
-/// <code source="../../../samples/DocSnippets/GovernanceSnippets.cs" region="RemoveConsensusNode" language="csharp"/>
+/// <code source="../../../samples/DocSnippets/GovernanceSnippets.cs" region="DeleteConsensusNode" language="csharp"/>
 /// </example>
 /// <remarks>
 /// This is a privileged transaction requiring Hedera governing council authorization.
@@ -19,7 +19,7 @@ namespace Hiero;
 /// network at the next upgrade (freeze with PREPARE_UPGRADE). Node identifiers are
 /// never reused after deletion.
 /// </remarks>
-public sealed class RemoveConsensusNodeParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
+public sealed class DeleteConsensusNodeParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
     /// The identifier of the node to delete. This field is REQUIRED.
@@ -50,13 +50,13 @@ public sealed class RemoveConsensusNodeParams : TransactionParams<TransactionRec
     string INetworkParams<TransactionReceipt>.OperationDescription => "Delete Node";
 }
 /// <summary>
-/// Extension methods for removing consensus nodes from the network address book.
+/// Extension methods for deleting consensus nodes from the network address book.
 /// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
-public static class RemoveConsensusNodeExtensions
+public static class DeleteConsensusNodeExtensions
 {
     /// <summary>
-    /// Removes a consensus node from the network address book.
+    /// Deletes a consensus node from the network address book.
     /// </summary>
     /// <remarks>
     /// This is a privileged transaction requiring Hedera governing council authorization.
@@ -82,15 +82,15 @@ public static class RemoveConsensusNodeExtensions
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
     /// <example>
-    /// <code source="../../../samples/DocSnippets/GovernanceSnippets.cs" region="RemoveConsensusNode" language="csharp"/>
+    /// <code source="../../../samples/DocSnippets/GovernanceSnippets.cs" region="DeleteConsensusNode" language="csharp"/>
     /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Task<TransactionReceipt> RemoveConsensusNodeAsync(this ConsensusClient client, ulong nodeId, Action<IConsensusContext>? configure = null)
+    public static Task<TransactionReceipt> DeleteConsensusNodeAsync(this ConsensusClient client, ulong nodeId, Action<IConsensusContext>? configure = null)
     {
-        return client.ExecuteAsync(new RemoveConsensusNodeParams { NodeId = nodeId }, configure);
+        return client.ExecuteAsync(new DeleteConsensusNodeParams { NodeId = nodeId }, configure);
     }
     /// <summary>
-    /// Removes a consensus node from the network address book.
+    /// Deletes a consensus node from the network address book.
     /// </summary>
     /// <param name="client">
     /// The Consensus Node Client orchestrating the request.
@@ -112,10 +112,10 @@ public static class RemoveConsensusNodeExtensions
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
     /// <example>
-    /// <code source="../../../samples/DocSnippets/GovernanceSnippets.cs" region="RemoveConsensusNode" language="csharp"/>
+    /// <code source="../../../samples/DocSnippets/GovernanceSnippets.cs" region="DeleteConsensusNode" language="csharp"/>
     /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Task<TransactionReceipt> RemoveConsensusNodeAsync(this ConsensusClient client, RemoveConsensusNodeParams deleteParams, Action<IConsensusContext>? configure = null)
+    public static Task<TransactionReceipt> DeleteConsensusNodeAsync(this ConsensusClient client, DeleteConsensusNodeParams deleteParams, Action<IConsensusContext>? configure = null)
     {
         return client.ExecuteAsync(deleteParams, configure);
     }

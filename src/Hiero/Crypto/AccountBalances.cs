@@ -118,13 +118,13 @@ public static class ContractBalancesExtensions
         return new AccountBalances(await Engine.QueryAsync(client, new CryptoGetAccountBalanceQuery { ContractID = new ContractID(contract) }, cancellationToken, configure).ConfigureAwait(false)).Crypto;
     }
     /// <summary>
-    /// Retrieves the crypto and token balances from the network for a given address.
+    /// Retrieves the crypto and token balances from the network for a given account.
     /// </summary>
     /// <param name="client">
     /// The Consensus Node Client to query.
     /// </param>
-    /// <param name="address">
-    /// The hedera network address to retrieve the balance of.
+    /// <param name="account">
+    /// The hedera account to retrieve the balance of.
     /// </param>
     /// <param name="cancellationToken">Optional cancellation token.</param>
     /// <param name="configure">
@@ -137,18 +137,18 @@ public static class ContractBalancesExtensions
     /// account in addition to a list of all tokens held by the account
     /// with their balances.
     /// </returns>
-    public static async Task<AccountBalances> GetAccountBalancesAsync(this ConsensusClient client, EntityId address, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
+    public static async Task<AccountBalances> GetAccountBalancesAsync(this ConsensusClient client, EntityId account, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
     {
-        return new AccountBalances(await Engine.QueryAsync(client, new CryptoGetAccountBalanceQuery { AccountID = new AccountID(address) }, cancellationToken, configure).ConfigureAwait(false));
+        return new AccountBalances(await Engine.QueryAsync(client, new CryptoGetAccountBalanceQuery { AccountID = new AccountID(account) }, cancellationToken, configure).ConfigureAwait(false));
     }
     /// <summary>
-    /// Retrieves the balance in tinybars from the network for a given address.
+    /// Retrieves the balance in tinybars from the network for a given account.
     /// </summary>
     /// <param name="client">
     /// The Consensus Node Client to query.
     /// </param>
-    /// <param name="address">
-    /// The hedera network address to retrieve the balance of.
+    /// <param name="account">
+    /// The hedera account to retrieve the balance of.
     /// </param>
     /// <param name="cancellationToken">Optional cancellation token.</param>
     /// <param name="configure">
@@ -157,13 +157,13 @@ public static class ContractBalancesExtensions
     /// It is executed prior to submitting the request to the network.
     /// </param>
     /// <returns>
-    /// The balance of the associated address.
+    /// The balance of the associated account.
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
-    public static async Task<ulong> GetAccountBalanceAsync(this ConsensusClient client, EntityId address, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
+    public static async Task<ulong> GetAccountBalanceAsync(this ConsensusClient client, EntityId account, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
     {
-        return new AccountBalances(await Engine.QueryAsync(client, new CryptoGetAccountBalanceQuery { AccountID = new AccountID(address) }, cancellationToken, configure).ConfigureAwait(false)).Crypto;
+        return new AccountBalances(await Engine.QueryAsync(client, new CryptoGetAccountBalanceQuery { AccountID = new AccountID(account) }, cancellationToken, configure).ConfigureAwait(false)).Crypto;
     }
 }

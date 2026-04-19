@@ -10,12 +10,12 @@ Transferring moves fungible token units from one account to another. The **recei
 
 ```csharp
 // Transfer 1,000 units of a fungible token between two accounts.
-var receipt = await client.TransferTokensAsync(token, sender, receiver, 1_000);
+var receipt = await client.TransferTokenAsync(token, sender, receiver, 1_000);
 Console.WriteLine($"Status: {receipt.Status}");
 ```
 
 > [!NOTE]
-> The method name is `TransferTokensAsync` (plural) — not `TransferAsync`, which is reserved for HBAR transfers.
+> The method name is `TransferTokenAsync` — not `TransferAsync`, which is reserved for HBAR transfers.
 
 ## Multi-party transfer
 

@@ -21,19 +21,19 @@ namespace Hiero;
 public sealed class UpdateAccountParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
-    /// The network address of account to update.
+    /// The address of the account to update.
     /// </summary>
-    public EntityId Address { get; set; } = default!;
+    public EntityId Account { get; set; } = default!;
     /// <summary>
-    /// Replace this Address's current key signing requirements with new signing
+    /// Replace this account's current key signing requirements with new signing
     /// requirements.</summary>
     /// <remarks>
     /// For this request to be accepted by the network, both the current private
-    /// key(s) for this account and the new private key(s) must sign the transaction.  
-    /// The existing key must sign for security and the new key must sign as a 
-    /// safeguard to avoid accidentally changing the key to an invalid value.  
-    /// Either the <see cref="IConsensusContext.Payer"/> account or 
-    /// <see cref="UpdateAccountParams.Address"/> may carry the new private key 
+    /// key(s) for this account and the new private key(s) must sign the transaction.
+    /// The existing key must sign for security and the new key must sign as a
+    /// safeguard to avoid accidentally changing the key to an invalid value.
+    /// Either the <see cref="IConsensusContext.Payer"/> account or
+    /// <see cref="UpdateAccountParams.Account"/> may carry the new private key
     /// for signing to meet this requirement.
     /// </remarks>
     public Endorsement? Endorsement { get; set; }
@@ -116,9 +116,9 @@ public sealed class UpdateAccountParams : TransactionParams<TransactionReceipt>,
     public CancellationToken? CancellationToken { get; set; }
     INetworkTransaction INetworkParams<TransactionReceipt>.CreateNetworkTransaction()
     {
-        if (Address is null)
+        if (Account is null)
         {
-            throw new ArgumentNullException(nameof(Address), "Account is missing. Please check that it is not null.");
+            throw new ArgumentNullException(nameof(Account), "Account is missing. Please check that it is not null.");
         }
         if (Endorsement.None.Equals(Endorsement))
         {
@@ -139,7 +139,7 @@ public sealed class UpdateAccountParams : TransactionParams<TransactionReceipt>,
             throw new ArgumentException("The Account Updates contains no update properties, it is blank.", nameof(UpdateAccountParams));
         }
         var result = new CryptoUpdateTransactionBody();
-        result.AccountIDToUpdate = new AccountID(Address);
+        result.AccountIDToUpdate = new AccountID(Account);
         if (Endorsement is not null)
         {
             result.Key = new Key(Endorsement);

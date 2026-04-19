@@ -14,7 +14,7 @@ public class ConfiscateTokenTests
         var xferAmount = 2 * fxToken.CreateParams.Circulation / (ulong)Generator.Integer(3, 5);
         var expectedTreasury = fxToken.CreateParams.Circulation - xferAmount;
 
-        var xferReceipt = await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
+        var xferReceipt = await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
@@ -23,7 +23,7 @@ public class ConfiscateTokenTests
         await Assert.That(await fxToken.TreasuryAccount.GetTokenBalanceAsync(fxToken)).IsEqualTo((long)expectedTreasury);
         await Assert.That((await client.GetTokenInfoAsync(fxToken)).Circulation).IsEqualTo(fxToken.CreateParams.Circulation);
 
-        var receipt = await client.ConfiscateTokensAsync(new ConfiscateTokenParams
+        var receipt = await client.ConfiscateTokenAsync(new ConfiscateTokenParams
         {
             Token = fxToken.CreateReceipt!.Token,
             Holder = fxAccount,
@@ -44,7 +44,7 @@ public class ConfiscateTokenTests
         await using var fxAccount = await TestAliasAccount.CreateAsync();
         await using var fxToken = await TestToken.CreateAsync(fx => fx.CreateParams.GrantKycEndorsement = null);
         await using var client = await TestNetwork.CreateClientAsync();
-        await client.AssociateTokenAsync(fxAccount, fxToken.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxToken.CreateReceipt!.Token, fxAccount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount.PrivateKey);
         });
@@ -52,7 +52,7 @@ public class ConfiscateTokenTests
         var xferAmount = 2 * fxToken.CreateParams.Circulation / (ulong)Generator.Integer(3, 5);
         var expectedTreasury = fxToken.CreateParams.Circulation - xferAmount;
 
-        var xferReceipt = await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
+        var xferReceipt = await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
@@ -61,7 +61,7 @@ public class ConfiscateTokenTests
         await Assert.That(await fxToken.TreasuryAccount.GetTokenBalanceAsync(fxToken)).IsEqualTo((long)expectedTreasury);
         await Assert.That((await client.GetTokenInfoAsync(fxToken)).Circulation).IsEqualTo(fxToken.CreateParams.Circulation);
 
-        var receipt = await client.ConfiscateTokensAsync(new ConfiscateTokenParams
+        var receipt = await client.ConfiscateTokenAsync(new ConfiscateTokenParams
         {
             Token = fxToken.CreateReceipt!.Token,
             Holder = fxAccount.Alias,
@@ -85,7 +85,7 @@ public class ConfiscateTokenTests
         var xferAmount = 2ul;
         var expectedTreasury = fxToken.CreateParams.Circulation - xferAmount;
 
-        var xferReceipt = await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
+        var xferReceipt = await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
@@ -94,7 +94,7 @@ public class ConfiscateTokenTests
         await Assert.That(await fxToken.TreasuryAccount.GetTokenBalanceAsync(fxToken)).IsEqualTo((long)expectedTreasury);
         await Assert.That((await client.GetTokenInfoAsync(fxToken)).Circulation).IsEqualTo(fxToken.CreateParams.Circulation);
 
-        var receipt = await client.ConfiscateTokensAsync(new ConfiscateTokenParams
+        var receipt = await client.ConfiscateTokenAsync(new ConfiscateTokenParams
         {
             Token = fxToken.CreateReceipt!.Token,
             Holder = fxAccount,
@@ -118,7 +118,7 @@ public class ConfiscateTokenTests
         var xferAmount = 2ul;
         var expectedTreasury = fxToken.CreateParams.Circulation - xferAmount;
 
-        var receipt = await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
+        var receipt = await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
@@ -127,7 +127,7 @@ public class ConfiscateTokenTests
         await Assert.That(await fxToken.TreasuryAccount.GetTokenBalanceAsync(fxToken)).IsEqualTo((long)expectedTreasury);
         await Assert.That((await client.GetTokenInfoAsync(fxToken)).Circulation).IsEqualTo(fxToken.CreateParams.Circulation);
 
-        var confiscateReceipt = await client.ConfiscateTokensAsync(new ConfiscateTokenParams
+        var confiscateReceipt = await client.ConfiscateTokenAsync(new ConfiscateTokenParams
         {
             Token = fxToken.CreateReceipt!.Token,
             Holder = fxAccount,
@@ -160,7 +160,7 @@ public class ConfiscateTokenTests
         var xferAmount = 2ul;
         var expectedTreasury = fxToken.CreateParams.Circulation - xferAmount;
 
-        var receipt = await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
+        var receipt = await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
@@ -169,7 +169,7 @@ public class ConfiscateTokenTests
         await Assert.That(await fxToken.TreasuryAccount.GetTokenBalanceAsync(fxToken)).IsEqualTo((long)expectedTreasury);
         await Assert.That((await client.GetTokenInfoAsync(fxToken)).Circulation).IsEqualTo(fxToken.CreateParams.Circulation);
 
-        var confiscateReceipt = await client.ConfiscateTokensAsync(fxToken, fxAccount, xferAmount, ctx =>
+        var confiscateReceipt = await client.ConfiscateTokenAsync(fxToken, fxAccount, xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(TestNetwork.PrivateKey, fxToken.ConfiscatePrivateKey);
         });
@@ -200,7 +200,7 @@ public class ConfiscateTokenTests
         var xferAmount = 2ul;
         var expectedTreasury = fxToken.CreateParams.Circulation - xferAmount;
 
-        var xferReceipt = await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
+        var xferReceipt = await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
@@ -209,7 +209,7 @@ public class ConfiscateTokenTests
         await Assert.That(await fxToken.TreasuryAccount.GetTokenBalanceAsync(fxToken)).IsEqualTo((long)expectedTreasury);
         await Assert.That((await client.GetTokenInfoAsync(fxToken)).Circulation).IsEqualTo(fxToken.CreateParams.Circulation);
 
-        var receipt = await client.ConfiscateTokensAsync(new ConfiscateTokenParams
+        var receipt = await client.ConfiscateTokenAsync(new ConfiscateTokenParams
         {
             Token = fxToken.CreateReceipt!.Token,
             Holder = fxAccount,
@@ -237,7 +237,7 @@ public class ConfiscateTokenTests
         var xferAmount = 2ul;
         var expectedTreasury = fxToken.CreateParams.Circulation - xferAmount;
 
-        var receipt = await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
+        var receipt = await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
@@ -248,7 +248,7 @@ public class ConfiscateTokenTests
 
         var ex = await Assert.That(async () =>
         {
-            await client.ConfiscateTokensAsync(new ConfiscateTokenParams
+            await client.ConfiscateTokenAsync(new ConfiscateTokenParams
             {
                 Token = fxToken.CreateReceipt!.Token,
                 Holder = fxAccount,
@@ -275,7 +275,7 @@ public class ConfiscateTokenTests
         var xferAmount = 2ul;
         var expectedTreasury = fxToken.CreateParams.Circulation - xferAmount;
 
-        var receipt = await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
+        var receipt = await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
@@ -284,7 +284,7 @@ public class ConfiscateTokenTests
         await Assert.That(await fxToken.TreasuryAccount.GetTokenBalanceAsync(fxToken)).IsEqualTo((long)expectedTreasury);
         await Assert.That((await client.GetTokenInfoAsync(fxToken)).Circulation).IsEqualTo(fxToken.CreateParams.Circulation);
 
-        var confiscateReceipt = await client.ConfiscateTokensAsync(new ConfiscateTokenParams
+        var confiscateReceipt = await client.ConfiscateTokenAsync(new ConfiscateTokenParams
         {
             Token = fxToken.CreateReceipt!.Token,
             Holder = fxAccount,
@@ -315,7 +315,7 @@ public class ConfiscateTokenTests
         var xferAmount = 2ul;
         var expectedTreasury = fxToken.CreateParams.Circulation - xferAmount;
 
-        var receipt = await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
+        var receipt = await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
@@ -326,7 +326,7 @@ public class ConfiscateTokenTests
 
         var ex = await Assert.That(async () =>
         {
-            await client.ConfiscateTokensAsync(fxToken, fxAccount, xferAmount);
+            await client.ConfiscateTokenAsync(fxToken, fxAccount, xferAmount);
         }).ThrowsException();
         var tex = ex as TransactionException;
         await Assert.That(tex).IsNotNull();
@@ -351,7 +351,7 @@ public class ConfiscateTokenTests
         var xferAmount = 2ul;
         var expectedTreasury = fxToken.CreateParams.Circulation - xferAmount;
 
-        var receipt = await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
+        var receipt = await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
@@ -362,7 +362,7 @@ public class ConfiscateTokenTests
 
         var ex = await Assert.That(async () =>
         {
-            await client.ConfiscateTokensAsync(new ConfiscateTokenParams
+            await client.ConfiscateTokenAsync(new ConfiscateTokenParams
             {
                 Token = fxToken.CreateReceipt!.Token,
                 Holder = fxAccount,
@@ -388,7 +388,7 @@ public class ConfiscateTokenTests
         await using var client = await TestNetwork.CreateClientAsync();
         var xferAmount = 2ul;
 
-        await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
+        await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });

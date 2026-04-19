@@ -8,17 +8,17 @@ using static Hiero.Mirror.Implementation.MirrorRestClientUtils;
 
 namespace Hiero.Mirror;
 /// <summary>
-/// Represents an HCS Message retrieved from the mirror node.
+/// Represents a topic message retrieved from the mirror node.
 /// </summary>
-public class HcsMessageData
+public class TopicMessageData
 {
     /// <summary>
-    /// HCS Message Chunk Information.
+    /// Chunk metadata for this message, when part of a segmented submit.
     /// </summary>
     [JsonPropertyName("chunk_info")]
-    public ChunkInfo? ChunkInfo { get; set; }
+    public ChunkData? Chunk { get; set; }
     /// <summary>
-    /// HCS Message Consensus Timestamp.
+    /// Topic message consensus timestamp.
     /// </summary>
     [JsonPropertyName("consensus_timestamp")]
     public ConsensusTimeStamp TimeStamp { get; set; }
@@ -44,62 +44,62 @@ public class HcsMessageData
     [JsonConverter(typeof(IntMirrorConverter))]
     public int HashVersion { get; set; }
     /// <summary>
-    /// Sequence number of this HCS message.
+    /// Sequence number of this topic message.
     /// </summary>
     [JsonPropertyName("sequence_number")]
     [JsonConverter(typeof(UnsignedLongMirrorConverter))]
     public ulong SequenceNumber { get; set; }
     /// <summary>
-    /// The HCS message stream topic ID for this message.
+    /// The topic ID for this message.
     /// </summary>
     [JsonPropertyName("topic_id")]
     public EntityId TopicId { get; set; } = default!;
 }
 /// <summary>
-/// Extension methods for querying HCS message data from the mirror node.
+/// Extension methods for querying topic message data from the mirror node.
 /// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
-public static class HcsMessageDataExtensions
+public static class TopicMessageDataExtensions
 {
     /// <summary>
-    /// Retrieves an HCS message with the given topic and sequence number.
+    /// Retrieves a topic message with the given topic and sequence number.
     /// </summary>
     /// <param name="client">
     /// Mirror Rest Client to use for the request.
     /// </param>
     /// <param name="topic">
-    /// The HCS message topic to retrieve.
+    /// The topic to retrieve the message from.
     /// </param>
     /// <param name="sequenceNumber">
     /// The sequence number of the message within the topic stream to retrieve.
     /// </param>
     /// <returns>
-    /// The HCS Message information or null if not found.
-    /// </returns>    
-    public static Task<HcsMessageData?> GetHcsMessageAsync(this MirrorRestClient client, EntityId topic, ulong sequenceNumber)
+    /// The topic message information or null if not found.
+    /// </returns>
+    public static Task<TopicMessageData?> GetTopicMessageAsync(this MirrorRestClient client, EntityId topic, ulong sequenceNumber)
     {
-        return client.GetSingleItemAsync<HcsMessageData>($"topics/{topic}/messages/{sequenceNumber}", MirrorJsonContext.Default.HcsMessageData);
+        return client.GetSingleItemAsync<TopicMessageData>($"topics/{topic}/messages/{sequenceNumber}", MirrorJsonContext.Default.TopicMessageData);
     }
     /// <summary>
-    /// Retrieves a list of HCS messages.  Messages may be filtered by a starting
+    /// Retrieves a list of topic messages.  Messages may be filtered by a starting
     /// sequence number or consensus timestamp.
     /// </summary>
     /// <param name="client">
     /// Mirror Rest Client to use for the request.
     /// </param>
     /// <param name="topic">
-    /// The topic id of the HCS stream.
+    /// The topic id of the message stream.
     /// </param>
     /// <param name="filters">
     /// Additional query filters if desired.
     /// </param>
     /// <returns>
-    /// An enumerable of HCS Messages meeting the given criteria, may be empty if 
+    /// An enumerable of topic messages meeting the given criteria, may be empty if
     /// none are found.
     /// </returns>
-    public static IAsyncEnumerable<HcsMessageData> GetHcsMessagesAsync(this MirrorRestClient client, EntityId topic, params IMirrorQueryFilter[] filters)
+    public static IAsyncEnumerable<TopicMessageData> GetTopicMessagesAsync(this MirrorRestClient client, EntityId topic, params IMirrorQueryFilter[] filters)
     {
         var path = GenerateInitialPath($"topics/{topic}/messages", [new LimitFilter(100), .. filters]);
-        return client.GetPagedItemsAsync<HcsMessageDataPage, HcsMessageData>(path, MirrorJsonContext.Default.HcsMessageDataPage);
+        return client.GetPagedItemsAsync<TopicMessageDataPage, TopicMessageData>(path, MirrorJsonContext.Default.TopicMessageDataPage);
     }
 }

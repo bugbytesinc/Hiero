@@ -237,7 +237,7 @@ public class MirrorFilterTests
     public async Task TopicFilter_Index0_Has_Correct_Name()
     {
         var topic = new BigInteger(Generator.Integer(1, 100000));
-        var filter = new TopicFilter(0, topic);
+        var filter = new TopicIsFilter(0, topic);
         await Assert.That(filter.Name).IsEqualTo("topic0");
     }
 
@@ -245,7 +245,7 @@ public class MirrorFilterTests
     public async Task TopicFilter_Index1_Has_Correct_Name()
     {
         var topic = new BigInteger(Generator.Integer(1, 100000));
-        var filter = new TopicFilter(1, topic);
+        var filter = new TopicIsFilter(1, topic);
         await Assert.That(filter.Name).IsEqualTo("topic1");
     }
 
@@ -253,7 +253,7 @@ public class MirrorFilterTests
     public async Task TopicFilter_Index2_Has_Correct_Name()
     {
         var topic = new BigInteger(Generator.Integer(1, 100000));
-        var filter = new TopicFilter(2, topic);
+        var filter = new TopicIsFilter(2, topic);
         await Assert.That(filter.Name).IsEqualTo("topic2");
     }
 
@@ -261,7 +261,7 @@ public class MirrorFilterTests
     public async Task TopicFilter_Index3_Has_Correct_Name()
     {
         var topic = new BigInteger(Generator.Integer(1, 100000));
-        var filter = new TopicFilter(3, topic);
+        var filter = new TopicIsFilter(3, topic);
         await Assert.That(filter.Name).IsEqualTo("topic3");
     }
 
@@ -270,7 +270,7 @@ public class MirrorFilterTests
     {
         var index = Generator.Integer(0, 3);
         var topic = new BigInteger(Generator.Integer(1, 1_000_000));
-        var filter = new TopicFilter(index, topic);
+        var filter = new TopicIsFilter(index, topic);
         var expected = "0x" + Hex.FromBytes(topic.ToByteArray(true, true)).PadLeft(64, '0');
         await Assert.That(filter.Value).IsEqualTo(expected);
     }
@@ -278,7 +278,7 @@ public class MirrorFilterTests
     [Test]
     public async Task TopicFilter_Has_Correct_Value_For_Zero_Topic()
     {
-        var filter = new TopicFilter(0, BigInteger.Zero);
+        var filter = new TopicIsFilter(0, BigInteger.Zero);
         await Assert.That(filter.Value).IsEqualTo("0x" + new string('0', 64));
     }
 
@@ -286,14 +286,14 @@ public class MirrorFilterTests
     public async Task TopicFilter_Throws_For_Negative_Index()
     {
         var topic = new BigInteger(1);
-        await Assert.That(() => new TopicFilter(-1, topic)).Throws<ArgumentOutOfRangeException>();
+        await Assert.That(() => new TopicIsFilter(-1, topic)).Throws<ArgumentOutOfRangeException>();
     }
 
     [Test]
     public async Task TopicFilter_Throws_For_Index_4()
     {
         var topic = new BigInteger(1);
-        await Assert.That(() => new TopicFilter(4, topic)).Throws<ArgumentOutOfRangeException>();
+        await Assert.That(() => new TopicIsFilter(4, topic)).Throws<ArgumentOutOfRangeException>();
     }
 
     [Test]
@@ -302,7 +302,7 @@ public class MirrorFilterTests
         var topic = new BigInteger(42);
         for (int index = 0; index <= 3; index++)
         {
-            var filter = new TopicFilter(index, topic);
+            var filter = new TopicIsFilter(index, topic);
             await Assert.That(filter.Name).IsEqualTo($"topic{index}");
         }
     }

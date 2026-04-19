@@ -9,7 +9,7 @@ namespace Hiero;
 /// <summary>
 /// Identifies a Hedera Address, Token, File, Topics, or Contract, typically
 /// in the native format of <code>shard.realm.num</code>, but can also hold
-/// a Key Alias or EVM Payer if such an Entity TransactionId type is required.
+/// a Key Alias or EVM Payer if such an Entity Id type is required.
 /// </summary>
 [DebuggerDisplay("{ToString(),nq}")]
 [JsonConverter(typeof(EntityIdConverter))]
@@ -40,20 +40,20 @@ public sealed record EntityId : IEquatable<EntityId>
     /// </summary>
     public long AccountNum { get; private init; }
     /// <summary>
-    /// Indicates if this Entity TransactionId contains a [shard.realm.num] native address.
+    /// Indicates if this Entity Id contains a [shard.realm.num] native address.
     /// </summary>
     public bool IsShardRealmNum => _evmAddress is null && _keyAlias is null;
     /// <summary>
-    /// Indicates if this Entity TransactionId contains an EVM Payer (EIP-1014) format.
+    /// Indicates if this Entity Id contains an EVM Payer (EIP-1014) format.
     /// </summary>
     public bool IsEvmAddress => _evmAddress is not null;
     /// <summary>
-    /// Indicates if this Entity TransactionId contains a Key Alias format.
+    /// Indicates if this Entity Id contains a Key Alias format.
     /// </summary>
     public bool IsKeyAlias => _keyAlias is not null;
     /// <summary>
-    /// A special designation of an Entity TransactionId that can't be created.
-    /// It represents the absence of a valid Entity TransactionId.  The network will
+    /// A special designation of an Entity Id that can't be created.
+    /// It represents the absence of a valid Entity Id.  The network will
     /// interpret as "no account/file/topic/token/contract" when applied 
     /// to change parameters. (typically the value null is interpreted 
     /// as "make no change"). In this way, it is possible to remove a 
@@ -92,7 +92,7 @@ public sealed record EntityId : IEquatable<EntityId>
     }
 
     /// <summary>
-    /// Constructor creating a form of Entity TransactionId that represents a Key Alias.
+    /// Constructor creating a form of Entity Id that represents a Key Alias.
     /// </summary>
     /// <param name="shardNum">
     /// The shard number for this Entity ID.
@@ -101,7 +101,7 @@ public sealed record EntityId : IEquatable<EntityId>
     /// The realm number for this Entity ID.
     /// </param>
     /// <param name="keyAlias">
-    /// The Ed25519 or ECDSA Secp 256K1 Endorsement this Entity TransactionId will encapsulate.
+    /// The Ed25519 or ECDSA Secp 256K1 Endorsement this Entity Id will encapsulate.
     /// </param>
     public EntityId(long shardNum, long realmNum, Endorsement keyAlias)
     {
@@ -127,7 +127,7 @@ public sealed record EntityId : IEquatable<EntityId>
         _keyAlias = keyAlias;
     }
     /// <summary>
-    /// Constructor creating a form of Entity TransactionId that represents an EVM Address.
+    /// Constructor creating a form of Entity Id that represents an EVM Address.
     /// </summary>
     /// <param name="shardNum">
     /// The shard number for this Entity ID.
@@ -136,7 +136,7 @@ public sealed record EntityId : IEquatable<EntityId>
     /// The realm number for this Entity ID.
     /// </param>
     /// <param name="evmAddress">
-    /// The EVM Address this Entity TransactionId will encapsulate.
+    /// The EVM Address this Entity Id will encapsulate.
     /// </param>
     public EntityId(long shardNum, long realmNum, EvmAddress evmAddress)
     {
@@ -155,7 +155,7 @@ public sealed record EntityId : IEquatable<EntityId>
     }
     /// <summary>
     /// Attempts to retrieve the Evm Payer wrapped by this
-    /// Entity TransactionId instance.  Will return false if this Entity TransactionId
+    /// Entity Id instance.  Will return false if this Entity Id
     /// does not hold an Evm Payer.
     /// </summary>
     /// <param name="evmAddress">
@@ -172,7 +172,7 @@ public sealed record EntityId : IEquatable<EntityId>
     }
     /// <summary>
     /// Attempts to retrieve the Key Alias Endorsement wrapped by 
-    /// this Entity TransactionId instance.  Will return false if this Entity TransactionId
+    /// this Entity Id instance.  Will return false if this Entity Id
     /// does not hold a Key Alias.
     /// </summary>
     /// <param name="keyAlias">
@@ -188,7 +188,7 @@ public sealed record EntityId : IEquatable<EntityId>
         return (keyAlias = _keyAlias) is not null;
     }
     /// <summary>
-    /// Outputs a string representation of the Entity TransactionId
+    /// Outputs a string representation of the Entity Id
     /// (<code>shard.realm.keyAlias</code>), Key Alias
     /// or Evm Payer.
     /// </summary>
@@ -213,7 +213,7 @@ public sealed record EntityId : IEquatable<EntityId>
     /// An EVM Payer compatible for use with smart contracts.
     /// </returns>
     /// <exception cref="InvalidOperationException">
-    /// If this Entity TransactionId represents a Key Alias form of 
+    /// If this Entity Id represents a Key Alias form of 
     /// an Entity ID, this will throw an exception, if the
     /// underlying key is not a single ECDSA public key.
     /// </exception>
@@ -242,16 +242,16 @@ public sealed record EntityId : IEquatable<EntityId>
     }
     /// <summary>
     /// Attempts to parse a string as in the [shard.realm.num] format to convert
-    /// into a Hedera Entity TransactionId.
+    /// into a Hedera Entity Id.
     /// </summary>
     /// <param name="value">
     /// The string form ([shard.realm.num]) of an Entity ID.
     /// </param>
     /// <param name="entityId">
-    /// The resulting Entity TransactionId if convertible, otherwise null.
+    /// The resulting Entity Id if convertible, otherwise null.
     /// </param>
     /// <returns>
-    /// True if the Entity TransactionId could be converted and contains a valid value.
+    /// True if the Entity Id could be converted and contains a valid value.
     /// </returns>
     public static bool TryParseShardRealmNum(string? value, [NotNullWhen(true)] out EntityId? entityId)
     {
@@ -264,16 +264,16 @@ public sealed record EntityId : IEquatable<EntityId>
     }
     /// <summary>
     /// Attempts to parse a span of characters (string) from in the [shard.realm.num] 
-    /// format to convert into a Hedera Entity TransactionId.
+    /// format to convert into a Hedera Entity Id.
     /// </summary>
     /// <param name="value">
     /// The sequence of characters in the form ([shard.realm.num]) of an Entity ID.
     /// </param>
     /// <param name="entityId">
-    /// The resulting Entity TransactionId if convertible, otherwise null.
+    /// The resulting Entity Id if convertible, otherwise null.
     /// </param>
     /// <returns>
-    /// True if the Entity TransactionId could be converted and contains a valid value.
+    /// True if the Entity Id could be converted and contains a valid value.
     /// </returns>
     public static bool TryParseShardRealmNum(ReadOnlySpan<char> value, [NotNullWhen(true)] out EntityId? entityId)
     {
@@ -307,7 +307,7 @@ public sealed record EntityId : IEquatable<EntityId>
         return false;
     }
     /// <summary>
-    /// Determines if this Entity TransactionId is equal to another Entity TransactionId.
+    /// Determines if this Entity Id is equal to another Entity Id.
     /// </summary>
     /// <param name="other">
     /// The other <code>EntityId</code> object to compare.

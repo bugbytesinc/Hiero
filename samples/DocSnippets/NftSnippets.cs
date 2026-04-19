@@ -43,20 +43,20 @@ public static class NftSnippets
     }
 
     public static async Task ConfiscateNft(
-        ConsensusClient client, Nft nft, EntityId account)
+        ConsensusClient client, Nft nft, EntityId holder)
     {
         #region ConfiscateNftSingle
         // Forcibly remove one NFT from an arbitrary holder's wallet and
         // return it to the token's treasury. Requires the NFT collection's
         // ConfiscateEndorsement (wipe key). Method name is singular for the
         // single-NFT overload.
-        var receipt = await client.ConfiscateNftAsync(nft, account);
+        var receipt = await client.ConfiscateNftAsync(nft, holder);
         Console.WriteLine($"Confiscate status: {receipt.Status}");
         #endregion
     }
 
     public static async Task ConfiscateMultipleNfts(
-        ConsensusClient client, EntityId collection, EntityId account)
+        ConsensusClient client, EntityId collection, EntityId holder)
     {
         #region ConfiscateNftBatch
         // Confiscate several NFTs from the same collection and holder in one
@@ -65,7 +65,7 @@ public static class NftSnippets
         var receipt = await client.ConfiscateNftsAsync(new ConfiscateNftParams
         {
             Token = collection,
-            Account = account,
+            Holder = holder,
             SerialNumbers = new long[] { 1, 2, 3 }
         });
         Console.WriteLine($"Confiscate status: {receipt.Status}");
@@ -93,7 +93,7 @@ public static class NftSnippets
         // the params form when rotating a shared metadata reference across a
         // set of NFTs in one collection. Method names: singular-one is
         // `UpdateNftMetadataAsync`, plural-batch is `UpdateNftsMetadataAsync`.
-        var receipt = await client.UpdateNftsMetadataAsync(new UpdateNftsParams
+        var receipt = await client.UpdateNftsMetadataAsync(new UpdateNftMetadataParams
         {
             Token = collection,
             SerialNumbers = new long[] { 1, 2, 3 },

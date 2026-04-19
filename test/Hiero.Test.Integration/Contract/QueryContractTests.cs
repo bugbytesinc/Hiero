@@ -90,7 +90,7 @@ public class QueryContractTests
         var pex = ex as PrecheckException;
         await Assert.That(pex).IsNotNull();
         await Assert.That(pex!.Status).IsEqualTo(ResponseCode.InsufficientGas);
-        await Assert.That(pex.TxId).IsNotNull();
+        await Assert.That(pex.TransactionId).IsNotNull();
         await Assert.That(pex.RequiredFee).IsEqualTo(0ul);
     }
 
@@ -114,7 +114,7 @@ public class QueryContractTests
         var pex = ex as PrecheckException;
         await Assert.That(pex).IsNotNull();
         await Assert.That(pex!.Status).IsEqualTo(ResponseCode.InsufficientGas);
-        await Assert.That(pex.TxId).IsNotNull();
+        await Assert.That(pex.TransactionId).IsNotNull();
         await Assert.That(pex.RequiredFee).IsEqualTo(0ul);
     }
 

@@ -66,7 +66,7 @@ public static class CryptoSnippets
         // Transfer fungible token units between two accounts. The receiver
         // must already be associated with the token (AssociateTokenAsync) or
         // have automatic-association slots available.
-        var receipt = await client.TransferTokensAsync(token, sender, receiver, units);
+        var receipt = await client.TransferTokenAsync(token, sender, receiver, units);
         Console.WriteLine($"Token transfer status: {receipt.Status}");
         #endregion
     }
@@ -117,7 +117,7 @@ public static class CryptoSnippets
         // signatory during signing.
         var receipt = await client.UpdateAccountAsync(new UpdateAccountParams
         {
-            Address = account,
+            Account = account,
             Endorsement = newEndorsement,
             Memo = "Key rotation 2026-Q2",
             Signatory = newSignatory

@@ -136,7 +136,7 @@ public class GetReceiptTests
         var amountToDestroy = fxToken.CreateParams.Circulation / 3;
         var expectedCirculation = fxToken.CreateParams.Circulation - amountToDestroy;
 
-        var originalReceipt = await client.BurnTokensAsync(fxToken, amountToDestroy, ctx =>
+        var originalReceipt = await client.BurnTokenAsync(fxToken, amountToDestroy, ctx =>
         {
             ctx.Signatory = new Signatory(TestNetwork.PrivateKey, fxToken.SupplyPrivateKey);
         });
@@ -195,7 +195,7 @@ public class GetReceiptTests
 
         await Assert.That(await fxAccount.GetTokenBalanceAsync(fxToken)).IsEqualTo((long)xferAmount);
 
-        var originalReceipt = await client.ConfiscateTokensAsync(fxToken, fxAccount, xferAmount, ctx =>
+        var originalReceipt = await client.ConfiscateTokenAsync(fxToken, fxAccount, xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(TestNetwork.PrivateKey, fxToken.ConfiscatePrivateKey);
         });

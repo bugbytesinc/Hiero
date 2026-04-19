@@ -86,15 +86,15 @@ public static class AssociateTokenExtensions
     /// <param name="client">
     /// The Consensus Node Client orchestrating the association.
     /// </param>
-    /// <param name="account">
-    /// The identifier of the account to provision token balance storage.
-    /// </param>
     /// <param name="token">
     /// The token or NFT token class type to associate with the account.
     /// </param>
+    /// <param name="account">
+    /// The identifier of the account to provision token balance storage.
+    /// </param>
     /// <param name="configure">
-    /// Optional callback method providing an opportunity to modify 
-    /// the execution configuration for just this method call. 
+    /// Optional callback method providing an opportunity to modify
+    /// the execution configuration for just this method call.
     /// It is executed prior to submitting the request to the network.
     /// </param>
     /// <returns>
@@ -109,7 +109,7 @@ public static class AssociateTokenExtensions
     /// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="AssociateToken" language="csharp"/>
     /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Task<TransactionReceipt> AssociateTokenAsync(this ConsensusClient client, EntityId account, EntityId token, Action<IConsensusContext>? configure = null)
+    public static Task<TransactionReceipt> AssociateTokenAsync(this ConsensusClient client, EntityId token, EntityId account, Action<IConsensusContext>? configure = null)
     {
         if (token.IsNullOrNone())
         {

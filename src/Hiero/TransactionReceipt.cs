@@ -45,7 +45,7 @@ public record TransactionReceipt
     /// <param name="receipt">Network Receipt Containing Info</param>
     internal TransactionReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)
     {
-        TransactionId = transactionId.AsTxId();
+        TransactionId = transactionId.AsTransactionId();
         Status = (ResponseCode)receipt.Status;
         if (receipt.ExchangeRate is not null)
         {
@@ -132,7 +132,7 @@ public static class TransactionReceiptExtensions
         var responseCode = response.TransactionGetReceipt.Header.NodeTransactionPrecheckCode;
         if (responseCode == ResponseCodeEnum.Busy)
         {
-            throw new ConsensusException("Network failed to respond to request for a transaction receipt, it is too busy. It is possible the network may still reach consensus for this transaction.", transactionId.AsTxId(), (ResponseCode)responseCode);
+            throw new ConsensusException("Network failed to respond to request for a transaction receipt, it is too busy. It is possible the network may still reach consensus for this transaction.", transactionId.AsTransactionId(), (ResponseCode)responseCode);
         }
         return createList(transactionId, response.TransactionGetReceipt.Receipt, response.TransactionGetReceipt.ChildTransactionReceipts, response.TransactionGetReceipt.DuplicateTransactionReceipts);
 

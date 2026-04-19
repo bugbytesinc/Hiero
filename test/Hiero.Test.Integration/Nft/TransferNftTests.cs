@@ -176,7 +176,7 @@ public class TransferNftTests
         await Assert.That(record.Royalties).IsEmpty();
         await Assert.That(record.Associations).IsEmpty();
 
-        var xfer = record.NftTransfers.First(x => x.To == fxAccount.CreateReceipt!.Address);
+        var xfer = record.NftTransfers.First(x => x.Receiver == fxAccount.CreateReceipt!.Address);
         await Assert.That(xfer).IsNotNull();
         await Assert.That(xfer.Nft.Token).IsEqualTo(fxNft.CreateReceipt!.Token);
         await Assert.That(xfer.Nft.SerialNumber).IsEqualTo(1);
@@ -238,7 +238,7 @@ public class TransferNftTests
         await Assert.That(record.Royalties).IsEmpty();
         await Assert.That(record.Associations).IsEmpty();
 
-        var xfer = record.NftTransfers.First(x => x.To == fxAccount.CreateReceipt!.Address);
+        var xfer = record.NftTransfers.First(x => x.Receiver == fxAccount.CreateReceipt!.Address);
         await Assert.That(xfer).IsNotNull();
         await Assert.That(xfer.Nft.Token).IsEqualTo(fxNft.CreateReceipt!.Token);
         await Assert.That(xfer.Nft.SerialNumber).IsEqualTo(1);
@@ -301,7 +301,7 @@ public class TransferNftTests
         await Assert.That(record.Royalties).IsEmpty();
         await Assert.That(record.Associations).IsEmpty();
 
-        var xfer = record.NftTransfers.First(x => x.To == fxAccount.CreateReceipt!.Address);
+        var xfer = record.NftTransfers.First(x => x.Receiver == fxAccount.CreateReceipt!.Address);
         await Assert.That(xfer).IsNotNull();
         await Assert.That(xfer.Nft.Token).IsEqualTo(fxNft.CreateReceipt!.Token);
         await Assert.That(xfer.Nft.SerialNumber).IsEqualTo(1);
@@ -392,16 +392,16 @@ public class TransferNftTests
         await Assert.That(record.NftTransfers.Count).IsEqualTo(2);
         await Assert.That(record.ParentTransactionConsensus).IsNull();
 
-        var xferTo1 = record.NftTransfers.First(x => x.To == fxAccount1.CreateReceipt!.Address);
+        var xferTo1 = record.NftTransfers.First(x => x.Receiver == fxAccount1.CreateReceipt!.Address);
         await Assert.That(xferTo1).IsNotNull();
         await Assert.That(xferTo1.Nft.Token).IsEqualTo(fxNft.CreateReceipt!.Token);
-        await Assert.That(xferTo1.From).IsEqualTo(fxNft.TreasuryAccount.CreateReceipt!.Address);
+        await Assert.That(xferTo1.Sender).IsEqualTo(fxNft.TreasuryAccount.CreateReceipt!.Address);
         await Assert.That(xferTo1.Nft.SerialNumber).IsEqualTo(1U);
 
-        var xferTo2 = record.NftTransfers.First(x => x.To == fxAccount2.CreateReceipt!.Address);
+        var xferTo2 = record.NftTransfers.First(x => x.Receiver == fxAccount2.CreateReceipt!.Address);
         await Assert.That(xferTo2).IsNotNull();
         await Assert.That(xferTo2.Nft.Token).IsEqualTo(fxNft.CreateReceipt!.Token);
-        await Assert.That(xferTo2.From).IsEqualTo(fxNft.TreasuryAccount.CreateReceipt!.Address);
+        await Assert.That(xferTo2.Sender).IsEqualTo(fxNft.TreasuryAccount.CreateReceipt!.Address);
         await Assert.That(xferTo2.Nft.SerialNumber).IsEqualTo(2U);
 
         await Assert.That(await fxAccount1.GetTokenBalanceAsync(fxNft)).IsEqualTo(1);
@@ -487,16 +487,16 @@ public class TransferNftTests
         await Assert.That(record.Transfers[fxAccount1]).IsEqualTo(cryptoAmount);
         await Assert.That(record.Transfers[fxAccount2]).IsEqualTo(cryptoAmount);
 
-        var xferTo1 = record.NftTransfers.First(x => x.To == fxAccount1.CreateReceipt!.Address);
+        var xferTo1 = record.NftTransfers.First(x => x.Receiver == fxAccount1.CreateReceipt!.Address);
         await Assert.That(xferTo1).IsNotNull();
         await Assert.That(xferTo1.Nft.Token).IsEqualTo(fxNft.CreateReceipt!.Token);
-        await Assert.That(xferTo1.From).IsEqualTo(fxNft.TreasuryAccount.CreateReceipt!.Address);
+        await Assert.That(xferTo1.Sender).IsEqualTo(fxNft.TreasuryAccount.CreateReceipt!.Address);
         await Assert.That(xferTo1.Nft.SerialNumber).IsEqualTo(1U);
 
-        var xferTo2 = record.NftTransfers.First(x => x.To == fxAccount2.CreateReceipt!.Address);
+        var xferTo2 = record.NftTransfers.First(x => x.Receiver == fxAccount2.CreateReceipt!.Address);
         await Assert.That(xferTo2).IsNotNull();
         await Assert.That(xferTo2.Nft.Token).IsEqualTo(fxNft.CreateReceipt!.Token);
-        await Assert.That(xferTo2.From).IsEqualTo(fxNft.TreasuryAccount.CreateReceipt!.Address);
+        await Assert.That(xferTo2.Sender).IsEqualTo(fxNft.TreasuryAccount.CreateReceipt!.Address);
         await Assert.That(xferTo2.Nft.SerialNumber).IsEqualTo(2U);
 
         await Assert.That(await client.GetAccountBalanceAsync(fxAccount1)).IsEqualTo(fxAccount1.CreateParams.InitialBalance + (ulong)cryptoAmount);
@@ -1024,7 +1024,7 @@ public class TransferNftTests
         });
         await Assert.That(counterReceipt.Status).IsEqualTo(ResponseCode.Success);
 
-        var transferReceipt = await client.GetReceiptAsync(schedulingReceipt.ScheduledTxId);
+        var transferReceipt = await client.GetReceiptAsync(schedulingReceipt.ScheduledTransactionId);
         await Assert.That(transferReceipt.Status).IsEqualTo(ResponseCode.Success);
 
         await Assert.That(await fxAccount1.GetTokenBalanceAsync(fxNft)).IsEqualTo(1);

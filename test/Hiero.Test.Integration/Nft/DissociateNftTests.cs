@@ -19,7 +19,7 @@ public class DissociateNftTests
         await Assert.That(association.FreezeStatus).IsEqualTo(TokenTradableStatus.Tradable);
         await Assert.That(association.AutoAssociated).IsFalse();
 
-        var receipt = await client.DissociateTokenAsync(new DissociateTokenParams
+        var receipt = await client.DissociateTokensAsync(new DissociateTokenParams
         {
             Account = fxAccount.CreateReceipt!.Address,
             Tokens = [fxNft.CreateReceipt!.Token],
@@ -55,7 +55,7 @@ public class DissociateNftTests
 
         var ex = await Assert.That(async () =>
         {
-            await client.DissociateTokenAsync(new DissociateTokenParams
+            await client.DissociateTokensAsync(new DissociateTokenParams
             {
                 Account = fxAccount.Alias,
                 Tokens = [fxNft.CreateReceipt!.Token],
@@ -84,7 +84,7 @@ public class DissociateNftTests
         await Assert.That(association.FreezeStatus).IsEqualTo(TokenTradableStatus.Tradable);
         await Assert.That(association.AutoAssociated).IsFalse();
 
-        var receipt = await client.DissociateTokenAsync(new DissociateTokenParams
+        var receipt = await client.DissociateTokensAsync(new DissociateTokenParams
         {
             Account = fxAccount.CreateReceipt!.Address,
             Tokens = [fxNft.CreateReceipt!.Token],
@@ -174,7 +174,7 @@ public class DissociateNftTests
         await AssertHg.NftIsAssociatedAsync(fxNft1, fxAccount);
         await AssertHg.NftIsAssociatedAsync(fxNft2, fxAccount);
 
-        var receipt = await client.DissociateTokenAsync(new DissociateTokenParams
+        var receipt = await client.DissociateTokensAsync(new DissociateTokenParams
         {
             Account = fxAccount.CreateReceipt!.Address,
             Tokens = nfts,
@@ -199,7 +199,7 @@ public class DissociateNftTests
         await AssertHg.NftIsAssociatedAsync(fxNft1, fxAccount);
         await AssertHg.NftIsAssociatedAsync(fxNft2, fxAccount);
 
-        var receipt = await client.DissociateTokenAsync(new DissociateTokenParams
+        var receipt = await client.DissociateTokensAsync(new DissociateTokenParams
         {
             Account = fxAccount.CreateReceipt!.Address,
             Tokens = nfts,
@@ -233,7 +233,7 @@ public class DissociateNftTests
         await AssertHg.NftIsAssociatedAsync(fxNft1, fxAccount);
         await AssertHg.NftIsAssociatedAsync(fxNft2, fxAccount);
 
-        var receipt = await client.DissociateTokenAsync(new DissociateTokenParams
+        var receipt = await client.DissociateTokensAsync(new DissociateTokenParams
         {
             Account = fxAccount.CreateReceipt!.Address,
             Tokens = nfts,
@@ -261,7 +261,7 @@ public class DissociateNftTests
         await AssertHg.NftIsAssociatedAsync(fxNft1, fxAccount);
         await AssertHg.NftIsAssociatedAsync(fxNft2, fxAccount);
 
-        var receipt = await client.DissociateTokenAsync(new DissociateTokenParams
+        var receipt = await client.DissociateTokensAsync(new DissociateTokenParams
         {
             Account = fxAccount.CreateReceipt!.Address,
             Tokens = nfts,
@@ -299,7 +299,7 @@ public class DissociateNftTests
         await Assert.That(association.FreezeStatus).IsEqualTo(TokenTradableStatus.Tradable);
         await Assert.That(association.AutoAssociated).IsFalse();
 
-        var receipt = await client.DissociateTokenAsync(new DissociateTokenParams
+        var receipt = await client.DissociateTokensAsync(new DissociateTokenParams
         {
             Account = fxAccount.CreateReceipt!.Address,
             Tokens = [fxNft.CreateReceipt!.Token],
@@ -367,7 +367,7 @@ public class DissociateNftTests
 
         ex = await Assert.That(async () =>
         {
-            await client.DissociateTokenAsync(new DissociateTokenParams
+            await client.DissociateTokensAsync(new DissociateTokenParams
             {
                 Account = fxAccount.CreateReceipt!.Address,
                 Tokens = null!,
@@ -380,7 +380,7 @@ public class DissociateNftTests
 
         ex = await Assert.That(async () =>
         {
-            await client.DissociateTokenAsync(new DissociateTokenParams
+            await client.DissociateTokensAsync(new DissociateTokenParams
             {
                 Account = fxAccount.CreateReceipt!.Address,
                 Tokens = new EntityId[] { null! },
@@ -434,7 +434,7 @@ public class DissociateNftTests
 
         var ex = await Assert.That(async () =>
         {
-            await client.DissociateTokenAsync(new DissociateTokenParams
+            await client.DissociateTokensAsync(new DissociateTokenParams
             {
                 Account = fxAccount.CreateReceipt!.Address,
                 Tokens = [fxNft.CreateReceipt!.Token],
@@ -456,7 +456,7 @@ public class DissociateNftTests
 
         var ex = await Assert.That(async () =>
         {
-            await client.DissociateTokenAsync(new DissociateTokenParams
+            await client.DissociateTokensAsync(new DissociateTokenParams
             {
                 Account = fxAccount.CreateReceipt!.Address,
                 Tokens = new EntityId[] { fxNft.CreateReceipt!.Token, fxNft.CreateReceipt!.Token },
@@ -479,7 +479,7 @@ public class DissociateNftTests
 
         var ex = await Assert.That(async () =>
         {
-            await client.DissociateTokenAsync(new DissociateTokenParams
+            await client.DissociateTokensAsync(new DissociateTokenParams
             {
                 Account = fxAccount.CreateReceipt!.Address,
                 Tokens = new EntityId[] { fxNft1.CreateReceipt!.Token, fxNft2.CreateReceipt!.Token },
@@ -522,7 +522,7 @@ public class DissociateNftTests
         await Assert.That(association.FreezeStatus).IsEqualTo(TokenTradableStatus.Tradable);
         await Assert.That(association.AutoAssociated).IsFalse();
 
-        receipt = await client.DissociateTokenAsync(new DissociateTokenParams
+        receipt = await client.DissociateTokensAsync(new DissociateTokenParams
         {
             Account = fxContract.ContractReceipt!.Contract,
             Tokens = [fxNft.CreateReceipt!.Token],

@@ -49,11 +49,11 @@ public class ContractAccountTests
         await using var fxContract = await GreetingContract.CreateAsync();
         await using var client = await TestNetwork.CreateClientAsync();
 
-        await client.AssociateTokenAsync(fxContract, fxToken, ctx =>
+        await client.AssociateTokenAsync(fxToken, fxContract, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxContract.PrivateKey);
         });
-        await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxContract, 500, ctx =>
+        await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxContract, 500, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
@@ -67,17 +67,17 @@ public class ContractAccountTests
         await using var fxContract = await GreetingContract.CreateAsync();
         await using var client = await TestNetwork.CreateClientAsync();
 
-        await client.AssociateTokenAsync(fxContract, fxToken, ctx =>
+        await client.AssociateTokenAsync(fxToken, fxContract, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxContract.PrivateKey);
         });
-        await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxContract, 500, ctx =>
+        await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxContract, 500, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
         await Assert.That(await fxContract.GetTokenBalanceAsync(fxToken)).IsEqualTo(500);
 
-        await client.TransferTokensAsync(fxToken, fxContract, fxToken.TreasuryAccount, 400, ctx =>
+        await client.TransferTokenAsync(fxToken, fxContract, fxToken.TreasuryAccount, 400, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxContract.PrivateKey);
         });
@@ -92,11 +92,11 @@ public class ContractAccountTests
         await using var fxContract = await GreetingContract.CreateAsync();
         await using var client = await TestNetwork.CreateClientAsync();
 
-        await client.AssociateTokenAsync(fxContract, fxToken, ctx =>
+        await client.AssociateTokenAsync(fxToken, fxContract, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxContract.PrivateKey);
         });
-        await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxContract, 500, ctx =>
+        await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxContract, 500, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });

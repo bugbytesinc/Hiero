@@ -38,7 +38,7 @@ public sealed record CryptoTransfer
     /// <summary>
     /// Public Constructor, a <code>CryptoTransfer</code> is immutable after creation.
     /// </summary>
-    /// <param name="address">
+    /// <param name="account">
     /// The account receiving or sending the crypto.
     /// </param>
     /// <param name="amount">
@@ -53,9 +53,9 @@ public sealed record CryptoTransfer
     /// <param name="allowanceHook">
     /// Optional allowance hook call for this transfer.
     /// </param>
-    public CryptoTransfer(EntityId address, long amount, bool delegated = false, HookCall? allowanceHook = null)
+    public CryptoTransfer(EntityId account, long amount, bool delegated = false, HookCall? allowanceHook = null)
     {
-        Address = address;
+        Address = account;
         Amount = amount;
         Delegated = delegated;
         AllowanceHook = allowanceHook;

@@ -38,7 +38,7 @@ public class SignScheduledTransactionTests
             Schedule = pendingFx.ScheduleReceipt.Schedule,
             Signatory = pendingFx.SendingAccount,
         });
-        var scheduledReceipt = await client.GetReceiptAsync(pendingFx.ScheduleReceipt.ScheduledTxId);
+        var scheduledReceipt = await client.GetReceiptAsync(pendingFx.ScheduleReceipt.ScheduledTransactionId);
         await Assert.That(scheduledReceipt.Status).IsEqualTo(ResponseCode.Success);
         await Assert.That(scheduledReceipt.TransactionId).IsNotEqualTo(TransactionId.None);
         await Assert.That(scheduledReceipt.CurrentExchangeRate).IsNotNull();

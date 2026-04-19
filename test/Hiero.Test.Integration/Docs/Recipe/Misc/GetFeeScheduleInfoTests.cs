@@ -20,7 +20,7 @@ public class GetFeeScheduleInfoTests
                 ctx.Signatory = new Signatory(payerPrivateKey);
             });
 
-            var schedules = await client.GetFeeScheduleAsync();
+            var schedules = await client.GetFeeSchedulesAsync();
 
             foreach (var schedule in schedules.Current!.Data)
             {

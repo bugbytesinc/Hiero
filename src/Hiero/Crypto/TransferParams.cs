@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: Apache-2.0
 using Hiero.Implementation;
 using Proto;
 using System.ComponentModel;
@@ -36,13 +36,13 @@ public sealed class TransferParams : TransactionParams<TransactionReceipt>, INet
     /// </summary>
     public IEnumerable<NftTransfer>? NftTransfers { get; set; }
     /// <summary>
-    /// Additional private key, keys or signing callback method 
+    /// Additional private key, keys or signing callback method
     /// required to authorize the transfers.  Typically matches the
     /// Endorsement assigned to sending accounts.
     /// </summary>
     /// <remarks>
     /// Keys/callbacks added here will be combined with those already
-    /// identified in the client object's context when signing this 
+    /// identified in the client object's context when signing this
     /// transaction to change the state of this account.
     /// </remarks>
     public Signatory? Signatory { get; set; }
@@ -146,18 +146,18 @@ public sealed class TransferParams : TransactionParams<TransactionReceipt>, INet
                 {
                     throw new ArgumentException("Nft", "The list of NFT transfers cannot contain a null or empty Token address.");
                 }
-                if (xfer.From.IsNullOrNone())
+                if (xfer.Sender.IsNullOrNone())
                 {
-                    throw new ArgumentException(nameof(xfer.From), "The list of NFT transfers cannot contain a null or empty from account value.");
+                    throw new ArgumentException(nameof(xfer.Sender), "The list of NFT transfers cannot contain a null or empty sender account value.");
                 }
-                if (xfer.To.IsNullOrNone())
+                if (xfer.Receiver.IsNullOrNone())
                 {
-                    throw new ArgumentException(nameof(xfer.To), "The list of NFT transfers cannot contain a null or empty to account value.");
+                    throw new ArgumentException(nameof(xfer.Receiver), "The list of NFT transfers cannot contain a null or empty receiver account value.");
                 }
                 var protoNftXfer = new Proto.NftTransfer
                 {
-                    SenderAccountID = new AccountID(xfer.From),
-                    ReceiverAccountID = new AccountID(xfer.To),
+                    SenderAccountID = new AccountID(xfer.Sender),
+                    ReceiverAccountID = new AccountID(xfer.Receiver),
                     SerialNumber = xfer.Nft.SerialNumber,
                     IsApproval = xfer.Delegated
                 };
@@ -225,35 +225,35 @@ public sealed class TransferParams : TransactionParams<TransactionReceipt>, INet
 /// </remarks>
 internal sealed class TransferOnlyCryptoParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
-    private readonly EntityId _fromAddress;
-    private readonly EntityId _toAddress;
+    private readonly EntityId _sender;
+    private readonly EntityId _receiver;
     private readonly long _amount;
 
-    public TransferOnlyCryptoParams(EntityId fromAddress, EntityId toAddress, long amount)
+    public TransferOnlyCryptoParams(EntityId sender, EntityId receiver, long amount)
     {
-        _fromAddress = fromAddress;
-        _toAddress = toAddress;
+        _sender = sender;
+        _receiver = receiver;
         _amount = amount;
     }
     public Signatory? Signatory => null;
     public CancellationToken? CancellationToken => null;
     INetworkTransaction INetworkParams<TransactionReceipt>.CreateNetworkTransaction()
     {
-        if (_fromAddress.IsNullOrNone())
+        if (_sender.IsNullOrNone())
         {
-            throw new ArgumentNullException("fromAddress", "Account to transfer from is missing. Please check that it is not null.");
+            throw new ArgumentNullException("sender", "Account to transfer from is missing. Please check that it is not null.");
         }
-        if (_toAddress.IsNullOrNone())
+        if (_receiver.IsNullOrNone())
         {
-            throw new ArgumentNullException("toAddress", "Account to transfer to is missing. Please check that it is not null.");
+            throw new ArgumentNullException("receiver", "Account to transfer to is missing. Please check that it is not null.");
         }
         if (_amount < 1)
         {
             throw new ArgumentOutOfRangeException("amount", "The amount to transfer must be non-negative.");
         }
         var xferList = new TransferList();
-        xferList.AccountAmounts.Add(new AccountAmount(_fromAddress, -_amount, false));
-        xferList.AccountAmounts.Add(new AccountAmount(_toAddress, _amount, false));
+        xferList.AccountAmounts.Add(new AccountAmount(_sender, -_amount, false));
+        xferList.AccountAmounts.Add(new AccountAmount(_receiver, _amount, false));
         return new CryptoTransferTransactionBody()
         {
             Transfers = xferList
@@ -274,14 +274,14 @@ internal sealed class TransferOnlyCryptoParams : TransactionParams<TransactionRe
 internal sealed class TransferOnlyNftParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     private readonly Nft _nft;
-    private readonly EntityId _fromAddress;
-    private readonly EntityId _toAddress;
+    private readonly EntityId _sender;
+    private readonly EntityId _receiver;
 
-    public TransferOnlyNftParams(Nft nft, EntityId fromAddress, EntityId toAddress)
+    public TransferOnlyNftParams(Nft nft, EntityId sender, EntityId receiver)
     {
         _nft = nft;
-        _fromAddress = fromAddress;
-        _toAddress = toAddress;
+        _sender = sender;
+        _receiver = receiver;
     }
     public Signatory? Signatory => null;
     public CancellationToken? CancellationToken => null;
@@ -291,13 +291,13 @@ internal sealed class TransferOnlyNftParams : TransactionParams<TransactionRecei
         {
             throw new ArgumentNullException("nft", "Asset to transfer is missing. Please check that it is not null.");
         }
-        if (_fromAddress is null)
+        if (_sender is null)
         {
-            throw new ArgumentNullException("fromAddress", "Account to transfer from is missing. Please check that it is not null.");
+            throw new ArgumentNullException("sender", "Account to transfer from is missing. Please check that it is not null.");
         }
-        if (_toAddress is null)
+        if (_receiver is null)
         {
-            throw new ArgumentNullException("toAddress", "Account to transfer to is missing. Please check that it is not null.");
+            throw new ArgumentNullException("receiver", "Account to transfer to is missing. Please check that it is not null.");
         }
         var transfers = new TokenTransferList
         {
@@ -305,8 +305,8 @@ internal sealed class TransferOnlyNftParams : TransactionParams<TransactionRecei
         };
         transfers.NftTransfers.Add(new Proto.NftTransfer
         {
-            SenderAccountID = new AccountID(_fromAddress),
-            ReceiverAccountID = new AccountID(_toAddress),
+            SenderAccountID = new AccountID(_sender),
+            ReceiverAccountID = new AccountID(_receiver),
             SerialNumber = _nft.SerialNumber
         });
         var result = new CryptoTransferTransactionBody();
@@ -328,28 +328,28 @@ internal sealed class TransferOnlyNftParams : TransactionParams<TransactionRecei
 internal sealed class TransferOnlyTokenParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     private readonly EntityId _token;
-    private readonly EntityId _fromAddress;
-    private readonly EntityId _toAddress;
+    private readonly EntityId _sender;
+    private readonly EntityId _receiver;
     private readonly long _amount;
 
-    public TransferOnlyTokenParams(EntityId token, EntityId fromAddress, EntityId toAddress, long amount)
+    public TransferOnlyTokenParams(EntityId token, EntityId sender, EntityId receiver, long amount)
     {
         _token = token;
-        _fromAddress = fromAddress;
-        _toAddress = toAddress;
+        _sender = sender;
+        _receiver = receiver;
         _amount = amount;
     }
     public Signatory? Signatory => null;
     public CancellationToken? CancellationToken => null;
     INetworkTransaction INetworkParams<TransactionReceipt>.CreateNetworkTransaction()
     {
-        if (_fromAddress is null)
+        if (_sender is null)
         {
-            throw new ArgumentNullException("fromAddress", "Account to transfer from is missing. Please check that it is not null.");
+            throw new ArgumentNullException("sender", "Account to transfer from is missing. Please check that it is not null.");
         }
-        if (_toAddress is null)
+        if (_receiver is null)
         {
-            throw new ArgumentNullException("toAddress", "Account to transfer to is missing. Please check that it is not null.");
+            throw new ArgumentNullException("receiver", "Account to transfer to is missing. Please check that it is not null.");
         }
         if (_amount < 1)
         {
@@ -359,8 +359,8 @@ internal sealed class TransferOnlyTokenParams : TransactionParams<TransactionRec
         {
             Token = new TokenID(_token)
         };
-        transfers.Transfers.Add(new AccountAmount(_fromAddress, -_amount, false));
-        transfers.Transfers.Add(new AccountAmount(_toAddress, _amount, false));
+        transfers.Transfers.Add(new AccountAmount(_sender, -_amount, false));
+        transfers.Transfers.Add(new AccountAmount(_receiver, _amount, false));
         var result = new CryptoTransferTransactionBody();
         result.TokenTransfers.Add(transfers);
         return result;
@@ -383,21 +383,21 @@ public static class TransferExtensions
     /// <param name="client">
     /// The Consensus Node Client orchestrating the transfer.
     /// </param>
-    /// <param name="fromAddress">
+    /// <param name="sender">
     /// The address to transfer the tinybars from.  Ensure that
     /// a signatory either in the context or passed with this
-    /// call can fulfill the signing requirements to transfer 
+    /// call can fulfill the signing requirements to transfer
     /// crypto out of the account identified by this address.
     /// </param>
-    /// <param name="toAddress">
+    /// <param name="receiver">
     /// The address receiving the tinybars.
     /// </param>
     /// <param name="amount">
     /// The amount of tinybars to transfer.
     /// </param>
     /// <param name="configure">
-    /// Optional callback method providing an opportunity to modify 
-    /// the execution configuration for just this method call. 
+    /// Optional callback method providing an opportunity to modify
+    /// the execution configuration for just this method call.
     /// It is executed prior to submitting the request to the network.
     /// </param>
     /// <returns>
@@ -412,9 +412,9 @@ public static class TransferExtensions
     /// <code source="../../../samples/DocSnippets/CryptoSnippets.cs" region="Transfer" language="csharp"/>
     /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Task<TransactionReceipt> TransferAsync(this ConsensusClient client, EntityId fromAddress, EntityId toAddress, long amount, Action<IConsensusContext>? configure = null)
+    public static Task<TransactionReceipt> TransferAsync(this ConsensusClient client, EntityId sender, EntityId receiver, long amount, Action<IConsensusContext>? configure = null)
     {
-        return client.ExecuteAsync(new TransferOnlyCryptoParams(fromAddress, toAddress, amount), configure);
+        return client.ExecuteAsync(new TransferOnlyCryptoParams(sender, receiver, amount), configure);
     }
     /// <summary>
     /// Transfer assets (NFTs) from one account to another.
@@ -431,18 +431,18 @@ public static class TransferExtensions
     /// <param name="nft">
     /// The identifier of the nft to transfer (shard, realm, num, serial).
     /// </param>
-    /// <param name="fromAddress">
+    /// <param name="sender">
     /// The account to transfer the assets from.  Ensure that
     /// a signatory either in the context or passed with this
-    /// call can fulfill the signing requirements to transfer 
+    /// call can fulfill the signing requirements to transfer
     /// assets out of the account identified by this account.
     /// </param>
-    /// <param name="toAddress">
+    /// <param name="receiver">
     /// The account receiving the assets.
     /// </param>
     /// <param name="configure">
-    /// Optional callback method providing an opportunity to modify 
-    /// the execution configuration for just this method call. 
+    /// Optional callback method providing an opportunity to modify
+    /// the execution configuration for just this method call.
     /// It is executed prior to submitting the request to the network.
     /// </param>
     /// <returns>
@@ -457,9 +457,9 @@ public static class TransferExtensions
     /// <code source="../../../samples/DocSnippets/CryptoSnippets.cs" region="TransferNft" language="csharp"/>
     /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Task<TransactionReceipt> TransferNftAsync(this ConsensusClient client, Nft nft, EntityId fromAddress, EntityId toAddress, Action<IConsensusContext>? configure = null)
+    public static Task<TransactionReceipt> TransferNftAsync(this ConsensusClient client, Nft nft, EntityId sender, EntityId receiver, Action<IConsensusContext>? configure = null)
     {
-        return client.ExecuteAsync(new TransferOnlyNftParams(nft, fromAddress, toAddress), configure);
+        return client.ExecuteAsync(new TransferOnlyNftParams(nft, sender, receiver), configure);
     }
     /// <summary>
     /// Transfer cryptocurrency and tokens in the same transaction atomically among multiple Hedera accounts and contracts.
@@ -471,8 +471,8 @@ public static class TransferExtensions
     /// A transfers parameter object holding lists of crypto and token transfers to perform.
     /// </param>
     /// <param name="configure">
-    /// Optional callback method providing an opportunity to modify 
-    /// the execution configuration for just this method call. 
+    /// Optional callback method providing an opportunity to modify
+    /// the execution configuration for just this method call.
     /// It is executed prior to submitting the request to the network.
     /// </param>
     /// <returns>
@@ -500,7 +500,7 @@ public static class TransferExtensions
     /// </summary>
     /// <remarks>
     /// Does not support allowances, to use the allowance flag
-    /// in the transfer list use the <see cref="TransferParams"/> 
+    /// in the transfer list use the <see cref="TransferParams"/>
     /// to construct the transfer.
     /// </remarks>
     /// <param name="client">
@@ -509,21 +509,21 @@ public static class TransferExtensions
     /// <param name="token">
     /// The identifier of the token type being transferred.
     /// </param>
-    /// <param name="fromAddress">
+    /// <param name="sender">
     /// The address to transfer the tokens from.  Ensure that
     /// a signatory either in the context or passed with this
-    /// call can fulfill the signing requirements to transfer 
+    /// call can fulfill the signing requirements to transfer
     /// tokens out of the account identified by this address.
     /// </param>
-    /// <param name="toAddress">
+    /// <param name="receiver">
     /// The address receiving the tokens.
     /// </param>
     /// <param name="amount">
     /// The amount of tokens to transfer.
     /// </param>
     /// <param name="configure">
-    /// Optional callback method providing an opportunity to modify 
-    /// the execution configuration for just this method call. 
+    /// Optional callback method providing an opportunity to modify
+    /// the execution configuration for just this method call.
     /// It is executed prior to submitting the request to the network.
     /// </param>
     /// <returns>
@@ -538,8 +538,8 @@ public static class TransferExtensions
     /// <code source="../../../samples/DocSnippets/CryptoSnippets.cs" region="TransferToken" language="csharp"/>
     /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Task<TransactionReceipt> TransferTokensAsync(this ConsensusClient client, EntityId token, EntityId fromAddress, EntityId toAddress, long amount, Action<IConsensusContext>? configure = null)
+    public static Task<TransactionReceipt> TransferTokenAsync(this ConsensusClient client, EntityId token, EntityId sender, EntityId receiver, long amount, Action<IConsensusContext>? configure = null)
     {
-        return client.ExecuteAsync(new TransferOnlyTokenParams(token, fromAddress, toAddress, amount), configure);
+        return client.ExecuteAsync(new TransferOnlyTokenParams(token, sender, receiver, amount), configure);
     }
 }

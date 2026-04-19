@@ -8,6 +8,15 @@ namespace Hiero;
 /// <summary>
 /// Allowance Creation and Adjustment Parameters
 /// </summary>
+/// <remarks>
+/// Also the revocation path for <b>crypto and token</b> allowances: HAPI has
+/// no dedicated delete op for these, so to revoke a crypto or token allowance
+/// re-submit via <see cref="AllowanceExtensions.AllocateAllowanceAsync"/> with
+/// the same owner/spender and <c>Amount = 0</c>. NFT allowances are the
+/// exception — they are revoked via
+/// <see cref="RevokeNftAllowanceExtensions.RevokeNftAllowanceAsync"/>, which
+/// submits a distinct <c>CryptoDeleteAllowance</c> HAPI transaction.
+/// </remarks>
 /// <example>
 /// Grant another account the right to spend up to a fixed amount of HBAR
 /// from the owning account (who must be the transaction Payer):
@@ -79,7 +88,7 @@ public sealed class AllowanceParams : TransactionParams<TransactionReceipt>, INe
                 {
                     TokenId = new TokenID(allowance.Token),
                     Owner = new AccountID(allowance.Owner),
-                    Spender = new AccountID(allowance.Agent),
+                    Spender = new AccountID(allowance.Spender),
                     Amount = allowance.Amount
                 });
             }
@@ -102,9 +111,9 @@ public sealed class AllowanceParams : TransactionParams<TransactionReceipt>, INe
                 {
                     nftAllowance.SerialNumbers.AddRange(allowance.SerialNumbers);
                 }
-                if (!allowance.OwnersDelegate.IsNullOrNone())
+                if (!allowance.DelegatingSpender.IsNullOrNone())
                 {
-                    nftAllowance.DelegatingSpender = new AccountID(allowance.OwnersDelegate);
+                    nftAllowance.DelegatingSpender = new AccountID(allowance.DelegatingSpender);
                 }
                 result.NftAllowances.Add(nftAllowance);
             }
@@ -129,11 +138,19 @@ public static class AllowanceExtensions
 {
     /// <summary>
     /// Creates approved allowance(s) allowing the designated
-    /// agent to spend crypto and tokens from the originating
-    /// account.  Presently the owning account must be the 
-    /// Payer (operator) paying for this transaction when 
+    /// spender to spend crypto and tokens from the originating
+    /// account.  Presently the owning account must be the
+    /// Payer (operator) paying for this transaction when
     /// submitted to the network.
     /// </summary>
+    /// <remarks>
+    /// This method is also the revocation path for crypto and token
+    /// allowances — resubmit with <c>Amount = 0</c> to revoke, since
+    /// HAPI has no dedicated <c>Revoke*</c> transaction for those.
+    /// NFT allowances use
+    /// <see cref="RevokeNftAllowanceExtensions.RevokeNftAllowanceAsync"/>
+    /// instead.
+    /// </remarks>
     /// <param name="client">
     /// The Consensus Node Client orchestrating the update.
     /// </param>
@@ -146,7 +163,7 @@ public static class AllowanceExtensions
     /// It is executed prior to submitting the request to the network.
     /// </param>
     /// <returns>
-    /// A TransactionId record indicating success, or an exception is thrown.
+    /// A transaction receipt indicating success, or an exception is thrown.
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>

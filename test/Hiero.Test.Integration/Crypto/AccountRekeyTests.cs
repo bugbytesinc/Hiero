@@ -32,7 +32,7 @@ public class AccountRekeyTests
         var newAlias = new EntityId(0, 0, newEndorsement);
         await client.UpdateAccountAsync(new UpdateAccountParams
         {
-            Address = fxAccount.CreateReceipt!.Address,
+            Account = fxAccount.CreateReceipt!.Address,
             Endorsement = newPublicKey,
             Signatory = new Signatory(newPrivateKey, fxAccount.PrivateKey)
         });
@@ -78,7 +78,7 @@ public class AccountRekeyTests
         var newAlias = new EntityId(0, 0, newEndorsement);
         await client.UpdateAccountAsync(new UpdateAccountParams
         {
-            Address = fxAccount.CreateReceipt!.Address,
+            Account = fxAccount.CreateReceipt!.Address,
             Endorsement = newPublicKey,
             Signatory = new Signatory(newPrivateKey, fxAccount.PrivateKey)
         });
@@ -149,7 +149,7 @@ public class AccountRekeyTests
         var newAlias = new EntityId(0, 0, newEndorsement);
         await client.UpdateAccountAsync(new UpdateAccountParams
         {
-            Address = address,
+            Account = address,
             Endorsement = newPublicKey,
             Signatory = new Signatory(newPrivateKey, originalPrivateKey)
         });
@@ -214,7 +214,7 @@ public class AccountRekeyTests
         var newAlias = new EntityId(0, 0, newEndorsement);
         await client.UpdateAccountAsync(new UpdateAccountParams
         {
-            Address = address,
+            Account = address,
             Endorsement = newPublicKey,
             Signatory = new Signatory(newPrivateKey, originalPrivateKey)
         });
@@ -256,7 +256,7 @@ public class AccountRekeyTests
         var newMoniker = new EvmAddress(newEndorsement);
         await client.UpdateAccountAsync(new UpdateAccountParams
         {
-            Address = fxAccount.CreateReceipt!.Address,
+            Account = fxAccount.CreateReceipt!.Address,
             Endorsement = newPublicKey,
             Signatory = new Signatory(newPrivateKey, fxAccount.PrivateKey)
         });
@@ -299,7 +299,7 @@ public class AccountRekeyTests
         var newAlias = new EntityId(0, 0, newEndorsement);
         await client.UpdateAccountAsync(new UpdateAccountParams
         {
-            Address = fxAccount.CreateReceipt!.Address,
+            Account = fxAccount.CreateReceipt!.Address,
             Endorsement = newPublicKey,
             Signatory = new Signatory(newPrivateKey, fxAccount.PrivateKey)
         });
@@ -370,7 +370,7 @@ public class AccountRekeyTests
         var newAlias = new EntityId(0, 0, newEndorsement);
         await client.UpdateAccountAsync(new UpdateAccountParams
         {
-            Address = address,
+            Account = address,
             Endorsement = newPublicKey,
             Signatory = new Signatory(newPrivateKey, originalPrivateKey)
         });
@@ -436,7 +436,7 @@ public class AccountRekeyTests
         var newMoniker = new EvmAddress(newEndorsement);
         await client.UpdateAccountAsync(new UpdateAccountParams
         {
-            Address = address,
+            Account = address,
             Endorsement = newPublicKey,
             Signatory = new Signatory(newPrivateKey, originalPrivateKey)
         });

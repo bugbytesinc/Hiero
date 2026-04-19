@@ -12,7 +12,7 @@ namespace Hiero;
 /// </summary>
 /// <example>
 /// Register a new node. The receipt carries the network-assigned NodeId
-/// which every later UpdateConsensusNode/RemoveConsensusNode call needs:
+/// which every later UpdateConsensusNode/DeleteConsensusNode call needs:
 /// <code source="../../../samples/DocSnippets/GovernanceSnippets.cs" region="AddConsensusNode" language="csharp"/>
 /// </example>
 /// <remarks>

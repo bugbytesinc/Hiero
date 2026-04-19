@@ -15,7 +15,7 @@ public class AirdropTokenTests
         // Transfer some tokens to the sender so they have a balance to airdrop.
         var xferAmount = (long)(fxToken.CreateParams.Circulation / 3);
         await using var client = await TestNetwork.CreateClientAsync();
-        await client.TransferTokensAsync(fxToken.CreateReceipt!.Token, fxToken.TreasuryAccount.CreateReceipt!.Address, fxSender.CreateReceipt!.Address, xferAmount, ctx =>
+        await client.TransferTokenAsync(fxToken.CreateReceipt!.Token, fxToken.TreasuryAccount.CreateReceipt!.Address, fxSender.CreateReceipt!.Address, xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });

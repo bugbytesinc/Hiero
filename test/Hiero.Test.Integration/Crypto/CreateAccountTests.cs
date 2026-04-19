@@ -245,7 +245,7 @@ public class CreateAccountTests
             ctx.Signatory = fxPayer;
         });
         var transactionReceipt = await payerClient.SignScheduleAsync(scheduledReceipt.Schedule);
-        var pendingReceipt = await payerClient.GetReceiptAsync(scheduledReceipt.ScheduledTxId);
+        var pendingReceipt = await payerClient.GetReceiptAsync(scheduledReceipt.ScheduledTransactionId);
         await Assert.That(pendingReceipt.Status).IsEqualTo(ResponseCode.Success);
 
         await Assert.That(pendingReceipt is CreateAccountReceipt).IsTrue();

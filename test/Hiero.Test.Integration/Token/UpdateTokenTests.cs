@@ -13,7 +13,7 @@ public class UpdateTokenTests
         await using var fxTemplate = await TestToken.CreateAsync();
         await using var client = await TestNetwork.CreateClientAsync();
 
-        await client.AssociateTokenAsync(fxTemplate.TreasuryAccount.CreateReceipt!.Address, fxToken.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxToken.CreateReceipt!.Token, fxTemplate.TreasuryAccount.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxTemplate.TreasuryAccount.PrivateKey));
 
         var newSymbol = Generator.Code(20);
@@ -75,7 +75,7 @@ public class UpdateTokenTests
         // It looks like changing the treasury requires the receiving account to be
         // associated first, since it still has to sign the update transaction anyway,
         // this seems unecessary.
-        await client.AssociateTokenAsync(fxTemplate.TreasuryAccount.CreateReceipt!.Address, fxToken.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxToken.CreateReceipt!.Token, fxTemplate.TreasuryAccount.CreateReceipt!.Address, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxTemplate.TreasuryAccount.PrivateKey));
 
         var newSymbol = Generator.Code(20);
@@ -1168,7 +1168,7 @@ public class UpdateTokenTests
         await using var client = await TestNetwork.CreateClientAsync();
 
         // Note: Contract did not need to sign.
-        await client.AssociateTokenAsync(fxContract.ContractReceipt!.Contract, fxToken.CreateReceipt!.Token, ctx =>
+        await client.AssociateTokenAsync(fxToken.CreateReceipt!.Token, fxContract.ContractReceipt!.Contract, ctx =>
             ctx.Signatory = new Signatory(ctx.Signatory!, fxContract.PrivateKey));
 
         var updateParams = new UpdateTokenParams
@@ -1351,7 +1351,7 @@ public class UpdateTokenTests
             ctx.Payer = fxPayer;
             ctx.Signatory = fxPayer;
         });
-        var pendingReceipt = await client.GetReceiptAsync(scheduledReceipt.ScheduledTxId);
+        var pendingReceipt = await client.GetReceiptAsync(scheduledReceipt.ScheduledTransactionId);
         await Assert.That(pendingReceipt.Status).IsEqualTo(ResponseCode.Success);
 
         var infoAfter = await client.GetTokenInfoAsync(fxToken.CreateReceipt!.Token);

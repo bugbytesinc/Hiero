@@ -26,17 +26,17 @@ public sealed partial class ContractCallLocalQuery : INetworkQuery
         var header = response.ResponseHeader;
         if (header == null)
         {
-            throw new PrecheckException($"Transaction Failed to Produce a Response.", transactionId.AsTxId(), ResponseCode.Unknown, 0);
+            throw new PrecheckException($"Transaction Failed to Produce a Response.", transactionId.AsTransactionId(), ResponseCode.Unknown, 0);
         }
         else if (response.ContractCallLocal?.FunctionResult == null)
         {
-            throw new PrecheckException($"Transaction Failed Pre-Check: {header.NodeTransactionPrecheckCode}", transactionId.AsTxId(), (ResponseCode)header.NodeTransactionPrecheckCode, header.Cost);
+            throw new PrecheckException($"Transaction Failed Pre-Check: {header.NodeTransactionPrecheckCode}", transactionId.AsTransactionId(), (ResponseCode)header.NodeTransactionPrecheckCode, header.Cost);
         }
         else if (ThrowOnFail && header.NodeTransactionPrecheckCode != ResponseCodeEnum.Ok)
         {
             throw new ContractException(
                 $"Contract Query Failed with Code: {header.NodeTransactionPrecheckCode}",
-                transactionId.AsTxId(),
+                transactionId.AsTransactionId(),
                 (ResponseCode)header.NodeTransactionPrecheckCode,
                 header.Cost,
                 new ContractCallResult(response));

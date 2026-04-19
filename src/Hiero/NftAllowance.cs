@@ -16,7 +16,7 @@ public sealed record NftAllowance
     public EntityId Token { get; private init; }
     /// <summary>
     /// The account holding the NFT(s) that
-    /// may be spent by the delegate spender.
+    /// may be spent by the spender.
     /// </summary>
     public EntityId Owner { get; private init; }
     /// <summary>
@@ -25,14 +25,17 @@ public sealed record NftAllowance
     /// </summary>
     public EntityId Spender { get; private init; }
     /// <summary>
-    /// An account, approved by the owner, that 
-    /// is given access to all of the Owner's 
-    /// NFTs of this class, and can therefore
-    /// in turn allocate a specific NFT instance
-    /// to a 3rd party to sell on behalf of the
-    /// original owner.
+    /// Optional. The account, previously granted an
+    /// <c>approved_for_all</c> allowance over this NFT
+    /// class by the <see cref="Owner"/>, that is granting
+    /// this specific-serial sub-allowance to
+    /// <see cref="Spender"/> without requiring the owner
+    /// to sign. When set, this account must sign the
+    /// allowance transaction and <see cref="Owner"/>
+    /// must not. Maps to the proto <c>delegating_spender</c>
+    /// field on an NFT allowance.
     /// </summary>
-    public EntityId OwnersDelegate { get; private init; }
+    public EntityId DelegatingSpender { get; private init; }
     /// <summary>
     /// The explicit list of serial numbers that
     /// can be spent by the delegate.  If the value
@@ -66,13 +69,15 @@ public sealed record NftAllowance
     /// is <code>null</code> then all NFTs of the
     /// token class may be spent.
     /// </param>
-    /// <param name="ownersDelegate">
-    /// The optional delegating account controlling NFTs for the owner.
+    /// <param name="delegatingSpender">
+    /// Optional. An account with a pre-existing <c>approved_for_all</c>
+    /// allowance over this NFT class, granting this specific-serial
+    /// sub-allowance on the owner's behalf.
     /// </param>
     /// <exception cref="ArgumentException">
     /// If any of the addresses are null or empty.
     /// </exception>
-    public NftAllowance(EntityId token, EntityId owner, EntityId spender, IReadOnlyList<long>? serialNumbers = null, EntityId? ownersDelegate = null)
+    public NftAllowance(EntityId token, EntityId owner, EntityId spender, IReadOnlyList<long>? serialNumbers = null, EntityId? delegatingSpender = null)
     {
         if (token.IsNullOrNone())
         {
@@ -86,15 +91,15 @@ public sealed record NftAllowance
         {
             throw new ArgumentException("The allowance spender account cannot be null or empty.", nameof(spender));
         }
-        if (serialNumbers == null && !ownersDelegate.IsNullOrNone())
+        if (serialNumbers == null && !delegatingSpender.IsNullOrNone())
         {
-            throw new ArgumentException("When specifying a delegating account controlling NFTs for an owner, the serial numbers must be specified.", nameof(ownersDelegate));
+            throw new ArgumentException("When specifying a delegating spender, the serial numbers must be specified.", nameof(delegatingSpender));
         }
         Token = token;
         Owner = owner;
         Spender = spender;
         SerialNumbers = serialNumbers;
-        OwnersDelegate = ownersDelegate is null ? EntityId.None : ownersDelegate;
+        DelegatingSpender = delegatingSpender is null ? EntityId.None : delegatingSpender;
     }
     /// <summary>
     /// Represents an allowance allocation permitting a
@@ -104,7 +109,7 @@ public sealed record NftAllowance
     /// <remarks>
     /// Convenience constructor for a singular NFT allowance.
     /// </remarks>
-    /// <param name="asset">
+    /// <param name="nft">
     /// Single NFT instance to grant the allowance.
     /// </param>
     /// <param name="owner">
@@ -115,17 +120,19 @@ public sealed record NftAllowance
     /// The account that may spend the allocated
     /// allowance of NFT.
     /// </param>
-    /// <param name="ownersDelegate">
-    /// The optional delegating account controlling NFTs for the owner.
+    /// <param name="delegatingSpender">
+    /// Optional. An account with a pre-existing <c>approved_for_all</c>
+    /// allowance over this NFT class, granting this specific-serial
+    /// sub-allowance on the owner's behalf.
     /// </param>
     /// <exception cref="ArgumentException">
     /// If any of the addresses are null or empty.
     /// </exception>
-    public NftAllowance(Nft asset, EntityId owner, EntityId spender, EntityId? ownersDelegate = null)
+    public NftAllowance(Nft nft, EntityId owner, EntityId spender, EntityId? delegatingSpender = null)
     {
-        if (asset is null || Nft.None.Equals(asset))
+        if (nft is null || Nft.None.Equals(nft))
         {
-            throw new ArgumentException("The allowance token cannot be null or empty.", nameof(asset));
+            throw new ArgumentException("The allowance token cannot be null or empty.", nameof(nft));
         }
         if (owner.IsNullOrNone())
         {
@@ -135,11 +142,11 @@ public sealed record NftAllowance
         {
             throw new ArgumentException("The allowance spender account cannot be null or empty.", nameof(spender));
         }
-        Token = asset;
+        Token = nft;
         Owner = owner;
         Spender = spender;
-        SerialNumbers = new[] { asset.SerialNumber };
-        OwnersDelegate = ownersDelegate is null ? EntityId.None : ownersDelegate;
+        SerialNumbers = new[] { nft.SerialNumber };
+        DelegatingSpender = delegatingSpender is null ? EntityId.None : delegatingSpender;
     }
     /// <summary>
     /// Internal helper constructor for creating the
@@ -153,7 +160,7 @@ public sealed record NftAllowance
             Owner = owner;
             Spender = allowance.Spender.AsAddress();
             SerialNumbers = [];
-            OwnersDelegate = EntityId.None;
+            DelegatingSpender = EntityId.None;
         }
         else
         {
@@ -161,7 +168,7 @@ public sealed record NftAllowance
             Owner = EntityId.None;
             Spender = EntityId.None;
             SerialNumbers = [];
-            OwnersDelegate = EntityId.None;
+            DelegatingSpender = EntityId.None;
         }
     }
 }

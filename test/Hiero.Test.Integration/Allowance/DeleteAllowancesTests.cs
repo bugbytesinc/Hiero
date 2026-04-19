@@ -12,7 +12,7 @@ public class DeleteAllowancesTests
         await using var fxAllowances = await TestAllowance.CreateAsync();
         await using var client = await TestNetwork.CreateClientAsync();
 
-        var receipt = await client.RevokeNftAllowancesAsync(new RevokeNftAllowanceParams
+        var receipt = await client.RevokeNftAllowanceAsync(new RevokeNftAllowanceParams
         {
             Token = fxAllowances.TestNft,
             Owner = fxAllowances.Owner,
@@ -28,7 +28,7 @@ public class DeleteAllowancesTests
         await using var fxAllowances = await TestAllowance.CreateAsync();
         await using var client = await TestNetwork.CreateClientAsync();
 
-        var receipt = await client.RevokeNftAllowancesAsync(new RevokeNftAllowanceParams
+        var receipt = await client.RevokeNftAllowanceAsync(new RevokeNftAllowanceParams
         {
             Token = fxAllowances.TestNft,
             Owner = fxAllowances.Owner,

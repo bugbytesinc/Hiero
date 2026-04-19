@@ -13,11 +13,11 @@ public sealed record NftTransfer
     /// <summary>
     /// The account sending the NFT.
     /// </summary>
-    public EntityId From { get; private init; }
+    public EntityId Sender { get; private init; }
     /// <summary>
     /// The account receiving the NFT.
     /// </summary>
-    public EntityId To { get; private init; }
+    public EntityId Receiver { get; private init; }
     /// <summary>
     /// Indicates the transfer was authorized through the
     /// allowance mechanism and the sending account
@@ -44,10 +44,10 @@ public sealed record NftTransfer
     /// <param name="nft">
     /// The address and serial number of the nft to transfer.
     /// </param>
-    /// <param name="fromAddress">
+    /// <param name="sender">
     /// The address of the crypto account having the NFT.
     /// </param>
-    /// <param name="toAddress">
+    /// <param name="receiver">
     /// The address of the crypto account receiving the NFT.
     /// </param>
     /// <param name="delegated">
@@ -60,11 +60,11 @@ public sealed record NftTransfer
     /// <param name="receiverAllowanceHook">
     /// Optional allowance hook call for the receiver.
     /// </param>
-    public NftTransfer(Nft nft, EntityId fromAddress, EntityId toAddress, bool delegated = false, HookCall? senderAllowanceHook = null, HookCall? receiverAllowanceHook = null)
+    public NftTransfer(Nft nft, EntityId sender, EntityId receiver, bool delegated = false, HookCall? senderAllowanceHook = null, HookCall? receiverAllowanceHook = null)
     {
         Nft = nft;
-        From = fromAddress;
-        To = toAddress;
+        Sender = sender;
+        Receiver = receiver;
         Delegated = delegated;
         SenderAllowanceHook = senderAllowanceHook;
         ReceiverAllowanceHook = receiverAllowanceHook;

@@ -9,8 +9,7 @@ namespace Hiero;
 /// Transaction Parameters for Confiscating/Wiping Tokens from an arbitrary account.
 /// </summary>
 /// <example>
-/// Forcibly remove tokens from a holder, reducing total circulation. The
-/// method name is plural — <c>ConfiscateTokensAsync</c>:
+/// Forcibly remove tokens from a holder, reducing total circulation:
 /// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="ConfiscateTokens" language="csharp"/>
 /// </example>
 public sealed class ConfiscateTokenParams : TransactionParams<TokenReceipt>, INetworkParams<TokenReceipt>
@@ -106,7 +105,7 @@ public static class ConfiscateTokenExtensions
     /// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="ConfiscateTokens" language="csharp"/>
     /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Task<TokenReceipt> ConfiscateTokensAsync(this ConsensusClient client, EntityId token, EntityId holder, ulong amount, Action<IConsensusContext>? configure = null)
+    public static Task<TokenReceipt> ConfiscateTokenAsync(this ConsensusClient client, EntityId token, EntityId holder, ulong amount, Action<IConsensusContext>? configure = null)
     {
         return client.ExecuteAsync(new ConfiscateTokenParams { Token = token, Holder = holder, Amount = amount }, configure);
     }
@@ -138,7 +137,7 @@ public static class ConfiscateTokenExtensions
     /// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="ConfiscateTokens" language="csharp"/>
     /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Task<TokenReceipt> ConfiscateTokensAsync(this ConsensusClient client, ConfiscateTokenParams confiscateParams, Action<IConsensusContext>? configure = null)
+    public static Task<TokenReceipt> ConfiscateTokenAsync(this ConsensusClient client, ConfiscateTokenParams confiscateParams, Action<IConsensusContext>? configure = null)
     {
         return client.ExecuteAsync(confiscateParams, configure);
     }

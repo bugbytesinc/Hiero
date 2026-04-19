@@ -8,7 +8,7 @@ public class GetFeeScheduleTests
     public async Task Can_Retrieve_Network_Fee_Schedule()
     {
         await using var client = await TestNetwork.CreateClientAsync();
-        var schedule = await client.GetFeeScheduleAsync();
+        var schedule = await client.GetFeeSchedulesAsync();
         await Assert.That(schedule).IsNotNull();
         await Assert.That(schedule.Current).IsNotNull();
         await Assert.That(schedule.Next).IsNotNull();

@@ -1096,7 +1096,7 @@ public class CreateTokenTests
             ctx.Payer = fxPayer;
             ctx.Signatory = fxPayer;
         });
-        var pendingReceipt = await client.GetReceiptAsync(schedulingReceipt.ScheduledTxId);
+        var pendingReceipt = await client.GetReceiptAsync(schedulingReceipt.ScheduledTransactionId);
         await Assert.That(pendingReceipt.Status).IsEqualTo(ResponseCode.Success);
 
         var createReceipt = pendingReceipt as CreateTokenReceipt;

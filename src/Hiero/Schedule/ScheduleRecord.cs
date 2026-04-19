@@ -16,13 +16,13 @@ public sealed record ScheduleRecord : TransactionRecord
     /// The transaction ID that will be used when the scheduled
     /// transaction is executed by the network.
     /// </summary>
-    public TransactionId ScheduledTxId { get; internal init; }
+    public TransactionId ScheduledTransactionId { get; internal init; }
     /// <summary>
     /// Internal Constructor of the record.
     /// </summary>
     internal ScheduleRecord(Proto.TransactionRecord record) : base(record)
     {
         Schedule = record.Receipt.ScheduleID?.ToAddress() ?? EntityId.None;
-        ScheduledTxId = record.Receipt.ScheduledTransactionID.AsTxId();
+        ScheduledTransactionId = record.Receipt.ScheduledTransactionID.AsTransactionId();
     }
 }

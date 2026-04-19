@@ -6,7 +6,7 @@ using Proto;
 
 namespace Hiero.Test.Integration.Network;
 
-public class SendExternalTests
+public class SubmitExternalTests
 {
     [Test]
     public async Task Can_Transfer_Crypto_Via_External_Transaction_With_No_Signatories()
@@ -53,7 +53,7 @@ public class SendExternalTests
         await senderSignatory.SignAsync(invoice);
         var signedTransaction = invoice.GenerateSignedTransactionFromSignatures(true).ToByteString().Memory;
 
-        var precheck = await noPayerClient.SendExternalTransactionAsync(signedTransaction);
+        var precheck = await noPayerClient.SubmitExternalTransactionAsync(signedTransaction);
         await Assert.That(precheck).IsEqualTo(ResponseCode.Ok);
 
         var receipt = await noPayerClient.GetReceiptAsync(txid);
@@ -112,7 +112,7 @@ public class SendExternalTests
             BodyBytes = body.ToByteString()
         };
 
-        var precheck = await senderClient.SendExternalTransactionAsync(signedTransaction.ToByteArray());
+        var precheck = await senderClient.SubmitExternalTransactionAsync(signedTransaction.ToByteArray());
         await Assert.That(precheck).IsEqualTo(ResponseCode.Ok);
 
         var receipt = await senderClient.GetReceiptAsync(txid);
@@ -165,7 +165,7 @@ public class SendExternalTests
         await senderSignatory.SignAsync(invoice);
         var signedTransaction = invoice.GenerateSignedTransactionFromSignatures(true).ToByteString().Memory;
 
-        var precheck = await client.SendExternalTransactionAsync(signedTransaction);
+        var precheck = await client.SubmitExternalTransactionAsync(signedTransaction);
         await Assert.That(precheck).IsEqualTo(ResponseCode.Ok);
 
         var receipt = await client.GetReceiptAsync(txid);
@@ -186,7 +186,7 @@ public class SendExternalTests
 
         var ex = await Assert.That(async () =>
         {
-            await client.SendExternalTransactionAsync(ReadOnlyMemory<byte>.Empty);
+            await client.SubmitExternalTransactionAsync(ReadOnlyMemory<byte>.Empty);
         }).ThrowsException();
         var ae = ex as ArgumentOutOfRangeException;
         await Assert.That(ae).IsNotNull();
@@ -202,7 +202,7 @@ public class SendExternalTests
 
         var ex = await Assert.That(async () =>
         {
-            await client.SendExternalTransactionAsync(signedTx.ToByteArray());
+            await client.SubmitExternalTransactionAsync(signedTx.ToByteArray());
         }).ThrowsException();
         var ae = ex as ArgumentOutOfRangeException;
         await Assert.That(ae).IsNotNull();
@@ -225,7 +225,7 @@ public class SendExternalTests
 
         var ex = await Assert.That(async () =>
         {
-            await client.SendExternalTransactionAsync(signedTx.ToByteArray());
+            await client.SubmitExternalTransactionAsync(signedTx.ToByteArray());
         }).ThrowsException();
         var ae = ex as ArgumentOutOfRangeException;
         await Assert.That(ae).IsNotNull();
@@ -271,7 +271,7 @@ public class SendExternalTests
 
         var ex = await Assert.That(async () =>
         {
-            await nullEndpointClient.SendExternalTransactionAsync(signedTransaction);
+            await nullEndpointClient.SubmitExternalTransactionAsync(signedTransaction);
         }).ThrowsException();
         var ioe = ex as InvalidOperationException;
         await Assert.That(ioe).IsNotNull();
@@ -320,7 +320,7 @@ public class SendExternalTests
 
         var ex = await Assert.That(async () =>
         {
-            await mismatchClient.SendExternalTransactionAsync(signedTransaction);
+            await mismatchClient.SubmitExternalTransactionAsync(signedTransaction);
         }).ThrowsException();
         var ae = ex as ArgumentException;
         await Assert.That(ae).IsNotNull();
@@ -366,7 +366,7 @@ public class SendExternalTests
         {
             BodyBytes = body.ToByteString()
         };
-        var precheck = await client.SendExternalTransactionAsync(signedTransaction.ToByteArray());
+        var precheck = await client.SubmitExternalTransactionAsync(signedTransaction.ToByteArray());
         await Assert.That(precheck).IsEqualTo(ResponseCode.Ok);
 
         var ex = await Assert.That(async () =>
@@ -388,7 +388,7 @@ public class SendExternalTests
 
         var ex = await Assert.That(async () =>
         {
-            await client.SendExternalTransactionAsync(signedTx);
+            await client.SubmitExternalTransactionAsync(signedTx);
         }).ThrowsException();
         var ae = ex as ArgumentException;
         await Assert.That(ae).IsNotNull();
@@ -446,7 +446,7 @@ public class SendExternalTests
         await senderSignatory.SignAsync(invoice);
         var signedTransaction = invoice.GenerateSignedTransactionFromSignatures(true).ToByteString().Memory;
 
-        var precheck = await noPayerClient.SendExternalTransactionAsync(signedTransaction);
+        var precheck = await noPayerClient.SubmitExternalTransactionAsync(signedTransaction);
         await Assert.That(precheck).IsEqualTo(ResponseCode.AccountRepeatedInAccountAmounts);
 
         var ex = await Assert.That(async () =>

@@ -137,8 +137,8 @@ public static class AccountInfoExtensions
     /// <param name="client">
     /// The Consensus Node Client to query.
     /// </param>
-    /// <param name="address">
-    /// The Hedera Network Address to retrieve detailed information of.
+    /// <param name="account">
+    /// The Hedera account address to retrieve detailed information of.
     /// </param>
     /// <param name="cancellationToken">Optional cancellation token.</param>
     /// <param name="configure">
@@ -152,8 +152,8 @@ public static class AccountInfoExtensions
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
     /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
-    public static async Task<AccountInfo> GetAccountInfoAsync(this ConsensusClient client, EntityId address, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
+    public static async Task<AccountInfo> GetAccountInfoAsync(this ConsensusClient client, EntityId account, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
     {
-        return new AccountInfo(await Engine.QueryAsync(client, new CryptoGetInfoQuery { AccountID = new AccountID(address) }, cancellationToken, configure).ConfigureAwait(false));
+        return new AccountInfo(await Engine.QueryAsync(client, new CryptoGetInfoQuery { AccountID = new AccountID(account) }, cancellationToken, configure).ConfigureAwait(false));
     }
 }

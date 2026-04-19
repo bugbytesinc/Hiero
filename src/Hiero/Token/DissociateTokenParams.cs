@@ -149,7 +149,7 @@ public static class DissociateTokenExtensions
     /// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="DissociateToken" language="csharp"/>
     /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Task<TransactionReceipt> DissociateTokenAsync(this ConsensusClient client, DissociateTokenParams dissociateParams, Action<IConsensusContext>? configure = null)
+    public static Task<TransactionReceipt> DissociateTokensAsync(this ConsensusClient client, DissociateTokenParams dissociateParams, Action<IConsensusContext>? configure = null)
     {
         return client.ExecuteAsync(dissociateParams, configure);
     }

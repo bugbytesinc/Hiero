@@ -54,7 +54,7 @@ public class DeleteTokenTests
         var totalTinytokens = fxToken.CreateParams.Circulation;
         var xferAmount = totalTinytokens / 3;
 
-        await client.TransferTokensAsync(fxToken.CreateReceipt!.Token, fxToken.TreasuryAccount.CreateReceipt!.Address, fxAccount.CreateReceipt!.Address, (long)xferAmount, ctx =>
+        await client.TransferTokenAsync(fxToken.CreateReceipt!.Token, fxToken.TreasuryAccount.CreateReceipt!.Address, fxAccount.CreateReceipt!.Address, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
@@ -116,7 +116,7 @@ public class DeleteTokenTests
         var totalTinytokens = fxToken.CreateParams.Circulation;
         var xferAmount = totalTinytokens / 3;
 
-        await client.TransferTokensAsync(fxToken.CreateReceipt!.Token, fxToken.TreasuryAccount.CreateReceipt!.Address, fxAccount.CreateReceipt!.Address, (long)xferAmount, ctx =>
+        await client.TransferTokenAsync(fxToken.CreateReceipt!.Token, fxToken.TreasuryAccount.CreateReceipt!.Address, fxAccount.CreateReceipt!.Address, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
@@ -130,7 +130,7 @@ public class DeleteTokenTests
 
         var ex = await Assert.That(async () =>
         {
-            await client.TransferTokensAsync(fxToken.CreateReceipt!.Token, fxToken.TreasuryAccount.CreateReceipt!.Address, fxAccount.CreateReceipt!.Address, (long)xferAmount, ctx =>
+            await client.TransferTokenAsync(fxToken.CreateReceipt!.Token, fxToken.TreasuryAccount.CreateReceipt!.Address, fxAccount.CreateReceipt!.Address, (long)xferAmount, ctx =>
             {
                 ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
             });
@@ -151,11 +151,11 @@ public class DeleteTokenTests
         var totalTinytokens = fxToken.CreateParams.Circulation;
         var xferAmount = totalTinytokens / 3;
 
-        await client.TransferTokensAsync(fxToken.CreateReceipt!.Token, fxToken.TreasuryAccount.CreateReceipt!.Address, fxAccount1.CreateReceipt!.Address, (long)xferAmount, ctx =>
+        await client.TransferTokenAsync(fxToken.CreateReceipt!.Token, fxToken.TreasuryAccount.CreateReceipt!.Address, fxAccount1.CreateReceipt!.Address, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
-        await client.TransferTokensAsync(fxToken.CreateReceipt!.Token, fxToken.TreasuryAccount.CreateReceipt!.Address, fxAccount2.CreateReceipt!.Address, (long)xferAmount, ctx =>
+        await client.TransferTokenAsync(fxToken.CreateReceipt!.Token, fxToken.TreasuryAccount.CreateReceipt!.Address, fxAccount2.CreateReceipt!.Address, (long)xferAmount, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
@@ -169,7 +169,7 @@ public class DeleteTokenTests
 
         var ex = await Assert.That(async () =>
         {
-            await client.TransferTokensAsync(fxToken.CreateReceipt!.Token, fxAccount1.CreateReceipt!.Address, fxAccount2.CreateReceipt!.Address, (long)xferAmount, ctx =>
+            await client.TransferTokenAsync(fxToken.CreateReceipt!.Token, fxAccount1.CreateReceipt!.Address, fxAccount2.CreateReceipt!.Address, (long)xferAmount, ctx =>
             {
                 ctx.Signatory = new Signatory(ctx.Signatory!, fxAccount1.PrivateKey);
             });
@@ -361,7 +361,7 @@ public class DeleteTokenTests
         await Assert.That(tex!.Status).IsEqualTo(ResponseCode.AccountIsTreasury);
         await Assert.That(tex.Message).StartsWith("Delete Account failed with status: AccountIsTreasury");
 
-        await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount2, (long)fxToken.CreateParams.Circulation, ctx =>
+        await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount2, (long)fxToken.CreateParams.Circulation, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
@@ -454,7 +454,7 @@ public class DeleteTokenTests
         await using var fx = await TestToken.CreateAsync(ctx => ctx.CreateParams.GrantKycEndorsement = null, fxBagHolder);
         await using var client = await TestNetwork.CreateClientAsync();
 
-        await client.TransferTokensAsync(fx.CreateReceipt!.Token, fx.TreasuryAccount, fxBagHolder, (long)fx.CreateParams.Circulation, ctx =>
+        await client.TransferTokenAsync(fx.CreateReceipt!.Token, fx.TreasuryAccount, fxBagHolder, (long)fx.CreateParams.Circulation, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fx.TreasuryAccount.PrivateKey);
         });
@@ -486,11 +486,11 @@ public class DeleteTokenTests
         await using var fxToken = await TestToken.CreateAsync(ctx => ctx.CreateParams.GrantKycEndorsement = null, fxAccount1, fxAccount2);
         await using var client = await TestNetwork.CreateClientAsync();
 
-        await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount1, 1, ctx =>
+        await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount1, 1, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
-        await client.TransferTokensAsync(fxToken, fxToken.TreasuryAccount, fxAccount2, 1, ctx =>
+        await client.TransferTokenAsync(fxToken, fxToken.TreasuryAccount, fxAccount2, 1, ctx =>
         {
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });

@@ -99,7 +99,7 @@ internal static class Engine
         if (precheck.NodeTransactionPrecheckCode != ResponseCodeEnum.Ok)
         {
             var responseCode = (ResponseCode)precheck.NodeTransactionPrecheckCode;
-            throw new PrecheckException($"Transaction Failed Pre-Check: {responseCode}", transactionId.AsTxId(), responseCode, precheck.Cost);
+            throw new PrecheckException($"Transaction Failed Pre-Check: {responseCode}", transactionId.AsTransactionId(), responseCode, precheck.Cost);
         }
         var result = await GetReceiptAsync(context, transactionId, cancellationToken).ConfigureAwait(false);
         var receipt = networkParams.CreateReceipt(transactionId, result);
@@ -525,7 +525,7 @@ internal static class Engine
             var message = rpcex.StatusCode == StatusCode.Unavailable && channel.State == ConnectivityState.Connecting ?
                 $"Unable to communicate with network node {channel.Target}, it may be down or not reachable." :
                 $"Unable to communicate with network node {channel.Target}: {rpcex.Status}";
-            throw new PrecheckException(message, transactionId.AsTxId(), ResponseCode.RpcError, 0, rpcex);
+            throw new PrecheckException(message, transactionId.AsTransactionId(), ResponseCode.RpcError, 0, rpcex);
         }
     }
     /// <summary>
@@ -640,7 +640,7 @@ internal static class Engine
             case ResponseCodeEnum.Ok:
                 break;
             case ResponseCodeEnum.Busy:
-                throw new ConsensusException("Network failed to respond to request for a transaction receipt, it is too busy. It is possible the network may still reach consensus for this transaction.", transactionId.AsTxId(), (ResponseCode)responseCode);
+                throw new ConsensusException("Network failed to respond to request for a transaction receipt, it is too busy. It is possible the network may still reach consensus for this transaction.", transactionId.AsTransactionId(), (ResponseCode)responseCode);
             case ResponseCodeEnum.Unknown:
             case ResponseCodeEnum.ReceiptNotFound:
                 throw new TransactionException($"Network failed to return a transaction receipt, Status Code Returned: {responseCode}", new TransactionReceipt(transactionId, new() { Status = responseCode }));
@@ -649,11 +649,11 @@ internal static class Engine
         switch (status)
         {
             case ResponseCodeEnum.Unknown:
-                throw new ConsensusException("Network failed to reach consensus within the configured retry time window, It is possible the network may still reach consensus for this transaction.", transactionId.AsTxId(), (ResponseCode)status);
+                throw new ConsensusException("Network failed to reach consensus within the configured retry time window, It is possible the network may still reach consensus for this transaction.", transactionId.AsTransactionId(), (ResponseCode)status);
             case ResponseCodeEnum.TransactionExpired:
-                throw new ConsensusException("Network failed to reach consensus before transaction request expired.", transactionId.AsTxId(), (ResponseCode)status);
+                throw new ConsensusException("Network failed to reach consensus before transaction request expired.", transactionId.AsTransactionId(), (ResponseCode)status);
             case ResponseCodeEnum.ReceiptNotFound:
-                throw new ConsensusException("Network failed to find a receipt for given transaction.", transactionId.AsTxId(), (ResponseCode)status);
+                throw new ConsensusException("Network failed to find a receipt for given transaction.", transactionId.AsTransactionId(), (ResponseCode)status);
             default:
                 return response.TransactionGetReceipt.Receipt;
         }
