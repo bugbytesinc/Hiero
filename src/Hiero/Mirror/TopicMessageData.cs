@@ -2,6 +2,7 @@
 using Hiero.Converters;
 using Hiero.Mirror.Filters;
 using Hiero.Mirror.Implementation;
+using Hiero.Mirror.Paging;
 using System.ComponentModel;
 using System.Text.Json.Serialization;
 using static Hiero.Mirror.Implementation.MirrorRestClientUtils;
@@ -62,7 +63,12 @@ public class TopicMessageData
 public static class TopicMessageDataExtensions
 {
     /// <summary>
-    /// Retrieves a topic message with the given topic and sequence number.
+    /// Retrieves a single topic message by topic id and in-stream
+    /// sequence number via
+    /// <c>/api/v1/topics/{topicId}/messages/{sequenceNumber}</c>.
+    /// Use the <see cref="GetTopicMessageAsync(MirrorRestClient, ConsensusTimeStamp)"/>
+    /// overload when the consensus timestamp is known but the topic id
+    /// is not.
     /// </summary>
     /// <param name="client">
     /// Mirror Rest Client to use for the request.
@@ -78,7 +84,26 @@ public static class TopicMessageDataExtensions
     /// </returns>
     public static Task<TopicMessageData?> GetTopicMessageAsync(this MirrorRestClient client, EntityId topic, ulong sequenceNumber)
     {
-        return client.GetSingleItemAsync<TopicMessageData>($"topics/{topic}/messages/{sequenceNumber}", MirrorJsonContext.Default.TopicMessageData);
+        return client.GetSingleItemAsync($"topics/{topic}/messages/{sequenceNumber}", MirrorJsonContext.Default.TopicMessageData);
+    }
+    /// <summary>
+    /// Retrieves a topic message by its consensus timestamp, without
+    /// needing to know the topic id — useful for forensic lookups
+    /// starting from a consensus instant recorded elsewhere (e.g.,
+    /// transaction records, block history).
+    /// </summary>
+    /// <param name="client">
+    /// Mirror Rest Client to use for the request.
+    /// </param>
+    /// <param name="consensus">
+    /// The consensus timestamp identifying the message.
+    /// </param>
+    /// <returns>
+    /// The topic message information or null if not found.
+    /// </returns>
+    public static Task<TopicMessageData?> GetTopicMessageAsync(this MirrorRestClient client, ConsensusTimeStamp consensus)
+    {
+        return client.GetSingleItemAsync($"topics/messages/{consensus}", MirrorJsonContext.Default.TopicMessageData);
     }
     /// <summary>
     /// Retrieves a list of topic messages.  Messages may be filtered by a starting
@@ -97,9 +122,9 @@ public static class TopicMessageDataExtensions
     /// An enumerable of topic messages meeting the given criteria, may be empty if
     /// none are found.
     /// </returns>
-    public static IAsyncEnumerable<TopicMessageData> GetTopicMessagesAsync(this MirrorRestClient client, EntityId topic, params IMirrorQueryFilter[] filters)
+    public static IAsyncEnumerable<TopicMessageData> GetTopicMessagesAsync(this MirrorRestClient client, EntityId topic, params IMirrorQueryParameter[] filters)
     {
-        var path = GenerateInitialPath($"topics/{topic}/messages", [new LimitFilter(100), .. filters]);
+        var path = GenerateInitialPath($"topics/{topic}/messages", [new PageLimit(100), .. filters]);
         return client.GetPagedItemsAsync<TopicMessageDataPage, TopicMessageData>(path, MirrorJsonContext.Default.TopicMessageDataPage);
     }
 }

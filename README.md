@@ -194,10 +194,10 @@ var mirror = new MirrorRestClient(new HttpClient
     BaseAddress = new Uri("https://testnet.mirrornode.hedera.com")
 });
 
-await foreach (var tx in mirror.GetAccountTransactionsAsync(
-    new EntityId(0, 0, 12345),
-    new LimitFilter(10),
-    new OrderByFilter("desc")))
+await foreach (var tx in mirror.GetTransactionsAsync(
+    AccountFilter.Is(new EntityId(0, 0, 12345)),
+    new PageLimit(10),
+    OrderBy.Descending))
 {
     Console.WriteLine($"{tx.ConsensusTimestamp}: {tx.Name}");
 }

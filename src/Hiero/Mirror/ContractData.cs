@@ -2,6 +2,7 @@
 using Hiero.Converters;
 using Hiero.Mirror.Filters;
 using Hiero.Mirror.Implementation;
+using Hiero.Mirror.Paging;
 using System.ComponentModel;
 using System.Text.Json.Serialization;
 using static Hiero.Mirror.Implementation.MirrorRestClientUtils;
@@ -74,6 +75,14 @@ public class ContractData
     [JsonPropertyName("memo")]
     public string Memo { get; set; } = default!;
     /// <summary>
+    /// The current contract nonce — the number of
+    /// contracts this contract has deployed via
+    /// <c>CREATE</c> / <c>CREATE2</c>.
+    /// </summary>
+    [JsonPropertyName("nonce")]
+    [JsonConverter(typeof(LongMirrorConverter))]
+    public long Nonce { get; set; }
+    /// <summary>
     /// The HAPI ID of the obtainer?
     /// </summary>
     [JsonPropertyName("obtainer_id")]
@@ -115,7 +124,12 @@ public class ContractData
 public static class ContractDataExtensions
 {
     /// <summary>
-    /// Retrieves the hedera details for a contract.
+    /// Retrieves the full contract information from
+    /// <c>/api/v1/contracts/{id}</c>, including both
+    /// <see cref="ContractData.Bytecode"/> and
+    /// <see cref="ContractData.RuntimeBytecode"/> (which the list
+    /// endpoint omits). Use <see cref="TimestampFilter"/> to retrieve
+    /// the contract's state at a historical consensus instant.
     /// </summary>
     /// <param name="client">
     /// Mirror Rest Client to use for the request.
@@ -124,14 +138,44 @@ public static class ContractDataExtensions
     /// The entityId of the contract to retrieve.
     /// </param>
     /// <param name="filters">
-    /// Additional filters that may be applied.
+    /// Additional query parameters. The endpoint supports
+    /// <see cref="TimestampFilter"/>.
     /// </param>
     /// <returns>
-    /// The contract information satisfying any additional filters, or null if not found.
+    /// The contract information, or null if not found.
     /// </returns>
-    public static Task<ContractData?> GetContractAsync(this MirrorRestClient client, EntityId contract, params IMirrorQueryFilter[] filters)
+    public static Task<ContractData?> GetContractAsync(this MirrorRestClient client, EntityId contract, params IMirrorQueryParameter[] filters)
     {
         var path = GenerateInitialPath($"contracts/{MirrorFormat(contract)}", filters);
-        return client.GetSingleItemAsync<ContractData>(path, MirrorJsonContext.Default.ContractData);
+        return client.GetSingleItemAsync(path, MirrorJsonContext.Default.ContractData);
+    }
+    /// <summary>
+    /// Enumerates smart-contract entities across the network from
+    /// <c>/api/v1/contracts</c>. Use <see cref="ContractFilter"/> to
+    /// narrow by contract id (or id range). Newest-first by default;
+    /// pass <see cref="OrderBy.Ascending"/> to reverse.
+    /// </summary>
+    /// <remarks>
+    /// The list endpoint omits <see cref="ContractData.Bytecode"/>
+    /// and <see cref="ContractData.RuntimeBytecode"/> — these
+    /// come back empty here. Call
+    /// <see cref="GetContractAsync(MirrorRestClient, EntityId, IMirrorQueryParameter[])"/>
+    /// on a specific id to retrieve them.
+    /// </remarks>
+    /// <param name="client">
+    /// Mirror Rest Client to use for the request.
+    /// </param>
+    /// <param name="filters">
+    /// Additional query filters. The endpoint supports
+    /// <see cref="ContractFilter"/>, <see cref="PageLimit"/>,
+    /// and <see cref="OrderBy"/>.
+    /// </param>
+    /// <returns>
+    /// An async enumerable of contract records.
+    /// </returns>
+    public static IAsyncEnumerable<ContractData> GetContractsAsync(this MirrorRestClient client, params IMirrorQueryParameter[] filters)
+    {
+        var path = GenerateInitialPath("contracts", [new PageLimit(100), .. filters]);
+        return client.GetPagedItemsAsync<ContractDataPage, ContractData>(path, MirrorJsonContext.Default.ContractDataPage);
     }
 }

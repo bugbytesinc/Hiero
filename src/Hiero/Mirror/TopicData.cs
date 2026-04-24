@@ -68,7 +68,9 @@ public class TopicData
 public static class TopicDataExtensions
 {
     /// <summary>
-    /// Retrieves the information regarding a topic.
+    /// Retrieves the topic entity information from
+    /// <c>/api/v1/topics/{id}</c>, including the admin and submit
+    /// keys, memo, and lifecycle timestamps.
     /// </summary>
     /// <param name="client">
     /// Mirror Rest Client to use for the request.
@@ -77,14 +79,16 @@ public static class TopicDataExtensions
     /// The ID of the topic to retrieve.
     /// </param>
     /// <param name="filters">
-    /// Additional query filters if desired.
+    /// Reserved for forward compatibility. The endpoint currently
+    /// accepts no query parameters per the OpenAPI spec; any filters
+    /// supplied here are included in the URL but ignored by the server.
     /// </param>
     /// <returns>
     /// The information for the specified topic, or null if not found.
     /// </returns>
-    public static Task<TopicData?> GetTopicAsync(this MirrorRestClient client, EntityId topic, params IMirrorQueryFilter[] filters)
+    public static Task<TopicData?> GetTopicAsync(this MirrorRestClient client, EntityId topic, params IMirrorQueryParameter[] filters)
     {
         var path = GenerateInitialPath($"topics/{MirrorFormat(topic)}", filters);
-        return client.GetSingleItemAsync<TopicData>(path, MirrorJsonContext.Default.TopicData);
+        return client.GetSingleItemAsync(path, MirrorJsonContext.Default.TopicData);
     }
 }

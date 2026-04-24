@@ -1166,49 +1166,99 @@ var mirror = new MirrorRestClient(new HttpClient
 });
 ```
 
+All list queries accept a `params IMirrorQueryParameter[]` tail for pagination
+and filtering; see **Query Filters** below for the full catalog.
+
 ### Accounts
 
 ```csharp
 AccountData? data = await mirror.GetAccountAsync(accountId);
-IAsyncEnumerable<AccountData> accounts = mirror.GetAccountsByEndorsementAsync(endorsement);
-IAsyncEnumerable<CryptoAllowanceData> allowances = mirror.GetAccountCryptoAllowancesAsync(account);
-IAsyncEnumerable<TokenAllowanceData> tokenAllowances = mirror.GetAccountTokenAllowancesAsync(account);
-IAsyncEnumerable<TokenHoldingData> holdings = mirror.GetAccountTokenHoldingsAsync(account);
+IAsyncEnumerable<AccountData> accounts =
+    mirror.GetAccountsAsync(AccountPublicKeyFilter.Is(endorsement));
+
+IAsyncEnumerable<CryptoAllowanceData>  hbarAllowances  = mirror.GetAccountCryptoAllowancesAsync(account);
+IAsyncEnumerable<TokenAllowanceData>   tokenAllowances = mirror.GetAccountTokenAllowancesAsync(account);
+IAsyncEnumerable<NftAllowanceData>     nftAsOwner      = mirror.GetAccountNftAllowancesAsOwnerAsync(account);
+IAsyncEnumerable<NftAllowanceData>     nftAsSpender    = mirror.GetAccountNftAllowancesAsSpenderAsync(account);
+IAsyncEnumerable<StakingRewardData>    rewards         = mirror.GetAccountStakingRewardsAsync(account);
+IAsyncEnumerable<TokenHoldingData>     holdings        = mirror.GetAccountTokenHoldingsAsync(account);
 long? balance = await mirror.GetAccountTokenBalanceAsync(account, token);
 ```
 
 ### Tokens and NFTs
 
 ```csharp
-TokenData? data = await mirror.GetTokenAsync(tokenId);
-NftData? nft = await mirror.GetNftAsync(new Nft(tokenId, serial));
-IAsyncEnumerable<AccountBalanceData> balances = mirror.GetTokenBalancesAsync(tokenId);
+TokenData?                          data   = await mirror.GetTokenAsync(tokenId);
+IAsyncEnumerable<TokenSummaryData>  tokens = mirror.GetTokensAsync(
+    TokenTypeFilter.Fungible,
+    TokenNameFilter.Contains("USD"));
+
+NftData?                     nft      = await mirror.GetNftAsync(new Nft(tokenId, serial));
+IAsyncEnumerable<NftData>    byOwner  = mirror.GetAccountNftsAsync(account);
+IAsyncEnumerable<NftData>    byCollection = mirror.GetTokenNftsAsync(tokenId);
+IAsyncEnumerable<NftTransactionData>  history = mirror.GetNftTransactionHistoryAsync(new Nft(tokenId, serial));
+IAsyncEnumerable<AccountBalanceData>  holders = mirror.GetTokenHoldersSnapshotAsync(tokenId, asOf);
+```
+
+### Airdrops
+
+```csharp
+IAsyncEnumerable<TokenAirdropData> outstanding = mirror.GetAccountOutstandingAirdropsAsync(account);
+IAsyncEnumerable<TokenAirdropData> pending     = mirror.GetAccountPendingAirdropsAsync(account);
 ```
 
 ### Transactions
 
 ```csharp
 TransactionDetailData[] group = await mirror.GetTransactionGroupAsync(txId);
-TransactionDetailData? tx = await mirror.GetTransactionAsync(consensusTimestamp);
-IAsyncEnumerable<TransactionDetailData> txs = mirror.GetAccountTransactionsAsync(account);
+TransactionDetailData?  tx    = await mirror.GetTransactionAsync(consensusTimestamp);
+IAsyncEnumerable<TransactionDetailData> txs = mirror.GetTransactionsAsync(
+    AccountFilter.Is(account),
+    ResultFilter.Success,
+    TransferDirectionFilter.Credit,
+    TransactionTypeFilter.CryptoTransfer,
+    OrderBy.Descending,
+    new PageLimit(25));
 ConsensusTimeStamp latest = await mirror.GetLatestConsensusTimestampAsync();
 ```
 
 ### HCS (Consensus Service)
 
 ```csharp
-TopicData? topic = await mirror.GetTopicAsync(topicId);
-TopicMessageData? msg = await mirror.GetTopicMessageAsync(topicId, sequenceNumber);
+TopicData?        topic  = await mirror.GetTopicAsync(topicId);
+TopicMessageData? bySeq  = await mirror.GetTopicMessageAsync(topicId, sequenceNumber);
+TopicMessageData? byTs   = await mirror.GetTopicMessageAsync(consensusTimestamp);
 IAsyncEnumerable<TopicMessageData> msgs = mirror.GetTopicMessagesAsync(topicId);
 ```
 
 ### Contracts
 
 ```csharp
-ContractData? data = await mirror.GetContractAsync(contractId);
-IAsyncEnumerable<ContractResultData> results = mirror.GetContractResultsAsync(contractId);
-ContractResultData? result = await mirror.GetContractResultByTransactionIdAsync(txId);
-IAsyncEnumerable<ExtendedContractLogData> logs = mirror.GetContractLogEventsAsync(contractId);
+ContractData?                   data      = await mirror.GetContractAsync(contractId);
+IAsyncEnumerable<ContractData>  contracts = mirror.GetContractsAsync();
+
+// Results — by contract, by timestamp, by tx, by block, or global
+IAsyncEnumerable<ContractResultData> byContract   = mirror.GetContractResultsAsync(contractId);
+ContractResultData? byTimestamp = await mirror.GetContractResultByTimestampAsync(contractId, ts);
+ContractResultData? byHash      = await mirror.GetContractResultByTransactionHashAsync(evmHash);
+ContractResultData? byTxId      = await mirror.GetContractResultByTransactionIdAsync(txId);
+ContractResultData? byBlockIdx  = await mirror.GetContractResultByBlockAndPositionAsync(blockHash, idx);
+IAsyncEnumerable<ContractResultData> byBlock = mirror.GetContractResultsByBlockHashAsync(blockHash);
+IAsyncEnumerable<ContractResultData> all     = mirror.GetAllContractResultsAsync();
+
+// Logs
+IAsyncEnumerable<ExtendedContractLogData> logs    = mirror.GetContractLogEventsAsync(contractId);
+IAsyncEnumerable<ExtendedContractLogData> allLogs = mirror.GetAllContractLogEventsAsync();
+
+// Internal actions (CALL / DELEGATECALL / CREATE trace) and opcode traces
+IAsyncEnumerable<ContractActionData> actions =
+    mirror.GetContractActionsByTransactionHashAsync(evmHash);
+OpcodesData? opcodes = await mirror.GetContractOpcodesByTransactionHashAsync(
+    evmHash,
+    OpcodeMemoryProjectionFilter.Include,
+    OpcodeStackProjectionFilter.Include,
+    OpcodeStorageProjectionFilter.Include);
+
 ContractStateData? state = await mirror.GetContractStateAsync(contractId, position, filters);
 EncodedParams result = await mirror.CallEvmAsync(evmCallData);
 long gas = await mirror.EstimateGasAsync(fromEvmAddress, callParams);
@@ -1218,9 +1268,18 @@ BigInteger chainId = await mirror.GetChainIdAsync();
 ### Blocks
 
 ```csharp
-BlockData? block = await mirror.GetBlockAsync(blockNumber);
-BlockData? block = await mirror.GetBlockAsync(blockhash);
-BlockData? latest = await mirror.GetLatestBlockAsync();
+BlockData?                   byNumber = await mirror.GetBlockAsync(blockNumber);
+BlockData?                   byHash   = await mirror.GetBlockAsync(blockhash);
+BlockData?                   latest   = await mirror.GetLatestBlockAsync();
+BlockData?                   asOf     = await mirror.GetLatestBlockBeforeConsensusAsync(ts);
+IAsyncEnumerable<BlockData>  blocks   = mirror.GetBlocksAsync(OrderBy.Descending, new PageLimit(50));
+```
+
+### Schedules
+
+```csharp
+ScheduleData?                  schedule  = await mirror.GetScheduleAsync(scheduleId);
+IAsyncEnumerable<ScheduleData> schedules = mirror.GetSchedulesAsync(AccountFilter.Is(creator));
 ```
 
 ### Network
@@ -1229,29 +1288,64 @@ BlockData? latest = await mirror.GetLatestBlockAsync();
 IAsyncEnumerable<ConsensusNodeData> nodes = mirror.GetConsensusNodesAsync();
 IReadOnlyDictionary<ConsensusNodeEndpoint, long> active =
     await mirror.GetActiveConsensusNodesAsync(timeoutMs);
-ExchangeRateData? rate = await mirror.GetExchangeRateAsync();
-NetworkFeesData? fees = await mirror.GetLatestNetworkFeesAsync();
+NetworkStakeData?  stake    = await mirror.GetNetworkStakeAsync();
+NetworkSupplyData? supply   = await mirror.GetNetworkSupplyAsync();
+ExchangeRateData?  rate     = await mirror.GetExchangeRateAsync();
+NetworkFeesData?   fees     = await mirror.GetLatestNetworkFeesAsync();
 ```
 
 ### Query Filters
 
-Many methods accept `IMirrorQueryFilter` parameters for pagination and filtering:
+Every list- and single-entity query accepts a `params IMirrorQueryParameter[]`
+tail, covering paging directives, predicate filters, and projection filters.
+Constructors are private; every filter is produced via static factories or
+static members. Paging directives live in `Hiero.Mirror.Paging`; all other
+filters live in `Hiero.Mirror.Filters`.
 
 ```csharp
-var txs = mirror.GetAccountTransactionsAsync(account,
-    new LimitFilter(25),
-    new OrderByFilter("desc"),
-    new TimestampAfterFilter(timestamp));
+var txs = mirror.GetTransactionsAsync(AccountFilter.Is(account),
+    new PageLimit(25),
+    OrderBy.Descending,
+    TimestampFilter.After(timestamp),
+    ResultFilter.Success);
 
 var holdings = mirror.GetAccountTokenHoldingsAsync(account,
-    new TokenIsFilter(tokenId),
-    new LimitFilter(10));
+    TokenFilter.Is(tokenId),
+    new PageLimit(10));
 ```
 
-Available filters: `LimitFilter`, `OrderByFilter`, `TimestampAfterFilter`,
-`TimestampEqualsFilter`, `TimestampOnOrBeforeFilter`, `SequenceAfterFilter`,
-`AccountIsFilter`, `ContractIsFilter`, `TokenIsFilter`, `SpenderIsFilter`,
-`SlotIsFilter`, `TopicIsFilter`.
+Paging directives:
+- `new PageLimit(n)`, `OrderBy.Ascending`, `OrderBy.Descending`.
+
+Comparison-capable predicate filters (`.Is`, `.After`, `.OnOrAfter`, `.Before`, `.OnOrBefore`, `.NotIs`):
+- `TimestampFilter`, `SequenceNumberFilter`, `SerialNumberFilter`,
+  `AccountBalanceFilter`, `BlockNumberFilter`, `AccountFilter`, `TokenFilter`,
+  `SpenderFilter`, `ContractFilter`, `ContractActionIndexFilter`, `ScheduleFilter`.
+- `NodeFilter` offers 5 operators (no `NotIs`).
+- `ContractLogIndexFilter` offers 5 operators (no `NotIs`) and must be accompanied by a `TimestampFilter` in the same request. Distinct from `ContractActionIndexFilter` despite sharing the `index` wire name — the two endpoints differ server-side on whether `ne:` is accepted.
+
+Equality-only predicate filters (`.Is(value)` only):
+- `AccountPublicKeyFilter`, `PublicKeyFilter`, `EvmSenderFilter`,
+  `EvmTopicFilter`, `BlockHashFilter`, `TransactionHashFilter`, `SlotFilter`,
+  `FileFilter`, `TransactionIndexFilter`, `SenderFilter`, `ReceiverFilter`.
+
+Enum-like predicate filters (static members):
+- `ResultFilter.Success | .Fail`
+- `TokenTypeFilter.All | .Fungible | .NonFungible`
+- `TransferDirectionFilter.Credit | .Debit`
+- `TransactionTypeFilter.CryptoTransfer | .ContractCall | … ` (full HAPI transaction enum)
+
+Substring predicate filter:
+- `TokenNameFilter.Contains(fragment)` — 3–100 character partial match.
+
+Projection filters (`IMirrorProjection`; control which fields come back, not which rows):
+- `BalanceProjectionFilter.Include | .Exclude` — per-token balances on `AccountData`.
+- `InternalProjectionFilter.Include | .Exclude` — child ledger entries on contract results.
+- `HbarTransferProjectionFilter.Include | .Exclude` — hbar transfers on contract results.
+- `MessageEncodingProjectionFilter.Base64 | .Utf8` — HCS message encoding.
+- `OpcodeMemoryProjectionFilter.Include | .Exclude`
+- `OpcodeStackProjectionFilter.Include | .Exclude`
+- `OpcodeStorageProjectionFilter.Include | .Exclude`
 
 ---
 

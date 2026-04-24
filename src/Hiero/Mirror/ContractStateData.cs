@@ -4,6 +4,7 @@ using Hiero.Converters;
 using Hiero.Mirror;
 using Hiero.Mirror.Filters;
 using Hiero.Mirror.Implementation;
+using Hiero.Mirror.Paging;
 using System.ComponentModel;
 using System.Numerics;
 using System.Text.Json.Serialization;
@@ -52,7 +53,11 @@ namespace Hiero.Mirror
 public static class ContractStateDataExtensions
 {
     /// <summary>
-    /// Retrieves Contract State (slot) data.
+    /// Retrieves the value stored at a specific storage slot of a
+    /// contract from <c>/api/v1/contracts/{id}/state</c>. The
+    /// <paramref name="position"/> is converted internally via
+    /// <see cref="SlotFilter"/>; use <see cref="TimestampFilter"/> to
+    /// read the slot's value at a historical consensus instant.
     /// </summary>
     /// <param name="client">
     /// Mirror Rest Client to use for the request.
@@ -61,18 +66,21 @@ public static class ContractStateDataExtensions
     /// The EntityId of the contract.
     /// </param>
     /// <param name="position">
-    /// The position within the data (slot number).
+    /// The storage slot position as a 32-byte big-endian integer.
     /// </param>
     /// <param name="filters">
-    /// Additional filters to apply.
+    /// Additional query parameters. The endpoint supports
+    /// <see cref="TimestampFilter"/>, <see cref="PageLimit"/>, and
+    /// <see cref="OrderBy"/>.
     /// </param>
     /// <returns>
-    /// The contract data (slot information) fulfilling the search criteria, or null if not found.
+    /// The slot record at the requested position, or null if the slot
+    /// has not been written.
     /// </returns>
-    public static async Task<ContractStateData?> GetContractStateAsync(this MirrorRestClient client, EntityId contract, BigInteger position, IMirrorQueryFilter[] filters)
+    public static async Task<ContractStateData?> GetContractStateAsync(this MirrorRestClient client, EntityId contract, BigInteger position, IMirrorQueryParameter[] filters)
     {
-        var path = GenerateInitialPath($"contracts/{MirrorFormat(contract)}/state", [new SlotIsFilter(position), .. filters]);
-        var list = await client.GetSingleItemAsync<ContractStateDataPage>(path, MirrorJsonContext.Default.ContractStateDataPage).ConfigureAwait(false);
+        var path = GenerateInitialPath($"contracts/{MirrorFormat(contract)}/state", [SlotFilter.Is(position), .. filters]);
+        var list = await client.GetSingleItemAsync(path, MirrorJsonContext.Default.ContractStateDataPage).ConfigureAwait(false);
         return list?.States?.FirstOrDefault();
     }
 }

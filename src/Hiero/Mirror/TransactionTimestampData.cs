@@ -23,17 +23,23 @@ internal class TransactionTimestampData
 public static class TransactionTimestampDataExtensions
 {
     /// <summary>
-    /// Retrieves the latest consensus timestamp known by the mirror node.
+    /// Retrieves the most recent consensus timestamp observed by the
+    /// mirror node via
+    /// <c>/api/v1/transactions?limit=1&amp;order=desc</c>. There is no
+    /// dedicated "now" endpoint on the mirror node; this is the
+    /// canonical way to get a current-ish network clock.
     /// </summary>
     /// <param name="client">
     /// Mirror Rest Client to use for the request.
     /// </param>
     /// <returns>
-    /// The latest consensus timestamp known by the mirror node.
+    /// The latest consensus timestamp known by the mirror node, or
+    /// <see cref="ConsensusTimeStamp.MinValue"/> if the mirror has no
+    /// transactions recorded yet (e.g., freshly-started local node).
     /// </returns>
     public static async Task<ConsensusTimeStamp> GetLatestConsensusTimestampAsync(this MirrorRestClient client)
     {
-        var list = await client.GetSingleItemAsync<TransactionTimestampDataPage>("transactions?limit=1&order=desc", MirrorJsonContext.Default.TransactionTimestampDataPage);
+        var list = await client.GetSingleItemAsync("transactions?limit=1&order=desc", MirrorJsonContext.Default.TransactionTimestampDataPage);
         if (list?.Transactions?.Length > 0)
         {
             return list.Transactions[0].Consensus;

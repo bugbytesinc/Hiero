@@ -2,6 +2,7 @@
 using Hiero.Converters;
 using Hiero.Mirror.Filters;
 using Hiero.Mirror.Implementation;
+using Hiero.Mirror.Paging;
 using System.ComponentModel;
 using System.Text.Json.Serialization;
 using static Hiero.Mirror.Implementation.MirrorRestClientUtils;
@@ -28,8 +29,7 @@ public class BlockData
     /// The Hash of the block.
     /// </summary>
     [JsonPropertyName("hash")]
-    [JsonConverter(typeof(HexStringToBytesConverter))]
-    public ReadOnlyMemory<byte> Hash { get; set; }
+    public EvmHash Hash { get; set; } = EvmHash.None;
     /// <summary>
     /// The filename of this block exported by 
     /// the gossip node network.
@@ -46,8 +46,7 @@ public class BlockData
     /// The Hash of the previous block.
     /// </summary>
     [JsonPropertyName("previous_hash")]
-    [JsonConverter(typeof(HexStringToBytesConverter))]
-    public ReadOnlyMemory<byte> PreviousHash { get; set; }
+    public EvmHash PreviousHash { get; set; } = EvmHash.None;
     /// <summary>
     /// The size of this block.
     /// </summary>
@@ -80,7 +79,8 @@ public class BlockData
 public static class BlockDataExtensions
 {
     /// <summary>
-    /// Retrieves block information given the block number ID
+    /// Retrieves a single block by number from
+    /// <c>/api/v1/blocks/{blockNumber}</c>.
     /// </summary>
     /// <param name="client">
     /// Mirror Rest Client to use for the request.
@@ -93,10 +93,11 @@ public static class BlockDataExtensions
     /// </returns>
     public static Task<BlockData?> GetBlockAsync(this MirrorRestClient client, long blockNumber)
     {
-        return client.GetSingleItemAsync<BlockData>($"blocks/{blockNumber}", MirrorJsonContext.Default.BlockData);
+        return client.GetSingleItemAsync($"blocks/{blockNumber}", MirrorJsonContext.Default.BlockData);
     }
     /// <summary>
-    /// Retrieves block information given the block hash.
+    /// Retrieves a single block by EVM hash from
+    /// <c>/api/v1/blocks/{blockHash}</c>.
     /// </summary>
     /// <param name="client">
     /// Mirror Rest Client to use for the request.
@@ -107,12 +108,14 @@ public static class BlockDataExtensions
     /// <returns>
     /// Information for the block, or null if not found.
     /// </returns>
-    public static Task<BlockData?> GetBlockAsync(this MirrorRestClient client, ReadOnlyMemory<byte> blockhash)
+    public static Task<BlockData?> GetBlockAsync(this MirrorRestClient client, EvmHash blockhash)
     {
-        return client.GetSingleItemAsync<BlockData>($"blocks/0x{Hex.FromBytes(blockhash)}", MirrorJsonContext.Default.BlockData);
+        return client.GetSingleItemAsync($"blocks/{blockhash}", MirrorJsonContext.Default.BlockData);
     }
     /// <summary>
-    /// Retrieves the latest block known to the remote mirror node.
+    /// Retrieves the most recent block observed by the mirror node via
+    /// <c>/api/v1/blocks?limit=1&amp;order=desc</c> (there is no
+    /// dedicated "latest block" endpoint).
     /// </summary>
     /// <param name="client">
     /// Mirror Rest Client to use for the request.
@@ -123,7 +126,7 @@ public static class BlockDataExtensions
     /// </returns>
     public static async Task<BlockData?> GetLatestBlockAsync(this MirrorRestClient client)
     {
-        var list = await client.GetSingleItemAsync<BlockDataPage>("blocks?limit=1&order=desc", MirrorJsonContext.Default.BlockDataPage).ConfigureAwait(false);
+        var list = await client.GetSingleItemAsync("blocks?limit=1&order=desc", MirrorJsonContext.Default.BlockDataPage).ConfigureAwait(false);
         return list?.Blocks?.FirstOrDefault();
     }
     /// <summary>
@@ -136,8 +139,31 @@ public static class BlockDataExtensions
     /// <returns>Block info for the latest block before the given timestamp</returns>
     public static async Task<BlockData?> GetLatestBlockBeforeConsensusAsync(this MirrorRestClient client, ConsensusTimeStamp consensus)
     {
-        var path = GenerateInitialPath($"blocks", [new LimitFilter(1), OrderByFilter.Descending, new TimestampOnOrBeforeFilter(consensus)]);
-        var list = await client.GetSingleItemAsync<BlockDataPage>("blocks?limit=1&order=desc", MirrorJsonContext.Default.BlockDataPage).ConfigureAwait(false);
+        var path = GenerateInitialPath($"blocks", [new PageLimit(1), OrderBy.Descending, TimestampFilter.OnOrBefore(consensus)]);
+        var list = await client.GetSingleItemAsync(path, MirrorJsonContext.Default.BlockDataPage).ConfigureAwait(false);
         return list?.Blocks?.FirstOrDefault();
+    }
+    /// <summary>
+    /// Enumerates blocks from the chain. Default ordering is
+    /// newest-first; pass <see cref="OrderBy.Ascending"/> to
+    /// reverse. Pair with <see cref="BlockNumberFilter"/> or
+    /// <see cref="TimestampFilter"/> to bound a range.
+    /// </summary>
+    /// <param name="client">
+    /// Mirror Rest Client to use for the request.
+    /// </param>
+    /// <param name="filters">
+    /// Additional query filters. The endpoint supports
+    /// <see cref="BlockNumberFilter"/>,
+    /// <see cref="TimestampFilter"/>, <see cref="PageLimit"/>,
+    /// and <see cref="OrderBy"/>.
+    /// </param>
+    /// <returns>
+    /// An async enumerable of block records.
+    /// </returns>
+    public static IAsyncEnumerable<BlockData> GetBlocksAsync(this MirrorRestClient client, params IMirrorQueryParameter[] filters)
+    {
+        var path = GenerateInitialPath("blocks", [new PageLimit(100), .. filters]);
+        return client.GetPagedItemsAsync<BlockDataPage, BlockData>(path, MirrorJsonContext.Default.BlockDataPage);
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Google.Protobuf;
 using Hiero.Mirror;
+using Hiero.Mirror.Filters;
 using Microsoft.Extensions.Configuration;
 using Proto;
 using System.Diagnostics.CodeAnalysis;
@@ -137,7 +138,7 @@ internal class TestNetwork
         {
             throw new InvalidOperationException("Invalid private key type [PayerPrivateKey] in configuration.");
         }
-        await foreach (var account in _mirrorClient.GetAccountsByEndorsementAsync(endorsement))
+        await foreach (var account in _mirrorClient.GetAccountsAsync(AccountPublicKeyFilter.Is(endorsement)))
         {
             return account;
         }

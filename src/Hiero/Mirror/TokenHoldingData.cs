@@ -1,6 +1,7 @@
 ﻿// SPDX-License-Identifier: Apache-2.0
 using Hiero.Converters;
 using Hiero.Mirror.Filters;
+using Hiero.Mirror.Paging;
 using Hiero.Mirror.Implementation;
 using System.ComponentModel;
 using System.Text.Json.Serialization;
@@ -57,8 +58,10 @@ public static class Extensions
 {
 
     /// <summary>
-    /// Retrieves the list of token holdings for this account, which includes
-    /// both fungible tokens and NFTs.
+    /// Enumerates the token-association records for a specific account
+    /// from <c>/api/v1/accounts/{id}/tokens</c>, including both
+    /// fungible tokens and NFT classes. Use <see cref="TokenFilter"/>
+    /// to narrow to a specific token.
     /// </summary>
     /// <param name="client">
     /// Mirror Rest Client to use for the request.
@@ -67,14 +70,16 @@ public static class Extensions
     /// The account to retrieve the token holdings.
     /// </param>
     /// <param name="filters">
-    /// Additional query filters if desired.
+    /// Additional query parameters. The endpoint supports
+    /// <see cref="TokenFilter"/>, <see cref="PageLimit"/>, and
+    /// <see cref="OrderBy"/>.
     /// </param>
     /// <returns>
-    /// An async enumerable of the native token holdings given the constraints.
+    /// An async enumerable of the account's token holdings.
     /// </returns>
-    public static IAsyncEnumerable<TokenHoldingData> GetAccountTokenHoldingsAsync(this MirrorRestClient client, EntityId account, params IMirrorQueryFilter[] filters)
+    public static IAsyncEnumerable<TokenHoldingData> GetAccountTokenHoldingsAsync(this MirrorRestClient client, EntityId account, params IMirrorQueryParameter[] filters)
     {
-        var path = GenerateInitialPath($"accounts/{MirrorFormat(account)}/tokens", [new LimitFilter(100), .. filters]);
+        var path = GenerateInitialPath($"accounts/{MirrorFormat(account)}/tokens", [new PageLimit(100), .. filters]);
         return client.GetPagedItemsAsync<TokenHoldingDataPage, TokenHoldingData>(path, MirrorJsonContext.Default.TokenHoldingDataPage);
     }
 }

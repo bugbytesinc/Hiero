@@ -48,24 +48,37 @@ public class NetworkFeesData
 public static class NetworkFeesExtensions
 {
     /// <summary>
-    /// Retrieves the network fee data for the given timestamp.
+    /// Retrieves the network fee schedule active at (or before) the
+    /// given consensus timestamp via
+    /// <c>/api/v1/network/fees?timestamp=lte:{consensus}</c>. Useful
+    /// for reconstructing historical fee conditions for a specific
+    /// transaction.
     /// </summary>
     /// <param name="client">
     /// Mirror Rest Client to use for the request.
     /// </param>
     /// <param name="consensus">
-    /// Timestamp to attempt to retrieve the network fee data.
+    /// Timestamp to retrieve the network fee schedule at or before.
     /// </param>
     /// <returns>
-    /// Network fee data for the timestamp, or null if not found.
+    /// The fee schedule in effect at the requested timestamp, or null
+    /// if the mirror node has no snapshot from that era.
     /// </returns>
+    /// <remarks>
+    /// For the current fee schedule, call
+    /// <see cref="GetLatestNetworkFeesAsync"/> instead — it skips the
+    /// timestamp filter and lets the server return the most recent
+    /// snapshot.
+    /// </remarks>
     public static Task<NetworkFeesData?> GetNetworkFeesAsync(this MirrorRestClient client, ConsensusTimeStamp consensus)
     {
-        var path = GenerateInitialPath($"network/fees", [new TimestampOnOrBeforeFilter(consensus)]);
-        return client.GetSingleItemAsync<NetworkFeesData>(path, MirrorJsonContext.Default.NetworkFeesData);
+        var path = GenerateInitialPath($"network/fees", [TimestampFilter.OnOrBefore(consensus)]);
+        return client.GetSingleItemAsync(path, MirrorJsonContext.Default.NetworkFeesData);
     }
     /// <summary>
-    /// Retrieves the latest network fee data from the ledger.
+    /// Retrieves the current network fee schedule via
+    /// <c>/api/v1/network/fees</c> (no timestamp filter). The mirror
+    /// node returns the most recent snapshot it has ingested.
     /// </summary>
     /// <param name="client">
     /// Mirror Rest Client to use for the request.
@@ -75,6 +88,6 @@ public static class NetworkFeesExtensions
     /// </returns>
     public static Task<NetworkFeesData?> GetLatestNetworkFeesAsync(this MirrorRestClient client)
     {
-        return client.GetSingleItemAsync<NetworkFeesData>("network/fees", MirrorJsonContext.Default.NetworkFeesData);
+        return client.GetSingleItemAsync("network/fees", MirrorJsonContext.Default.NetworkFeesData);
     }
 }

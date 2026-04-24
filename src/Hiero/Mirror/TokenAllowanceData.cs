@@ -1,6 +1,7 @@
 ﻿// SPDX-License-Identifier: Apache-2.0
 using Hiero.Converters;
 using Hiero.Mirror.Filters;
+using Hiero.Mirror.Paging;
 using Hiero.Mirror.Implementation;
 using System.ComponentModel;
 using System.Text.Json.Serialization;
@@ -51,23 +52,39 @@ public class TokenAllowanceData
 public static class TokenAllowanceDataExtensions
 {
     /// <summary>
-    /// Retrieves the token allowances associated with this account.
+    /// Enumerates fungible-token allowances granted by a specific
+    /// account from <c>/api/v1/accounts/{id}/allowances/tokens</c>.
+    /// Use <see cref="SpenderFilter"/> to narrow to a specific
+    /// allowance recipient, or <see cref="TokenFilter"/> to narrow to
+    /// a specific token. Default order is ascending (spender id,
+    /// then token id).
     /// </summary>
     /// <param name="client">
     /// Mirror Rest Client to use for the request.
     /// </param>
     /// <param name="account">
-    /// The account ID
+    /// The account whose token-allowance grants are requested.
     /// </param>
     /// <param name="filters">
-    /// Additional query filters if desired.
+    /// Additional query parameters. The endpoint supports
+    /// <see cref="SpenderFilter"/>, <see cref="TokenFilter"/>,
+    /// <see cref="PageLimit"/>, and <see cref="OrderBy"/>.
     /// </param>
     /// <returns>
-    /// A list of token allowances granted by this account.
+    /// An async enumerable of token-allowance records granted by the
+    /// given account.
     /// </returns>
-    public static IAsyncEnumerable<TokenAllowanceData> GetAccountTokenAllowancesAsync(this MirrorRestClient client, EntityId account, params IMirrorQueryFilter[] filters)
+    /// <remarks>
+    /// The server imposes cross-filter constraints on this endpoint:
+    /// <see cref="TokenFilter"/> requires an accompanying
+    /// <see cref="SpenderFilter"/> with compatible operator semantics
+    /// (<c>lt(e):spender.id + lt(e):token.id</c>, or equivalent
+    /// <c>gt(e)</c>/<c>eq</c> pairings). Violating the rule yields a
+    /// server-side 400; the SDK does not enforce client-side.
+    /// </remarks>
+    public static IAsyncEnumerable<TokenAllowanceData> GetAccountTokenAllowancesAsync(this MirrorRestClient client, EntityId account, params IMirrorQueryParameter[] filters)
     {
-        var path = GenerateInitialPath($"accounts/{MirrorFormat(account)}/allowances/tokens", [new LimitFilter(100), .. filters]);
+        var path = GenerateInitialPath($"accounts/{MirrorFormat(account)}/allowances/tokens", [new PageLimit(100), .. filters]);
         return client.GetPagedItemsAsync<TokenAllowanceDataPage, TokenAllowanceData>(path, MirrorJsonContext.Default.TokenAllowanceDataPage);
     }
 }

@@ -26,8 +26,11 @@ public class EvmCallResult
 public static class EvmCallResultExtensions
 {
     /// <summary>
-    /// Simulates a call to the Hedera EVM, can be used for
-    /// pure view methods as well.
+    /// Simulates a call to the Hedera EVM via the
+    /// <c>POST /api/v1/contracts/call</c> endpoint. Usable for pure /
+    /// view methods (read-only inspection) or for estimating what a
+    /// state-changing call would return — the mirror node's simulation
+    /// does not persist state regardless.
     /// </summary>
     /// <param name="client">
     /// Mirror Rest Client to use for the request.

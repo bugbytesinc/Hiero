@@ -1,6 +1,7 @@
 ﻿// SPDX-License-Identifier: Apache-2.0
 using Hiero.Converters;
 using Hiero.Mirror.Filters;
+using Hiero.Mirror.Paging;
 using Hiero.Mirror.Implementation;
 using System.ComponentModel;
 using System.Text.Json.Serialization;
@@ -19,8 +20,7 @@ public class ExtendedContractLogData : ContractLogData
     /// The Block Hash of the TransactionId
     /// </summary>
     [JsonPropertyName("block_hash")]
-    [JsonConverter(typeof(HexStringToBytesConverter))]
-    public ReadOnlyMemory<byte> BlockHash { get; set; }
+    public EvmHash BlockHash { get; set; } = EvmHash.None;
     /// <summary>
     /// The Block Number containing this log entry
     /// </summary>
@@ -36,8 +36,7 @@ public class ExtendedContractLogData : ContractLogData
     /// The Hash of the TransactionId
     /// </summary>
     [JsonPropertyName("transaction_hash")]
-    [JsonConverter(typeof(HexStringToBytesConverter))]
-    public ReadOnlyMemory<byte> TransactionHash { get; set; }
+    public EvmHash TransactionHash { get; set; } = EvmHash.None;
     /// <summary>
     /// The transaction index within the block for this log record
     /// </summary>
@@ -59,37 +58,63 @@ public class ExtendedContractLogData : ContractLogData
 public static class ExtendedContractLogDataExtensions
 {
     /// <summary>
-    /// Retrieves the log events for a contract
+    /// Enumerates log events emitted by a specific contract. Narrow
+    /// by <see cref="TimestampFilter"/>, event-log topic via
+    /// <see cref="EvmTopicFilter"/>, originating transaction hash
+    /// via <see cref="TransactionHashFilter"/>, or block-local
+    /// position via <see cref="ContractLogIndexFilter"/>.
     /// </summary>
     /// <param name="client">
     /// Mirror Rest Client to use for the request.
     /// </param>
     /// <param name="contract">
-    /// The entityId of the contract
+    /// The entityId of the contract.
     /// </param>
     /// <param name="filters">
-    /// Additional query filters if desired.
+    /// Additional query parameters. The endpoint supports
+    /// <see cref="TimestampFilter"/>, <see cref="EvmTopicFilter"/>,
+    /// <see cref="TransactionHashFilter"/>,
+    /// <see cref="ContractLogIndexFilter"/>, <see cref="PageLimit"/>,
+    /// and <see cref="OrderBy"/>.
     /// </param>
     /// <returns>An async enumerable of contract log events meeting the given criteria.</returns>
-    public static IAsyncEnumerable<ExtendedContractLogData> GetContractLogEventsAsync(this MirrorRestClient client, EntityId contract, params IMirrorQueryFilter[] filters)
+    /// <remarks>
+    /// The mirror node requires a <see cref="TimestampFilter"/> to
+    /// accompany any <see cref="ContractLogIndexFilter"/> (or any
+    /// <see cref="EvmTopicFilter"/>); passing the index or topic
+    /// filter alone will yield a server-side 400.
+    /// </remarks>
+    public static IAsyncEnumerable<ExtendedContractLogData> GetContractLogEventsAsync(this MirrorRestClient client, EntityId contract, params IMirrorQueryParameter[] filters)
     {
-        var path = GenerateInitialPath($"contracts/{MirrorFormat(contract)}/results/logs", [new LimitFilter(100), .. filters]);
+        var path = GenerateInitialPath($"contracts/{MirrorFormat(contract)}/results/logs", [new PageLimit(100), .. filters]);
         return client.GetPagedItemsAsync<ExtendedContractLogDataPage, ExtendedContractLogData>(path, MirrorJsonContext.Default.ExtendedContractLogDataPage);
     }
     /// <summary>
-    /// Retrieves the log events for all contracts satisfying the
-    /// filters.
+    /// Enumerates log events across every contract on the network.
+    /// Same filter palette as
+    /// <see cref="GetContractLogEventsAsync"/>, without the
+    /// per-contract scoping.
     /// </summary>
     /// <param name="client">
     /// Mirror Rest Client to use for the request.
     /// </param>
     /// <param name="filters">
-    /// Additional filters
+    /// Additional query parameters. The endpoint supports
+    /// <see cref="TimestampFilter"/>, <see cref="EvmTopicFilter"/>,
+    /// <see cref="TransactionHashFilter"/>,
+    /// <see cref="ContractLogIndexFilter"/>, <see cref="PageLimit"/>,
+    /// and <see cref="OrderBy"/>.
     /// </param>
     /// <returns>An async enumerable of contract log events meeting the given criteria.</returns>
-    public static IAsyncEnumerable<ExtendedContractLogData> GetAllContractLogEventsAsync(this MirrorRestClient client, params IMirrorQueryFilter[] filters)
+    /// <remarks>
+    /// The mirror node requires a <see cref="TimestampFilter"/> to
+    /// accompany any <see cref="ContractLogIndexFilter"/> (or any
+    /// <see cref="EvmTopicFilter"/>); passing the index or topic
+    /// filter alone will yield a server-side 400.
+    /// </remarks>
+    public static IAsyncEnumerable<ExtendedContractLogData> GetAllContractLogEventsAsync(this MirrorRestClient client, params IMirrorQueryParameter[] filters)
     {
-        var path = GenerateInitialPath($"contracts/results/logs", [new LimitFilter(100), .. filters]);
+        var path = GenerateInitialPath($"contracts/results/logs", [new PageLimit(100), .. filters]);
         return client.GetPagedItemsAsync<ExtendedContractLogDataPage, ExtendedContractLogData>(path, MirrorJsonContext.Default.ExtendedContractLogDataPage);
     }
 }

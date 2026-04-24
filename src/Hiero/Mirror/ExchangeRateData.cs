@@ -59,12 +59,12 @@ public static class ExchangeRateDataExtensions
     {
         if (consensus == null)
         {
-            return client.GetSingleItemAsync<ExchangeRateData>("network/exchangerate", MirrorJsonContext.Default.ExchangeRateData);
+            return client.GetSingleItemAsync("network/exchangerate", MirrorJsonContext.Default.ExchangeRateData);
         }
         else
         {
-            var path = GenerateInitialPath($"network/exchangerate", [new TimestampOnOrBeforeFilter(consensus.Value)]);
-            return client.GetSingleItemAsync<ExchangeRateData>(path, MirrorJsonContext.Default.ExchangeRateData);
+            var path = GenerateInitialPath($"network/exchangerate", [TimestampFilter.OnOrBefore(consensus.Value)]);
+            return client.GetSingleItemAsync(path, MirrorJsonContext.Default.ExchangeRateData);
         }
     }
 }

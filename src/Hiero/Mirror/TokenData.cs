@@ -129,6 +129,21 @@ public class TokenData
     [JsonPropertyName("wipe_key")]
     public Endorsement? ConfiscateEndorsement { get; set; }
     /// <summary>
+    /// Administrator key for signing transactions that update the
+    /// <see cref="Metadata"/> bytes on the token class itself or on
+    /// individual NFTs minted under it (per HIP-657).
+    /// </summary>
+    [JsonPropertyName("metadata_key")]
+    public Endorsement? MetadataEndorsement { get; set; }
+    /// <summary>
+    /// Arbitrary binary metadata attached to the token class (per
+    /// HIP-657). Not to be confused with per-NFT metadata, which is
+    /// carried on <see cref="NftData.Metadata"/>.
+    /// </summary>
+    [JsonPropertyName("metadata")]
+    [JsonConverter(typeof(Base64StringToBytesConverter))]
+    public ReadOnlyMemory<byte> Metadata { get; set; }
+    /// <summary>
     /// The current default suspended/frozen status of the token.
     /// </summary>
     [JsonPropertyName("freeze_default")]
@@ -183,7 +198,10 @@ public class TokenData
 public static class TokenDataExtensions
 {
     /// <summary>
-    /// Retrieves information for the given token.
+    /// Retrieves the full token information for a specific token from
+    /// <c>/api/v1/tokens/{id}</c>, including keys, custom fees, and
+    /// metadata. Use <see cref="TimestampFilter"/> to retrieve the
+    /// token's state at a historical consensus instant.
     /// </summary>
     /// <param name="client">
     /// Mirror Rest Client to use for the request.
@@ -192,14 +210,16 @@ public static class TokenDataExtensions
     /// The ID of the token to retrieve.
     /// </param>
     /// <param name="filters">
-    /// Optional list of filter constraints for this query.
+    /// Additional query parameters. The endpoint supports
+    /// <see cref="TimestampFilter"/>.
     /// </param>
     /// <returns>
-    /// The token information.
+    /// The token information, or null if the token id is unknown to
+    /// the mirror node.
     /// </returns>
-    public static Task<TokenData?> GetTokenAsync(this MirrorRestClient client, EntityId token, params IMirrorQueryFilter[] filters)
+    public static Task<TokenData?> GetTokenAsync(this MirrorRestClient client, EntityId token, params IMirrorQueryParameter[] filters)
     {
         var path = GenerateInitialPath($"tokens/{token}", filters);
-        return client.GetSingleItemAsync<TokenData>(path, MirrorJsonContext.Default.TokenData);
+        return client.GetSingleItemAsync(path, MirrorJsonContext.Default.TokenData);
     }
 }

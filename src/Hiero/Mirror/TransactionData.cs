@@ -82,7 +82,7 @@ public class TransactionData
     /// to this transaction.
     /// </summary>
     [JsonPropertyName("staking_reward_transfers")]
-    public StakingRewardData[]? StakingRewards { get; set; }
+    public StakingRewardTransferData[]? StakingRewards { get; set; }
     /// <summary>
     /// Enumerates the tokens that were transferred
     /// as a part of this transaction.

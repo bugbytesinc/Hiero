@@ -1,8 +1,11 @@
 ﻿// SPDX-License-Identifier: Apache-2.0
 using Hiero.Converters;
+using Hiero.Mirror.Filters;
 using Hiero.Mirror.Implementation;
+using Hiero.Mirror.Paging;
 using System.ComponentModel;
 using System.Text.Json.Serialization;
+using static Hiero.Mirror.Implementation.MirrorRestClientUtils;
 
 namespace Hiero.Mirror;
 /// <summary>
@@ -110,23 +113,35 @@ public class ConsensusNodeData
 public static class ConsensusNodeDataExtensions
 {
     /// <summary>
-    /// Retrieves the list of known Hedera Gossip Nodes.
+    /// Enumerates the consensus (gossip) nodes published by the
+    /// network's address book, reading from
+    /// <c>/api/v1/network/nodes</c>. Use <see cref="FileFilter"/> to
+    /// narrow to a specific address-book file (<c>0.0.101</c> or
+    /// <c>0.0.102</c>) or <see cref="NodeFilter"/> to narrow by node id.
     /// </summary>
     /// <param name="client">
     /// Mirror Rest Client to use for the request.
     /// </param>
+    /// <param name="filters">
+    /// Additional query parameters. The endpoint supports
+    /// <see cref="FileFilter"/>, <see cref="NodeFilter"/>,
+    /// <see cref="PageLimit"/>, and <see cref="OrderBy"/>.
+    /// </param>
     /// <returns>
-    /// The list of known Hedera Gossip Nodes.
+    /// An async enumerable of consensus-node records.
     /// </returns>
-    public static IAsyncEnumerable<ConsensusNodeData> GetConsensusNodesAsync(this MirrorRestClient client)
+    public static IAsyncEnumerable<ConsensusNodeData> GetConsensusNodesAsync(this MirrorRestClient client, params IMirrorQueryParameter[] filters)
     {
-        return client.GetPagedItemsAsync<ConsensusNodeDataPage, ConsensusNodeData>("network/nodes", MirrorJsonContext.Default.ConsensusNodeDataPage);
+        var path = GenerateInitialPath("network/nodes", filters);
+        return client.GetPagedItemsAsync<ConsensusNodeDataPage, ConsensusNodeData>(path, MirrorJsonContext.Default.ConsensusNodeDataPage);
     }
     /// <summary>
-    /// Retrieves a list of Hedera gRPC nodes known to the 
-    /// mirror node that respond to a ping query within
-    /// the given timeout value.  This can be used to create
-    /// a list of working gRPC nodes for submitting transactions.
+    /// Client-side wrapper over <see cref="GetConsensusNodesAsync"/>
+    /// that pings each gRPC endpoint returned from
+    /// <c>/api/v1/network/nodes</c> and returns only the nodes that
+    /// respond within <paramref name="maxTimeoutInMilliseconds"/>.
+    /// Useful for building a dynamic gateway list for
+    /// <c>ConsensusClient</c> transaction submission.
     /// </summary>
     /// <param name="client">
     /// Mirror Rest Client to use for the request.

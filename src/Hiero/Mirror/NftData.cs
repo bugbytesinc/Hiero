@@ -2,6 +2,7 @@
 using Hiero.Converters;
 using Hiero.Mirror.Filters;
 using Hiero.Mirror.Implementation;
+using Hiero.Mirror.Paging;
 using System.ComponentModel;
 using System.Text.Json.Serialization;
 using static Hiero.Mirror.Implementation.MirrorRestClientUtils;
@@ -35,10 +36,13 @@ public class NftData
     [JsonConverter(typeof(BooleanMirrorConverter))]
     public bool Deleted { get; set; }
     /// <summary>
-    /// The associated Nft metadata.
+    /// Arbitrary binary metadata attached to this individual NFT
+    /// serial. The wire format is base64 per OpenAPI
+    /// (<c>format: byte</c>); decoded to raw bytes here.
     /// </summary>
     [JsonPropertyName("metadata")]
-    public string Metadata { get; set; } = default!;
+    [JsonConverter(typeof(Base64StringToBytesConverter))]
+    public ReadOnlyMemory<byte> Metadata { get; set; }
     /// <summary>
     /// The last time this asset was modified.
     /// </summary>
@@ -69,24 +73,82 @@ public class NftData
 public static class NftDataExtensions
 {
     /// <summary>
-    /// Retrieves information for the given asset.
+    /// Retrieves the record for a specific NFT serial from
+    /// <c>/api/v1/tokens/{tokenId}/nfts/{serialNumber}</c>.
     /// </summary>
     /// <param name="client">
     /// Mirror Rest Client to use for the request.
     /// </param>
     /// <param name="nft">
-    /// The identifier of the NFT to retrieve, which includes the token address 
+    /// The identifier of the NFT to retrieve, which includes the token address
     /// and the serial number of the NFT.
     /// </param>
     /// <param name="filters">
-    /// Optional list of filter constraints for this query.
+    /// Reserved for forward compatibility. The endpoint currently
+    /// accepts no query parameters per the OpenAPI spec; any filters
+    /// supplied here are included in the URL but ignored by the server.
     /// </param>
     /// <returns>
-    /// The asset information.
+    /// The NFT record, or null if the token/serial pair is unknown to
+    /// the mirror node.
     /// </returns>
-    public static Task<NftData?> GetNftAsync(this MirrorRestClient client, Nft nft, params IMirrorQueryFilter[] filters)
+    public static Task<NftData?> GetNftAsync(this MirrorRestClient client, Nft nft, params IMirrorQueryParameter[] filters)
     {
         var path = GenerateInitialPath($"tokens/{nft.Token}/nfts/{nft.SerialNumber}", filters);
-        return client.GetSingleItemAsync<NftData>(path, MirrorJsonContext.Default.NftData);
+        return client.GetSingleItemAsync(path, MirrorJsonContext.Default.NftData);
+    }
+    /// <summary>
+    /// Enumerates the NFTs held by the given account. The records
+    /// are returned newest-first by default (governed by
+    /// <c>token.id</c> then <c>serialnumber</c>); pass
+    /// <see cref="OrderBy.Ascending"/> to reverse.
+    /// </summary>
+    /// <param name="client">
+    /// Mirror Rest Client to use for the request.
+    /// </param>
+    /// <param name="account">
+    /// The account whose NFT holdings are requested.
+    /// </param>
+    /// <param name="filters">
+    /// Additional query filters. The endpoint supports
+    /// <see cref="TokenFilter"/>, <see cref="SpenderFilter"/>, and
+    /// <see cref="SerialNumberFilter"/>, along with the usual
+    /// <see cref="PageLimit"/> and <see cref="OrderBy"/>. The
+    /// mirror node requires a <see cref="TokenFilter"/> to be
+    /// present whenever <see cref="SerialNumberFilter"/> is used.
+    /// </param>
+    /// <returns>
+    /// An async enumerable of NFT records.
+    /// </returns>
+    public static IAsyncEnumerable<NftData> GetAccountNftsAsync(this MirrorRestClient client, EntityId account, params IMirrorQueryParameter[] filters)
+    {
+        var path = GenerateInitialPath($"accounts/{MirrorFormat(account)}/nfts", [new PageLimit(100), .. filters]);
+        return client.GetPagedItemsAsync<NftDataPage, NftData>(path, MirrorJsonContext.Default.NftDataPage);
+    }
+    /// <summary>
+    /// Enumerates the individual NFT serials that have been minted
+    /// under the given token. The records are returned
+    /// newest-serial-first by default; pass
+    /// <see cref="OrderBy.Ascending"/> to reverse.
+    /// </summary>
+    /// <param name="client">
+    /// Mirror Rest Client to use for the request.
+    /// </param>
+    /// <param name="token">
+    /// The NFT class whose individual serials are requested.
+    /// </param>
+    /// <param name="filters">
+    /// Additional query filters. The endpoint supports
+    /// <see cref="AccountFilter"/> (current holder),
+    /// <see cref="SerialNumberFilter"/>, <see cref="PageLimit"/>,
+    /// and <see cref="OrderBy"/>.
+    /// </param>
+    /// <returns>
+    /// An async enumerable of NFT records.
+    /// </returns>
+    public static IAsyncEnumerable<NftData> GetTokenNftsAsync(this MirrorRestClient client, EntityId token, params IMirrorQueryParameter[] filters)
+    {
+        var path = GenerateInitialPath($"tokens/{MirrorFormat(token)}/nfts", [new PageLimit(100), .. filters]);
+        return client.GetPagedItemsAsync<NftDataPage, NftData>(path, MirrorJsonContext.Default.NftDataPage);
     }
 }

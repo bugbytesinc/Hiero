@@ -648,14 +648,141 @@ var mirror = new MirrorRestClient(new HttpClient
 {
     BaseAddress = new Uri("https://testnet.mirrornode.hedera.com")
 });
-
-// Queries return typed data objects
-var account = await mirror.GetAccountAsync(accountId);
-var token = await mirror.GetTokenAsync(tokenId);
-var nft = await mirror.GetNftAsync(new Nft(tokenId, serialNo));
-var contract = await mirror.GetContractAsync(contractId);
-var tx = await mirror.GetTransactionAsync(consensusTimestamp);
 ```
+
+All list queries accept a `params IMirrorQueryParameter[]` tail; examples below
+show representative filters only.
+
+### Accounts
+```csharp
+AccountData? account = await mirror.GetAccountAsync(accountId);
+IAsyncEnumerable<AccountData> accounts = mirror.GetAccountsAsync(
+    AccountPublicKeyFilter.Is(endorsement),
+    AccountBalanceFilter.After(100_000_000),
+    new PageLimit(50));
+
+IAsyncEnumerable<CryptoAllowanceData>  hbarAllowances  = mirror.GetAccountCryptoAllowancesAsync(account);
+IAsyncEnumerable<TokenAllowanceData>   tokenAllowances = mirror.GetAccountTokenAllowancesAsync(account);
+IAsyncEnumerable<NftAllowanceData>     nftAsOwner      = mirror.GetAccountNftAllowancesAsOwnerAsync(account);
+IAsyncEnumerable<NftAllowanceData>     nftAsSpender    = mirror.GetAccountNftAllowancesAsSpenderAsync(account);
+IAsyncEnumerable<StakingRewardData>    rewards         = mirror.GetAccountStakingRewardsAsync(account);
+IAsyncEnumerable<TokenHoldingData>     holdings        = mirror.GetAccountTokenHoldingsAsync(account);
+long?                                  balance         = await mirror.GetAccountTokenBalanceAsync(account, token);
+```
+
+### Tokens and NFTs
+```csharp
+TokenData?                       token  = await mirror.GetTokenAsync(tokenId);
+IAsyncEnumerable<TokenSummaryData> tokens = mirror.GetTokensAsync(
+    TokenTypeFilter.Fungible,
+    TokenNameFilter.Contains("USD"));
+
+NftData?                      nft          = await mirror.GetNftAsync(new Nft(tokenId, serial));
+IAsyncEnumerable<NftData>     byAccount    = mirror.GetAccountNftsAsync(account);
+IAsyncEnumerable<NftData>     byCollection = mirror.GetTokenNftsAsync(tokenId);
+IAsyncEnumerable<NftTransactionData> history = mirror.GetNftTransactionHistoryAsync(new Nft(tokenId, serial));
+IAsyncEnumerable<AccountBalanceData> holders = mirror.GetTokenHoldersSnapshotAsync(tokenId, asOf);
+```
+
+### Airdrops
+```csharp
+IAsyncEnumerable<TokenAirdropData> outstanding = mirror.GetAccountOutstandingAirdropsAsync(account);
+IAsyncEnumerable<TokenAirdropData> pending     = mirror.GetAccountPendingAirdropsAsync(account);
+```
+
+### Transactions
+```csharp
+TransactionDetailData[]  group = await mirror.GetTransactionGroupAsync(txId);
+TransactionDetailData?   one   = await mirror.GetTransactionAsync(consensusTimestamp);
+IAsyncEnumerable<TransactionDetailData> byAccount = mirror.GetTransactionsAsync(
+    AccountFilter.Is(account),
+    ResultFilter.Success,
+    TransferDirectionFilter.Credit,
+    TransactionTypeFilter.CryptoTransfer,
+    OrderBy.Descending,
+    new PageLimit(25));
+IAsyncEnumerable<TransactionDetailData> allFailed = mirror.GetTransactionsAsync(
+    ResultFilter.Fail,
+    TimestampFilter.After(since));
+ConsensusTimeStamp latest = await mirror.GetLatestConsensusTimestampAsync();
+```
+
+### HCS
+```csharp
+TopicData?         topic     = await mirror.GetTopicAsync(topicId);
+TopicMessageData?  bySeq     = await mirror.GetTopicMessageAsync(topicId, sequenceNumber);
+TopicMessageData?  byTs      = await mirror.GetTopicMessageAsync(consensusTimestamp);
+IAsyncEnumerable<TopicMessageData> messages = mirror.GetTopicMessagesAsync(
+    topicId, TimestampFilter.After(since), SequenceNumberFilter.OnOrAfter(100));
+```
+
+### Contracts
+```csharp
+ContractData?                 contract  = await mirror.GetContractAsync(contractId);
+IAsyncEnumerable<ContractData> contracts = mirror.GetContractsAsync();
+
+// Results
+IAsyncEnumerable<ContractResultData> byContract   = mirror.GetContractResultsAsync(contractId);
+ContractResultData? byTimestamp = await mirror.GetContractResultByTimestampAsync(contractId, ts);
+ContractResultData? byHash      = await mirror.GetContractResultByTransactionHashAsync(evmHash);
+ContractResultData? byTxId      = await mirror.GetContractResultByTransactionIdAsync(txId);
+ContractResultData? byBlockIdx  = await mirror.GetContractResultByBlockAndPositionAsync(blockHash, idx);
+IAsyncEnumerable<ContractResultData> byBlock = mirror.GetContractResultsByBlockHashAsync(blockHash);
+IAsyncEnumerable<ContractResultData> all     = mirror.GetAllContractResultsAsync();
+
+// Logs, actions, opcode traces
+IAsyncEnumerable<ExtendedContractLogData> logs    = mirror.GetContractLogEventsAsync(contractId);
+IAsyncEnumerable<ExtendedContractLogData> allLogs = mirror.GetAllContractLogEventsAsync();
+IAsyncEnumerable<ContractActionData>      actions = mirror.GetContractActionsByTransactionHashAsync(evmHash);
+OpcodesData?                              opcodes = await mirror.GetContractOpcodesByTransactionHashAsync(
+    evmHash,
+    OpcodeMemoryProjectionFilter.Include,
+    OpcodeStackProjectionFilter.Include,
+    OpcodeStorageProjectionFilter.Include);
+
+ContractStateData? state = await mirror.GetContractStateAsync(contractId, position, filters);
+EncodedParams      call  = await mirror.CallEvmAsync(evmCallData);
+long               gas   = await mirror.EstimateGasAsync(fromEvm, callParams);
+BigInteger         chain = await mirror.GetChainIdAsync();
+```
+
+### Blocks
+```csharp
+BlockData?                  byNumber = await mirror.GetBlockAsync(blockNumber);
+BlockData?                  byHash   = await mirror.GetBlockAsync(blockhash);
+BlockData?                  latest   = await mirror.GetLatestBlockAsync();
+BlockData?                  asOf     = await mirror.GetLatestBlockBeforeConsensusAsync(ts);
+IAsyncEnumerable<BlockData> blocks   = mirror.GetBlocksAsync(OrderBy.Descending, new PageLimit(50));
+```
+
+### Schedules
+```csharp
+ScheduleData?                   schedule  = await mirror.GetScheduleAsync(scheduleId);
+IAsyncEnumerable<ScheduleData>  schedules = mirror.GetSchedulesAsync(AccountFilter.Is(creator));
+```
+
+### Network
+```csharp
+IAsyncEnumerable<ConsensusNodeData> nodes = mirror.GetConsensusNodesAsync();
+IReadOnlyDictionary<ConsensusNodeEndpoint, long> active =
+    await mirror.GetActiveConsensusNodesAsync(timeoutMs);
+NetworkStakeData?  stake    = await mirror.GetNetworkStakeAsync();
+NetworkSupplyData? supply   = await mirror.GetNetworkSupplyAsync();
+ExchangeRateData?  rate     = await mirror.GetExchangeRateAsync();
+NetworkFeesData?   fees     = await mirror.GetLatestNetworkFeesAsync();
+```
+
+### Filter catalog (`Hiero.Mirror.Filters` / `Hiero.Mirror.Paging`)
+
+| Category | Members |
+|---------|---------|
+| Paging | `PageLimit(n)`, `OrderBy.Ascending`, `OrderBy.Descending` |
+| 6-operator (`.Is` `.After` `.OnOrAfter` `.Before` `.OnOrBefore` `.NotIs`) | `TimestampFilter`, `SequenceNumberFilter`, `SerialNumberFilter`, `AccountBalanceFilter`, `BlockNumberFilter`, `AccountFilter`, `TokenFilter`, `SpenderFilter`, `ContractFilter`, `ContractActionIndexFilter`, `ScheduleFilter` |
+| 5-operator (no `NotIs`) | `NodeFilter`, `ContractLogIndexFilter` (latter requires `TimestampFilter` in same request) |
+| Equality-only (`.Is`) | `AccountPublicKeyFilter`, `PublicKeyFilter`, `EvmSenderFilter`, `EvmTopicFilter`, `BlockHashFilter`, `TransactionHashFilter`, `SlotFilter`, `FileFilter`, `TransactionIndexFilter`, `SenderFilter`, `ReceiverFilter` |
+| Enum-like (static members) | `ResultFilter`, `TokenTypeFilter`, `TransferDirectionFilter`, `TransactionTypeFilter` |
+| Substring | `TokenNameFilter.Contains(fragment)` |
+| Projections (`IMirrorProjection`) | `BalanceProjectionFilter`, `InternalProjectionFilter`, `HbarTransferProjectionFilter`, `MessageEncodingProjectionFilter`, `OpcodeMemoryProjectionFilter`, `OpcodeStackProjectionFilter`, `OpcodeStorageProjectionFilter` |
 
 ---
 

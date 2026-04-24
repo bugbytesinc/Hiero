@@ -2,6 +2,7 @@
 using Hiero.Converters;
 using Hiero.Mirror.Filters;
 using Hiero.Mirror.Implementation;
+using Hiero.Mirror.Paging;
 using System.ComponentModel;
 using System.Text.Json.Serialization;
 using static Hiero.Mirror.Implementation.MirrorRestClientUtils;
@@ -135,8 +136,21 @@ public class AccountData
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class AccountDataExtensions
 {
+    private sealed class SuppressTransactionsProjection : IMirrorProjection
+    {
+        public string Name => "transactions";
+        public string Value => "false";
+    }
+
+    private static readonly SuppressTransactionsProjection SuppressTransactions = new();
+
     /// <summary>
-    /// Retrieves information about an account.
+    /// Retrieves information about a single account from
+    /// <c>/api/v1/accounts/{id}</c>. Use <see cref="TimestampFilter"/>
+    /// to retrieve the account's state at a historical consensus
+    /// instant; otherwise returns the current state. The server's inline
+    /// transaction list is suppressed on the wire (bandwidth
+    /// optimization, since <see cref="AccountData"/> does not carry it).
     /// </summary>
     /// <param name="client">
     /// Mirror Rest Client to use for the request.
@@ -145,32 +159,49 @@ public static class AccountDataExtensions
     /// The id of the account to retrieve.
     /// </param>
     /// <param name="filters">
-    /// Optional list of filters to apply to the query.
+    /// Additional query parameters. The endpoint meaningfully supports
+    /// <see cref="TimestampFilter"/> for historical state lookup; other
+    /// parameters the server accepts on this endpoint
+    /// (<c>limit</c>/<c>order</c>/<c>transactiontype</c>) only affect
+    /// the inline transaction list, which this SDK suppresses.
     /// </param>
     /// <returns>
     /// An account information object, or null if not found.
     /// </returns>
-    public static Task<AccountData?> GetAccountAsync(this MirrorRestClient client, EntityId account, params IMirrorQueryFilter[] filters)
+    /// <remarks>
+    /// For the account's transaction listing, call
+    /// <c>GetTransactionsAsync(AccountFilter.Is(account))</c>.
+    /// </remarks>
+    public static Task<AccountData?> GetAccountAsync(this MirrorRestClient client, EntityId account, params IMirrorQueryParameter[] filters)
     {
-        var path = GenerateInitialPath($"accounts/{MirrorFormat(account)}", filters);
-        return client.GetSingleItemAsync<AccountData>(path, MirrorJsonContext.Default.AccountData);
+        var path = GenerateInitialPath($"accounts/{MirrorFormat(account)}", [SuppressTransactions, .. filters]);
+        return client.GetSingleItemAsync(path, MirrorJsonContext.Default.AccountData);
     }
     /// <summary>
-    /// Returns a list of accounts matching the given public key endorsement value.
+    /// Enumerates accounts across the network. Use
+    /// <see cref="AccountFilter"/> to narrow by id,
+    /// <see cref="AccountPublicKeyFilter"/> to narrow by root
+    /// public key, <see cref="AccountBalanceFilter"/> to narrow by
+    /// tinybar balance threshold, or
+    /// <see cref="BalanceProjectionFilter"/> to control whether the
+    /// balance subtree is included in each record.
     /// </summary>
     /// <param name="client">
     /// Mirror Rest Client to use for the request.
     /// </param>
-    /// <param name="endorsement">
-    /// The endorsement to match against.
+    /// <param name="filters">
+    /// Additional query parameters. The endpoint supports
+    /// <see cref="AccountFilter"/>, <see cref="AccountPublicKeyFilter"/>,
+    /// <see cref="AccountBalanceFilter"/>,
+    /// <see cref="BalanceProjectionFilter"/>, <see cref="PageLimit"/>,
+    /// and <see cref="OrderBy"/>.
     /// </param>
     /// <returns>
-    /// Array of account information objects with public keys matching the endorsement,
-    /// or empty if no matches are found.
+    /// An async enumerable of account records.
     /// </returns>
-    public static IAsyncEnumerable<AccountData> GetAccountsByEndorsementAsync(this MirrorRestClient client, Endorsement endorsement)
+    public static IAsyncEnumerable<AccountData> GetAccountsAsync(this MirrorRestClient client, params IMirrorQueryParameter[] filters)
     {
-        var searchKey = Hex.FromBytes(endorsement.ToBytes(KeyFormat.Mirror));
-        return client.GetPagedItemsAsync<AccountDataPage, AccountData>($"accounts?account.publickey={searchKey}&balance=true&limit=20&order=asc", MirrorJsonContext.Default.AccountDataPage);
+        var path = GenerateInitialPath("accounts", [new PageLimit(100), .. filters]);
+        return client.GetPagedItemsAsync<AccountDataPage, AccountData>(path, MirrorJsonContext.Default.AccountDataPage);
     }
 }

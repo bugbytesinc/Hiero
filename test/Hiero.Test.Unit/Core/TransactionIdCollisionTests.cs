@@ -35,6 +35,7 @@ public class TransactionIdCollisionTests
     }
 
     [Test]
+    [Category("Slow")]
     public async Task Tics_Creator_Does_Not_Collide_Multi_Thread_In_Linq()
     {
         var tasks = Enumerable.Range(1, 30000).Select(_ => Task.Run(() => Epoch.UniqueClockNanos()));
@@ -49,6 +50,7 @@ public class TransactionIdCollisionTests
     }
 
     [Test]
+    [Category("Slow")]
     public async Task Client_Creator_Does_Not_Collide_Multi_Thread_In_Linq()
     {
         await using ConsensusClient client = new(cfg =>

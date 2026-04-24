@@ -1,6 +1,7 @@
 ﻿// SPDX-License-Identifier: Apache-2.0
 using Hiero.Converters;
 using Hiero.Mirror.Filters;
+using Hiero.Mirror.Paging;
 using Hiero.Mirror.Implementation;
 using System.ComponentModel;
 using System.Text.Json.Serialization;
@@ -38,23 +39,30 @@ public class CryptoAllowanceData
 public static class CryptoAllowanceDataExtensions
 {
     /// <summary>
-    /// Retrieves the crypto allowances associated with this account.
+    /// Enumerates HBAR (crypto) allowances granted by a specific
+    /// account from <c>/api/v1/accounts/{id}/allowances/crypto</c>.
+    /// Use <see cref="SpenderFilter"/> to narrow to a specific
+    /// allowance recipient. Newest-first by default; pass
+    /// <see cref="OrderBy.Ascending"/> to reverse.
     /// </summary>
     /// <param name="client">
     /// Mirror Rest Client to use for the request.
     /// </param>
     /// <param name="account">
-    /// The account ID
+    /// The account whose crypto-allowance grants are requested.
     /// </param>
     /// <param name="filters">
-    /// Additional query filters if desired.
+    /// Additional query parameters. The endpoint supports
+    /// <see cref="SpenderFilter"/>, <see cref="PageLimit"/>, and
+    /// <see cref="OrderBy"/>.
     /// </param>
     /// <returns>
-    /// A list of crypto allowances associated with this account.
+    /// An async enumerable of crypto-allowance records granted by the
+    /// given account.
     /// </returns>
-    public static IAsyncEnumerable<CryptoAllowanceData> GetAccountCryptoAllowancesAsync(this MirrorRestClient client, EntityId account, params IMirrorQueryFilter[] filters)
+    public static IAsyncEnumerable<CryptoAllowanceData> GetAccountCryptoAllowancesAsync(this MirrorRestClient client, EntityId account, params IMirrorQueryParameter[] filters)
     {
-        var path = GenerateInitialPath($"accounts/{MirrorFormat(account)}/allowances/crypto", [new LimitFilter(100), .. filters]);
+        var path = GenerateInitialPath($"accounts/{MirrorFormat(account)}/allowances/crypto", [new PageLimit(100), .. filters]);
         return client.GetPagedItemsAsync<CryptoAllowanceDataPage, CryptoAllowanceData>(path, MirrorJsonContext.Default.CryptoAllowanceDataPage);
     }
 }
