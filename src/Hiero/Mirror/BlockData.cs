@@ -26,10 +26,16 @@ public class BlockData
     [JsonPropertyName("hapi_version")]
     public string Version { get; set; } = default!;
     /// <summary>
-    /// The Hash of the block.
+    /// The 48-byte SHA-384 record-file hash of the block.
     /// </summary>
+    /// <remarks>
+    /// Hedera block hashes are SHA-384 outputs (48 bytes / 96 hex
+    /// chars on the wire), not 32-byte EVM-style hashes — see the
+    /// remarks on <see cref="EvmHash"/>.
+    /// </remarks>
     [JsonPropertyName("hash")]
-    public EvmHash Hash { get; set; } = EvmHash.None;
+    [JsonConverter(typeof(HexStringToBytesConverter))]
+    public ReadOnlyMemory<byte> Hash { get; set; }
     /// <summary>
     /// The filename of this block exported by 
     /// the gossip node network.
@@ -43,10 +49,11 @@ public class BlockData
     [JsonConverter(typeof(LongMirrorConverter))]
     public long Number { get; set; }
     /// <summary>
-    /// The Hash of the previous block.
+    /// The 48-byte SHA-384 record-file hash of the previous block.
     /// </summary>
     [JsonPropertyName("previous_hash")]
-    public EvmHash PreviousHash { get; set; } = EvmHash.None;
+    [JsonConverter(typeof(HexStringToBytesConverter))]
+    public ReadOnlyMemory<byte> PreviousHash { get; set; }
     /// <summary>
     /// The size of this block.
     /// </summary>
@@ -96,21 +103,30 @@ public static class BlockDataExtensions
         return client.GetSingleItemAsync($"blocks/{blockNumber}", MirrorJsonContext.Default.BlockData);
     }
     /// <summary>
-    /// Retrieves a single block by EVM hash from
+    /// Retrieves a single block by hash from
     /// <c>/api/v1/blocks/{blockHash}</c>.
     /// </summary>
     /// <param name="client">
     /// Mirror Rest Client to use for the request.
     /// </param>
     /// <param name="blockhash">
-    /// The EVM Block Hash for the block to search for.
+    /// The block hash bytes — accepts the 48-byte Hedera SHA-384
+    /// record-file hash returned by the mirror, or a 32-byte EVM
+    /// block hash for callers that have one.
     /// </param>
     /// <returns>
     /// Information for the block, or null if not found.
     /// </returns>
-    public static Task<BlockData?> GetBlockAsync(this MirrorRestClient client, EvmHash blockhash)
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// Thrown when <paramref name="blockhash"/> is neither 32 nor 48 bytes long.
+    /// </exception>
+    public static Task<BlockData?> GetBlockAsync(this MirrorRestClient client, ReadOnlyMemory<byte> blockhash)
     {
-        return client.GetSingleItemAsync($"blocks/{blockhash}", MirrorJsonContext.Default.BlockData);
+        if (blockhash.Length != 32 && blockhash.Length != 48)
+        {
+            throw new ArgumentOutOfRangeException(nameof(blockhash), "Block hash must be 32 bytes (EVM) or 48 bytes (Hedera SHA-384).");
+        }
+        return client.GetSingleItemAsync($"blocks/0x{Hex.FromBytes(blockhash.Span)}", MirrorJsonContext.Default.BlockData);
     }
     /// <summary>
     /// Retrieves the most recent block observed by the mirror node via

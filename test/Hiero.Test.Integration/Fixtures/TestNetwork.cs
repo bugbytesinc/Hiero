@@ -266,6 +266,10 @@ internal class TestNetwork
     }
     private static async Task WaitForMirrorConsensusCatchUpAsync()
     {
+        if (_latestKnownMutatingTransaction == TransactionId.None)
+        {
+            return;
+        }
         var client = await CreateClientAsync();
         var lastMutatingConsensus = (await client.GetTransactionRecordAsync(_latestKnownMutatingTransaction)).Consensus;
         if (_latestKnownMirrorTimestamp < lastMutatingConsensus)

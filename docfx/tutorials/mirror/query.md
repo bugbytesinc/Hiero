@@ -146,6 +146,8 @@ ContractStateData? state = await mirror.GetContractStateAsync(
     contractId, position, new IMirrorQueryParameter[] { TimestampFilter.OnOrBefore(asOf) });
 
 // Results — by contract, by timestamp, by tx, by block, or global
+//   evmHash   : EvmHash             — 32-byte EVM transaction hash
+//   blockHash : ReadOnlyMemory<byte> — accepts 32-byte (EVM) or 48-byte (Hedera SHA-384)
 await foreach (var r in mirror.GetContractResultsAsync(contractId)) { }
 ContractResultData? a = await mirror.GetContractResultByTimestampAsync(contractId, ts);
 ContractResultData? b = await mirror.GetContractResultByTransactionHashAsync(evmHash);
@@ -179,6 +181,8 @@ BigInteger chainId   = await mirror.GetChainIdAsync();
 ## Blocks
 
 ```csharp
+// blockhash : ReadOnlyMemory<byte> — 48-byte SHA-384 from BlockData.Hash
+//                                    (32-byte EVM hashes also accepted)
 BlockData? byNumber = await mirror.GetBlockAsync(blockNumber);
 BlockData? byHash   = await mirror.GetBlockAsync(blockhash);
 BlockData? latest   = await mirror.GetLatestBlockAsync();

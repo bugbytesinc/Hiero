@@ -21,5 +21,25 @@ while IFS='=' read -r KEY VALUE; do
     echo "  export ${KEY}=${VALUE}"
 done <<< "${ENV_FILE}"
 
+CONSENSUS_PORT="${ConsensusEndpoint##*:}"
+MIRROR_REST_PORT="${MirrorRestUrl##*:}"
+MIRROR_GRPC_PORT="${MirrorGrpcUrl##*:}"
+
+echo ""
+echo "To tunnel from another machine (ports are IPv4-only, use 127.0.0.1 not localhost):"
+echo "  ssh -L ${CONSENSUS_PORT}:127.0.0.1:${CONSENSUS_PORT} -L ${MIRROR_REST_PORT}:127.0.0.1:${MIRROR_REST_PORT} -L ${MIRROR_GRPC_PORT}:127.0.0.1:${MIRROR_GRPC_PORT} $(hostname)"
+echo ""
+echo "User Secrets Configuration:"
+echo "{"
+echo "  \"MirrorRestUrl\": \"http://localhost:${MIRROR_REST_PORT}\","
+echo "  \"MirrorGrpcUrl\": \"http://localhost:${MIRROR_GRPC_PORT}\","
+echo "  \"PayerPrivateKey\": \"${PayerPrivateKey}\","
+echo "  \"ConsensusEndpoint\": \"http://localhost:${CONSENSUS_PORT}\","
+echo "  \"ConsensusNodeId\": \"${ConsensusNodeId}\","
+echo "  \"PayerAccountId\": \"${PayerAccountId}\","
+echo "}"
+
+
+
 echo ""
 echo "Environment set. Run: dotnet test --project test/Hiero.Test.Integration/"

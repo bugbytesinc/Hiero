@@ -110,10 +110,17 @@ public class ContractResultData
     [JsonPropertyName("hash")]
     public EvmHash Hash { get; set; } = EvmHash.None;
     /// <summary>
-    /// The Hash of the block the transaction is included in.
+    /// The 48-byte SHA-384 record-file hash of the block the
+    /// transaction is included in.
     /// </summary>
+    /// <remarks>
+    /// Hedera block hashes are SHA-384 outputs (48 bytes / 96 hex
+    /// chars on the wire), not 32-byte EVM-style hashes — see the
+    /// remarks on <see cref="EvmHash"/>.
+    /// </remarks>
     [JsonPropertyName("block_hash")]
-    public EvmHash BlockHash { get; set; } = EvmHash.None;
+    [JsonConverter(typeof(HexStringToBytesConverter))]
+    public ReadOnlyMemory<byte> BlockHash { get; set; }
     /// <summary>
     /// The number of the block the transaction was in.
     /// </summary>
@@ -301,7 +308,7 @@ public static class ContractResultDataExtensions
     }
     /// <summary>
     /// Retrieves a single contract-call result by its position within a
-    /// simulated EVM block, via
+    /// block, via
     /// <c>/api/v1/contracts/results?block.hash={hash}&amp;transaction.index={position}</c>.
     /// The server returns a list and this method unwraps the first
     /// item — a matching result should be unique for a given (block,
@@ -311,39 +318,56 @@ public static class ContractResultDataExtensions
     /// Mirror Rest Client to use for the request.
     /// </param>
     /// <param name="blockHash">
-    /// The Simulated EVM Block hash.
+    /// The block hash bytes — accepts the 48-byte Hedera SHA-384
+    /// record-file hash returned by the mirror, or a 32-byte EVM
+    /// block hash for callers that have one.
     /// </param>
     /// <param name="position">
-    /// The transaction position within the simulated EVM Block.
+    /// The transaction position within the block.
     /// </param>
     /// <returns>
     /// The contract results data or null if not found.
     /// </returns>
-    public static async Task<ContractResultData?> GetContractResultByBlockAndPositionAsync(this MirrorRestClient client, EvmHash blockHash, long position)
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// Thrown when <paramref name="blockHash"/> is neither 32 nor 48 bytes long.
+    /// </exception>
+    public static async Task<ContractResultData?> GetContractResultByBlockAndPositionAsync(this MirrorRestClient client, ReadOnlyMemory<byte> blockHash, long position)
     {
-        var path = $"contracts/results?block.hash={blockHash}&transaction.index={position}";
+        if (blockHash.Length != 32 && blockHash.Length != 48)
+        {
+            throw new ArgumentOutOfRangeException(nameof(blockHash), "Block hash must be 32 bytes (EVM) or 48 bytes (Hedera SHA-384).");
+        }
+        var path = $"contracts/results?block.hash=0x{Hex.FromBytes(blockHash.Span)}&transaction.index={position}";
         var list = await client.GetSingleItemAsync(path, MirrorJsonContext.Default.ContractResultDataPage).ConfigureAwait(false);
         return list?.Results?.FirstOrDefault();
     }
     /// <summary>
-    /// Enumerates every contract-call result contained in a simulated
-    /// EVM block, via
-    /// <c>/api/v1/contracts/results?block.hash={hash}</c>. Results are
-    /// returned in ascending transaction-index order.
+    /// Enumerates every contract-call result contained in a block,
+    /// via <c>/api/v1/contracts/results?block.hash={hash}</c>. Results
+    /// are returned in ascending transaction-index order.
     /// </summary>
     /// <param name="client">
     /// Mirror Rest Client to use for the request.
     /// </param>
     /// <param name="blockHash">
-    /// Hash of the simulated EVM block.
+    /// The block hash bytes — accepts the 48-byte Hedera SHA-384
+    /// record-file hash returned by the mirror, or a 32-byte EVM
+    /// block hash for callers that have one.
     /// </param>
     /// <returns>
     /// An async enumerable of contract-call results in the block; may
     /// be empty if the block contained no contract calls.
     /// </returns>
-    public static IAsyncEnumerable<ContractResultData> GetContractResultsByBlockHashAsync(this MirrorRestClient client, EvmHash blockHash)
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// Thrown when <paramref name="blockHash"/> is neither 32 nor 48 bytes long.
+    /// </exception>
+    public static IAsyncEnumerable<ContractResultData> GetContractResultsByBlockHashAsync(this MirrorRestClient client, ReadOnlyMemory<byte> blockHash)
     {
-        var path = $"contracts/results?block.hash={blockHash}&limit=100&order=asc";
+        if (blockHash.Length != 32 && blockHash.Length != 48)
+        {
+            throw new ArgumentOutOfRangeException(nameof(blockHash), "Block hash must be 32 bytes (EVM) or 48 bytes (Hedera SHA-384).");
+        }
+        var path = $"contracts/results?block.hash=0x{Hex.FromBytes(blockHash.Span)}&limit=100&order=asc";
         return client.GetPagedItemsAsync<ContractResultDataPage, ContractResultData>(path, MirrorJsonContext.Default.ContractResultDataPage);
     }
     /// <summary>

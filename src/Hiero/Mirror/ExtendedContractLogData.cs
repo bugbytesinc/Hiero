@@ -17,10 +17,17 @@ namespace Hiero.Mirror;
 public class ExtendedContractLogData : ContractLogData
 {
     /// <summary>
-    /// The Block Hash of the TransactionId
+    /// The 48-byte SHA-384 record-file hash of the block this log
+    /// event was emitted in.
     /// </summary>
+    /// <remarks>
+    /// Hedera block hashes are SHA-384 outputs (48 bytes / 96 hex
+    /// chars on the wire), not 32-byte EVM-style hashes — see the
+    /// remarks on <see cref="EvmHash"/>.
+    /// </remarks>
     [JsonPropertyName("block_hash")]
-    public EvmHash BlockHash { get; set; } = EvmHash.None;
+    [JsonConverter(typeof(HexStringToBytesConverter))]
+    public ReadOnlyMemory<byte> BlockHash { get; set; }
     /// <summary>
     /// The Block Number containing this log entry
     /// </summary>

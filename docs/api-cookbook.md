@@ -722,6 +722,8 @@ ContractData?                 contract  = await mirror.GetContractAsync(contract
 IAsyncEnumerable<ContractData> contracts = mirror.GetContractsAsync();
 
 // Results
+//   evmHash   : EvmHash             — 32-byte EVM transaction hash
+//   blockHash : ReadOnlyMemory<byte> — accepts 32-byte (EVM) or 48-byte (Hedera SHA-384)
 IAsyncEnumerable<ContractResultData> byContract   = mirror.GetContractResultsAsync(contractId);
 ContractResultData? byTimestamp = await mirror.GetContractResultByTimestampAsync(contractId, ts);
 ContractResultData? byHash      = await mirror.GetContractResultByTransactionHashAsync(evmHash);
@@ -748,6 +750,8 @@ BigInteger         chain = await mirror.GetChainIdAsync();
 
 ### Blocks
 ```csharp
+// blockhash : ReadOnlyMemory<byte> — 48-byte SHA-384 from BlockData.Hash
+//                                    (32-byte EVM hashes also accepted)
 BlockData?                  byNumber = await mirror.GetBlockAsync(blockNumber);
 BlockData?                  byHash   = await mirror.GetBlockAsync(blockhash);
 BlockData?                  latest   = await mirror.GetLatestBlockAsync();
