@@ -15,13 +15,13 @@ namespace Hiero;
 public sealed record ScheduleInfo
 {
     /// <summary>
-    /// The identifier of scheduled transaction
-    /// record held by the network.
+    /// The address of the schedule entity
+    /// held by the network.
     /// </summary>
     public EntityId Schedule { get; internal init; } = default!;
     /// <summary>
-    /// The ID of the scheduled transaction, 
-    /// should it be executed.
+    /// The transaction ID that will be used when the
+    /// scheduled transaction is executed by the network.
     /// </summary>
     public TransactionId TransactionId { get; internal init; } = default!;
     /// <summary>

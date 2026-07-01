@@ -49,15 +49,24 @@ public sealed class UpdateNftMetadataParams : TransactionParams<TransactionRecei
         {
             throw new ArgumentNullException(nameof(SerialNumbers), "The list of serial numbers must not be null.");
         }
+        var count = SerialNumbers.Count;
+        if (count == 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(SerialNumbers), "The list of serial numbers must not be empty.");
+        }
         var result = new TokenUpdateNftsTransactionBody
         {
             Token = new TokenID(Token),
             Metadata = ByteString.CopyFrom(Metadata.Span)
         };
-        result.SerialNumbers.AddRange(SerialNumbers);
-        if (result.SerialNumbers.Count == 0)
+        var serialNumbers = result.SerialNumbers;
+        if (serialNumbers.Capacity < count)
         {
-            throw new ArgumentOutOfRangeException(nameof(SerialNumbers), "The list of serial numbers must not be empty.");
+            serialNumbers.Capacity = count;
+        }
+        for (var i = 0; i < count; i++)
+        {
+            serialNumbers.Add(SerialNumbers[i]);
         }
         return result;
     }

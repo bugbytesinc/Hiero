@@ -68,7 +68,8 @@ public class ContractResultData
     [JsonConverter(typeof(UnsignedLongMirrorConverter))]
     public ulong GasConsumed { get; set; } = default!;
     /// <summary>
-    /// The amount of gas that was debted (charged)
+    /// The total amount of gas used by all transactions in the block
+    /// that contains this result.
     /// </summary>
     [JsonPropertyName("block_gas_used")]
     [JsonConverter(typeof(UnsignedLongMirrorConverter))]
@@ -88,7 +89,7 @@ public class ContractResultData
     [JsonConverter(typeof(LongMirrorConverter))]
     public long GasLimit { get; set; }
     /// <summary>
-    /// Gas price (not sure of denomination)
+    /// The gas price of the wrapped ethereum transaction, in tinybars.
     /// </summary>
     [JsonPropertyName("gas_price")]
     [JsonConverter(typeof(BigIntegerConverter))]
@@ -105,7 +106,8 @@ public class ContractResultData
     [JsonPropertyName("to")]
     public EntityId MessageReceiver { get; set; } = default!;
     /// <summary>
-    /// The Hash of the TransactionId
+    /// The EVM transaction hash for this result (not the raw HAPI
+    /// transaction hash).
     /// </summary>
     [JsonPropertyName("hash")]
     public EvmHash Hash { get; set; } = EvmHash.None;
@@ -228,7 +230,7 @@ public static class ContractResultDataExtensions
     /// </returns>
     public static IAsyncEnumerable<ContractResultData> GetContractResultsAsync(this MirrorRestClient client, EntityId contract, params IMirrorQueryParameter[] filters)
     {
-        var path = GenerateInitialPath($"contracts/{MirrorFormat(contract)}/results", [new PageLimit(100), .. filters]);
+        var path = GenerateInitialPath($"contracts/{contract.ToMirrorString()}/results", new PageLimit(100), filters);
         return client.GetPagedItemsAsync<ContractResultDataPage, ContractResultData>(path, MirrorJsonContext.Default.ContractResultDataPage);
     }
     /// <summary>
@@ -256,7 +258,7 @@ public static class ContractResultDataExtensions
     /// </returns>
     public static Task<ContractResultData?> GetContractResultByTimestampAsync(this MirrorRestClient client, EntityId contract, ConsensusTimeStamp timestamp, params IMirrorQueryParameter[] filters)
     {
-        var path = GenerateInitialPath($"contracts/{MirrorFormat(contract)}/results/{timestamp}", filters);
+        var path = GenerateInitialPath($"contracts/{contract.ToMirrorString()}/results/{timestamp}", filters);
         return client.GetSingleItemAsync(path, MirrorJsonContext.Default.ContractResultData);
     }
     /// <summary>
@@ -300,11 +302,11 @@ public static class ContractResultDataExtensions
     /// <returns>
     /// The contract results data or null if not found
     /// </returns>
-    public static async Task<ContractResultData?> GetContractResultByTransactionIdAsync(this MirrorRestClient client, TransactionId transactionId, params IMirrorProjection[] filters)
+    public static Task<ContractResultData?> GetContractResultByTransactionIdAsync(this MirrorRestClient client, TransactionId transactionId, params IMirrorProjection[] filters)
     {
         var (txId, txFilters) = MirrorFormat(transactionId);
-        var path = GenerateInitialPath($"contracts/results/{txId}", [.. txFilters, .. filters]);
-        return await client.GetSingleItemAsync(path, MirrorJsonContext.Default.ContractResultData);
+        var path = GenerateInitialPath($"contracts/results/{txId}", txFilters, filters);
+        return client.GetSingleItemAsync(path, MirrorJsonContext.Default.ContractResultData);
     }
     /// <summary>
     /// Retrieves a single contract-call result by its position within a
@@ -337,9 +339,10 @@ public static class ContractResultDataExtensions
         {
             throw new ArgumentOutOfRangeException(nameof(blockHash), "Block hash must be 32 bytes (EVM) or 48 bytes (Hedera SHA-384).");
         }
-        var path = $"contracts/results?block.hash=0x{Hex.FromBytes(blockHash.Span)}&transaction.index={position}";
+        var path = GenerateInitialPath("contracts/results", BlockHashFilter.Is(blockHash), TransactionIndexFilter.Is(position));
         var list = await client.GetSingleItemAsync(path, MirrorJsonContext.Default.ContractResultDataPage).ConfigureAwait(false);
-        return list?.Results?.FirstOrDefault();
+        var results = list?.Results;
+        return results is { Length: > 0 } ? results[0] : null;
     }
     /// <summary>
     /// Enumerates every contract-call result contained in a block,
@@ -367,7 +370,7 @@ public static class ContractResultDataExtensions
         {
             throw new ArgumentOutOfRangeException(nameof(blockHash), "Block hash must be 32 bytes (EVM) or 48 bytes (Hedera SHA-384).");
         }
-        var path = $"contracts/results?block.hash=0x{Hex.FromBytes(blockHash.Span)}&limit=100&order=asc";
+        var path = GenerateInitialPath("contracts/results", BlockHashFilter.Is(blockHash), new PageLimit(100), OrderBy.Ascending);
         return client.GetPagedItemsAsync<ContractResultDataPage, ContractResultData>(path, MirrorJsonContext.Default.ContractResultDataPage);
     }
     /// <summary>
@@ -397,7 +400,7 @@ public static class ContractResultDataExtensions
     /// </returns>
     public static IAsyncEnumerable<ContractResultData> GetAllContractResultsAsync(this MirrorRestClient client, params IMirrorQueryParameter[] filters)
     {
-        var path = GenerateInitialPath($"contracts/results", [new PageLimit(100), OrderBy.Ascending, .. filters]);
+        var path = GenerateInitialPath("contracts/results", new PageLimit(100), OrderBy.Ascending, filters);
         return client.GetPagedItemsAsync<ContractResultDataPage, ContractResultData>(path, MirrorJsonContext.Default.ContractResultDataPage);
     }
     /// <summary>
@@ -420,7 +423,7 @@ public static class ContractResultDataExtensions
     /// </exception>
     public static async Task<BigInteger> GetChainIdAsync(this MirrorRestClient client)
     {
-        var path = GenerateInitialPath($"contracts/results", [new PageLimit(10), OrderBy.Descending]);
+        var path = GenerateInitialPath("contracts/results", new PageLimit(10), OrderBy.Descending);
         var data = (await client.GetSingleItemAsync(path, MirrorJsonContext.Default.ContractResultDataPage).ConfigureAwait(false))?.Results ?? throw new MirrorException("Contract results are empty, unable to find Chain ID.", [], System.Net.HttpStatusCode.NotFound);
         for (int i = 0; i < data.Length; i++)
         {

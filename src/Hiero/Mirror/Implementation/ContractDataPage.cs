@@ -18,8 +18,8 @@ internal class ContractDataPage : Page<ContractData>
     /// <returns>
     /// An enumerator listing the records in the list.
     /// </returns>
-    public override IEnumerable<ContractData> GetItems()
+    public override ContractData[] GetItems()
     {
-        return Contracts ?? Array.Empty<ContractData>();
+        return Contracts ?? [];
     }
 }

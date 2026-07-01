@@ -50,9 +50,15 @@ public sealed class UpdateRoyaltiesParams : TransactionParams<TransactionReceipt
         // Note: Null & Empty are Valid, they will clear the list of fees.
         if (Royalties is { Count: > 0 })
         {
-            foreach (var royalty in Royalties)
+            var count = Royalties.Count;
+            var customFees = result.CustomFees;
+            if (customFees.Capacity < count)
             {
-                result.CustomFees.Add(royalty.ToCustomFee());
+                customFees.Capacity = count;
+            }
+            for (var i = 0; i < count; i++)
+            {
+                customFees.Add(Royalties[i].ToCustomFee());
             }
         }
         return result;

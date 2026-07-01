@@ -54,7 +54,7 @@ internal class TestNetwork
         }
         _mirrorClient = new MirrorRestClient(new HttpClient() { BaseAddress = new Uri(mirrorRestUrl) });
         _mirrorGrpcUri = new Uri(mirrorGrpcUrl);
-        _privateKey = Hex.ToBytes(payerPrivateKey);
+        _privateKey = Convert.FromHexString(payerPrivateKey);
         var signatory = new Signatory(_privateKey);
         var endorsement = signatory.GetEndorsements()[0];
         var payerAccountId = configuration["PayerAccountId"];

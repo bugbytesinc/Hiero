@@ -9,7 +9,7 @@ namespace Hiero;
 public sealed record ScheduleRecord : TransactionRecord
 {
     /// <summary>
-    /// The address of the newly created schedule record.
+    /// The address of the newly created schedule entity.
     /// </summary>
     public EntityId Schedule { get; internal init; }
     /// <summary>

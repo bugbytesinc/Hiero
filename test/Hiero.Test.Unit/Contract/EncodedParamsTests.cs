@@ -65,7 +65,7 @@ public class EncodedParamsTests
         // Encode a known int and get its hex representation
         var expected = 42;
         var encoded = Abi.EncodeArguments(new object[] { expected });
-        var hex = Hex.FromBytes(encoded);
+        var hex = Convert.ToHexStringLower(encoded.Span);
         var ep = new EncodedParams(hex);
         await Assert.That(ep.Size).IsEqualTo(encoded.Length);
         await Assert.That(ep.Data.ToArray().SequenceEqual(encoded.ToArray())).IsTrue();
@@ -76,7 +76,7 @@ public class EncodedParamsTests
     {
         var expected = 99;
         var encoded = Abi.EncodeArguments(new object[] { expected });
-        var hex = "0x" + Hex.FromBytes(encoded);
+        var hex = "0x" + Convert.ToHexStringLower(encoded.Span);
         var ep = new EncodedParams(hex);
         await Assert.That(ep.Size).IsEqualTo(encoded.Length);
         await Assert.That(ep.Data.ToArray().SequenceEqual(encoded.ToArray())).IsTrue();
@@ -102,6 +102,7 @@ public class EncodedParamsTests
         var rawString = "0xNotHex!!";
         var ep = new EncodedParams(rawString);
         await Assert.That(ep.Size).IsGreaterThan(0);
+        await Assert.That(ep.As<string>()).IsEqualTo("NotHex!!");
     }
 
     // ── Size property ─────────────────────────────────────────────────────────
@@ -443,7 +444,7 @@ public class EncodedParamsTests
     {
         var expected = Generator.Integer(1, 50_000);
         var encoded = Abi.EncodeArguments(new object[] { expected });
-        var hex = Hex.FromBytes(encoded);
+        var hex = Convert.ToHexStringLower(encoded.Span);
         var ep = new EncodedParams(hex);
         await Assert.That(ep.As<int>()).IsEqualTo(expected);
     }
@@ -453,7 +454,7 @@ public class EncodedParamsTests
     {
         var expected = Generator.Memo(5, 15);
         var encoded = Abi.EncodeArguments(new object[] { expected });
-        var hex = "0x" + Hex.FromBytes(encoded);
+        var hex = "0x" + Convert.ToHexStringLower(encoded.Span);
         var ep = new EncodedParams(hex);
         await Assert.That(ep.As<string>()).IsEqualTo(expected);
     }

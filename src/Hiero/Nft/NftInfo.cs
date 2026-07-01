@@ -83,6 +83,7 @@ public sealed record NftInfo
         Nft = NftIDExtensions.AsNft(info.NftID);
         Owner = AccountIDExtensions.AsAddress(info.AccountID);
         Created = info.CreationTime.ToConsensusTimeStamp();
+        // Keep a copy so this public result does not retain the protobuf response buffer.
         Metadata = info.Metadata.ToByteArray();
         Ledger = new BigInteger(info.LedgerId.Span, true, true);
         Spender = AccountIDExtensions.AsAddress(info.SpenderId);

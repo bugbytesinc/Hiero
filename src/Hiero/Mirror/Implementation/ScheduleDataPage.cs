@@ -18,8 +18,8 @@ internal class ScheduleDataPage : Page<ScheduleData>
     /// <returns>
     /// An enumerator listing the records in the list.
     /// </returns>
-    public override IEnumerable<ScheduleData> GetItems()
+    public override ScheduleData[] GetItems()
     {
-        return Schedules ?? Array.Empty<ScheduleData>();
+        return Schedules ?? [];
     }
 }

@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
-using System.Text.Json;
-using System.Text.Json.Serialization;
+using Google.Protobuf;
 using Hiero.Converters;
 using Hiero.Test.Helpers;
+using Proto;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Hiero.Test.Unit.Converters;
 
@@ -63,6 +65,14 @@ public class DomainConverterTests
     }
 
     [Test]
+    public async Task ConsensusTimeStamp_Deserialize_ParsesEscapedDecimalSecondsString()
+    {
+        var json = "\"1234567890.12345678\\u0039\"";
+        var ts = JsonSerializer.Deserialize<ConsensusTimeStamp>(json);
+        await Assert.That(ts.Seconds).IsEqualTo(1234567890.123456789m);
+    }
+
+    [Test]
     public async Task ConsensusTimeStamp_RoundTrip_PreservesValue()
     {
         var original = new ConsensusTimeStamp(1700000000L, 999999999);
@@ -84,9 +94,25 @@ public class DomainConverterTests
     }
 
     [Test]
+    public async Task EntityId_SerializePropertyName_ProducesShardRealmNum()
+    {
+        var entity = new EntityId(0, 0, 5);
+        var json = JsonSerializer.Serialize(new Dictionary<EntityId, int> { [entity] = 7 });
+        await Assert.That(json).IsEqualTo("""{"0.0.5":7}""");
+    }
+
+    [Test]
     public async Task EntityId_Deserialize_ParsesShardRealmNum()
     {
         var json = "\"0.0.5\"";
+        var entity = JsonSerializer.Deserialize<EntityId>(json);
+        await Assert.That(entity).IsEqualTo(new EntityId(0, 0, 5));
+    }
+
+    [Test]
+    public async Task EntityId_Deserialize_ParsesEscapedShardRealmNum()
+    {
+        var json = "\"0.\\u0030.5\"";
         var entity = JsonSerializer.Deserialize<EntityId>(json);
         await Assert.That(entity).IsEqualTo(new EntityId(0, 0, 5));
     }
@@ -111,9 +137,39 @@ public class DomainConverterTests
         await Assert.That(entity).IsEqualTo(EntityId.None);
     }
 
+    [Test]
+    public async Task EntityId_Deserialize_ProtobufEncoded_KeyAlias()
+    {
+        var (publicKey, _) = Generator.Ed25519KeyPair();
+        var expectedAlias = new Endorsement(publicKey);
+        var encodedKey = new Key(expectedAlias).ToByteArray();
+        var json = $"\"0x{Convert.ToHexStringLower(encodedKey)}\"";
+
+        var entity = JsonSerializer.Deserialize<EntityId>(json);
+
+        await Assert.That(entity).IsNotNull();
+        await Assert.That(entity!.TryGetKeyAlias(out var actualAlias)).IsTrue();
+        await Assert.That(actualAlias).IsEqualTo(expectedAlias);
+    }
+
     // ═══════════════════════════════════════════════════════════════════════
     //  3. EvmAddressConverter (has [JsonConverter] on type)
     // ═══════════════════════════════════════════════════════════════════════
+
+    [Test]
+    public async Task EntityId_Deserialize_EscapedProtobufEncodedKeyAlias()
+    {
+        var (publicKey, _) = Generator.Ed25519KeyPair();
+        var expectedAlias = new Endorsement(publicKey);
+        var encodedKey = new Key(expectedAlias).ToByteArray();
+        var json = $"\"0\\u0078{Convert.ToHexStringLower(encodedKey)}\"";
+
+        var entity = JsonSerializer.Deserialize<EntityId>(json);
+
+        await Assert.That(entity).IsNotNull();
+        await Assert.That(entity!.TryGetKeyAlias(out var actualAlias)).IsTrue();
+        await Assert.That(actualAlias).IsEqualTo(expectedAlias);
+    }
 
     [Test]
     public async Task EvmAddress_RoundTrip_PreservesKnownBytes()
@@ -141,11 +197,37 @@ public class DomainConverterTests
     }
 
     [Test]
+    public async Task EvmAddress_SerializePropertyName_ProducesHexStringWith0xPrefix()
+    {
+        var bytes = new byte[20];
+        bytes[19] = 0x01;
+        var addr = new EvmAddress(bytes);
+        var json = JsonSerializer.Serialize(new Dictionary<EvmAddress, int> { [addr] = 7 });
+        await Assert.That(json).IsEqualTo($$"""{"{{addr}}":7}""");
+    }
+
+    [Test]
     public async Task EvmAddress_Deserialize_None_ProducesZeroAddress()
     {
         var json = "\"0x0000000000000000000000000000000000000000\"";
         var addr = JsonSerializer.Deserialize<EvmAddress>(json);
         await Assert.That(addr).IsEqualTo(EvmAddress.None);
+    }
+
+    [Test]
+    public async Task EvmAddress_Deserialize_ParsesUnescapedAddress()
+    {
+        var original = new EvmAddress(Enumerable.Repeat((byte)0xAB, 20).ToArray());
+        var addr = JsonSerializer.Deserialize<EvmAddress>($"\"{original}\"");
+        await Assert.That(addr).IsEqualTo(original);
+    }
+
+    [Test]
+    public async Task EvmHash_Deserialize_ParsesUnescapedHash()
+    {
+        var original = new EvmHash(Enumerable.Repeat((byte)0xAB, 32).ToArray());
+        var hash = JsonSerializer.Deserialize<EvmHash>($"\"{original}\"");
+        await Assert.That(hash).IsEqualTo(original);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -161,9 +243,27 @@ public class DomainConverterTests
     }
 
     [Test]
+    public async Task Nft_SerializePropertyName_ProducesTokenHashSerial()
+    {
+        var nft = new Hiero.Nft(new EntityId(0, 0, 5), 3);
+        var json = JsonSerializer.Serialize(new Dictionary<Hiero.Nft, int> { [nft] = 7 });
+        await Assert.That(json).IsEqualTo("""{"0.0.5#3":7}""");
+    }
+
+    [Test]
     public async Task Nft_Deserialize_ParsesTokenHashSerial()
     {
         var json = "\"0.0.5#3\"";
+        var nft = JsonSerializer.Deserialize<Hiero.Nft>(json);
+        await Assert.That(nft).IsNotNull();
+        await Assert.That(nft!.Token).IsEqualTo(new EntityId(0, 0, 5));
+        await Assert.That(nft.SerialNumber).IsEqualTo(3L);
+    }
+
+    [Test]
+    public async Task Nft_Deserialize_ParsesEscapedTokenHashSerial()
+    {
+        var json = "\"0.\\u0030.5#3\"";
         var nft = JsonSerializer.Deserialize<Hiero.Nft>(json);
         await Assert.That(nft).IsNotNull();
         await Assert.That(nft!.Token).IsEqualTo(new EntityId(0, 0, 5));
@@ -202,6 +302,16 @@ public class DomainConverterTests
     public async Task ConsensusNodeEndpoint_Deserialize_ParsesJsonObject()
     {
         var json = """{"address":"0.0.3","url":"https://0.testnet.hedera.com:50211"}""";
+        var endpoint = JsonSerializer.Deserialize<ConsensusNodeEndpoint>(json);
+        await Assert.That(endpoint).IsNotNull();
+        await Assert.That(endpoint!.Node).IsEqualTo(new EntityId(0, 0, 3));
+        await Assert.That(endpoint.Uri.Host).IsEqualTo("0.testnet.hedera.com");
+    }
+
+    [Test]
+    public async Task ConsensusNodeEndpoint_Deserialize_ParsesEscapedPropertyNames()
+    {
+        var json = """{"\u0061ddress":"0.0.3","\u0075rl":"https://0.testnet.hedera.com:50211"}""";
         var endpoint = JsonSerializer.Deserialize<ConsensusNodeEndpoint>(json);
         await Assert.That(endpoint).IsNotNull();
         await Assert.That(endpoint!.Node).IsEqualTo(new EntityId(0, 0, 3));
@@ -424,6 +534,15 @@ public class DomainConverterTests
     }
 
     [Test]
+    public async Task TokenKycStatus_NonStringValue_MapsToNotApplicable()
+    {
+        var json = """{"Value":123}""";
+        var result = JsonSerializer.Deserialize<KycWrapper>(json);
+        await Assert.That(result).IsNotNull();
+        await Assert.That(result!.Value).IsEqualTo(TokenKycStatus.NotApplicable);
+    }
+
+    [Test]
     public async Task TokenKycStatus_Serialize_Granted_WritesGranted()
     {
         var wrapper = new KycWrapper(TokenKycStatus.Granted);
@@ -463,6 +582,14 @@ public class DomainConverterTests
     public async Task TokenType_NonFungibleUnique_MapsToNonFungible()
     {
         var json = "\"NON_FUNGIBLE_UNIQUE\"";
+        var result = JsonSerializer.Deserialize<TokenType>(json);
+        await Assert.That(result).IsEqualTo(TokenType.NonFungible);
+    }
+
+    [Test]
+    public async Task TokenType_EscapedNonFungibleUnique_MapsToNonFungible()
+    {
+        var json = "\"NON\\u005fFUNGIBLE\\u005fUNIQUE\"";
         var result = JsonSerializer.Deserialize<TokenType>(json);
         await Assert.That(result).IsEqualTo(TokenType.NonFungible);
     }
@@ -511,6 +638,30 @@ public class DomainConverterTests
         await Assert.That(result.Value.Payer).IsEqualTo(new EntityId(0, 0, 5));
         await Assert.That(result.Value.ValidStartSeconds).IsEqualTo(1234567890L);
         await Assert.That(result.Value.ValidStartNanos).IsEqualTo(123456789);
+    }
+
+    [Test]
+    public async Task TransactionIdMirror_Deserialize_ParsesEscapedDashSeparatedFormat()
+    {
+        var json = """{"Value":"0.\u0030.5-1234567890-123456789"}""";
+        var result = JsonSerializer.Deserialize<TxIdMirrorWrapper>(json);
+        await Assert.That(result).IsNotNull();
+        await Assert.That(result!.Value).IsNotNull();
+        await Assert.That(result.Value.Payer).IsEqualTo(new EntityId(0, 0, 5));
+        await Assert.That(result.Value.ValidStartSeconds).IsEqualTo(1234567890L);
+        await Assert.That(result.Value.ValidStartNanos).IsEqualTo(123456789);
+    }
+
+    [Test]
+    public async Task TransactionIdMirror_Deserialize_ParsesDashSeparatedFormatWithoutNanos()
+    {
+        var json = """{"Value":"0.0.5-1234567890"}""";
+        var result = JsonSerializer.Deserialize<TxIdMirrorWrapper>(json);
+        await Assert.That(result).IsNotNull();
+        await Assert.That(result!.Value).IsNotNull();
+        await Assert.That(result.Value.Payer).IsEqualTo(new EntityId(0, 0, 5));
+        await Assert.That(result.Value.ValidStartSeconds).IsEqualTo(1234567890L);
+        await Assert.That(result.Value.ValidStartNanos).IsEqualTo(0);
     }
 
     [Test]
@@ -566,6 +717,15 @@ public class DomainConverterTests
     public async Task EncodedParams_Deserialize_ParsesHexPrefixedString()
     {
         var json = "\"0xdeadbeef\"";
+        var result = JsonSerializer.Deserialize<EncodedParams>(json);
+        await Assert.That(result).IsNotNull();
+        await Assert.That(result!.Data.ToArray()).IsEquivalentTo(new byte[] { 0xDE, 0xAD, 0xBE, 0xEF });
+    }
+
+    [Test]
+    public async Task EncodedParams_Deserialize_ParsesEscapedHexPrefixedString()
+    {
+        var json = "\"0xdea\\u0064beef\"";
         var result = JsonSerializer.Deserialize<EncodedParams>(json);
         await Assert.That(result).IsNotNull();
         await Assert.That(result!.Data.ToArray()).IsEquivalentTo(new byte[] { 0xDE, 0xAD, 0xBE, 0xEF });

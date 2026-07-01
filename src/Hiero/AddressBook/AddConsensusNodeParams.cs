@@ -36,12 +36,12 @@ public sealed class AddConsensusNodeParams : TransactionParams<ConsensusNodeRece
     /// Service endpoints for gossip communication with other consensus nodes.
     /// Must contain between 1 and 10 entries. This field is REQUIRED.
     /// </summary>
-    public IEnumerable<Uri> GossipEndpoints { get; set; } = default!;
+    public IReadOnlyList<Uri> GossipEndpoints { get; set; } = default!;
     /// <summary>
     /// Service endpoints for gRPC client connections.
     /// Must contain between 1 and 8 entries. This field is REQUIRED.
     /// </summary>
-    public IEnumerable<Uri> ServiceEndpoints { get; set; } = default!;
+    public IReadOnlyList<Uri> ServiceEndpoints { get; set; } = default!;
     /// <summary>
     /// The DER-encoded gossip CA certificate used to sign gossip events.
     /// This field is REQUIRED and must not be empty.
@@ -96,6 +96,16 @@ public sealed class AddConsensusNodeParams : TransactionParams<ConsensusNodeRece
         {
             throw new ArgumentNullException(nameof(ServiceEndpoints), "Service endpoints are required.");
         }
+        var gossipEndpointCount = GossipEndpoints.Count;
+        var serviceEndpointCount = ServiceEndpoints.Count;
+        if (gossipEndpointCount == 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(GossipEndpoints), "At least one gossip endpoint is required.");
+        }
+        if (serviceEndpointCount == 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(ServiceEndpoints), "At least one service endpoint is required.");
+        }
         var result = new NodeCreateTransactionBody
         {
             AccountId = new AccountID(Account),
@@ -107,15 +117,23 @@ public sealed class AddConsensusNodeParams : TransactionParams<ConsensusNodeRece
         {
             result.Description = Description;
         }
-        result.GossipEndpoint.AddRange(GossipEndpoints.Select(e => new ServiceEndpoint(e)));
-        if (result.GossipEndpoint.Count == 0)
+        var gossipEndpoints = result.GossipEndpoint;
+        if (gossipEndpoints.Capacity < gossipEndpointCount)
         {
-            throw new ArgumentOutOfRangeException(nameof(GossipEndpoints), "At least one gossip endpoint is required.");
+            gossipEndpoints.Capacity = gossipEndpointCount;
         }
-        result.ServiceEndpoint.AddRange(ServiceEndpoints.Select(e => new ServiceEndpoint(e)));
-        if (result.ServiceEndpoint.Count == 0)
+        for (var i = 0; i < gossipEndpointCount; i++)
         {
-            throw new ArgumentOutOfRangeException(nameof(ServiceEndpoints), "At least one service endpoint is required.");
+            gossipEndpoints.Add(new ServiceEndpoint(GossipEndpoints[i]));
+        }
+        var serviceEndpoints = result.ServiceEndpoint;
+        if (serviceEndpoints.Capacity < serviceEndpointCount)
+        {
+            serviceEndpoints.Capacity = serviceEndpointCount;
+        }
+        for (var i = 0; i < serviceEndpointCount; i++)
+        {
+            serviceEndpoints.Add(new ServiceEndpoint(ServiceEndpoints[i]));
         }
         if (GrpcCertificateHash.HasValue)
         {

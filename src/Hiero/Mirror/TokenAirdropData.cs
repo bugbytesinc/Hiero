@@ -90,7 +90,7 @@ public static class TokenAirdropDataExtensions
     /// </returns>
     public static IAsyncEnumerable<TokenAirdropData> GetAccountOutstandingAirdropsAsync(this MirrorRestClient client, EntityId account, params IMirrorQueryParameter[] filters)
     {
-        var path = GenerateInitialPath($"accounts/{MirrorFormat(account)}/airdrops/outstanding", [new PageLimit(100), .. filters]);
+        var path = GenerateInitialPath($"accounts/{account.ToMirrorString()}/airdrops/outstanding", new PageLimit(100), filters);
         return client.GetPagedItemsAsync<TokenAirdropDataPage, TokenAirdropData>(path, MirrorJsonContext.Default.TokenAirdropDataPage);
     }
     /// <summary>
@@ -118,7 +118,7 @@ public static class TokenAirdropDataExtensions
     /// </returns>
     public static IAsyncEnumerable<TokenAirdropData> GetAccountPendingAirdropsAsync(this MirrorRestClient client, EntityId account, params IMirrorQueryParameter[] filters)
     {
-        var path = GenerateInitialPath($"accounts/{MirrorFormat(account)}/airdrops/pending", [new PageLimit(100), .. filters]);
+        var path = GenerateInitialPath($"accounts/{account.ToMirrorString()}/airdrops/pending", new PageLimit(100), filters);
         return client.GetPagedItemsAsync<TokenAirdropDataPage, TokenAirdropData>(path, MirrorJsonContext.Default.TokenAirdropDataPage);
     }
 }

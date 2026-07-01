@@ -8,14 +8,14 @@ public class UpdateAccountTests
 {
     // Code Example:  Docs / Recipe / Crypto / Update Address
     static async Task Recipe(string[] args)
-    {                                                 // For Example:
-        var gatewayUrl = new Uri(args[0]);            //   http://2.testnet.hedera.com:50211
-        var gatewayAccountNo = long.Parse(args[1]);   //   5 (gateway node 0.0.5)
-        var payerAccountNo = long.Parse(args[2]);     //   20 (account 0.0.20)
-        var payerPrivateKey = Hex.ToBytes(args[3]);   //   302e0201... (Ed25519 private in hex)
-        var targetAccountNo = long.Parse(args[4]);    //   2023 (account 0.0.2023)
-        var targetPrivateKey = Hex.ToBytes(args[5]);  //   302e0201... (Ed25519 private in hex)
-        var targetAccountNewMemo = args[6];           //   New Memo to Associate with Target
+    {                                                          // For Example:
+        var gatewayUrl = new Uri(args[0]);                     //   http://2.testnet.hedera.com:50211
+        var gatewayAccountNo = long.Parse(args[1]);            //   5 (gateway node 0.0.5)
+        var payerAccountNo = long.Parse(args[2]);              //   20 (account 0.0.20)
+        var payerPrivateKey = Convert.FromHexString(args[3]);  //   302e0201... (Ed25519 private in hex)
+        var targetAccountNo = long.Parse(args[4]);             //   2023 (account 0.0.2023)
+        var targetPrivateKey = Convert.FromHexString(args[5]); //   302e0201... (Ed25519 private in hex)
+        var targetAccountNewMemo = args[6];                    //   New Memo to Associate with Target
         try
         {
             await using var client = new ConsensusClient(ctx =>
@@ -50,9 +50,9 @@ public class UpdateAccountTests
         var arg0 = endpoint.Uri;
         var arg1 = endpoint.Node.AccountNum.ToString();
         var arg2 = TestNetwork.Payer.AccountNum.ToString();
-        var arg3 = Hex.FromBytes(TestNetwork.PrivateKey);
+        var arg3 = Convert.ToHexStringLower(TestNetwork.PrivateKey.Span);
         var arg4 = fxAccount.CreateReceipt!.Address.AccountNum.ToString();
-        var arg5 = Hex.FromBytes(fxAccount.PrivateKey);
+        var arg5 = Convert.ToHexStringLower(fxAccount.PrivateKey.Span);
         var arg6 = Generator.String(10, 20);
         await Recipe(new string[] { arg0.ToString(), arg1, arg2, arg3, arg4, arg5, arg6 });
     }

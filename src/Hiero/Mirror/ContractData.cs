@@ -83,12 +83,14 @@ public class ContractData
     [JsonConverter(typeof(LongMirrorConverter))]
     public long Nonce { get; set; }
     /// <summary>
-    /// The HAPI ID of the obtainer?
+    /// The HAPI ID of the obtainer — the account or contract that
+    /// received this contract's remaining balance when it was deleted.
     /// </summary>
     [JsonPropertyName("obtainer_id")]
     public EntityId Obtainer { get; set; } = default!;
     /// <summary>
-    /// Flag indicating permanent removal?
+    /// Flag indicating the contract was permanently removed by the
+    /// network (as opposed to merely marked deleted).
     /// </summary>
     [JsonPropertyName("permanent_removal")]
     [JsonConverter(typeof(BooleanMirrorConverter))]
@@ -146,7 +148,7 @@ public static class ContractDataExtensions
     /// </returns>
     public static Task<ContractData?> GetContractAsync(this MirrorRestClient client, EntityId contract, params IMirrorQueryParameter[] filters)
     {
-        var path = GenerateInitialPath($"contracts/{MirrorFormat(contract)}", filters);
+        var path = GenerateInitialPath($"contracts/{contract.ToMirrorString()}", filters);
         return client.GetSingleItemAsync(path, MirrorJsonContext.Default.ContractData);
     }
     /// <summary>
@@ -175,7 +177,7 @@ public static class ContractDataExtensions
     /// </returns>
     public static IAsyncEnumerable<ContractData> GetContractsAsync(this MirrorRestClient client, params IMirrorQueryParameter[] filters)
     {
-        var path = GenerateInitialPath("contracts", [new PageLimit(100), .. filters]);
+        var path = GenerateInitialPath("contracts", new PageLimit(100), filters);
         return client.GetPagedItemsAsync<ContractDataPage, ContractData>(path, MirrorJsonContext.Default.ContractDataPage);
     }
 }

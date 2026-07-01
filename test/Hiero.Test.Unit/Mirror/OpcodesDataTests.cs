@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
-using System.Text.Json;
 using Hiero.Mirror;
+using System.Text.Json;
 
 namespace Hiero.Test.Unit.Mirror;
 
@@ -49,7 +49,7 @@ public class OpcodesDataTests
         await Assert.That(data!.Failed).IsFalse();
         await Assert.That(data.Gas).IsEqualTo(42000L);
         await Assert.That(data.Contract).IsEqualTo(new EntityId(0, 0, 1000));
-        await Assert.That(Hex.FromBytes(data.ReturnValue)).IsEqualTo("1234");
+        await Assert.That(Convert.ToHexStringLower(data.ReturnValue.Span)).IsEqualTo("1234");
         await Assert.That(data.Opcodes.Length).IsEqualTo(2);
 
         var first = data.Opcodes[0];
@@ -60,22 +60,22 @@ public class OpcodesDataTests
         await Assert.That(first.Pc).IsEqualTo(0);
         await Assert.That(first.Stack).IsNotNull();
         await Assert.That(first.Stack!.Length).IsEqualTo(2);
-        await Assert.That(Hex.FromBytes(first.Stack[1])).IsEqualTo("01");
+        await Assert.That(Convert.ToHexStringLower(first.Stack[1].Span)).IsEqualTo("01");
         await Assert.That(first.Memory).IsNotNull();
         await Assert.That(first.Memory!.Length).IsEqualTo(1);
-        await Assert.That(Hex.FromBytes(first.Memory[0])).IsEqualTo("aabbccdd");
+        await Assert.That(Convert.ToHexStringLower(first.Memory[0].Span)).IsEqualTo("aabbccdd");
         await Assert.That(first.Storage).IsNotNull();
         await Assert.That(first.Storage!.Count).IsEqualTo(1);
         var kvp = first.Storage.Single();
         await Assert.That(kvp.Key).IsEqualTo("0x0000000000000000000000000000000000000000000000000000000000000001");
-        await Assert.That(Hex.FromBytes(kvp.Value).EndsWith("ff")).IsTrue();
+        await Assert.That(Convert.ToHexStringLower(kvp.Value.Span).EndsWith("ff")).IsTrue();
 
         var second = data.Opcodes[1];
         await Assert.That(second.Op).IsEqualTo("REVERT");
         await Assert.That(second.Stack).IsNull();
         await Assert.That(second.Memory).IsNull();
         await Assert.That(second.Storage).IsNull();
-        await Assert.That(Hex.FromBytes(second.Reason)).IsEqualTo("deadbeef");
+        await Assert.That(Convert.ToHexStringLower(second.Reason.Span)).IsEqualTo("deadbeef");
     }
 
     [Test]

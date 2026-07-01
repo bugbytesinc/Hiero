@@ -11,7 +11,7 @@ public record CryptoBalance
     /// </summary>
     public ulong Balance { get; internal init; }
     /// <summary>
-    /// The number of decimal places which each token may be subdivided.
+    /// The number of decimal places to which each token may be subdivided.
     /// </summary>
     public uint Decimals { get; internal init; }
     /// <summary>

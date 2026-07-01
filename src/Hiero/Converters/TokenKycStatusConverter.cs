@@ -5,20 +5,27 @@ using System.Text.Json.Serialization;
 namespace Hiero.Converters;
 
 /// <summary>
-/// Kyc Status JSON Converter
+/// Converts the mirror node KYC-status string (<c>GRANTED</c>/<c>REVOKED</c>)
+/// to and from a <see cref="TokenKycStatus"/>.
 /// </summary>
 public sealed class TokenKycStatusConverter : JsonConverter<TokenKycStatus>
 {
     /// <inheritdoc />
     public override TokenKycStatus Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        return reader.GetString() switch
+        if (reader.TokenType != JsonTokenType.String)
         {
-            "GRANTED" => TokenKycStatus.Granted,
-            "REVOKED" => TokenKycStatus.Revoked,
-            "NOT_APPLICABLE" => TokenKycStatus.NotApplicable,
-            _ => TokenKycStatus.NotApplicable
-        };
+            return TokenKycStatus.NotApplicable;
+        }
+        if (reader.ValueTextEquals("GRANTED"u8))
+        {
+            return TokenKycStatus.Granted;
+        }
+        if (reader.ValueTextEquals("REVOKED"u8))
+        {
+            return TokenKycStatus.Revoked;
+        }
+        return TokenKycStatus.NotApplicable;
     }
     /// <inheritdoc />
     public override void Write(Utf8JsonWriter writer, TokenKycStatus status, JsonSerializerOptions options)

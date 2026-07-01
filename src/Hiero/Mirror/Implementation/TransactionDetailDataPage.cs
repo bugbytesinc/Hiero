@@ -19,8 +19,8 @@ internal class TransactionDetailDataPage : Page<TransactionDetailData>
     /// Enumerator of account transaction detail objects for this
     /// paged list.
     /// </returns>
-    public override IEnumerable<TransactionDetailData> GetItems()
+    public override TransactionDetailData[] GetItems()
     {
-        return Transactions ?? Array.Empty<TransactionDetailData>();
+        return Transactions ?? [];
     }
 }

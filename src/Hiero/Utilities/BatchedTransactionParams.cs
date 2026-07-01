@@ -67,7 +67,8 @@ internal sealed class BatchedParamsOrchestrator : TransactionParams<TransactionR
         var transactionBodies = new TransactionBody[count];
         var signatories = new Signatory[count];
         var signTasks = new Task<ByteString>[count];
-        var cancellationTokens = new List<CancellationToken>(count + 1);
+        CancellationToken[]? cancellationTokens = null;
+        var cancellationTokenCount = 0;
         for (int i = 0; i < count; i++)
         {
             var transactionParams = batchParams.TransactionParams![i] ?? throw new ArgumentNullException(nameof(batchParams.TransactionParams), $"The batch transaction at index {i} is null.");
@@ -80,7 +81,7 @@ internal sealed class BatchedParamsOrchestrator : TransactionParams<TransactionR
                 var externalParamms = ((batchMetadata?.TransactionParams ?? transactionParams) as ExternalTransactionParams) ?? throw new ArgumentException($"The transaction at index {i} is not a batchable transaction.", nameof(batchParams.TransactionParams));
                 if (externalParamms.CancellationToken?.CanBeCanceled == true)
                 {
-                    cancellationTokens.Add(externalParamms.CancellationToken.Value);
+                    addCancellationToken(externalParamms.CancellationToken.Value);
                 }
                 if (externalParamms.Signatory is not null)
                 {
@@ -101,20 +102,21 @@ internal sealed class BatchedParamsOrchestrator : TransactionParams<TransactionR
                 transactionBodies[i] = transactionBody;
                 if (networkParams.CancellationToken?.CanBeCanceled == true)
                 {
-                    cancellationTokens.Add(networkParams.CancellationToken.Value);
+                    addCancellationToken(networkParams.CancellationToken.Value);
                 }
                 signatories[i] = coalesceSignatories(batchMetadata, networkParams, i);
             }
         }
         if (batchParams.CancellationToken?.CanBeCanceled == true)
         {
-            cancellationTokens.Add(batchParams.CancellationToken.Value);
+            addCancellationToken(batchParams.CancellationToken.Value);
         }
-        var cancellationToken = cancellationTokens.Count switch
+        var cancellationToken = cancellationTokenCount switch
         {
             0 => default,
-            1 => cancellationTokens[0],
-            _ => CancellationTokenSource.CreateLinkedTokenSource(cancellationTokens.ToArray()).Token
+            1 => cancellationTokens![0],
+            2 => CancellationTokenSource.CreateLinkedTokenSource(cancellationTokens![0], cancellationTokens[1]).Token,
+            _ => createLinkedCancellationToken()
         };
         for (int i = 0; i < count; i++)
         {
@@ -127,6 +129,21 @@ internal sealed class BatchedParamsOrchestrator : TransactionParams<TransactionR
         var atomicBatchTransactionBody = new AtomicBatchTransactionBody();
         atomicBatchTransactionBody.Transactions.AddRange(signedTransactions);
         return new BatchedParamsOrchestrator(batchParams.Signatory, cancellationToken, atomicBatchTransactionBody);
+
+        void addCancellationToken(CancellationToken token)
+        {
+            cancellationTokens ??= new CancellationToken[count + 1];
+            cancellationTokens[cancellationTokenCount++] = token;
+        }
+
+        CancellationToken createLinkedCancellationToken()
+        {
+            if (cancellationTokenCount != cancellationTokens!.Length)
+            {
+                Array.Resize(ref cancellationTokens, cancellationTokenCount);
+            }
+            return CancellationTokenSource.CreateLinkedTokenSource(cancellationTokens).Token;
+        }
 
         Key getDefaultBatchKey()
         {
@@ -152,7 +169,7 @@ internal sealed class BatchedParamsOrchestrator : TransactionParams<TransactionR
                     {
                         defaultBatchKey = new Key
                         {
-                            KeyList = new KeyList([.. batchEndorsements])
+                            KeyList = new KeyList(batchEndorsements)
                         };
                     }
                 }
@@ -203,38 +220,50 @@ internal sealed class BatchedParamsOrchestrator : TransactionParams<TransactionR
 
         Signatory coalesceSignatories(BatchedTransactionMetadata? batchMetadata, INetworkParams<TransactionReceipt> transactionParams, int i)
         {
-            var signatoryList = new List<Signatory>(3);
+            Signatory? first = null;
+            Signatory? second = null;
             if (transactionParams.Signatory is not null)
             {
-                signatoryList.Add(transactionParams.Signatory);
+                first = transactionParams.Signatory;
             }
             if (batchMetadata?.Payer is null)
             {
                 if (context.Signatory is not null)
                 {
-                    signatoryList.Add(context.Signatory);
+                    if (first is null)
+                    {
+                        first = context.Signatory;
+                    }
+                    else
+                    {
+                        second = context.Signatory;
+                    }
                 }
-                if (signatoryList.Count == 0 && batchParams.Signatory is not null)
+                if (first is null && batchParams.Signatory is not null)
                 {
-                    signatoryList.Add(batchParams.Signatory);
+                    first = batchParams.Signatory;
                 }
             }
             else
             {
-                if (signatoryList.Count == 0 && batchParams.Signatory is not null)
+                if (first is null && batchParams.Signatory is not null)
                 {
-                    signatoryList.Add(batchParams.Signatory);
+                    first = batchParams.Signatory;
                 }
-                if (signatoryList.Count == 0 && context.Signatory is not null)
+                if (first is null && context.Signatory is not null)
                 {
-                    signatoryList.Add(context.Signatory);
+                    first = context.Signatory;
                 }
             }
-            if (signatoryList.Count == 0)
+            if (first is null)
             {
                 throw new InvalidOperationException($"Unable to find a Signatory for batch transaction at index {i}.");
             }
-            return new Signatory(signatoryList.ToArray());
+            if (second is null)
+            {
+                return first;
+            }
+            return new Signatory(first, second);
         }
 
         async Task<ByteString> signBatchedTransactionAsync(TransactionBody transactionBody, ISignatory signatory)

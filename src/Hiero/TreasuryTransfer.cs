@@ -2,7 +2,7 @@
 namespace Hiero;
 
 /// <summary>
-/// Represents a change of Treasury for an NFT token .
+/// Represents a change of Treasury for an NFT token.
 /// </summary>
 public sealed record TreasuryTransfer
 {
@@ -19,7 +19,7 @@ public sealed record TreasuryTransfer
     /// </summary>
     public EntityId NewTreasury { get; private init; }
     /// <summary>
-    /// Public Constructor, an <code>NftTransfer</code> is immutable after creation.
+    /// Internal Constructor, a <code>TreasuryTransfer</code> is immutable after creation.
     /// </summary>
     /// <param name="token">
     /// The address of the token identifying the class of NFTs.

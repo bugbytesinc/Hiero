@@ -60,7 +60,20 @@ public sealed class ConfiscateNftParams : TransactionParams<TokenReceipt>, INetw
             Token = new TokenID(Token),
             Account = new AccountID(Holder),
         };
-        result.SerialNumbers.AddRange(SerialNumbers);
+        var serialNumbers = result.SerialNumbers;
+        if (SerialNumbers is null)
+        {
+            throw new ArgumentNullException(nameof(SerialNumbers), "The list of serial numbers must not be null.");
+        }
+        var count = SerialNumbers.Count;
+        if (count > 0 && serialNumbers.Capacity < count)
+        {
+            serialNumbers.Capacity = count;
+        }
+        for (var i = 0; i < count; i++)
+        {
+            serialNumbers.Add(SerialNumbers[i]);
+        }
         return result;
     }
     TokenReceipt INetworkParams<TokenReceipt>.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)

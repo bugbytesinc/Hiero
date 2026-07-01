@@ -1,8 +1,6 @@
 ﻿// SPDX-License-Identifier: Apache-2.0
-using Google.Protobuf;
-using Proto;
+using Hiero.Implementation.Parsing;
 using System.Diagnostics.CodeAnalysis;
-using System.Numerics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -16,63 +14,31 @@ public sealed class EntityIdConverter : JsonConverter<EntityId>
     /// <inheritdoc />
     public override EntityId Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        var value = reader.GetString();
-        if (!string.IsNullOrWhiteSpace(value))
+        if (reader.TokenType is not (JsonTokenType.String or JsonTokenType.PropertyName))
         {
-            if (value.StartsWith("0x"))
-            {
-                // This is probably contract encoded form (at least the 0x
-                // indicates a HEX encoded binary value), may still be
-                // something other than an EVM Payer, need to try.
-                try
-                {
-                    var bytes = Hex.ToBytes(value[2..]);
-                    if (bytes.Length == 20)
-                    {
-                        // This is HAPI Contract form or an outright EVM value
-                        // HAPI will have a certain pattern we can guess.
-                        var shard = new BigInteger(bytes.Slice(0, 4).Span, true, true);
-                        var realm = new BigInteger(bytes.Slice(4, 8).Span, true, true);
-                        var num = new BigInteger(bytes.Slice(12, 8).Span, false, true);
-                        // Assume for now shard & realm are zero, don't
-                        // know how long this will be valid, good guess for now.
-                        if (shard.IsZero && realm.IsZero && num.Sign == 1)
-                        {
-                            return new EntityId((long)shard, (long)realm, (long)num);
-                        }
-                        // Not a small enough number, must be a EvmAddress (EVM Payer)
-                        return new EvmAddress(bytes);
-                    }
-                    try
-                    {
-                        // Maybe the bytes are parsable as an
-                        // Ed25519 or ECDSA public key
-                        return new EntityId(0, 0, new Endorsement(bytes));
-                    }
-                    catch
-                    {
-                        // fall thru to possibility of complex key
-                        // encoded as protobuf instead.
-                    }
-                    var byteString = ByteString.CopyFrom(bytes.Span);
-                    return new EntityId(0, 0, Key.Parser.ParseFrom(byteString).ToEndorsement());
-                }
-                catch
-                {
-                    // Unhappy case, can't figure out what this actually
-                    // represents, fall thru and let it return None
-                }
-            }
-            else if (EntityId.TryParseShardRealmNum(value.AsSpan(), out EntityId? entityId))
-            {
-                return entityId;
-            }
+            return EntityId.None;
         }
-        return EntityId.None;
+        EntityId? entityId;
+        if (reader.ValueIsEscaped)
+        {
+            return EntityIdParser.TryParse(reader.GetString().AsSpan(), out entityId) ? entityId : EntityId.None;
+        }
+        else if (reader.HasValueSequence)
+        {
+            return EntityIdParser.TryParse(reader.ValueSequence, out entityId) ? entityId : EntityId.None;
+        }
+        return EntityIdParser.TryParse(reader.ValueSpan, out entityId) ? entityId : EntityId.None;
     }
+
     /// <inheritdoc />
     public override void Write(Utf8JsonWriter writer, EntityId value, JsonSerializerOptions options)
     {
+        Span<byte> buffer = stackalloc byte[64];
+        if (value.TryFormat(buffer, out var bytesWritten, default, default))
+        {
+            writer.WriteStringValue(buffer[..bytesWritten]);
+            return;
+        }
         writer.WriteStringValue(value.ToString());
     }
     /// <inheritdoc />
@@ -83,6 +49,12 @@ public sealed class EntityIdConverter : JsonConverter<EntityId>
     /// <inheritdoc />
     public override void WriteAsPropertyName(Utf8JsonWriter writer, [DisallowNull] EntityId value, JsonSerializerOptions options)
     {
+        Span<byte> buffer = stackalloc byte[64];
+        if (value.TryFormat(buffer, out var bytesWritten, default, default))
+        {
+            writer.WritePropertyName(buffer[..bytesWritten]);
+            return;
+        }
         writer.WritePropertyName(value.ToString());
     }
 }

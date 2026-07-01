@@ -19,8 +19,8 @@ internal class ContractStateDataPage : Page<ContractStateData>
     /// Enumerator of slot detail objects for this
     /// paged list.
     /// </returns>
-    public override IEnumerable<ContractStateData> GetItems()
+    public override ContractStateData[] GetItems()
     {
-        return States ?? Array.Empty<ContractStateData>();
+        return States ?? [];
     }
 }

@@ -46,6 +46,6 @@ public sealed class AccountPublicKeyFilter : IMirrorFilter
     public static AccountPublicKeyFilter Is(Endorsement endorsement)
     {
         ArgumentNullException.ThrowIfNull(endorsement);
-        return new AccountPublicKeyFilter(Hex.FromBytes(endorsement.ToBytes(KeyFormat.Mirror)));
+        return new AccountPublicKeyFilter(Convert.ToHexStringLower(endorsement.ToBytes(KeyFormat.Mirror).Span));
     }
 }

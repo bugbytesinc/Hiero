@@ -1,8 +1,8 @@
-using Hiero.Implementation;
+using Hiero.Extensions;
 using Hiero.Mirror;
 using Hiero.Test.Helpers;
 using Hiero.Test.Integration.Fixtures;
-using Hiero.Extensions;
+using System.Text;
 
 namespace Hiero.Test.Integration.Contract;
 
@@ -342,5 +342,305 @@ public class CallContractTests
         }).ThrowsException();
         await Assert.That(tex).IsTypeOf<TransactionException>();
         await Assert.That(((TransactionException)tex!).Status).IsEqualTo(ResponseCode.NoNewValidSignatures);
+    }
+    [Test]
+    public async Task Can_Set_State_Using_Multi_Key_Sender_Async()
+    {
+        var key1 = Generator.KeyPair();
+        var key2 = Generator.KeyPair();
+        var key3 = Generator.KeyPair();
+        var multiEndorsement = new Endorsement(3, [key1.publicKey, key2.publicKey, key3.publicKey]);
+        var multiSignatory = new Signatory([key1.privateKey, key2.privateKey, key3.privateKey]);
+        await using var contractOwnerFx = await TestAccount.CreateAsync(fx =>
+        {
+            fx.CreateParams.Endorsement = multiEndorsement;
+            fx.CreateParams.InitialBalance = 50_00_000_000;
+        });
+        await using var rootClient = await TestNetwork.CreateClientAsync();
+        await using var client = rootClient.Clone(ctx =>
+        {
+            ctx.Payer = contractOwnerFx;
+            ctx.Signatory = multiSignatory;
+        });
+        var fileReceipt = await rootClient.CreateFileAsync(new CreateFileParams
+        {
+            Expiration = DateTime.UtcNow.AddSeconds(7890000),
+            Endorsements = [TestNetwork.Endorsement],
+            Contents = Encoding.UTF8.GetBytes(StatefulContract.STATEFUL_CONTRACT_BYTECODE)
+        });
+        var createReceipt = await client.CreateContractAsync(new CreateContractParams
+        {
+            File = fileReceipt.File,
+            Gas = await TestNetwork.EstimateGasFromCentsAsync(4),
+            RenewPeriod = TimeSpan.FromSeconds(7890000),
+            ConstructorArgs = ["Hello from .NET. " + DateTime.UtcNow.ToLongDateString()],
+            Memo = Generator.Code(50)
+        });
+        await Assert.That(createReceipt.Status).IsEqualTo(ResponseCode.Success);
+        var contract = createReceipt.Contract;
+        var mirror = await TestNetwork.GetMirrorRestClientAsync();
+
+        var newMessage = Generator.Code(50);
+        var setCallParams = new CallContractParams
+        {
+            Contract = contract,
+            MethodName = "set_message",
+            MethodArgs = [newMessage]
+        };
+        setCallParams.Gas = await mirror.EstimateGasAsync(TestNetwork.Payer.CastToEvmAddress(), setCallParams) + 17000;
+        var setReceipt = await client.CallContractAsync(setCallParams);
+        await Assert.That(setReceipt.Status).IsEqualTo(ResponseCode.Success);
+
+        var getCallParams = new CallContractParams
+        {
+            Contract = contract,
+            MethodName = "get_message"
+        };
+        getCallParams.Gas = await mirror.EstimateGasAsync(TestNetwork.Payer.CastToEvmAddress(), getCallParams) + 1000;
+        var getReceipt = await rootClient.CallContractAsync(getCallParams);
+        await Assert.That(getReceipt.Status).IsEqualTo(ResponseCode.Success);
+        var getRecord = (CallContractRecord)await client.GetTransactionRecordAsync(getReceipt.TransactionId);
+        await Assert.That(getRecord).IsNotNull();
+        await Assert.That(getRecord.Result).IsNotNull();
+        await Assert.That(getRecord.Result.Result.As<string>()).IsEqualTo(newMessage);
+    }
+    [Test]
+    public async Task Can_Add_Additional_Keys_To_Contract_Owner_Async()
+    {
+        var key1 = Generator.Secp256k1KeyPair();
+        var key2 = Generator.KeyPair();
+        var key3 = Generator.Ed25519KeyPair();
+        var multiEndorsement = new Endorsement(3, [key1.publicKey, key2.publicKey, key3.publicKey]);
+        var multiSignatory = new Signatory([key1.privateKey, key2.privateKey, key3.privateKey]);
+
+        await using var rootClient = await TestNetwork.CreateClientAsync();
+
+        // Create the account via xfer to ensure we have key1 as the EVM Hash Address
+        var createOwnerReceipt = await rootClient.TransferAsync(TestNetwork.Payer, new Endorsement(key1.publicKey), 30_00_000_000);
+        await Assert.That(createOwnerReceipt.Status).IsEqualTo(ResponseCode.Success);
+
+        var ownerAddress = ((CreateAccountReceipt)(await rootClient.GetAllReceiptsAsync(createOwnerReceipt.TransactionId))[1]).Address;
+        await Assert.That(ownerAddress).IsNotEqualTo(EntityId.None);
+
+        var updateReceipt = await rootClient.UpdateAccountAsync(new UpdateAccountParams
+        {
+            Account = ownerAddress,
+            Endorsement = multiEndorsement,
+            Signatory = multiSignatory,
+        });
+        await Assert.That(updateReceipt.Status).IsEqualTo(ResponseCode.Success);
+        await using var client = rootClient.Clone(ctx =>
+        {
+            ctx.Payer = ownerAddress;
+            ctx.Signatory = multiSignatory;
+        });
+        var fileReceipt = await rootClient.CreateFileAsync(new CreateFileParams
+        {
+            Expiration = DateTime.UtcNow.AddSeconds(7890000),
+            Endorsements = [TestNetwork.Endorsement],
+            Contents = Encoding.UTF8.GetBytes(StatefulContract.STATEFUL_CONTRACT_BYTECODE)
+        });
+        var originalMessage = "Hello from .NET. " + DateTime.UtcNow.ToLongDateString();
+        var createReceipt = await client.CreateContractAsync(new CreateContractParams
+        {
+            File = fileReceipt.File,
+            Gas = await TestNetwork.EstimateGasFromCentsAsync(4),
+            RenewPeriod = TimeSpan.FromSeconds(7890000),
+            ConstructorArgs = [originalMessage],
+            Memo = Generator.Code(50)
+        });
+        await Assert.That(createReceipt.Status).IsEqualTo(ResponseCode.Success);
+        var contract = createReceipt.Contract;
+        var mirror = await TestNetwork.GetMirrorRestClientAsync();
+        var chainId = await mirror.GetChainIdAsync();
+
+        var newMessage = Generator.Code(50);
+        var evmInput = new EvmTransactionInput
+        {
+            ToEvmAddress = contract.CastToEvmAddress(),
+            MethodName = "set_message",
+            MethodParameters = [newMessage],
+            GasLimit = 50_000,
+            ChainId = chainId,
+        };
+        var setReceipt = await client.ExecuteEvmTransactionAsync(new EvmTransactionParams
+        {
+            Transaction = evmInput.RlpEncode(key1.privateKey),
+            AdditionalGasAllowance = 10_00_000_000
+        });
+        await Assert.That(setReceipt.Status).IsEqualTo(ResponseCode.Success);
+
+        var getCallParams = new CallContractParams
+        {
+            Contract = contract,
+            MethodName = "get_message"
+        };
+        getCallParams.Gas = await mirror.EstimateGasAsync(TestNetwork.Payer.CastToEvmAddress(), getCallParams) + 1000;
+        var getReceipt = await rootClient.CallContractAsync(getCallParams);
+        await Assert.That(getReceipt.Status).IsEqualTo(ResponseCode.Success);
+        var getRecord = (CallContractRecord)await client.GetTransactionRecordAsync(getReceipt.TransactionId);
+        await Assert.That(getRecord).IsNotNull();
+        await Assert.That(getRecord.Result).IsNotNull();
+        await Assert.That(getRecord.Result.Result.As<string>()).IsEqualTo(newMessage);
+    }
+    [Test]
+    public async Task RLP_Encoding_Identifies_Caller_Async()
+    {
+        var key0 = Generator.Secp256k1KeyPair();
+        var key1 = Generator.Secp256k1KeyPair();
+        var key2 = Generator.KeyPair();
+        var key3 = Generator.Ed25519KeyPair();
+        var multiEndorsement = new Endorsement(3, [key1.publicKey, key2.publicKey, key3.publicKey]);
+        var multiSignatory = new Signatory([key1.privateKey, key2.privateKey, key3.privateKey]);
+
+        await using var rootClient = await TestNetwork.CreateClientAsync();
+
+        // Create the account via xfer to ensure we have key1 as the EVM Hash Address
+        var createOwnerReceipt = await rootClient.TransferAsync(TestNetwork.Payer, new Endorsement(key0.publicKey), 30_00_000_000);
+        await Assert.That(createOwnerReceipt.Status).IsEqualTo(ResponseCode.Success);
+
+        var ownerAddress = ((CreateAccountReceipt)(await rootClient.GetAllReceiptsAsync(createOwnerReceipt.TransactionId))[1]).Address;
+        await Assert.That(ownerAddress).IsNotEqualTo(EntityId.None);
+
+        var updateReceipt = await rootClient.UpdateAccountAsync(new UpdateAccountParams
+        {
+            Account = ownerAddress,
+            Endorsement = multiEndorsement,
+            Signatory = new Signatory(multiSignatory, key0.privateKey),
+        });
+        await Assert.That(updateReceipt.Status).IsEqualTo(ResponseCode.Success);
+        await using var client = rootClient.Clone(ctx =>
+        {
+            ctx.Payer = ownerAddress;
+            ctx.Signatory = multiSignatory;
+        });
+        var fileReceipt = await rootClient.CreateFileAsync(new CreateFileParams
+        {
+            Expiration = DateTime.UtcNow.AddSeconds(7890000),
+            Endorsements = [TestNetwork.Endorsement],
+            Contents = Encoding.UTF8.GetBytes(StatefulContract.STATEFUL_CONTRACT_BYTECODE)
+        });
+        var originalMessage = "Hello from .NET. " + DateTime.UtcNow.ToLongDateString();
+        var createReceipt = await client.CreateContractAsync(new CreateContractParams
+        {
+            File = fileReceipt.File,
+            Gas = await TestNetwork.EstimateGasFromCentsAsync(4),
+            RenewPeriod = TimeSpan.FromSeconds(7890000),
+            ConstructorArgs = [originalMessage],
+            Memo = Generator.Code(50)
+        });
+        await Assert.That(createReceipt.Status).IsEqualTo(ResponseCode.Success);
+        var contract = createReceipt.Contract;
+        var mirror = await TestNetwork.GetMirrorRestClientAsync();
+        var chainId = await mirror.GetChainIdAsync();
+
+        var newMessage = Generator.Code(50);
+        var evmInput = new EvmTransactionInput
+        {
+            ToEvmAddress = contract.CastToEvmAddress(),
+            MethodName = "set_message",
+            MethodParameters = [newMessage],
+            GasLimit = 50_000,
+            ChainId = chainId,
+        };
+        var setReceipt = await client.ExecuteEvmTransactionAsync(new EvmTransactionParams
+        {
+            Transaction = evmInput.RlpEncode(key0.privateKey),
+            AdditionalGasAllowance = 10_00_000_000
+        });
+        await Assert.That(setReceipt.Status).IsEqualTo(ResponseCode.Success);
+
+        var getCallParams = new CallContractParams
+        {
+            Contract = contract,
+            MethodName = "get_message"
+        };
+        getCallParams.Gas = await mirror.EstimateGasAsync(TestNetwork.Payer.CastToEvmAddress(), getCallParams) + 1000;
+        var getReceipt = await rootClient.CallContractAsync(getCallParams);
+        await Assert.That(getReceipt.Status).IsEqualTo(ResponseCode.Success);
+        var getRecord = (CallContractRecord)await client.GetTransactionRecordAsync(getReceipt.TransactionId);
+        await Assert.That(getRecord).IsNotNull();
+        await Assert.That(getRecord.Result).IsNotNull();
+        await Assert.That(getRecord.Result.Result.As<string>()).IsEqualTo(newMessage);
+    }
+    [Test]
+    public async Task RLP_Encoding_Identifies_Message_Sender_Without_Validation_Async()
+    {
+        var key0 = Generator.Secp256k1KeyPair();
+        var key1 = Generator.Secp256k1KeyPair();
+        var key2 = Generator.KeyPair();
+        var key3 = Generator.Ed25519KeyPair();
+        var multiEndorsement = new Endorsement(3, [key1.publicKey, key2.publicKey, key3.publicKey]);
+        var multiSignatory = new Signatory([key1.privateKey, key2.privateKey, key3.privateKey]);
+
+        await using var rootClient = await TestNetwork.CreateClientAsync();
+
+        // Create the account via xfer to ensure we have key1 as the EVM Hash Address
+        var createOwnerReceipt = await rootClient.TransferAsync(TestNetwork.Payer, new Endorsement(key0.publicKey), 30_00_000_000);
+        await Assert.That(createOwnerReceipt.Status).IsEqualTo(ResponseCode.Success);
+
+        var ownerAddress = ((CreateAccountReceipt)(await rootClient.GetAllReceiptsAsync(createOwnerReceipt.TransactionId))[1]).Address;
+        await Assert.That(ownerAddress).IsNotEqualTo(EntityId.None);
+
+        var updateReceipt = await rootClient.UpdateAccountAsync(new UpdateAccountParams
+        {
+            Account = ownerAddress,
+            Endorsement = multiEndorsement,
+            Signatory = new Signatory(multiSignatory, key0.privateKey),
+        });
+        await Assert.That(updateReceipt.Status).IsEqualTo(ResponseCode.Success);
+        await using var client = rootClient.Clone(ctx =>
+        {
+            ctx.Payer = ownerAddress;
+            ctx.Signatory = multiSignatory;
+        });
+        var fileReceipt = await rootClient.CreateFileAsync(new CreateFileParams
+        {
+            Expiration = DateTime.UtcNow.AddSeconds(7890000),
+            Endorsements = [TestNetwork.Endorsement],
+            Contents = Encoding.UTF8.GetBytes(StatefulContract.STATEFUL_CONTRACT_BYTECODE)
+        });
+        var originalMessage = "Hello from .NET. " + DateTime.UtcNow.ToLongDateString();
+        var createReceipt = await client.CreateContractAsync(new CreateContractParams
+        {
+            File = fileReceipt.File,
+            Gas = await TestNetwork.EstimateGasFromCentsAsync(4),
+            RenewPeriod = TimeSpan.FromSeconds(7890000),
+            ConstructorArgs = [originalMessage],
+            Memo = Generator.Code(50)
+        });
+        await Assert.That(createReceipt.Status).IsEqualTo(ResponseCode.Success);
+        var contract = createReceipt.Contract;
+        var mirror = await TestNetwork.GetMirrorRestClientAsync();
+        var chainId = await mirror.GetChainIdAsync();
+
+        var newMessage = Generator.Code(50);
+        var evmInput = new EvmTransactionInput
+        {
+            ToEvmAddress = contract.CastToEvmAddress(),
+            MethodName = "set_message",
+            MethodParameters = [newMessage],
+            GasLimit = 50_000,
+            ChainId = chainId,
+        };
+        var setReceipt = await rootClient.ExecuteEvmTransactionAsync(new EvmTransactionParams
+        {
+            Transaction = evmInput.RlpEncode(key0.privateKey),
+            AdditionalGasAllowance = 10_00_000_000
+        });
+        await Assert.That(setReceipt.Status).IsEqualTo(ResponseCode.Success);
+
+        var getCallParams = new CallContractParams
+        {
+            Contract = contract,
+            MethodName = "get_message"
+        };
+        getCallParams.Gas = await mirror.EstimateGasAsync(TestNetwork.Payer.CastToEvmAddress(), getCallParams) + 1000;
+        var getReceipt = await rootClient.CallContractAsync(getCallParams);
+        await Assert.That(getReceipt.Status).IsEqualTo(ResponseCode.Success);
+        var getRecord = (CallContractRecord)await client.GetTransactionRecordAsync(getReceipt.TransactionId);
+        await Assert.That(getRecord).IsNotNull();
+        await Assert.That(getRecord.Result).IsNotNull();
+        await Assert.That(getRecord.Result.Result.As<string>()).IsEqualTo(newMessage);
     }
 }

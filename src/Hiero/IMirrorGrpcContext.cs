@@ -10,7 +10,7 @@ namespace Hiero;
 /// This interface exposes the current configuration context for a 
 /// <see cref="MirrorGrpcClient"/> instance.  When accessed through a 
 /// <see cref="MirrorGrpcClient.Configure(Action{IMirrorGrpcContext})"/>, 
-/// <see cref="MirrorGrpcClient.Clone(Action{IMirrorGrpcContext}?)"/> or one of the 
+/// <see cref="MirrorGrpcClient.Clone(Action{IMirrorGrpcContext})"/> or one of the
 /// network request methods, calling code can interrogate the 
 /// object for configuration details and update as necessary.  
 /// Typically, the bare minimum that must be configured in a 

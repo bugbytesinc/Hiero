@@ -1,15 +1,19 @@
 ﻿// SPDX-License-Identifier: Apache-2.0
 using Hiero.Converters;
 using Hiero.Mirror.Filters;
-using Hiero.Mirror.Paging;
 using Hiero.Mirror.Implementation;
+using Hiero.Mirror.Paging;
 using System.ComponentModel;
 using System.Text.Json.Serialization;
 using static Hiero.Mirror.Implementation.MirrorRestClientUtils;
 
 namespace Hiero.Mirror;
 /// <summary>
-/// Allowance information retrieved from a mirror node.
+/// A single fungible-token allowance record — a grant by an owner
+/// authorizing a spender to transfer up to a capped amount of a
+/// particular token on the owner's behalf. Returned by the
+/// <c>/api/v1/accounts/{id}/allowances/tokens</c> mirror-node
+/// endpoint.
 /// </summary>
 public class TokenAllowanceData
 {
@@ -84,7 +88,7 @@ public static class TokenAllowanceDataExtensions
     /// </remarks>
     public static IAsyncEnumerable<TokenAllowanceData> GetAccountTokenAllowancesAsync(this MirrorRestClient client, EntityId account, params IMirrorQueryParameter[] filters)
     {
-        var path = GenerateInitialPath($"accounts/{MirrorFormat(account)}/allowances/tokens", [new PageLimit(100), .. filters]);
+        var path = GenerateInitialPath($"accounts/{account.ToMirrorString()}/allowances/tokens", new PageLimit(100), filters);
         return client.GetPagedItemsAsync<TokenAllowanceDataPage, TokenAllowanceData>(path, MirrorJsonContext.Default.TokenAllowanceDataPage);
     }
 }

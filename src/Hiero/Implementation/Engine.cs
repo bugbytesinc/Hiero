@@ -211,29 +211,27 @@ internal static class Engine
     /// Coalesces zero or more Signatories into a single ISignatory (which 
     /// may include child signatories).
     /// </summary>
-    /// <param name="signatories">
-    /// List of signatory entries, individual entries may be null.
+    /// <param name="first">
+    /// First signatory entry, may be null.
+    /// </param>
+    /// <param name="second">
+    /// Second signatory entry, may be null.
     /// </param>
     /// <returns>
     /// A Signatory grouping all the signatories found in the list or
     /// <code>null</code> if the list was empty or full of null values.
     /// </returns>
-    internal static ISignatory? CoalesceSignatories(params Signatory?[] signatories)
+    internal static ISignatory? CoalesceSignatories(Signatory? first, Signatory? second)
     {
-        var signers = new List<Signatory>(signatories.Length);
-        foreach (var extraSignatory in signatories)
+        if (first is null)
         {
-            if (extraSignatory is not null)
-            {
-                signers.Add(extraSignatory);
-            }
+            return second;
         }
-        return signers.Count switch
+        if (second is null)
         {
-            0 => null,
-            1 => signers[0],
-            _ => new Signatory([.. signers])
-        };
+            return first;
+        }
+        return new Signatory(first, second);
     }
     /// <summary>
     /// Returns a transaction ID for the given calling context, it is either

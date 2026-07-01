@@ -38,8 +38,8 @@ public class TestAllowance : IAsyncDisposable
                 new TokenTransfer(fixture.TestToken.CreateReceipt!.Token, fixture.TestToken.TreasuryAccount, -(long)fixture.TestToken.CreateParams.Circulation),
                 new TokenTransfer(fixture.TestToken.CreateReceipt!.Token, fixture.Owner, (long)fixture.TestToken.CreateParams.Circulation)
             ],
-            NftTransfers = fixture.TestNft.MintReceipt!.SerialNumbers.Select(s =>
-                new NftTransfer(new Nft(fixture.TestNft.CreateReceipt!.Token, s), fixture.TestNft.TreasuryAccount, fixture.Owner)),
+            NftTransfers = [.. fixture.TestNft.MintReceipt!.SerialNumbers.Select(s =>
+                new NftTransfer(new Nft(fixture.TestNft.CreateReceipt!.Token, s), fixture.TestNft.TreasuryAccount, fixture.Owner))],
             Signatory = new Signatory(fixture.TestToken.TreasuryAccount.PrivateKey, fixture.TestNft.TreasuryAccount.PrivateKey)
         });
         // Grant allowances from owner to agent

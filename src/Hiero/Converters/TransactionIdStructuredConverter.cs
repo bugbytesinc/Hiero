@@ -1,4 +1,5 @@
 ﻿// SPDX-License-Identifier: Apache-2.0
+using System.Buffers.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -26,25 +27,30 @@ public sealed class TransactionIdStructuredConverter : JsonConverter<Transaction
         {
             if (reader.TokenType == JsonTokenType.PropertyName)
             {
-                var propertyName = reader.GetString();
-                reader.Read();
-                switch (propertyName)
+                if (reader.ValueTextEquals("account_id"u8))
                 {
-                    case "account_id":
-                        accountId = _entityIdConverter.Read(ref reader, typeof(EntityId), options);
-                        break;
-
-                    case "nonce":
-                        nonce = reader.GetInt32();
-                        break;
-
-                    case "scheduled":
-                        scheduled = reader.GetBoolean();
-                        break;
-
-                    case "transaction_valid_start":
-                        validStart = _consensusTimeStampConverter.Read(ref reader, typeof(ConsensusTimeStamp), options);
-                        break;
+                    reader.Read();
+                    accountId = _entityIdConverter.Read(ref reader, typeof(EntityId), options);
+                }
+                else if (reader.ValueTextEquals("nonce"u8))
+                {
+                    reader.Read();
+                    nonce = reader.GetInt32();
+                }
+                else if (reader.ValueTextEquals("scheduled"u8))
+                {
+                    reader.Read();
+                    scheduled = reader.GetBoolean();
+                }
+                else if (reader.ValueTextEquals("transaction_valid_start"u8))
+                {
+                    reader.Read();
+                    validStart = _consensusTimeStampConverter.Read(ref reader, typeof(ConsensusTimeStamp), options);
+                }
+                else
+                {
+                    reader.Read();
+                    reader.Skip();
                 }
             }
         }
@@ -60,14 +66,31 @@ public sealed class TransactionIdStructuredConverter : JsonConverter<Transaction
     public override void Write(Utf8JsonWriter writer, TransactionId id, JsonSerializerOptions options)
     {
         writer.WriteStartObject();
-        writer.WritePropertyName("account_id");
+        writer.WritePropertyName("account_id"u8);
         _entityIdConverter.Write(writer, id.Payer, options);
-        writer.WritePropertyName("nonce");
+        writer.WritePropertyName("nonce"u8);
         writer.WriteNumberValue(id.ChildNonce);
-        writer.WritePropertyName("scheduled");
+        writer.WritePropertyName("scheduled"u8);
         writer.WriteBooleanValue(id.Scheduled);
-        writer.WritePropertyName("transaction_valid_start");
-        writer.WriteStringValue($"{id.ValidStartSeconds}.{id.ValidStartNanos.ToString().PadLeft(9, '0')}");
+        writer.WritePropertyName("transaction_valid_start"u8);
+        Span<byte> buffer = stackalloc byte[30];
+        if (!Utf8Formatter.TryFormat(id.ValidStartSeconds, buffer, out var secondsLength))
+        {
+            throw new JsonException("Unable to format transaction valid start seconds.");
+        }
+        buffer[secondsLength] = (byte)'.';
+        var nanosSpan = buffer[(secondsLength + 1)..];
+        if (!Utf8Formatter.TryFormat(id.ValidStartNanos, nanosSpan, out var nanosLength))
+        {
+            throw new JsonException("Unable to format transaction valid start nanos.");
+        }
+        var paddingLength = Math.Max(0, 9 - nanosLength);
+        if (paddingLength > 0)
+        {
+            nanosSpan[..nanosLength].CopyTo(nanosSpan[paddingLength..]);
+            nanosSpan[..paddingLength].Fill((byte)'0');
+        }
+        writer.WriteStringValue(buffer[..(secondsLength + 1 + paddingLength + nanosLength)]);
         writer.WriteEndObject();
     }
 }

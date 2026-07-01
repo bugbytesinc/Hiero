@@ -18,8 +18,8 @@ internal class AccountDataPage : Page<AccountData>
     /// <returns>
     /// Enumerator of account info objects for this paged list.
     /// </returns>
-    public override IEnumerable<AccountData> GetItems()
+    public override AccountData[] GetItems()
     {
-        return Accounts ?? Array.Empty<AccountData>();
+        return Accounts ?? [];
     }
 }

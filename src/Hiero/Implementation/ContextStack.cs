@@ -76,12 +76,17 @@ internal abstract class ContextStack<TContext, TChannelKey> : IAsyncDisposable w
         {
             if (count == 0)
             {
-                var tasks = new List<Task>(_channels.Count);
-                foreach (var channel in _channels.Values)
+                var channels = _channels.Values;
+                if (channels.Count > 0)
                 {
-                    tasks.Add(channel.ShutdownAsync());
+                    var tasks = new Task[channels.Count];
+                    var index = 0;
+                    foreach (var channel in channels)
+                    {
+                        tasks[index++] = channel.ShutdownAsync();
+                    }
+                    await Task.WhenAll(tasks).ConfigureAwait(false);
                 }
-                await Task.WhenAll(tasks).ConfigureAwait(false);
                 _channels.Clear();
             }
         }

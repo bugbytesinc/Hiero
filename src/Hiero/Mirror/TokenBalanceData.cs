@@ -1,4 +1,5 @@
 ﻿// SPDX-License-Identifier: Apache-2.0
+using Hiero.Converters;
 using Hiero.Mirror.Filters;
 using Hiero.Mirror.Implementation;
 using Hiero.Mirror.Paging;
@@ -23,6 +24,7 @@ public class TokenBalanceData
     /// </summary>
 
     [JsonPropertyName("balance")]
+    [JsonConverter(typeof(LongMirrorConverter))]
     public long Balance { get; set; }
 }
 /// <summary>
@@ -58,8 +60,21 @@ public static class TokenBalanceDataExtensions
     /// </returns>
     public static async Task<long?> GetAccountTokenBalanceAsync(this MirrorRestClient client, EntityId account, EntityId token, params IMirrorQueryParameter[] filters)
     {
-        var path = GenerateInitialPath($"accounts/{MirrorFormat(account)}/tokens", [TokenFilter.Is(token), .. filters]);
+        var path = GenerateInitialPath($"accounts/{account.ToMirrorString()}/tokens", TokenFilter.Is(token), filters);
         var payload = await client.GetSingleItemAsync(path, MirrorJsonContext.Default.TokenHoldingDataPage).ConfigureAwait(false);
-        return payload?.TokenHoldings?.FirstOrDefault(r => r.Token == token)?.Balance;
+        var holdings = payload?.TokenHoldings;
+        if (holdings is not null)
+        {
+            var count = holdings.Length;
+            for (var i = 0; i < count; i++)
+            {
+                var holding = holdings[i];
+                if (holding.Token == token)
+                {
+                    return holding.Balance;
+                }
+            }
+        }
+        return null;
     }
 }

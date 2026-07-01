@@ -179,7 +179,7 @@ public static class OpcodesDataExtensions
     public static Task<OpcodesData?> GetContractOpcodesByTransactionIdAsync(this MirrorRestClient client, TransactionId transactionId, params IMirrorProjection[] filters)
     {
         var (txId, txFilters) = MirrorFormat(transactionId);
-        var path = GenerateInitialPath($"contracts/results/{txId}/opcodes", [.. txFilters, .. filters]);
+        var path = GenerateInitialPath($"contracts/results/{txId}/opcodes", txFilters, filters);
         return client.GetSingleItemAsync(path, MirrorJsonContext.Default.OpcodesData);
     }
 }

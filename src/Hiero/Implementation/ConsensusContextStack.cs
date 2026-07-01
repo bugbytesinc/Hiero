@@ -86,7 +86,8 @@ namespace Hiero.Implementation
         /// </returns>
         internal Action<IMessage> InstantiateOnSendingRequestHandler()
         {
-            List<Action<IMessage>>? list = null;
+            var count = 0;
+            Action<IMessage>? single = null;
             for (var ctx = this; ctx is not null; ctx = ctx._parent)
             {
                 if (ctx._onSendingRequest.HasValue)
@@ -94,19 +95,32 @@ namespace Hiero.Implementation
                     var handler = ctx._onSendingRequest.Value;
                     if (handler is not null)
                     {
-                        (list ??= []).Add(handler);
+                        single = handler;
+                        count++;
                     }
                 }
             }
-            if (list is null || list.Count == 0)
+            if (count == 0)
             {
                 return NoOpSendingHandler;
             }
-            if (list.Count == 1)
+            if (count == 1)
             {
-                return list[0];
+                return single!;
             }
-            var handlers = list.ToArray();
+            var handlers = new Action<IMessage>[count];
+            var index = 0;
+            for (var ctx = this; ctx is not null; ctx = ctx._parent)
+            {
+                if (ctx._onSendingRequest.HasValue)
+                {
+                    var handler = ctx._onSendingRequest.Value;
+                    if (handler is not null)
+                    {
+                        handlers[index++] = handler;
+                    }
+                }
+            }
             return request =>
             {
                 for (var i = 0; i < handlers.Length; i++)
@@ -129,7 +143,8 @@ namespace Hiero.Implementation
         /// </returns>
         internal Action<int, IMessage> InstantiateOnResponseReceivedHandler()
         {
-            List<Action<int, IMessage>>? list = null;
+            var count = 0;
+            Action<int, IMessage>? single = null;
             for (var ctx = this; ctx is not null; ctx = ctx._parent)
             {
                 if (ctx._onResponseReceived.HasValue)
@@ -137,19 +152,32 @@ namespace Hiero.Implementation
                     var handler = ctx._onResponseReceived.Value;
                     if (handler is not null)
                     {
-                        (list ??= []).Add(handler);
+                        single = handler;
+                        count++;
                     }
                 }
             }
-            if (list is null || list.Count == 0)
+            if (count == 0)
             {
                 return NoOpResponseHandler;
             }
-            if (list.Count == 1)
+            if (count == 1)
             {
-                return list[0];
+                return single!;
             }
-            var handlers = list.ToArray();
+            var handlers = new Action<int, IMessage>[count];
+            var index = 0;
+            for (var ctx = this; ctx is not null; ctx = ctx._parent)
+            {
+                if (ctx._onResponseReceived.HasValue)
+                {
+                    var handler = ctx._onResponseReceived.Value;
+                    if (handler is not null)
+                    {
+                        handlers[index++] = handler;
+                    }
+                }
+            }
             return (tryNumber, response) =>
             {
                 for (var i = 0; i < handlers.Length; i++)

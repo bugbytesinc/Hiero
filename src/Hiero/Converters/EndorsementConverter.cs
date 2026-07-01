@@ -1,6 +1,6 @@
 ﻿// SPDX-License-Identifier: Apache-2.0
 using Google.Protobuf;
-using Org.BouncyCastle.Crypto.Parameters;
+using Hiero.Implementation;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -11,11 +11,20 @@ namespace Hiero.Converters;
 /// </summary>
 public sealed class EndorsementConverter : JsonConverter<Endorsement>
 {
+    private enum SerializedType
+    {
+        Unknown,
+        Ed25519,
+        EcdsaSecp256K1,
+        ProtobufEncoded
+    }
+
     /// <inheritdoc />
     public override Endorsement Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        string? type = null;
-        string? data = null;
+        var type = SerializedType.Unknown;
+        ReadOnlyMemory<byte> data = ReadOnlyMemory<byte>.Empty;
+        var hasData = false;
         if (reader.TokenType != JsonTokenType.StartObject)
         {
             throw new JsonException();
@@ -24,62 +33,90 @@ public sealed class EndorsementConverter : JsonConverter<Endorsement>
         {
             if (reader.TokenType == JsonTokenType.PropertyName)
             {
-                var propertyName = reader.GetString();
-                reader.Read();
-                switch (propertyName)
+                if (reader.ValueTextEquals("_type"u8))
                 {
-                    case "_type":
-                        type = reader.GetString();
-                        break;
-
-                    case "key":
-                        data = reader.GetString();
-                        break;
+                    reader.Read();
+                    type = ReadType(ref reader);
+                }
+                else if (reader.ValueTextEquals("key"u8))
+                {
+                    reader.Read();
+                    data = reader.ReadHexData();
+                    hasData = true;
+                }
+                else
+                {
+                    reader.Skip();
                 }
             }
         }
-        if ("ProtobufEncoded" == type && string.IsNullOrEmpty(data))
+        if (type == SerializedType.ProtobufEncoded && (!hasData || data.Length == 0))
         {
             return Endorsement.None;
         }
-        if (string.IsNullOrWhiteSpace(data) || string.IsNullOrWhiteSpace(type))
+        if (type == SerializedType.Unknown || !hasData || data.Length == 0)
         {
             throw new JsonException();
         }
-        var bytes = Hex.ToBytes(data);
         return type switch
         {
-            "ED25519" => new Endorsement(KeyType.Ed25519, bytes),
-            "ECDSA_SECP256K1" => new Endorsement(KeyType.ECDSASecp256K1, bytes),
-            "ProtobufEncoded" => Proto.Key.Parser.ParseFrom(bytes.ToArray()).ToEndorsement(),
+            SerializedType.Ed25519 => new Endorsement(KeyType.Ed25519, data),
+            SerializedType.EcdsaSecp256K1 => new Endorsement(KeyType.ECDSASecp256K1, data),
+            SerializedType.ProtobufEncoded => Proto.Key.Parser.ParseFrom(data.Span).ToEndorsement(),
             _ => throw new JsonException(),
         };
     }
+
     /// <inheritdoc />
     public override void Write(Utf8JsonWriter writer, Endorsement endorsement, JsonSerializerOptions options)
     {
-        string type;
-        byte[] data;
+        writer.WriteStartObject();
         switch (endorsement.Type)
         {
             case KeyType.Ed25519:
-                type = "ED25519";
-                data = ((Ed25519PublicKeyParameters)endorsement._data).GetEncoded();
+                writer.WriteString("_type"u8, "ED25519"u8);
+                writer.WriteHexString("key"u8, ((Ed25519EndorsementData)endorsement._data).RawPublicKey);
                 break;
             case KeyType.ECDSASecp256K1:
-                type = "ECDSA_SECP256K1";
-                data = ((ECPublicKeyParameters)endorsement._data).Q.GetEncoded(true);
+                writer.WriteString("_type"u8, "ECDSA_SECP256K1"u8);
+                writer.WriteHexString("key"u8, ((EcdsaSecp256K1EndorsementData)endorsement._data).RawPublicKey);
                 break;
             default:
-                type = "ProtobufEncoded";
-                data = endorsement == Endorsement.None ? [] : new Proto.Key(endorsement).ToByteArray();
+                writer.WriteString("_type"u8, "ProtobufEncoded"u8);
+                writer.WriteHexString("key"u8, endorsement == Endorsement.None ? [] : new Proto.Key(endorsement).ToByteArray());
                 break;
         }
-        writer.WriteStartObject();
-        writer.WritePropertyName("_type");
-        writer.WriteStringValue(type);
-        writer.WritePropertyName("key");
-        writer.WriteStringValue(Hex.FromBytes(data));
         writer.WriteEndObject();
+    }
+
+    private static SerializedType ReadType(ref Utf8JsonReader reader)
+    {
+        if (reader.TokenType != JsonTokenType.String)
+        {
+            return SerializedType.Unknown;
+        }
+        if (!reader.HasValueSequence && !reader.ValueIsEscaped)
+        {
+            if (reader.ValueTextEquals("ED25519"u8))
+            {
+                return SerializedType.Ed25519;
+            }
+            if (reader.ValueTextEquals("ECDSA_SECP256K1"u8))
+            {
+                return SerializedType.EcdsaSecp256K1;
+            }
+            if (reader.ValueTextEquals("ProtobufEncoded"u8))
+            {
+                return SerializedType.ProtobufEncoded;
+            }
+            return SerializedType.Unknown;
+        }
+        return reader.GetString() switch
+        {
+            "ED25519" => SerializedType.Ed25519,
+            "ECDSA_SECP256K1" => SerializedType.EcdsaSecp256K1,
+            "ProtobufEncoded" => SerializedType.ProtobufEncoded,
+            _ => SerializedType.Unknown,
+        };
     }
 }

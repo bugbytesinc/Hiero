@@ -18,8 +18,8 @@ internal class BlockDataPage : Page<BlockData>
     /// <returns>
     /// Enumerator of block info objects for this paged list.
     /// </returns>
-    public override IEnumerable<BlockData> GetItems()
+    public override BlockData[] GetItems()
     {
-        return Blocks ?? Array.Empty<BlockData>();
+        return Blocks ?? [];
     }
 }

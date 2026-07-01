@@ -1,5 +1,6 @@
 ﻿// SPDX-License-Identifier: Apache-2.0
 using Org.BouncyCastle.Crypto.Digests;
+using System.Buffers.Binary;
 using System.Numerics;
 using System.Text;
 
@@ -103,28 +104,35 @@ internal static class Abi
         buffer.Append('(');
         if (methodArgs != null && methodArgs.Length > 0)
         {
-            buffer.Append(GetFunctionSelectorMapping(methodArgs[0]));
+            AppendFunctionSelectorMapping(buffer, methodArgs[0]);
             for (int i = 1; i < methodArgs.Length; i++)
             {
                 buffer.Append(',');
-                buffer.Append(GetFunctionSelectorMapping(methodArgs[i]));
+                AppendFunctionSelectorMapping(buffer, methodArgs[i]);
             }
         }
         buffer.Append(')');
-        var bytes = Encoding.ASCII.GetBytes(buffer.ToString());
+        var bytes = GetAsciiBytes(buffer);
         var digest = new KeccakDigest(256);
         digest.BlockUpdate(bytes, 0, bytes.Length);
-        var hash = new byte[digest.GetByteLength()];
+        var hash = new byte[digest.GetDigestSize()];
         digest.DoFinal(hash, 0);
         return hash.AsMemory(0, 4);
     }
     private static ReadOnlyMemory<byte> EncodeStringPart(object value)
     {
-        return EncodeByteArrayPart(Encoding.UTF8.GetBytes(Convert.ToString(value) ?? string.Empty));
+        var text = (string)value;
+        var byteCount = Encoding.UTF8.GetByteCount(text);
+        var words = (byteCount / 32) + (byteCount % 32 > 0 ? 2 : 1);
+        var result = new byte[32 * words];
+        WriteInt64(result.AsSpan(0, 32), byteCount);
+        Encoding.UTF8.GetBytes(text, result.AsSpan(32));
+        return result;
     }
     private static object DecodeStringPart(ReadOnlyMemory<byte> arg)
     {
-        return Encoding.UTF8.GetString((byte[])DecodeByteArrayPart(arg));
+        var size = (int)ReadInt64(arg.Slice(0, 32));
+        return Encoding.UTF8.GetString(arg.Slice(32, size).Span);
     }
     private static ReadOnlyMemory<byte> EncodeByteArrayPart(object value)
     {
@@ -177,7 +185,7 @@ internal static class Abi
     private static ReadOnlyMemory<byte> EncodeInt32Part(object value)
     {
         var bytes = new byte[32];
-        WriteInt64(bytes.AsSpan(), Convert.ToInt32(value));
+        WriteInt256(bytes.AsSpan(), Convert.ToInt32(value));
         return bytes;
     }
     private static object DecodeInt32Part(ReadOnlyMemory<byte> arg)
@@ -187,7 +195,7 @@ internal static class Abi
     private static ReadOnlyMemory<byte> EncodeInt64Part(object value)
     {
         var bytes = new byte[32];
-        WriteInt64(bytes.AsSpan(), Convert.ToInt64(value));
+        WriteInt256(bytes.AsSpan(), Convert.ToInt64(value));
         return bytes;
     }
     private static object DecodeInt64Part(ReadOnlyMemory<byte> arg)
@@ -216,18 +224,23 @@ internal static class Abi
     }
     private static ReadOnlyMemory<byte> EncodeUInt256Part(object value)
     {
-        var bytes = ((BigInteger)value).ToByteArray(true, true);
-        if (bytes.Length < 32)
+        var bytes = new byte[32];
+        WriteUInt256Part(bytes, (BigInteger)value);
+        return bytes;
+    }
+    private static void WriteUInt256Part(Span<byte> destination, BigInteger value)
+    {
+        if (value.Sign < 0)
         {
-            var buff = new byte[32];
-            bytes.CopyTo(buff, 32 - bytes.Length);
-            return buff;
+            throw new ArgumentOutOfRangeException(nameof(value), "Negative values cannot be represented as a UInt256.");
         }
-        if (bytes.Length == 32)
+        destination.Clear();
+        Span<byte> bytes = stackalloc byte[32];
+        if (!value.TryWriteBytes(bytes, out var bytesWritten, true, true))
         {
-            return bytes;
+            throw new ArgumentOutOfRangeException(nameof(value), "Integer too large to represent as an UInt256");
         }
-        throw new ArgumentOutOfRangeException(nameof(value), "Integer too large to represent as an UInt256");
+        bytes.Slice(0, bytesWritten).CopyTo(destination.Slice(32 - bytesWritten));
     }
     private static object DecodeUInt256Part(ReadOnlyMemory<byte> arg)
     {
@@ -241,7 +254,7 @@ internal static class Abi
         WriteInt64(result.AsSpan(0, 32), addresses.Length);
         for (var i = 0; i < addresses.Length; i++)
         {
-            EncodeUInt256Part(addresses[i]).CopyTo(result.AsMemory(32 * (i + 1)));
+            WriteUInt256Part(result.AsSpan(32 * (i + 1), 32), addresses[i]);
         }
         return result;
     }
@@ -269,65 +282,37 @@ internal static class Abi
     {
         if (value is EntityId address)
         {
-            if (address.TryGetEvmAddress(out var moniker))
-            {
-                return EncodeMonikerPart(moniker);
-            }
-            else if (!address.TryGetKeyAlias(out _))
-            {
-                // For 20 bytes total (aka uint160)
-                // byte 0 to 3 are shard
-                // byte 4 to 11 are realm
-                // byte 12 to 19 are account number
-                // Note: packed in 32 bytes, right aligned
-
-                var bytes = new byte[32];
-                var shard = BitConverter.GetBytes(address.ShardNum);
-                if (BitConverter.IsLittleEndian)
-                {
-                    Array.Reverse(shard);
-                }
-                shard[^4..^0].CopyTo(bytes, 12);
-                var realm = BitConverter.GetBytes(address.RealmNum);
-                if (BitConverter.IsLittleEndian)
-                {
-                    Array.Reverse(realm);
-                }
-                realm.CopyTo(bytes, 16);
-                var num = BitConverter.GetBytes(address.AccountNum);
-                if (BitConverter.IsLittleEndian)
-                {
-                    Array.Reverse(num);
-                }
-                num.CopyTo(bytes, 24);
-                return bytes;
-            }
+            var bytes = new byte[32];
+            WriteAddressPart(bytes, address);
+            return bytes;
         }
         throw new ArgumentException("Argument was not an address.", nameof(value));
+    }
+    private static void WriteAddressPart(Span<byte> destination, EntityId address)
+    {
+        if (address.TryGetEvmAddress(out var evmAddress))
+        {
+            WriteEvmAddressPart(destination, evmAddress);
+        }
+        else if (!address.TryGetKeyAlias(out _))
+        {
+            // For 20 bytes total (aka uint160), packed in 32 bytes, right aligned.
+            destination.Clear();
+            BinaryPrimitives.WriteInt32BigEndian(destination.Slice(12, 4), (int)address.ShardNum);
+            BinaryPrimitives.WriteInt64BigEndian(destination.Slice(16, 8), address.RealmNum);
+            BinaryPrimitives.WriteInt64BigEndian(destination.Slice(24, 8), address.AccountNum);
+        }
+        else
+        {
+            throw new ArgumentException("Argument was not an address.", nameof(address));
+        }
     }
     private static object DecodeAddressPart(ReadOnlyMemory<byte> arg)
     {
         // See EncodeAddressPart for packing notes
-        var shardAsBytes = arg.Slice(12, 4).ToArray();
-        if (BitConverter.IsLittleEndian)
-        {
-            Array.Reverse(shardAsBytes);
-        }
-        var shard = BitConverter.ToInt32(shardAsBytes);
-
-        var realmAsBytes = arg.Slice(16, 8).ToArray();
-        if (BitConverter.IsLittleEndian)
-        {
-            Array.Reverse(realmAsBytes);
-        }
-        var realm = BitConverter.ToInt64(realmAsBytes);
-
-        var numAsBytes = arg.Slice(24, 8).ToArray();
-        if (BitConverter.IsLittleEndian)
-        {
-            Array.Reverse(numAsBytes);
-        }
-        var num = BitConverter.ToInt64(numAsBytes);
+        var shard = BinaryPrimitives.ReadInt32BigEndian(arg.Slice(12, 4).Span);
+        var realm = BinaryPrimitives.ReadInt64BigEndian(arg.Slice(16, 8).Span);
+        var num = BinaryPrimitives.ReadInt64BigEndian(arg.Slice(24, 8).Span);
 
         return new EntityId(shard, realm, num);
     }
@@ -339,7 +324,7 @@ internal static class Abi
         WriteInt64(result.AsSpan(0, 32), addresses.Length);
         for (var i = 0; i < addresses.Length; i++)
         {
-            EncodeAddressPart(addresses[i]).CopyTo(result.AsMemory(32 * (i + 1)));
+            WriteAddressPart(result.AsSpan(32 * (i + 1), 32), addresses[i]);
         }
         return result;
     }
@@ -354,43 +339,44 @@ internal static class Abi
         return result;
     }
 
-    private static ReadOnlyMemory<byte> EncodeMonikerPart(object value)
+    private static ReadOnlyMemory<byte> EncodeEvmAddressPart(object value)
     {
-        if (value is EvmAddress moniker)
+        if (value is EvmAddress evmAddress)
         {
             var bytes = new byte[32];
-            moniker.Bytes.ToArray().CopyTo(bytes, 12);
+            WriteEvmAddressPart(bytes, evmAddress);
             return bytes;
         }
-        throw new ArgumentException("Argument was not a moniker.", nameof(value));
+        throw new ArgumentException("Argument was not an EVM address.", nameof(value));
     }
-    private static object DecodeMonikerPart(ReadOnlyMemory<byte> arg)
+    private static void WriteEvmAddressPart(Span<byte> destination, EvmAddress evmAddress)
     {
-        var addressAsBigInt = new BigInteger(arg.Slice(0, 32).Span, true, true);
-        var minBytes = addressAsBigInt.ToByteArray(true, true);
-        var bytes = new byte[20];
-        minBytes.CopyTo(bytes, 20 - minBytes.Length);
-        return new EvmAddress(bytes.AsSpan());
+        destination.Clear();
+        evmAddress.Bytes.CopyTo(destination.Slice(12));
+    }
+    private static object DecodeEvmAddressPart(ReadOnlyMemory<byte> arg)
+    {
+        return new EvmAddress(arg.Slice(12, 20).Span);
     }
 
-    private static ReadOnlyMemory<byte> EncodeMonikerArrayPart(object value)
+    private static ReadOnlyMemory<byte> EncodeEvmAddressArrayPart(object value)
     {
         var addresses = (EvmAddress[])value;
         var result = new byte[32 * (addresses.Length + 1)];
         WriteInt64(result.AsSpan(0, 32), addresses.Length);
         for (var i = 0; i < addresses.Length; i++)
         {
-            EncodeMonikerPart(addresses[i]).CopyTo(result.AsMemory(32 * (i + 1)));
+            WriteEvmAddressPart(result.AsSpan(32 * (i + 1), 32), addresses[i]);
         }
         return result;
     }
-    private static object DecodeMonikerArrayPart(ReadOnlyMemory<byte> arg)
+    private static object DecodeEvmAddressArrayPart(ReadOnlyMemory<byte> arg)
     {
         var size = (int)ReadInt64(arg.Slice(0, 32));
         var result = new EvmAddress[size];
         for (var i = 0; i < size; i++)
         {
-            result[i] = (EvmAddress)DecodeMonikerPart(arg.Slice((i + 1) * 32, 32));
+            result[i] = (EvmAddress)DecodeEvmAddressPart(arg.Slice((i + 1) * 32, 32));
         }
         return result;
     }
@@ -410,59 +396,62 @@ internal static class Abi
     }
     private static void WriteInt64(Span<byte> buffer, long value)
     {
-        var valueAsBytes = BitConverter.GetBytes(value);
-        if (BitConverter.IsLittleEndian)
-        {
-            Array.Reverse(valueAsBytes);
-        }
-        valueAsBytes.CopyTo(buffer.Slice(24));
+        BinaryPrimitives.WriteInt64BigEndian(buffer.Slice(24, 8), value);
+    }
+    private static void WriteInt256(Span<byte> buffer, long value)
+    {
+        // Sign-extend negative values across the full 32-byte word so the
+        // two's-complement int256 is correct on-chain; the low 8 bytes carry
+        // the big-endian value, and non-negative values keep zeroed high bytes.
+        buffer.Slice(0, 24).Fill(value < 0 ? (byte)0xFF : (byte)0x00);
+        BinaryPrimitives.WriteInt64BigEndian(buffer.Slice(24, 8), value);
     }
     private static long ReadInt64(ReadOnlyMemory<byte> buffer)
     {
-        var valueAsBytes = buffer.Slice(24, 8).ToArray();
-        if (BitConverter.IsLittleEndian)
-        {
-            Array.Reverse(valueAsBytes);
-        }
-        return BitConverter.ToInt64(valueAsBytes);
+        return BinaryPrimitives.ReadInt64BigEndian(buffer.Slice(24, 8).Span);
     }
     private static void WriteUint64(Span<byte> buffer, ulong value)
     {
-        var valueAsBytes = BitConverter.GetBytes(value);
-        if (BitConverter.IsLittleEndian)
-        {
-            Array.Reverse(valueAsBytes);
-        }
-        valueAsBytes.CopyTo(buffer.Slice(24));
+        BinaryPrimitives.WriteUInt64BigEndian(buffer.Slice(24, 8), value);
     }
     private static ulong ReadUint64(ReadOnlyMemory<byte> buffer)
     {
-        var valueAsBytes = buffer.Slice(24, 8).ToArray();
-        if (BitConverter.IsLittleEndian)
-        {
-            Array.Reverse(valueAsBytes);
-        }
-        return BitConverter.ToUInt64(valueAsBytes);
+        return BinaryPrimitives.ReadUInt64BigEndian(buffer.Slice(24, 8).Span);
     }
-    private static string GetFunctionSelectorMapping(object value)
+    private static byte[] GetAsciiBytes(StringBuilder buffer)
+    {
+        var byteCount = 0;
+        foreach (var chunk in buffer.GetChunks())
+        {
+            byteCount += Encoding.ASCII.GetByteCount(chunk.Span);
+        }
+
+        var bytes = new byte[byteCount];
+        var offset = 0;
+        foreach (var chunk in buffer.GetChunks())
+        {
+            offset += Encoding.ASCII.GetBytes(chunk.Span, bytes.AsSpan(offset));
+        }
+        return bytes;
+    }
+    private static void AppendFunctionSelectorMapping(StringBuilder buffer, object value)
     {
         if (value is AbiTuple tuple)
         {
-            var buffer = new StringBuilder(100);
             buffer.Append('(');
             if (tuple.Values.Length > 0)
             {
-                buffer.Append(GetFunctionSelectorMapping(tuple.Values[0]));
+                AppendFunctionSelectorMapping(buffer, tuple.Values[0]);
                 for (int i = 1; i < tuple.Values.Length; i++)
                 {
                     buffer.Append(',');
-                    buffer.Append(GetFunctionSelectorMapping(tuple.Values[i]));
+                    AppendFunctionSelectorMapping(buffer, tuple.Values[i]);
                 }
             }
             buffer.Append(')');
-            return buffer.ToString();
+            return;
         }
-        return GetMapping(value).AbiCode;
+        buffer.Append(GetMapping(value).AbiCode);
     }
     private static TypeMapping GetMapping(object value)
     {
@@ -499,8 +488,8 @@ internal static class Abi
             { typeof(ReadOnlyMemory<byte>), new TypeMapping("bytes", true, 32, EncodeReadOnlyMemoryPart, DecodeReadOnlyMemoryPart) },
             { typeof(EntityId), new TypeMapping("address", false, 32, EncodeAddressPart, DecodeAddressPart) },
             { typeof(EntityId[]), new TypeMapping("address[]", true, 32, EncodeAddressArrayPart, DecodeAddressArrayPart) },
-            { typeof(EvmAddress), new TypeMapping("address", false, 32, EncodeMonikerPart, DecodeMonikerPart) },
-            { typeof(EvmAddress[]), new TypeMapping("address[]", true, 32, EncodeMonikerArrayPart, DecodeMonikerArrayPart) },
+            { typeof(EvmAddress), new TypeMapping("address", false, 32, EncodeEvmAddressPart, DecodeEvmAddressPart) },
+            { typeof(EvmAddress[]), new TypeMapping("address[]", true, 32, EncodeEvmAddressArrayPart, DecodeEvmAddressArrayPart) },
             { typeof(AbiTuple), new TypeMapping("()", true, 32, EncodeAbiTuplePart, DecodeAbiTuplePart) },
         };
     }

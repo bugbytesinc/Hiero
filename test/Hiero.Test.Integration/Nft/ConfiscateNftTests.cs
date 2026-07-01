@@ -18,7 +18,7 @@ public class ConfiscateNftTests
 
         var xferRecipt = await client.TransferAsync(new TransferParams
         {
-            NftTransfers = serialNumbersToConfiscate.Select(sn => new NftTransfer(new Hiero.Nft(fxNft.CreateReceipt!.Token, sn), fxNft.TreasuryAccount, fxAccount)),
+            NftTransfers = [.. serialNumbersToConfiscate.Select(sn => new NftTransfer(new Hiero.Nft(fxNft.CreateReceipt!.Token, sn), fxNft.TreasuryAccount, fxAccount))],
             Signatory = fxNft.TreasuryAccount
         });
 
@@ -56,7 +56,7 @@ public class ConfiscateNftTests
 
         var xferReceipt = await client.TransferAsync(new TransferParams
         {
-            NftTransfers = serialNumbersToXfer.Select(sn => new NftTransfer(new Hiero.Nft(fxNft.CreateReceipt!.Token, sn), fxNft.TreasuryAccount, fxAccount)),
+            NftTransfers = [.. serialNumbersToXfer.Select(sn => new NftTransfer(new Hiero.Nft(fxNft.CreateReceipt!.Token, sn), fxNft.TreasuryAccount, fxAccount))],
             Signatory = fxNft.TreasuryAccount
         });
 
@@ -93,7 +93,7 @@ public class ConfiscateNftTests
 
         var xfrReceipt = await client.TransferAsync(new TransferParams
         {
-            NftTransfers = serialNumbersToConfiscate.Select(sn => new NftTransfer(new Hiero.Nft(fxNft.CreateReceipt!.Token, sn), fxNft.TreasuryAccount, fxAccount)),
+            NftTransfers = [.. serialNumbersToConfiscate.Select(sn => new NftTransfer(new Hiero.Nft(fxNft.CreateReceipt!.Token, sn), fxNft.TreasuryAccount, fxAccount))],
             Signatory = fxNft.TreasuryAccount
         });
 
@@ -130,7 +130,7 @@ public class ConfiscateNftTests
 
         var transferParams = new TransferParams
         {
-            NftTransfers = serialNumbersTransfered.Select(sn => new NftTransfer(new Hiero.Nft(fxNft.CreateReceipt!.Token, sn), fxNft.TreasuryAccount, fxAccount)),
+            NftTransfers = [..serialNumbersTransfered.Select(sn => new NftTransfer(new Hiero.Nft(fxNft.CreateReceipt!.Token, sn), fxNft.TreasuryAccount, fxAccount))],
             Signatory = fxNft.TreasuryAccount
         };
 
@@ -166,7 +166,7 @@ public class ConfiscateNftTests
 
         var transferParams = new TransferParams
         {
-            NftTransfers = serialNumbersTransfered.Select(sn => new NftTransfer(new Hiero.Nft(fxNft.CreateReceipt!.Token, sn), fxNft.TreasuryAccount, fxAccount)),
+            NftTransfers = [.. serialNumbersTransfered.Select(sn => new NftTransfer(new Hiero.Nft(fxNft.CreateReceipt!.Token, sn), fxNft.TreasuryAccount, fxAccount))],
             Signatory = fxNft.TreasuryAccount
         };
 
@@ -213,7 +213,7 @@ public class ConfiscateNftTests
 
         var transferParams = new TransferParams
         {
-            NftTransfers = serialNumbersTransfered.Select(sn => new NftTransfer(new Hiero.Nft(fxNft.CreateReceipt!.Token, sn), fxNft.TreasuryAccount, fxAccount)),
+            NftTransfers = [.. serialNumbersTransfered.Select(sn => new NftTransfer(new Hiero.Nft(fxNft.CreateReceipt!.Token, sn), fxNft.TreasuryAccount, fxAccount))],
             Signatory = fxNft.TreasuryAccount
         };
 
@@ -262,7 +262,7 @@ public class ConfiscateNftTests
 
         var transferParams = new TransferParams
         {
-            NftTransfers = serialNumbersTransfered.Select(sn => new NftTransfer(new Hiero.Nft(fxNft.CreateReceipt!.Token, sn), fxNft.TreasuryAccount, fxAccount)),
+            NftTransfers = [.. serialNumbersTransfered.Select(sn => new NftTransfer(new Hiero.Nft(fxNft.CreateReceipt!.Token, sn), fxNft.TreasuryAccount, fxAccount))],
             Signatory = fxNft.TreasuryAccount
         };
 
@@ -311,7 +311,7 @@ public class ConfiscateNftTests
 
         var transferParams = new TransferParams
         {
-            NftTransfers = serialNumbersTransfered.Select(sn => new NftTransfer(new Hiero.Nft(fxNft.CreateReceipt!.Token, sn), fxNft.TreasuryAccount, fxAccount)),
+            NftTransfers = [.. serialNumbersTransfered.Select(sn => new NftTransfer(new Hiero.Nft(fxNft.CreateReceipt!.Token, sn), fxNft.TreasuryAccount, fxAccount))],
             Signatory = fxNft.TreasuryAccount
         };
 
@@ -354,7 +354,7 @@ public class ConfiscateNftTests
 
         var transferParams = new TransferParams
         {
-            NftTransfers = serialNumbersTransfered.Select(sn => new NftTransfer(new Hiero.Nft(fxNft.CreateReceipt!.Token, sn), fxNft.TreasuryAccount, fxAccount)),
+            NftTransfers = [.. serialNumbersTransfered.Select(sn => new NftTransfer(new Hiero.Nft(fxNft.CreateReceipt!.Token, sn), fxNft.TreasuryAccount, fxAccount))],
             Signatory = fxNft.TreasuryAccount
         };
 
@@ -391,7 +391,7 @@ public class ConfiscateNftTests
 
         var transferParams = new TransferParams
         {
-            NftTransfers = serialNumbersTransfered.Select(sn => new NftTransfer(new Hiero.Nft(fxNft.CreateReceipt!.Token, sn), fxNft.TreasuryAccount, fxAccount)),
+            NftTransfers = [.. serialNumbersTransfered.Select(sn => new NftTransfer(new Hiero.Nft(fxNft.CreateReceipt!.Token, sn), fxNft.TreasuryAccount, fxAccount))],
             Signatory = fxNft.TreasuryAccount
         };
 
@@ -436,7 +436,7 @@ public class ConfiscateNftTests
 
         var transferParams = new TransferParams
         {
-            NftTransfers = serialNumbersTransfered.Select(sn => new NftTransfer(new Hiero.Nft(fxNft.CreateReceipt!.Token, sn), fxNft.TreasuryAccount, fxAccount)),
+            NftTransfers = [..serialNumbersTransfered.Select(sn => new NftTransfer(new Hiero.Nft(fxNft.CreateReceipt!.Token, sn), fxNft.TreasuryAccount, fxAccount))],
             Signatory = fxNft.TreasuryAccount
         };
 
@@ -476,7 +476,7 @@ public class ConfiscateNftTests
 
         var transferParams = new TransferParams
         {
-            NftTransfers = serialNumbersTransfered.Select(sn => new NftTransfer(new Hiero.Nft(fxNft.CreateReceipt!.Token, sn), fxNft.TreasuryAccount, fxAccount)),
+            NftTransfers = [.. serialNumbersTransfered.Select(sn => new NftTransfer(new Hiero.Nft(fxNft.CreateReceipt!.Token, sn), fxNft.TreasuryAccount, fxAccount))],
             Signatory = fxNft.TreasuryAccount
         };
 
@@ -524,7 +524,7 @@ public class ConfiscateNftTests
 
         var transferParams = new TransferParams
         {
-            NftTransfers = serialNumbersTransfered.Select(sn => new NftTransfer(new Hiero.Nft(fxNft.CreateReceipt!.Token, sn), fxNft.TreasuryAccount, fxAccount)),
+            NftTransfers = [.. serialNumbersTransfered.Select(sn => new NftTransfer(new Hiero.Nft(fxNft.CreateReceipt!.Token, sn), fxNft.TreasuryAccount, fxAccount))],
             Signatory = fxNft.TreasuryAccount
         };
 
@@ -567,7 +567,7 @@ public class ConfiscateNftTests
 
         var transferParams = new TransferParams
         {
-            NftTransfers = serialNumbersTransfered.Select(sn => new NftTransfer(new Hiero.Nft(fxNft.CreateReceipt!.Token, sn), fxNft.TreasuryAccount, fxAccount)),
+            NftTransfers = [.. serialNumbersTransfered.Select(sn => new NftTransfer(new Hiero.Nft(fxNft.CreateReceipt!.Token, sn), fxNft.TreasuryAccount, fxAccount))],
             Signatory = fxNft.TreasuryAccount
         };
 

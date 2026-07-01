@@ -19,8 +19,8 @@ internal class ExtendedContractLogDataPage : Page<ExtendedContractLogData>
     /// Enumerator of contract log objects for this
     /// paged list.
     /// </returns>
-    public override IEnumerable<ExtendedContractLogData> GetItems()
+    public override ExtendedContractLogData[] GetItems()
     {
-        return Logs ?? Array.Empty<ExtendedContractLogData>();
+        return Logs ?? [];
     }
 }

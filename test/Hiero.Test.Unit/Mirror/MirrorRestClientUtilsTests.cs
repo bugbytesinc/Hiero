@@ -2,11 +2,43 @@
 using Hiero.Mirror.Filters;
 using Hiero.Mirror.Implementation;
 using Hiero.Mirror.Paging;
+using Hiero.Test.Helpers;
 
 namespace Hiero.Test.Unit.Mirror;
 
 public class MirrorRestClientUtilsTests
 {
+    [Test]
+    public async Task FormatMirror_Formats_ShardRealmNum_EntityId()
+    {
+        var result = new EntityId(0, 0, 1234).ToMirrorString();
+
+        await Assert.That(result).IsEqualTo("0.0.1234");
+    }
+
+    [Test]
+    public async Task FormatMirror_Formats_EvmAddress_EntityId_As_UnprefixedHex()
+    {
+        var bytes = new byte[20];
+        for (var i = 0; i < bytes.Length; i++)
+        {
+            bytes[i] = (byte)(i + 1);
+        }
+        var result = new EntityId(0, 0, new EvmAddress(bytes)).ToMirrorString();
+
+        await Assert.That(result).IsEqualTo(Convert.ToHexStringLower(bytes));
+    }
+
+    [Test]
+    public async Task FormatMirror_Formats_KeyAlias_EntityId_As_MirrorHex()
+    {
+        var (publicKey, _) = Generator.Ed25519KeyPair();
+        var alias = new Endorsement(publicKey);
+        var result = new EntityId(0, 0, alias).ToMirrorString();
+
+        await Assert.That(result).IsEqualTo(Convert.ToHexStringLower(alias.ToBytes(KeyFormat.Mirror).Span));
+    }
+
     [Test]
     public async Task MirrorFormat_Emits_Bare_Path_For_Default_TransactionId()
     {
@@ -72,7 +104,7 @@ public class MirrorRestClientUtilsTests
     {
         var result = MirrorRestClientUtils.GenerateInitialPath(
             "contracts/results/0xdeadbeef",
-            [HbarTransferProjectionFilter.Exclude]);
+            HbarTransferProjectionFilter.Exclude);
         await Assert.That(result).IsEqualTo("contracts/results/0xdeadbeef?hbar=false");
     }
 
@@ -81,7 +113,7 @@ public class MirrorRestClientUtilsTests
     {
         var result = MirrorRestClientUtils.GenerateInitialPath(
             "contracts/results/0.0.1234-1700000000-123456789?nonce=7",
-            [HbarTransferProjectionFilter.Exclude]);
+            HbarTransferProjectionFilter.Exclude);
         await Assert.That(result).IsEqualTo("contracts/results/0.0.1234-1700000000-123456789?nonce=7&hbar=false");
     }
 
@@ -92,5 +124,101 @@ public class MirrorRestClientUtilsTests
             "contracts/results",
             [new PageLimit(50), HbarTransferProjectionFilter.Exclude]);
         await Assert.That(result).IsEqualTo("contracts/results?limit=50&hbar=false");
+    }
+
+    [Test]
+    public async Task GenerateInitialPath_Joins_One_Array_Filter()
+    {
+        var result = MirrorRestClientUtils.GenerateInitialPath(
+            "contracts/results",
+            [HbarTransferProjectionFilter.Exclude]);
+        await Assert.That(result).IsEqualTo("contracts/results?hbar=false");
+    }
+
+    [Test]
+    public async Task GenerateInitialPath_Joins_Three_Array_Filters()
+    {
+        var result = MirrorRestClientUtils.GenerateInitialPath(
+            "contracts/results",
+            [new PageLimit(50), HbarTransferProjectionFilter.Exclude, new TestFilter("order", "asc")]);
+        await Assert.That(result).IsEqualTo("contracts/results?limit=50&hbar=false&order=asc");
+    }
+
+    [Test]
+    public async Task GenerateInitialPath_Joins_Two_Fixed_Filters_With_Ampersand()
+    {
+        var result = MirrorRestClientUtils.GenerateInitialPath(
+            "contracts/results",
+            new PageLimit(50),
+            HbarTransferProjectionFilter.Exclude);
+        await Assert.That(result).IsEqualTo("contracts/results?limit=50&hbar=false");
+    }
+
+    [Test]
+    public async Task GenerateInitialPath_Joins_Three_Fixed_Filters_With_Ampersand()
+    {
+        var result = MirrorRestClientUtils.GenerateInitialPath(
+            "contracts/results",
+            new PageLimit(50),
+            HbarTransferProjectionFilter.Exclude,
+            new TestFilter("order", "asc"));
+        await Assert.That(result).IsEqualTo("contracts/results?limit=50&hbar=false&order=asc");
+    }
+
+    [Test]
+    public async Task GenerateInitialPath_Uses_Fixed_Filter_Path_When_Optional_Filters_Are_Empty()
+    {
+        var result = MirrorRestClientUtils.GenerateInitialPath(
+            "contracts/results",
+            HbarTransferProjectionFilter.Exclude,
+            []);
+        await Assert.That(result).IsEqualTo("contracts/results?hbar=false");
+    }
+
+    [Test]
+    public async Task GenerateInitialPath_Uses_Two_Fixed_Filter_Path_When_Optional_Filters_Are_Empty()
+    {
+        var result = MirrorRestClientUtils.GenerateInitialPath(
+            "contracts/results",
+            new PageLimit(50),
+            HbarTransferProjectionFilter.Exclude,
+            []);
+        await Assert.That(result).IsEqualTo("contracts/results?limit=50&hbar=false");
+    }
+
+    [Test]
+    public async Task GenerateInitialPath_Joins_Two_Filter_Arrays()
+    {
+        var result = MirrorRestClientUtils.GenerateInitialPath(
+            "contracts/results",
+            [new PageLimit(50)],
+            [HbarTransferProjectionFilter.Exclude]);
+        await Assert.That(result).IsEqualTo("contracts/results?limit=50&hbar=false");
+    }
+
+    [Test]
+    public async Task GenerateInitialPath_Joins_Required_Filter_And_Two_Filter_Arrays()
+    {
+        var result = MirrorRestClientUtils.GenerateInitialPath(
+            "contracts/results",
+            new PageLimit(50),
+            [HbarTransferProjectionFilter.Exclude],
+            [new TestFilter("order", "asc")]);
+        await Assert.That(result).IsEqualTo("contracts/results?limit=50&hbar=false&order=asc");
+    }
+
+    [Test]
+    public async Task GenerateInitialPath_Url_Encodes_Filter_Names_And_Values()
+    {
+        var result = MirrorRestClientUtils.GenerateInitialPath(
+            "contracts/results",
+            new TestFilter("memo value", "alpha beta&gamma"));
+        await Assert.That(result).IsEqualTo("contracts/results?memo+value=alpha+beta%26gamma");
+    }
+
+    private sealed class TestFilter(string name, string value) : IMirrorFilter
+    {
+        public string Name { get; } = name;
+        public string Value { get; } = value;
     }
 }

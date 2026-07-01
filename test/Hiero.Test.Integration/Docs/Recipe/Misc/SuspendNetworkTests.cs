@@ -6,11 +6,11 @@ public class SuspendNetworkTests
 {
     // Code Example:  Docs / Recipe / Misc / Suspend Network
     static async Task Recipe(string[] args)
-    {                                                 // For Example:
-        var gatewayUrl = new Uri(args[0]);            //   http://2.testnet.hedera.com:50211
-        var gatewayAccountNo = long.Parse(args[1]);   //   5 (gateway node 0.0.5)
-        var payerAccountNo = long.Parse(args[2]);     //   20 (account 0.0.20)
-        var payerPrivateKey = Hex.ToBytes(args[3]);   //   302e0201... (Ed25519 private in hex)
+    {                                                         // For Example:
+        var gatewayUrl = new Uri(args[0]);                    //   http://2.testnet.hedera.com:50211
+        var gatewayAccountNo = long.Parse(args[1]);           //   5 (gateway node 0.0.5)
+        var payerAccountNo = long.Parse(args[2]);             //   20 (account 0.0.20)
+        var payerPrivateKey = Convert.FromHexString(args[3]); //   302e0201... (Ed25519 private in hex)
         try
         {
             await using var client = new ConsensusClient(ctx =>
@@ -48,7 +48,7 @@ public class SuspendNetworkTests
         var arg0 = endpoint.Uri;
         var arg1 = endpoint.Node.AccountNum.ToString();
         var arg2 = fxAccount.CreateReceipt!.Address.AccountNum.ToString();
-        var arg3 = Hex.FromBytes(fxAccount.PrivateKey);
+        var arg3 = Convert.ToHexStringLower(fxAccount.PrivateKey.Span);
         await Recipe(new string[] { arg0.ToString(), arg1, arg2, arg3 });
     }
 }

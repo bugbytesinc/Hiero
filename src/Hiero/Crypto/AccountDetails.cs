@@ -127,9 +127,51 @@ public sealed record AccountDetails
         AutoAssociationLimit = info.MaxAutomaticTokenAssociations;
         KeyAlias = info.Alias is { IsEmpty: false } ? Key.Parser.ParseFrom(info.Alias).ToEndorsement() : Endorsement.None;
         Ledger = new BigInteger(info.LedgerId.Span, true, true);
-        CryptoAllowances = info.GrantedCryptoAllowances is { Count: > 0 } ? info.GrantedCryptoAllowances.Select(a => new CryptoAllowance(a, address)).ToArray() : [];
-        TokenAllowances = info.GrantedTokenAllowances is { Count: > 0 } ? info.GrantedTokenAllowances.Select(a => new TokenAllowance(a, address)).ToArray() : [];
-        NftAllowances = info.GrantedNftAllowances is { Count: > 0 } ? info.GrantedNftAllowances.Select(a => new NftAllowance(a, address)).ToArray() : [];
+        CryptoAllowances = ToCryptoAllowances(info.GrantedCryptoAllowances, address);
+        TokenAllowances = ToTokenAllowances(info.GrantedTokenAllowances, address);
+        NftAllowances = ToNftAllowances(info.GrantedNftAllowances, address);
+    }
+    private static CryptoAllowance[] ToCryptoAllowances(Google.Protobuf.Collections.RepeatedField<GrantedCryptoAllowance> allowances, EntityId owner)
+    {
+        var count = allowances.Count;
+        if (count == 0)
+        {
+            return [];
+        }
+        var result = new CryptoAllowance[count];
+        for (var i = 0; i < count; i++)
+        {
+            result[i] = new CryptoAllowance(allowances[i], owner);
+        }
+        return result;
+    }
+    private static TokenAllowance[] ToTokenAllowances(Google.Protobuf.Collections.RepeatedField<GrantedTokenAllowance> allowances, EntityId owner)
+    {
+        var count = allowances.Count;
+        if (count == 0)
+        {
+            return [];
+        }
+        var result = new TokenAllowance[count];
+        for (var i = 0; i < count; i++)
+        {
+            result[i] = new TokenAllowance(allowances[i], owner);
+        }
+        return result;
+    }
+    private static NftAllowance[] ToNftAllowances(Google.Protobuf.Collections.RepeatedField<GrantedNftAllowance> allowances, EntityId owner)
+    {
+        var count = allowances.Count;
+        if (count == 0)
+        {
+            return [];
+        }
+        var result = new NftAllowance[count];
+        for (var i = 0; i < count; i++)
+        {
+            result[i] = new NftAllowance(allowances[i], owner);
+        }
+        return result;
     }
 }
 /// <summary>

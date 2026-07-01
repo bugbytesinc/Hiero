@@ -1,4 +1,3 @@
-using Hiero.Test.Helpers;
 using Hiero.Test.Integration.Fixtures;
 using System.Numerics;
 
@@ -546,7 +545,7 @@ public class BurnNftTests
         await using var client = await TestNetwork.CreateClientAsync();
         var transferParams = new TransferParams
         {
-            NftTransfers = serialNumbersTransfered.Select(sn => new NftTransfer(new Hiero.Nft(fxNft.CreateReceipt!.Token, sn), fxNft.TreasuryAccount, fxAccount)),
+            NftTransfers = [.. serialNumbersTransfered.Select(sn => new NftTransfer(new Hiero.Nft(fxNft.CreateReceipt!.Token, sn), fxNft.TreasuryAccount, fxAccount))],
             Signatory = fxNft.TreasuryAccount.PrivateKey
         };
         var receipt = await client.TransferAsync(transferParams);
@@ -587,7 +586,7 @@ public class BurnNftTests
         await using var client = await TestNetwork.CreateClientAsync();
         var transferParams = new TransferParams
         {
-            NftTransfers = serialNumbersTransfered.Select(sn => new NftTransfer(new Hiero.Nft(fxNft.CreateReceipt!.Token, sn), fxNft.TreasuryAccount, fxAccount)),
+            NftTransfers = [.. serialNumbersTransfered.Select(sn => new NftTransfer(new Hiero.Nft(fxNft.CreateReceipt!.Token, sn), fxNft.TreasuryAccount, fxAccount))],
             Signatory = fxNft.TreasuryAccount.PrivateKey
         };
         var receipt = await client.TransferAsync(transferParams);
@@ -628,7 +627,7 @@ public class BurnNftTests
         await using var client = await TestNetwork.CreateClientAsync();
         var transferParams = new TransferParams
         {
-            NftTransfers = serialNumbersTransfered.Select(sn => new NftTransfer(new Hiero.Nft(fxNft.CreateReceipt!.Token, sn), fxNft.TreasuryAccount, fxAccount)),
+            NftTransfers = [.. serialNumbersTransfered.Select(sn => new NftTransfer(new Hiero.Nft(fxNft.CreateReceipt!.Token, sn), fxNft.TreasuryAccount, fxAccount))],
             Signatory = fxNft.TreasuryAccount.PrivateKey
         };
         var receipt = await client.TransferAsync(transferParams);

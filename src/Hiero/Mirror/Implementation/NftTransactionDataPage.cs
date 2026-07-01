@@ -18,8 +18,8 @@ internal class NftTransactionDataPage : Page<NftTransactionData>
     /// <returns>
     /// An enumerator listing the records in the list.
     /// </returns>
-    public override IEnumerable<NftTransactionData> GetItems()
+    public override NftTransactionData[] GetItems()
     {
-        return Transactions ?? Array.Empty<NftTransactionData>();
+        return Transactions ?? [];
     }
 }

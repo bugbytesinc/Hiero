@@ -1,18 +1,20 @@
 ﻿// SPDX-License-Identifier: Apache-2.0
+using Hiero.Implementation.Parsing;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace Hiero.Converters;
 
 /// <summary>
-/// Consensus Node ConsensusNodeEndpoint JSON Converter
+/// Converts a <see cref="ConsensusNodeEndpoint"/> to and from a JSON object
+/// with <c>address</c> (node id) and <c>url</c> properties.
 /// </summary>
 public sealed class ConsensusNodeEndpointConverter : JsonConverter<ConsensusNodeEndpoint>
 {
     /// <inheritdoc />
-    public override ConsensusNodeEndpoint? Read(ref Utf8JsonReader reader, System.Type typeToConvert, JsonSerializerOptions options)
+    public override ConsensusNodeEndpoint? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        string? address = null;
+        EntityId? node = null;
         string? urlAsString = null;
         if (reader.TokenType != JsonTokenType.StartObject)
         {
@@ -22,38 +24,58 @@ public sealed class ConsensusNodeEndpointConverter : JsonConverter<ConsensusNode
         {
             if (reader.TokenType == JsonTokenType.PropertyName)
             {
-                var propertyName = reader.GetString();
-                reader.Read();
-                switch (propertyName)
+                if (reader.ValueTextEquals("address"u8))
                 {
-                    case "address":
-                        address = reader.GetString();
-                        break;
-
-                    case "url":
-                        urlAsString = reader.GetString();
-                        break;
+                    reader.Read();
+                    if (reader.TokenType == JsonTokenType.Null)
+                    {
+                        continue;
+                    }
+                    if (reader.ValueIsEscaped)
+                    {
+                        ShardRealmNumParser.TryParse(reader.GetString(), out node);
+                    }
+                    else if (reader.HasValueSequence)
+                    {
+                        ShardRealmNumParser.TryParse(reader.ValueSequence, out node);
+                    }
+                    else
+                    {
+                        ShardRealmNumParser.TryParse(reader.ValueSpan, out node);
+                    }
+                }
+                else if (reader.ValueTextEquals("url"u8))
+                {
+                    reader.Read();
+                    urlAsString = reader.GetString();
+                }
+                else
+                {
+                    reader.Skip();
                 }
             }
         }
-        if (!string.IsNullOrEmpty(urlAsString))
+        if (node is not null && !string.IsNullOrEmpty(urlAsString))
         {
-            var uri = new Uri(urlAsString);
-            if (EntityId.TryParseShardRealmNum(address, out var node))
-            {
-                return new ConsensusNodeEndpoint(node, uri);
-            }
+            return new ConsensusNodeEndpoint(node, new Uri(urlAsString));
         }
         throw new JsonException("Not an appropriately formatted Consensus Node Endpoint Object.");
     }
+
     /// <inheritdoc />
     public override void Write(Utf8JsonWriter writer, ConsensusNodeEndpoint gateway, JsonSerializerOptions options)
     {
         writer.WriteStartObject();
-        writer.WritePropertyName("address");
-        writer.WriteStringValue(gateway.Node.ToString());
-        writer.WritePropertyName("url");
-        writer.WriteStringValue(gateway.Uri.ToString());
+        Span<byte> buffer = stackalloc byte[64];
+        if (gateway.Node.TryFormat(buffer, out var bytesWritten, default, default))
+        {
+            writer.WriteString("address"u8, buffer[..bytesWritten]);
+        }
+        else
+        {
+            writer.WriteString("address"u8, gateway.Node.ToString());
+        }
+        writer.WriteString("url"u8, gateway.Uri.AbsoluteUri);
         writer.WriteEndObject();
     }
 }

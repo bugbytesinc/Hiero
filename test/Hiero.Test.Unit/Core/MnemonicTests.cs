@@ -10,8 +10,8 @@ public class MnemonicTests
         var mnemonic = new Mnemonic(words, "");
         var (publicKey, privateKey) = mnemonic.GenerateKeyPair(KeyDerivationPath.HashPack);
 
-        var expectedPublicKey = Hex.ToBytes("302a300506032b6570032100e8fbc76f27d87092a1f37fc53caf0c084ac2df1b2693c0bef24e350b0843b39f");
-        var expectedPrivateKey = Hex.ToBytes("302e020100300506032b6570042204200bfe68bfa4b8048a6c6cd67c33a482ac01b061810f3b443ddf1e15919bd39bfe");
+        var expectedPublicKey = Convert.FromHexString("302a300506032b6570032100e8fbc76f27d87092a1f37fc53caf0c084ac2df1b2693c0bef24e350b0843b39f");
+        var expectedPrivateKey = Convert.FromHexString("302e020100300506032b6570042204200bfe68bfa4b8048a6c6cd67c33a482ac01b061810f3b443ddf1e15919bd39bfe");
 
         await Assert.That(publicKey.ToArray().SequenceEqual(expectedPublicKey.ToArray())).IsTrue();
         await Assert.That(privateKey.ToArray().SequenceEqual(expectedPrivateKey.ToArray())).IsTrue();
@@ -21,7 +21,7 @@ public class MnemonicTests
     public async Task Can_Generate_Calaxy_Ed25519_Key_From_Mnemonic()
     {
         var words = "recipe harsh clever agent snow diagram rain use hybrid demand pumpkin dynamic".Split(" ");
-        var expectedEndorsement = new Endorsement(KeyType.Ed25519, Hex.ToBytes("1df12df4508a18239333240a92f97287bf1f49ec8f9ff88e6dc996d3b7ab6de7"));
+        var expectedEndorsement = new Endorsement(KeyType.Ed25519, Convert.FromHexString("1df12df4508a18239333240a92f97287bf1f49ec8f9ff88e6dc996d3b7ab6de7"));
         var mnemonic = new Mnemonic(words, "");
         var (publicKey, _) = mnemonic.GenerateKeyPair(KeyDerivationPath.Calaxy);
         var endorsement = new Endorsement(publicKey);
@@ -33,9 +33,9 @@ public class MnemonicTests
     public async Task Can_Generate_Blade_ECDSA_Secp256K1_Key_From_Mnemonic()
     {
         var words = "pass tumble pencil hat grape abstract apple shallow leg embrace truth royal".Split(" ");
-        var expectedSignatory = new Signatory(KeyType.ECDSASecp256K1, Hex.ToBytes("13fa7ab3d0b22d66e940b5147af4059408a1ce51ae2415641daad400d2a3f3fb"));
-        var expectedEndorsement = new Endorsement(KeyType.ECDSASecp256K1, Hex.ToBytes("0377abfad2ff0e83b10e64852565ffe2296aad79c7e83218672b8719f3dbaeda90"));
-        var expectedEvmAddress = new EvmAddress(Hex.ToBytes("69a5b0c36547c5cccce4bbf662e4594ebc2e0a00"));
+        var expectedSignatory = new Signatory(KeyType.ECDSASecp256K1, Convert.FromHexString("13fa7ab3d0b22d66e940b5147af4059408a1ce51ae2415641daad400d2a3f3fb"));
+        var expectedEndorsement = new Endorsement(KeyType.ECDSASecp256K1, Convert.FromHexString("0377abfad2ff0e83b10e64852565ffe2296aad79c7e83218672b8719f3dbaeda90"));
+        var expectedEvmAddress = new EvmAddress(Convert.FromHexString("69a5b0c36547c5cccce4bbf662e4594ebc2e0a00"));
 
         var mnemonic = new Mnemonic(words, "");
         var (publicKey, privateKey) = mnemonic.GenerateKeyPair(KeyDerivationPath.Blade);
@@ -53,8 +53,8 @@ public class MnemonicTests
     public async Task Can_Generate_WallaWallet_Ed25519_Key_From_Mnemonic()
     {
         var words = "flame tower stand popular farm response vacant theory ticket enemy priority wreck".Split(" ");
-        var expectedSignatory = new Signatory(KeyType.Ed25519, Hex.ToBytes("431ec28f4a7907fd4bdfa4a02b054addc0c5c20f93dfa34c8e5dfe96f9c0924b"));
-        var expectedEndorsement = new Endorsement(KeyType.Ed25519, Hex.ToBytes("6a74a7d3498a3ea407830f31c2b1a6ed15140c5a0934c85a029b2d1fc1d9dfc6"));
+        var expectedSignatory = new Signatory(KeyType.Ed25519, Convert.FromHexString("431ec28f4a7907fd4bdfa4a02b054addc0c5c20f93dfa34c8e5dfe96f9c0924b"));
+        var expectedEndorsement = new Endorsement(KeyType.Ed25519, Convert.FromHexString("6a74a7d3498a3ea407830f31c2b1a6ed15140c5a0934c85a029b2d1fc1d9dfc6"));
 
         var mnemonic = new Mnemonic(words, "");
         var (publicKey, privateKey) = mnemonic.GenerateKeyPair(KeyDerivationPath.WallaWallet);

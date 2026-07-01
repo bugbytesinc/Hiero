@@ -52,14 +52,23 @@ public sealed class BurnNftParams : TransactionParams<TokenReceipt>, INetworkPar
         {
             throw new ArgumentOutOfRangeException(nameof(SerialNumbers), "The list of serial numbers must not be null.");
         }
+        var count = SerialNumbers.Count;
+        if (count == 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(SerialNumbers), "The list of serial numbers must not be empty.");
+        }
         var result = new TokenBurnTransactionBody
         {
             Token = new TokenID(Token)
         };
-        result.SerialNumbers.AddRange(SerialNumbers);
-        if (result.SerialNumbers.Count == 0)
+        var serialNumbers = result.SerialNumbers;
+        if (serialNumbers.Capacity < count)
         {
-            throw new ArgumentOutOfRangeException(nameof(SerialNumbers), "The list of serial numbers must not be empty.");
+            serialNumbers.Capacity = count;
+        }
+        for (var i = 0; i < count; i++)
+        {
+            serialNumbers.Add(SerialNumbers[i]);
         }
         return result;
     }

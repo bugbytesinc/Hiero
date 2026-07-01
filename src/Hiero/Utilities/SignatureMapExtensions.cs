@@ -3,7 +3,6 @@ using Google.Protobuf;
 using Hiero.Implementation;
 using Proto;
 using System.ComponentModel;
-using System.Runtime.CompilerServices;
 
 namespace Hiero;
 
@@ -36,7 +35,7 @@ public static class SignatureMapExtensions
     /// </param>
     public static async Task AddSignatureAsync(this SignatureMap signatureMap, ReadOnlyMemory<byte> data, Signatory signatory)
     {
-        await ((ISignatory)signatory).SignAsync(new UncheckedSignatureMapInvoice(signatureMap, data));
+        await ((ISignatory)signatory).SignAsync(new UncheckedSignatureMapInvoice(signatureMap, data)).ConfigureAwait(false);
     }
     /// <summary>
     /// Lightweight <see cref="IInvoice"/> implementation over an existing
@@ -120,14 +119,42 @@ public static class SignatureMapExtensions
 
         bool isKeySatisfied(Endorsement endorsement)
         {
-            foreach (var signature in findCandidateSignatures(endorsement.Type, endorsement.ToBytes(KeyFormat.Raw)))
+            var pairs = signatureMap.SigPair;
+            if (pairs is null || pairs.Count == 0)
             {
-                if (endorsement.Verify(data, signature))
-                {
-                    return true;
-                }
+                return false;
             }
-            return false;
+            switch (endorsement.Type)
+            {
+                case KeyType.Ed25519:
+                    var ed25519PublicKey = ((Ed25519EndorsementData)endorsement._data).RawPublicKey;
+                    foreach (var p in pairs)
+                    {
+                        if (p.SignatureCase == SignaturePair.SignatureOneofCase.Ed25519 && ed25519PublicKey.StartsWith(p.PubKeyPrefix.Span))
+                        {
+                            if (((Ed25519EndorsementData)endorsement._data).Verify(data, p.Ed25519.Memory))
+                            {
+                                return true;
+                            }
+                        }
+                    }
+                    return false;
+                case KeyType.ECDSASecp256K1:
+                    var ecdsaPublicKey = ((EcdsaSecp256K1EndorsementData)endorsement._data).RawPublicKey;
+                    foreach (var p in pairs)
+                    {
+                        if (p.SignatureCase == SignaturePair.SignatureOneofCase.ECDSASecp256K1 && ecdsaPublicKey.StartsWith(p.PubKeyPrefix.Span))
+                        {
+                            if (endorsement.Verify(data, p.ECDSASecp256K1.Memory))
+                            {
+                                return true;
+                            }
+                        }
+                    }
+                    return false;
+                default:
+                    return false;
+            }
         }
 
         bool isListSatisfied(uint threshold, Endorsement[] list)
@@ -145,39 +172,6 @@ public static class SignatureMapExtensions
                 }
             }
             return false;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        IEnumerable<ReadOnlyMemory<byte>> findCandidateSignatures(KeyType keyType, ReadOnlyMemory<byte> fullPublicKey)
-        {
-            var pairs = signatureMap.SigPair;
-            if (pairs is null || pairs.Count == 0)
-            {
-                yield break;
-            }
-            switch (keyType)
-            {
-                case KeyType.Ed25519:
-                    foreach (var p in pairs)
-                    {
-                        if (p.SignatureCase == SignaturePair.SignatureOneofCase.Ed25519 && fullPublicKey.Span.StartsWith(p.PubKeyPrefix.Span))
-                        {
-                            yield return p.Ed25519.Memory;
-                        }
-                    }
-                    yield break;
-                case KeyType.ECDSASecp256K1:
-                    foreach (var p in pairs)
-                    {
-                        if (p.SignatureCase == SignaturePair.SignatureOneofCase.ECDSASecp256K1 && fullPublicKey.Span.StartsWith(p.PubKeyPrefix.Span))
-                        {
-                            yield return p.ECDSASecp256K1.Memory;
-                        }
-                    }
-                    yield break;
-                default:
-                    yield break;
-            }
         }
     }
 }

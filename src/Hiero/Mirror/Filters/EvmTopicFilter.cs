@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
+using Hiero.Mirror.Implementation;
 using System.Numerics;
 
 namespace Hiero.Mirror.Filters;
@@ -49,7 +50,6 @@ public sealed class EvmTopicFilter : IMirrorFilter
         {
             throw new ArgumentOutOfRangeException(nameof(index), "Index topics must be between 0 and 3 inclusive.");
         }
-        var value = "0x" + Hex.FromBytes(topic.ToByteArray(true, true)).PadLeft(64, '0');
-        return new EvmTopicFilter(index, value);
+        return new EvmTopicFilter(index, MirrorHexFormatter.FormatPrefixedPadded32(topic));
     }
 }

@@ -6,15 +6,15 @@ public class TransferCryptoTests
 {
     // Code Example:  Docs / Recipe / Transfer Crypto
     static async Task Recipe(string[] args)
-    {                                                 // For Example:
-        var gatewayUrl = new Uri(args[0]);            //   http://2.testnet.hedera.com:50211
-        var gatewayAccountNo = long.Parse(args[1]);   //   5 (gateway node 0.0.5)
-        var payerAccountNo = long.Parse(args[2]);     //   20 (account 0.0.20)
-        var payerPrivateKey = Hex.ToBytes(args[3]);   //   302e0201... (48 byte Ed25519 private in hex)
-        var fromAccountNo = long.Parse(args[4]);      //   2300 (account 0.0.2300)
-        var fromPrivateKey = Hex.ToBytes(args[5]);    //   302e0201... (48 byte Ed25519 private in hex)
-        var toAccountNo = long.Parse(args[6]);        //   4500 (account 0.0.4500)
-        var amount = long.Parse(args[7]);             //   100000000 (1 hBar)
+    {                                                         // For Example:
+        var gatewayUrl = new Uri(args[0]);                    //   http://2.testnet.hedera.com:50211
+        var gatewayAccountNo = long.Parse(args[1]);           //   5 (gateway node 0.0.5)
+        var payerAccountNo = long.Parse(args[2]);             //   20 (account 0.0.20)
+        var payerPrivateKey = Convert.FromHexString(args[3]); //   302e0201... (48 byte Ed25519 private in hex)
+        var fromAccountNo = long.Parse(args[4]);              //   2300 (account 0.0.2300)
+        var fromPrivateKey = Convert.FromHexString(args[5]);  //   302e0201... (48 byte Ed25519 private in hex)
+        var toAccountNo = long.Parse(args[6]);                //   4500 (account 0.0.4500)
+        var amount = long.Parse(args[7]);                     //   100000000 (1 hBar)
         try
         {
             var fromAccount = new EntityId(0, 0, fromAccountNo);
@@ -47,9 +47,9 @@ public class TransferCryptoTests
         var arg0 = endpoint.Uri;
         var arg1 = endpoint.Node.AccountNum.ToString();
         var arg2 = TestNetwork.Payer.AccountNum.ToString();
-        var arg3 = Hex.FromBytes(TestNetwork.PrivateKey);
+        var arg3 = Convert.ToHexStringLower(TestNetwork.PrivateKey.Span);
         var arg4 = fxFrom.CreateReceipt!.Address.AccountNum.ToString();
-        var arg5 = Hex.FromBytes(fxFrom.PrivateKey);
+        var arg5 = Convert.ToHexStringLower(fxFrom.PrivateKey.Span);
         var arg6 = fxTo.CreateReceipt!.Address.AccountNum.ToString();
         var arg7 = (fxFrom.CreateParams.InitialBalance / 2).ToString();
         await Recipe(new string[] { arg0.ToString(), arg1, arg2, arg3, arg4, arg5, arg6, arg7 });

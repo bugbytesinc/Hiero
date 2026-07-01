@@ -68,7 +68,7 @@ public static class ExternalExtensions
             {
                 var transactionId = Engine.GetOrCreateTransactionID(context);
                 query.SetHeader(await Engine.CreateSignedQueryHeader(context, (long)response.ResponseHeader.Cost, transactionId, cancellationToken).ConfigureAwait(false));
-                response = await Engine.SubmitMessageAsync(context, envelope, query.InstantiateNetworkRequestMethod, cancellationToken);
+                response = await Engine.SubmitMessageAsync(context, envelope, query.InstantiateNetworkRequestMethod, cancellationToken).ConfigureAwait(false);
             }
             return response.ToByteArray();
         }
@@ -114,13 +114,13 @@ public static class ExternalExtensions
         {
             await using var configuredClient = client.Clone(configure);
             var batchParams = new BatchedTransactionParams { TransactionParams = [batchMetadata] };
-            var outerNetworkParams = (await BatchedParamsOrchestrator.CreateAsync(batchParams, configuredClient)) as INetworkParams<TransactionReceipt>;
+            var outerNetworkParams = (await BatchedParamsOrchestrator.CreateAsync(batchParams, configuredClient).ConfigureAwait(false)) as INetworkParams<TransactionReceipt>;
             var atomicBatch = (AtomicBatchTransactionBody)outerNetworkParams!.CreateNetworkTransaction();
             return atomicBatch.Transactions[0].Memory;
         }
         await using var context = client.BuildChildContext(configure);
         var networkParams = transactionParams as INetworkParams<TransactionReceipt> ?? throw new ArgumentNullException(nameof(transactionParams), "External Transaction Params can not be null.");
-        var (_, signedTransactionBytes, _, _) = await Engine.EncodeAndSignAsync(context, networkParams, false);
+        var (_, signedTransactionBytes, _, _) = await Engine.EncodeAndSignAsync(context, networkParams, false).ConfigureAwait(false);
         return signedTransactionBytes.Memory;
     }
 }

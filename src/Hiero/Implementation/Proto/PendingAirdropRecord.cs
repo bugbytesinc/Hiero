@@ -8,10 +8,11 @@ internal static class PendingAirdropRecordExtensions
 {
     internal static IReadOnlyList<AirdropAmount> AsAirdropAmountList(this RepeatedField<PendingAirdropRecord> list)
     {
-        if (list is { Count: > 0 })
+        var count = list.Count;
+        if (count > 0)
         {
-            var result = new AirdropAmount[list.Count];
-            for (int i = 0; i < list.Count; i++)
+            var result = new AirdropAmount[count];
+            for (var i = 0; i < count; i++)
             {
                 result[i] = new(list[i]);
             }

@@ -4,12 +4,15 @@ using Hiero.Implementation;
 using Proto;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Runtime.InteropServices;
 
 namespace Hiero;
 
 /// <summary>
-/// The details returned from the network after consensus 
-/// has been reached for a network request.
+/// The detailed results of a network request after consensus has been
+/// reached, extending the <see cref="TransactionReceipt"/> with the
+/// transaction hash, consensus timestamp, fee charged, and the full set
+/// of hBar, token, NFT, royalty and staking-reward transfers it produced.
 /// </summary>
 public record TransactionRecord : TransactionReceipt
 {
@@ -32,8 +35,9 @@ public record TransactionRecord : TransactionReceipt
     public ulong Fee { get; internal init; }
     /// <summary>
     /// A map of tinybar transfers to and from accounts associated with
-    /// the records represented by this transaction.
-    /// <see cref="IConsensusContext.Payer"/>.
+    /// the records represented by this transaction, keyed by account
+    /// (including the <see cref="IConsensusContext.Payer"/> that funded
+    /// the transaction).
     /// </summary>
     public ReadOnlyDictionary<EntityId, long> Transfers { get; internal init; }
     /// <summary>
@@ -50,7 +54,7 @@ public record TransactionRecord : TransactionReceipt
     /// If the transaction affected a change in treasury for an NFT token
     /// it will be identified here.  It does not indicate which serial 
     /// numbers of NFTs were transferred to the new treasury, just that
-    /// all of NFTs held by the previously designated treasury are new
+    /// all of the NFTs held by the previously designated treasury are now
     /// owned by the new treasury.
     /// </summary>
     public TreasuryTransfer? TreasuryTransfer { get; internal init; }
@@ -86,7 +90,7 @@ public record TransactionRecord : TransactionReceipt
         Consensus = record.ConsensusTimestamp?.ToConsensusTimeStamp();
         Memo = record.Memo;
         Fee = record.TransactionFee;
-        Transfers = record.TransferList?.ToTransfers() ?? new ReadOnlyDictionary<EntityId, long>(new Dictionary<EntityId, long>());
+        Transfers = record.TransferList?.ToTransfers() ?? TransactionRecordExtensions.EMPTY_TRANSFERS;
         TokenTransfers = tokenTransfers;
         NftTransfers = assetTransfers;
         TreasuryTransfer = treasuryTransfer;
@@ -102,6 +106,12 @@ public record TransactionRecord : TransactionReceipt
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class TransactionRecordExtensions
 {
+    internal static readonly ReadOnlyDictionary<EntityId, long> EMPTY_TRANSFERS = new(new Dictionary<EntityId, long>(0));
+    /// <summary>
+    /// Empty Result when no records are returned from the network.
+    /// </summary>
+    private static readonly ReadOnlyCollection<TransactionRecord> EMPTY_RESULT = Array.AsReadOnly(Array.Empty<TransactionRecord>());
+
     /// <summary>
     /// Retrieves the transaction records for a given transaction ID that was
     /// successfully processed, otherwise the first one to reach consensus.
@@ -161,7 +171,7 @@ public static class TransactionRecordExtensions
     /// It is executed prior to submitting the request to the network.
     /// </param>
     /// <returns>
-    /// An collection of all the transaction records known to the system
+    /// A collection of all the transaction records known to the system
     /// at the time of query having the identified transaction id.
     /// </returns>
     public static async Task<ReadOnlyCollection<TransactionRecord>> GetAllTransactionRecordsAsync(this ConsensusClient client, TransactionId transaction, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
@@ -181,29 +191,6 @@ public static class TransactionRecordExtensions
         var records = response.TransactionGetRecord;
         return TransactionRecordExtensions.Create(records.TransactionRecord, records.ChildTransactionRecords, records.DuplicateTransactionRecords);
     }
-    /// <summary>
-    /// Internal Helper function used to wait for consensus regardless of the reported
-    /// transaction outcome. We do not know if the transaction in question has come
-    /// to consensus so we need to get the receipt first (and wait if necessary).
-    /// The Receipt status returned does not matter in this case.
-    /// We may be retrieving a failed record (the status would not equal OK).
-    /// </summary>
-    private static async Task WaitForConsensusReceipt(ConsensusContextStack context, TransactionID transactionId, CancellationToken cancellationToken)
-    {
-        INetworkQuery query = new TransactionGetReceiptQuery { TransactionID = transactionId };
-        await Engine.SubmitMessageAsync(context, query.CreateEnvelope(), query.InstantiateNetworkRequestMethod, shouldRetry, cancellationToken).ConfigureAwait(false);
-
-        static bool shouldRetry(Response response)
-        {
-            return
-                response.TransactionGetReceipt?.Header?.NodeTransactionPrecheckCode == ResponseCodeEnum.Busy ||
-                response.TransactionGetReceipt?.Receipt?.Status == ResponseCodeEnum.Unknown;
-        }
-    }
-    /// <summary>
-    /// Empty Result when no records are returned from the network.
-    /// </summary>
-    private static readonly ReadOnlyCollection<TransactionRecord> EMPTY_RESULT = new List<TransactionRecord>().AsReadOnly();
     /// <summary>
     /// Retrieves the account records associated with an account that are presently
     /// held within the network because they exceeded the receive or send threshold
@@ -230,9 +217,15 @@ public static class TransactionRecordExtensions
     public static async Task<TransactionRecord[]> GetAccountRecordsAsync(this ConsensusClient client, EntityId account, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
     {
         var records = (await Engine.QueryAsync(client, new CryptoGetAccountRecordsQuery { AccountID = new AccountID(account) }, cancellationToken, configure).ConfigureAwait(false)).CryptoGetAccountRecords;
-        if (records.Records.Count != 0)
+        var count = records.Records.Count;
+        if (count != 0)
         {
-            return [.. records.Records.Select(FromProtobuf)];
+            var result = new TransactionRecord[count];
+            for (var i = 0; i < count; i++)
+            {
+                result[i] = FromProtobuf(records.Records[i]);
+            }
+            return result;
         }
         return [];
     }
@@ -245,53 +238,78 @@ public static class TransactionRecordExtensions
     /// <returns>A read-only collection of all transaction records associated with the transaction.</returns>
     internal static ReadOnlyCollection<TransactionRecord> Create(Proto.TransactionRecord? rootRecord, RepeatedField<Proto.TransactionRecord>? childrenRecords, RepeatedField<Proto.TransactionRecord>? failedRecords)
     {
-        var count = (rootRecord != null ? 1 : 0) + (childrenRecords != null ? childrenRecords.Count : 0) + (failedRecords != null ? failedRecords.Count : 0);
+        var childCount = childrenRecords?.Count ?? 0;
+        var failedCount = failedRecords?.Count ?? 0;
+        var count = (rootRecord != null ? 1 : 0) + childCount + failedCount;
         if (count > 0)
         {
-            var result = new List<TransactionRecord>(count);
+            var result = new TransactionRecord[count];
+            var index = 0;
             if (rootRecord is not null)
             {
-                result.Add(FromProtobuf(rootRecord));
+                result[index++] = FromProtobuf(rootRecord);
             }
-            if (childrenRecords is not null && childrenRecords.Count > 0)
+            if (childCount > 0)
             {
                 // The network DOES NOT return the
                 // child transaction ID, so we have
                 // to synthesize it.
-                var nonce = 1;
-                foreach (var entry in childrenRecords)
+                for (var i = 0; i < childCount; i++)
                 {
+                    var entry = childrenRecords![i];
                     var childTransactionId = entry.TransactionID.Clone();
-                    childTransactionId.Nonce = nonce;
-                    result.Add(FromProtobuf(entry));
-                    nonce++;
+                    childTransactionId.Nonce = i + 1;
+                    entry.TransactionID = childTransactionId;
+                    result[index++] = FromProtobuf(entry);
                 }
             }
-            if (failedRecords is not null && failedRecords.Count > 0)
+            if (failedCount > 0)
             {
-                foreach (var entry in failedRecords)
+                for (var i = 0; i < failedCount; i++)
                 {
-                    result.Add(FromProtobuf(entry));
+                    result[index++] = FromProtobuf(failedRecords![i]);
                 }
             }
-            return result.AsReadOnly();
+            return new ReadOnlyCollection<TransactionRecord>(result);
         }
         return EMPTY_RESULT;
     }
 
     internal static ReadOnlyDictionary<EntityId, long> AsStakingRewards(this RepeatedField<AccountAmount> rewards)
     {
-        var results = new Dictionary<EntityId, long>();
-        if (rewards is not null)
+        var count = rewards?.Count ?? 0;
+        if (count == 0)
         {
-            foreach (var xfer in rewards)
-            {
-                var account = xfer.AccountID.AsAddress();
-                results.TryGetValue(account, out long amount);
-                results[account] = amount + xfer.Amount;
-            }
+            return EMPTY_TRANSFERS;
+        }
+        var results = new Dictionary<EntityId, long>(count);
+        for (var i = 0; i < count; i++)
+        {
+            var reward = rewards![i];
+            var account = reward.AccountID.AsAddress();
+            ref var amount = ref CollectionsMarshal.GetValueRefOrAddDefault(results, account, out _);
+            amount += reward.Amount;
         }
         return new ReadOnlyDictionary<EntityId, long>(results);
+    }
+    /// <summary>
+    /// Internal Helper function used to wait for consensus regardless of the reported
+    /// transaction outcome. We do not know if the transaction in question has come
+    /// to consensus so we need to get the receipt first (and wait if necessary).
+    /// The Receipt status returned does not matter in this case.
+    /// We may be retrieving a failed record (the status would not equal OK).
+    /// </summary>
+    private static async Task WaitForConsensusReceipt(ConsensusContextStack context, TransactionID transactionId, CancellationToken cancellationToken)
+    {
+        INetworkQuery query = new TransactionGetReceiptQuery { TransactionID = transactionId };
+        await Engine.SubmitMessageAsync(context, query.CreateEnvelope(), query.InstantiateNetworkRequestMethod, shouldRetry, cancellationToken).ConfigureAwait(false);
+
+        static bool shouldRetry(Response response)
+        {
+            return
+                response.TransactionGetReceipt?.Header?.NodeTransactionPrecheckCode == ResponseCodeEnum.Busy ||
+                response.TransactionGetReceipt?.Receipt?.Status == ResponseCodeEnum.Unknown;
+        }
     }
     private static TransactionRecord FromProtobuf(Proto.TransactionRecord record)
     {

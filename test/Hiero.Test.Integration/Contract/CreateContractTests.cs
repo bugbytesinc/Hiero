@@ -99,7 +99,7 @@ public class CreateContractTests
         {
             await GreetingContract.CreateAsync(fx =>
             {
-                fx.ContractParams.ByteCode = Hex.ToBytes(InitCodeContract.CONTRACT_BYTECODE);
+                fx.ContractParams.ByteCode = Convert.FromHexString(InitCodeContract.CONTRACT_BYTECODE);
             });
         }).ThrowsException();
         var ae = ex as ArgumentException;

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
+using Hiero.Implementation.Parsing;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -22,12 +23,20 @@ public sealed class NullableEvmAddressConverter : JsonConverter<EvmAddress?>
         {
             return null;
         }
-        var value = reader.GetString();
-        if (string.IsNullOrEmpty(value))
+        if (reader.TokenType is not (JsonTokenType.String or JsonTokenType.PropertyName))
         {
             return null;
         }
-        return EvmAddress.TryParse(value, out var evmAddress) ? evmAddress : null;
+        if (reader.HasValueSequence || reader.ValueIsEscaped)
+        {
+            var value = reader.GetString();
+            if (string.IsNullOrEmpty(value))
+            {
+                return null;
+            }
+            return EvmAddressParser.TryParse(value, out var evmAddress) ? evmAddress : null;
+        }
+        return EvmAddressParser.TryParse(reader.ValueSpan, out var spanAddress) ? spanAddress : null;
     }
     /// <inheritdoc />
     public override void Write(Utf8JsonWriter writer, EvmAddress? evmAddress, JsonSerializerOptions options)
@@ -38,9 +47,13 @@ public sealed class NullableEvmAddressConverter : JsonConverter<EvmAddress?>
         }
         else
         {
-            writer.WriteStringValue(evmAddress.Bytes.IsEmpty ?
-                "0x0000000000000000000000000000000000000000" :
-                evmAddress.ToString());
+            Span<char> buffer = stackalloc char[42];
+            if (evmAddress.TryFormat(buffer, out var charsWritten, default, default))
+            {
+                writer.WriteStringValue(buffer[..charsWritten]);
+                return;
+            }
+            writer.WriteStringValue(evmAddress.ToString());
         }
     }
 }

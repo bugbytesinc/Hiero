@@ -15,13 +15,14 @@ namespace Hiero.Mirror;
 public class TransactionDetailData : TransactionData
 {
     /// <summary>
-    /// Assessed custom fees for transferring tokens.
+    /// The custom (royalty) fees the network assessed against this
+    /// transaction. Null when no custom fees applied.
     /// </summary>
     [JsonPropertyName("assessed_custom_fees")]
     public AssessedFeeData[]? AssessedFees { get; set; }
     /// <summary>
-    /// List of Assets transferred as a part of this
-    /// transaction.
+    /// The individual NFT (asset) transfers carried out by this
+    /// transaction. Null when the transaction moved no NFTs.
     /// </summary>
     [JsonPropertyName("nft_transfers")]
     public AssetTransferData[]? AssetTransfers { get; set; }
@@ -89,9 +90,10 @@ public static class TransactionDetailDataExtensions
     /// </returns>
     public static async Task<TransactionDetailData?> GetTransactionAsync(this MirrorRestClient client, ConsensusTimeStamp consensus)
     {
-        var path = GenerateInitialPath($"transactions", [new PageLimit(100), TimestampFilter.Is(consensus)]);
+        var path = GenerateInitialPath("transactions", new PageLimit(100), TimestampFilter.Is(consensus));
         var list = await client.GetSingleItemAsync(path, MirrorJsonContext.Default.TransactionDetailByIdResponse).ConfigureAwait(false);
-        return list?.Transactions?.FirstOrDefault();
+        var transactions = list?.Transactions;
+        return transactions is { Length: > 0 } ? transactions[0] : null;
     }
     /// <summary>
     /// Enumerates transactions across the network. Pair with
@@ -120,7 +122,7 @@ public static class TransactionDetailDataExtensions
     /// </returns>
     public static IAsyncEnumerable<TransactionDetailData> GetTransactionsAsync(this MirrorRestClient client, params IMirrorQueryParameter[] filters)
     {
-        var path = GenerateInitialPath($"transactions", [new PageLimit(100), .. filters]);
+        var path = GenerateInitialPath("transactions", new PageLimit(100), filters);
         return client.GetPagedItemsAsync<TransactionDetailDataPage, TransactionDetailData>(path, MirrorJsonContext.Default.TransactionDetailDataPage);
     }
 }

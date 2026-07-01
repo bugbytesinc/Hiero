@@ -1,4 +1,6 @@
 ﻿// SPDX-License-Identifier: Apache-2.0
+using Hiero.Implementation.Formatting;
+using Hiero.Implementation.Parsing;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -13,21 +15,17 @@ public sealed class TransactionIdMirrorConverter : JsonConverter<TransactionId>
     /// <inheritdoc />
     public override TransactionId? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        var valueAsString = reader.GetString();
-        if (!string.IsNullOrWhiteSpace(valueAsString))
+        if (reader.TokenType is not (JsonTokenType.String or JsonTokenType.PropertyName))
         {
-            var parts = valueAsString.Split('-');
-            if (parts.Length > 1 &&
-                parts.Length < 4 &&
-                EntityId.TryParseShardRealmNum(parts[0], out var address) &&
-                long.TryParse(parts[1], out var seconds) &&
-                int.TryParse((parts.Length == 3 ? parts[2] : null) ?? "0", out var nanos))
-            {
-                return new TransactionId(address, seconds, nanos);
-            }
+            return TransactionId.None;
         }
-        return TransactionId.None;
+        if (reader.HasValueSequence || reader.ValueIsEscaped)
+        {
+            return TransactionIdMirrorParser.TryParse(reader.GetString(), out var id) ? id : TransactionId.None;
+        }
+        return TransactionIdMirrorParser.TryParse(reader.ValueSpan, out var transactionId) ? transactionId : TransactionId.None;
     }
+
     /// <inheritdoc />
     public override void Write(Utf8JsonWriter writer, TransactionId txId, JsonSerializerOptions options)
     {
@@ -37,7 +35,15 @@ public sealed class TransactionIdMirrorConverter : JsonConverter<TransactionId>
         }
         else
         {
-            writer.WriteStringValue($"{txId.Payer}-{txId.ValidStartSeconds}-{txId.ValidStartNanos:000000000}");
+            Span<byte> buffer = stackalloc byte[96];
+            if (TransactionIdFormatter.TryFormat(txId, TransactionIdFormatStyle.Mirror, buffer, out var bytesWritten))
+            {
+                writer.WriteStringValue(buffer[..bytesWritten]);
+            }
+            else
+            {
+                writer.WriteStringValue(TransactionIdFormatter.Format(txId, TransactionIdFormatStyle.Mirror));
+            }
         }
     }
 }

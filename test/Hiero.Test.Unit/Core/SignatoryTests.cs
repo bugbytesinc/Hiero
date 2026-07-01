@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 #pragma warning disable CS8600, CS8602, CS8604, CS8625 // Null assignments and dereferences are intentional in these tests
 using Hiero.Test.Helpers;
+using Org.BouncyCastle.Asn1.Sec;
 using Org.BouncyCastle.Crypto.Parameters;
+using Org.BouncyCastle.Math;
+using Org.BouncyCastle.Pkcs;
 using Org.BouncyCastle.Security;
 using Proto;
 
@@ -54,8 +57,8 @@ public class SignatoryTests
         var (_, privateKey) = Generator.Secp256k1KeyPair();
         var unencoded = ((ECPrivateKeyParameters)PrivateKeyFactory.CreateKey(privateKey.ToArray())).D.ToByteArray();
 
-        var sig1 = new Signatory(KeyType.ECDSASecp256K1, Hex.ToBytes(Hex.FromBytes(unencoded)));
-        var sig2 = new Signatory(KeyType.ECDSASecp256K1, Hex.ToBytes(Hex.FromBytes(privateKey)));
+        var sig1 = new Signatory(KeyType.ECDSASecp256K1, Convert.FromHexString(Convert.ToHexStringLower(unencoded)));
+        var sig2 = new Signatory(KeyType.ECDSASecp256K1, Convert.FromHexString(Convert.ToHexStringLower(privateKey.Span)));
         await Assert.That(sig1).IsEqualTo(sig2);
     }
 
@@ -87,6 +90,20 @@ public class SignatoryTests
             new Signatory(KeyType.ECDSASecp256K1, invalidKey);
         });
         await Assert.That(exception.Message).StartsWith("The private key was not provided in a recognizable ECDSA Secp256K1 format.");
+    }
+
+    [Test]
+    public async Task Non_Secp256K1_EC_Private_Key_Throws_Error()
+    {
+        var curve = SecNamedCurves.GetByName("secp256r1");
+        var domain = new ECDomainParameters(curve.Curve, curve.G, curve.N, curve.H);
+        var privateKey = new ECPrivateKeyParameters(BigInteger.ValueOf(7), domain);
+        var privateKeyBytes = PrivateKeyInfoFactory.CreatePrivateKeyInfo(privateKey).GetDerEncoded();
+        var exception = Assert.Throws<ArgumentOutOfRangeException>(() =>
+        {
+            new Signatory(KeyType.ECDSASecp256K1, privateKeyBytes);
+        });
+        await Assert.That(exception.Message).StartsWith("This is not an ECDSA Secp256K1 private key.");
     }
 
     [Test]
@@ -174,6 +191,92 @@ public class SignatoryTests
     }
 
     [Test]
+    public async Task Deterministic_Single_Key_Signatory_Equality_Per_Key_Type()
+    {
+        var (_, ed25519PrivateKey1) = Generator.Ed25519KeyPair();
+        var (_, ed25519PrivateKey2) = Generator.Ed25519KeyPair();
+        var (_, ecdsaPrivateKey1) = Generator.Secp256k1KeyPair();
+        var (_, ecdsaPrivateKey2) = Generator.Secp256k1KeyPair();
+
+        await AssertSignatoriesEqual(new Signatory(ed25519PrivateKey1), new Signatory(ed25519PrivateKey1));
+        await AssertSignatoriesNotEqual(new Signatory(ed25519PrivateKey1), new Signatory(ed25519PrivateKey2));
+
+        await AssertSignatoriesEqual(new Signatory(ecdsaPrivateKey1), new Signatory(ecdsaPrivateKey1));
+        await AssertSignatoriesNotEqual(new Signatory(ecdsaPrivateKey1), new Signatory(ecdsaPrivateKey2));
+
+        await AssertSignatoriesNotEqual(new Signatory(ed25519PrivateKey1), new Signatory(ecdsaPrivateKey1));
+    }
+
+    [Test]
+    public async Task Deterministic_Typed_And_Implicit_Signatory_Equality_Per_Key_Type()
+    {
+        var (_, ed25519PrivateKey1) = Generator.Ed25519KeyPair();
+        var (_, ed25519PrivateKey2) = Generator.Ed25519KeyPair();
+        var (_, ecdsaPrivateKey1) = Generator.Secp256k1KeyPair();
+        var (_, ecdsaPrivateKey2) = Generator.Secp256k1KeyPair();
+
+        await AssertSignatoriesEqual(
+            new Signatory(KeyType.Ed25519, ed25519PrivateKey1),
+            new Signatory(ed25519PrivateKey1));
+
+        await AssertSignatoriesNotEqual(
+            new Signatory(KeyType.Ed25519, ed25519PrivateKey1),
+            new Signatory(KeyType.Ed25519, ed25519PrivateKey2));
+
+        await AssertSignatoriesEqual(
+            new Signatory(KeyType.ECDSASecp256K1, ecdsaPrivateKey1),
+            new Signatory(ecdsaPrivateKey1));
+
+        await AssertSignatoriesNotEqual(
+            new Signatory(KeyType.ECDSASecp256K1, ecdsaPrivateKey1),
+            new Signatory(KeyType.ECDSASecp256K1, ecdsaPrivateKey2));
+    }
+
+    [Test]
+    public async Task Deterministic_Ordered_Multi_Key_Signatory_Equality()
+    {
+        var (_, ed25519PrivateKey1) = Generator.Ed25519KeyPair();
+        var (_, ed25519PrivateKey2) = Generator.Ed25519KeyPair();
+        var (_, ed25519PrivateKey3) = Generator.Ed25519KeyPair();
+        var (_, ecdsaPrivateKey1) = Generator.Secp256k1KeyPair();
+        var (_, ecdsaPrivateKey2) = Generator.Secp256k1KeyPair();
+        var (_, ecdsaPrivateKey3) = Generator.Secp256k1KeyPair();
+
+        await AssertSignatoriesEqual(
+            new Signatory(new Signatory(ed25519PrivateKey1), new Signatory(ecdsaPrivateKey1)),
+            new Signatory(new Signatory(ed25519PrivateKey1), new Signatory(ecdsaPrivateKey1)));
+
+        await AssertSignatoriesNotEqual(
+            new Signatory(new Signatory(ed25519PrivateKey1), new Signatory(ecdsaPrivateKey1)),
+            new Signatory(new Signatory(ecdsaPrivateKey1), new Signatory(ed25519PrivateKey1)));
+
+        await AssertSignatoriesNotEqual(
+            new Signatory(new Signatory(ed25519PrivateKey1), new Signatory(ed25519PrivateKey2)),
+            new Signatory(new Signatory(ed25519PrivateKey1), new Signatory(ed25519PrivateKey3)));
+
+        await AssertSignatoriesNotEqual(
+            new Signatory(new Signatory(ecdsaPrivateKey1), new Signatory(ecdsaPrivateKey2)),
+            new Signatory(new Signatory(ecdsaPrivateKey1), new Signatory(ecdsaPrivateKey3)));
+    }
+
+    [Test]
+    public async Task Deterministic_Nested_Multi_Key_Signatory_Equality()
+    {
+        var (_, ed25519PrivateKey1) = Generator.Ed25519KeyPair();
+        var (_, ed25519PrivateKey2) = Generator.Ed25519KeyPair();
+        var (_, ed25519PrivateKey3) = Generator.Ed25519KeyPair();
+        var (_, ecdsaPrivateKey1) = Generator.Secp256k1KeyPair();
+
+        await AssertSignatoriesEqual(
+            new Signatory(new Signatory(ed25519PrivateKey1), new Signatory(new Signatory(ecdsaPrivateKey1), new Signatory(ed25519PrivateKey2))),
+            new Signatory(new Signatory(ed25519PrivateKey1), new Signatory(new Signatory(ecdsaPrivateKey1), new Signatory(ed25519PrivateKey2))));
+
+        await AssertSignatoriesNotEqual(
+            new Signatory(new Signatory(ed25519PrivateKey1), new Signatory(new Signatory(ecdsaPrivateKey1), new Signatory(ed25519PrivateKey2))),
+            new Signatory(new Signatory(ed25519PrivateKey1), new Signatory(new Signatory(ecdsaPrivateKey1), new Signatory(ed25519PrivateKey3))));
+    }
+
+    [Test]
     public async Task Equivalent_Complex_Signatories_Are_Considered_Equal()
     {
         Func<IInvoice, Task> callback = ctx => { return Task.FromResult(0); };
@@ -215,7 +318,7 @@ public class SignatoryTests
     [Test]
     public async Task Can_Sign_With_Ed25519_DER_Key()
     {
-        var derPrivateKey = Hex.ToBytes("302e020100300506032b657004220420a89f2eecc02118bc7f6205b11315e0e0a185a4170fa88f28990b5db93154055a");
+        var derPrivateKey = Convert.FromHexString("302e020100300506032b657004220420a89f2eecc02118bc7f6205b11315e0e0a185a4170fa88f28990b5db93154055a");
 
         var signatory = new Signatory(derPrivateKey);
         var message = Generator.Ed25519KeyPair().publicKey;
@@ -225,13 +328,13 @@ public class SignatoryTests
         var sigPair = sigMap.SigPair[0];
         await Assert.That(sigPair).IsNotNull();
         await Assert.That(sigPair.SignatureCase).IsEqualTo(SignaturePair.SignatureOneofCase.Ed25519);
-        await Assert.That(Hex.FromBytes(sigPair.PubKeyPrefix.Memory)).IsEqualTo("b9732ad628cb6c28da0c52a3123af7f2725e7a4df53c36a7fc357334ff6dba37");
+        await Assert.That(Convert.ToHexStringLower(sigPair.PubKeyPrefix.Memory.Span)).IsEqualTo("b9732ad628cb6c28da0c52a3123af7f2725e7a4df53c36a7fc357334ff6dba37");
     }
 
     [Test]
     public async Task Ambiguous_Raw_32_Byte_Key_Throws_Error()
     {
-        var derPrivateKey = Hex.ToBytes("302e020100300506032b657004220420a89f2eecc02118bc7f6205b11315e0e0a185a4170fa88f28990b5db93154055a");
+        var derPrivateKey = Convert.FromHexString("302e020100300506032b657004220420a89f2eecc02118bc7f6205b11315e0e0a185a4170fa88f28990b5db93154055a");
         var rawPrivateKey = derPrivateKey[^32..];
         var exception = Assert.Throws<ArgumentOutOfRangeException>(() =>
         {
@@ -243,7 +346,7 @@ public class SignatoryTests
     [Test]
     public async Task Can_Sign_With_Explicit_Ed25519_Raw_32_Byte_Key()
     {
-        var derPrivateKey = Hex.ToBytes("302e020100300506032b657004220420a89f2eecc02118bc7f6205b11315e0e0a185a4170fa88f28990b5db93154055a");
+        var derPrivateKey = Convert.FromHexString("302e020100300506032b657004220420a89f2eecc02118bc7f6205b11315e0e0a185a4170fa88f28990b5db93154055a");
         var rawPrivateKey = derPrivateKey[^32..];
 
         var signatory = new Signatory(KeyType.Ed25519, rawPrivateKey);
@@ -254,9 +357,9 @@ public class SignatoryTests
         var sigPair = sigMap.SigPair[0];
         await Assert.That(sigPair).IsNotNull();
         await Assert.That(sigPair.SignatureCase).IsEqualTo(SignaturePair.SignatureOneofCase.Ed25519);
-        await Assert.That(Hex.FromBytes(sigPair.PubKeyPrefix.Memory)).IsEqualTo("b9732ad628cb6c28da0c52a3123af7f2725e7a4df53c36a7fc357334ff6dba37");
+        await Assert.That(Convert.ToHexStringLower(sigPair.PubKeyPrefix.Memory.Span)).IsEqualTo("b9732ad628cb6c28da0c52a3123af7f2725e7a4df53c36a7fc357334ff6dba37");
 
-        var exported = Hex.FromBytes(signatory.GetEndorsements()[0].ToBytes(KeyFormat.Raw));
+        var exported = Convert.ToHexStringLower(signatory.GetEndorsements()[0].ToBytes(KeyFormat.Raw).Span);
         await Assert.That(exported).IsEqualTo("b9732ad628cb6c28da0c52a3123af7f2725e7a4df53c36a7fc357334ff6dba37");
     }
 
@@ -274,14 +377,14 @@ public class SignatoryTests
         var sigPair = sigMap.SigPair[0];
         await Assert.That(sigPair).IsNotNull();
         await Assert.That(sigPair.SignatureCase).IsEqualTo(SignaturePair.SignatureOneofCase.ECDSASecp256K1);
-        await Assert.That(Hex.FromBytes(sigPair.PubKeyPrefix.Memory)).IsEqualTo(Hex.FromBytes(compressed));
+        await Assert.That(Convert.ToHexStringLower(sigPair.PubKeyPrefix.Memory.Span)).IsEqualTo(Convert.ToHexStringLower(compressed));
     }
 
     [Test]
     public async Task Can_Sign_With_Secp256K1_Hedera_DER_Key()
     {
-        var derPrivateKey = Hex.ToBytes("3030020100300706052b8104000a042204200ea81572b0fd122cc9cb90cc57506a2723a2fe1fd7e69c0f26b3c6b6917c60c3");
-        var compressed = Hex.ToBytes("02cd51c7f285ffc6c158a4aa866eb6827a61cbe178288df850f26283103a23cc1e");
+        var derPrivateKey = Convert.FromHexString("3030020100300706052b8104000a042204200ea81572b0fd122cc9cb90cc57506a2723a2fe1fd7e69c0f26b3c6b6917c60c3");
+        var compressed = Convert.FromHexString("02cd51c7f285ffc6c158a4aa866eb6827a61cbe178288df850f26283103a23cc1e");
 
         var signatory = new Signatory(derPrivateKey);
         var message = Generator.Ed25519KeyPair().publicKey;
@@ -291,13 +394,13 @@ public class SignatoryTests
         var sigPair = sigMap.SigPair[0];
         await Assert.That(sigPair).IsNotNull();
         await Assert.That(sigPair.SignatureCase).IsEqualTo(SignaturePair.SignatureOneofCase.ECDSASecp256K1);
-        await Assert.That(Hex.FromBytes(sigPair.PubKeyPrefix.Memory)).IsEqualTo(Hex.FromBytes(compressed));
+        await Assert.That(Convert.ToHexStringLower(sigPair.PubKeyPrefix.Memory.Span)).IsEqualTo(Convert.ToHexStringLower(compressed));
     }
 
     [Test]
     public async Task Ambiguous_Secp256K1_Raw_32_Byte_Key_Throws_Error()
     {
-        var rawPrivateKey = Hex.ToBytes("aa55060f559d5454f596c4b5676e61840add416a49fddab7b7676f8e6899f3e7");
+        var rawPrivateKey = Convert.FromHexString("aa55060f559d5454f596c4b5676e61840add416a49fddab7b7676f8e6899f3e7");
         var exception = Assert.Throws<ArgumentOutOfRangeException>(() =>
         {
             new Signatory(rawPrivateKey);
@@ -308,7 +411,7 @@ public class SignatoryTests
     [Test]
     public async Task Can_Sign_With_Explicit_Secp256K1_Raw_32_Byte_Key()
     {
-        var rawPrivateKey = Hex.ToBytes("7696d163713ef671481340aa17c825738753fd67b81f9f7e42e4a95c59431cb7");
+        var rawPrivateKey = Convert.FromHexString("7696d163713ef671481340aa17c825738753fd67b81f9f7e42e4a95c59431cb7");
 
         var signatory = new Signatory(KeyType.ECDSASecp256K1, rawPrivateKey);
         var message = Generator.Ed25519KeyPair().publicKey;
@@ -318,9 +421,9 @@ public class SignatoryTests
         var sigPair = sigMap.SigPair[0];
         await Assert.That(sigPair).IsNotNull();
         await Assert.That(sigPair.SignatureCase).IsEqualTo(SignaturePair.SignatureOneofCase.ECDSASecp256K1);
-        await Assert.That(Hex.FromBytes(sigPair.PubKeyPrefix.Memory)).IsEqualTo("032ac21b3fb74a014c3473c51153c590c75fbd969b4b007830bccc7a99c489ab88");
+        await Assert.That(Convert.ToHexStringLower(sigPair.PubKeyPrefix.Memory.Span)).IsEqualTo("032ac21b3fb74a014c3473c51153c590c75fbd969b4b007830bccc7a99c489ab88");
 
-        var exported = Hex.FromBytes(signatory.GetEndorsements()[0].ToBytes(KeyFormat.Raw));
+        var exported = Convert.ToHexStringLower(signatory.GetEndorsements()[0].ToBytes(KeyFormat.Raw).Span);
         await Assert.That(exported).IsEqualTo("032ac21b3fb74a014c3473c51153c590c75fbd969b4b007830bccc7a99c489ab88");
     }
 
@@ -494,5 +597,19 @@ public class SignatoryTests
         var signatory = new Signatory(callback);
         var endorsements = signatory.GetEndorsements();
         await Assert.That(endorsements.Count).IsEqualTo(0);
+    }
+
+    private static async Task AssertSignatoriesEqual(Signatory left, Signatory right)
+    {
+        await Assert.That(left).IsEqualTo(right);
+        await Assert.That(left == right).IsTrue();
+        await Assert.That(left != right).IsFalse();
+    }
+
+    private static async Task AssertSignatoriesNotEqual(Signatory left, Signatory right)
+    {
+        await Assert.That(left).IsNotEqualTo(right);
+        await Assert.That(left == right).IsFalse();
+        await Assert.That(left != right).IsTrue();
     }
 }

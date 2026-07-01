@@ -25,8 +25,8 @@ internal class AccountBalanceDataPage : Page<AccountBalanceData>
     /// <returns>
     /// Enumerator for the TokenBalance objects in the list.
     /// </returns>
-    public override IEnumerable<AccountBalanceData> GetItems()
+    public override AccountBalanceData[] GetItems()
     {
-        return Balances ?? Array.Empty<AccountBalanceData>();
+        return Balances ?? [];
     }
 }

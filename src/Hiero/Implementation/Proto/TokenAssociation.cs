@@ -8,12 +8,13 @@ internal static class TokenAssociationExtensions
 {
     internal static IReadOnlyList<Association> AsAssociationList(this RepeatedField<TokenAssociation> list)
     {
-        if (list is { Count: > 0 })
+        var count = list?.Count ?? 0;
+        if (count > 0)
         {
-            var result = new List<Association>(list.Count);
-            for (int i = 0; i < list.Count; i++)
+            var result = new Association[count];
+            for (var i = 0; i < count; i++)
             {
-                result.Add(new Association(list[i]));
+                result[i] = new Association(list![i]);
             }
             return result;
         }

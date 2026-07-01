@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
+using Hiero.Mirror.Implementation;
+
 namespace Hiero.Mirror.Filters;
 /// <summary>
 /// Predicate filter on the <c>from</c> query parameter of the
@@ -32,5 +34,5 @@ public sealed class EvmSenderFilter : IMirrorFilter
     /// </summary>
     /// <param name="sender">The EVM sender address.</param>
     public static EvmSenderFilter Is(EvmAddress sender) =>
-        new($"0x{Hex.FromBytes(sender.Bytes)}");
+        new(MirrorHexFormatter.FormatPrefixed(sender.Bytes));
 }

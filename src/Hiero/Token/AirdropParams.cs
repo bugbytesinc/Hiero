@@ -26,12 +26,12 @@ public sealed class AirdropParams : TransactionParams<TransactionReceipt>, INetw
     /// Each entry specifies the token, the sending account (negative amount),
     /// and the receiving account (positive amount). Entries must balance per token.
     /// </summary>
-    public IEnumerable<TokenTransfer>? TokenTransfers { get; set; }
+    public IReadOnlyList<TokenTransfer>? TokenTransfers { get; set; }
     /// <summary>
     /// A list of NFT transfers for the airdrop.
     /// Each entry specifies the NFT, the sending account, and the receiving account.
     /// </summary>
-    public IEnumerable<NftTransfer>? NftTransfers { get; set; }
+    public IReadOnlyList<NftTransfer>? NftTransfers { get; set; }
     /// <summary>
     /// Additional private key, keys or signing callback method
     /// required to authorize the airdrop. Typically matches the
@@ -52,9 +52,13 @@ public sealed class AirdropParams : TransactionParams<TransactionReceipt>, INetw
         var result = new TokenAirdropTransactionBody();
         if (TokenTransfers is not null)
         {
-            var netTransfers = new Dictionary<EntityId, (long sum, TokenTransferList list)>();
-            foreach (var xfer in TokenTransfers)
+            var tokenTransferCount = TokenTransfers.Count;
+            var netTransfers = tokenTransferCount > 0
+                ? new Dictionary<EntityId, (long sum, TokenTransferList list)>(tokenTransferCount)
+                : [];
+            for (var i = 0; i < tokenTransferCount; i++)
             {
+                var xfer = TokenTransfers[i];
                 if (xfer.Token.IsNullOrNone())
                 {
                     throw new ArgumentException("Token", "The list of token transfers cannot contain a null or empty Token value.");
@@ -78,6 +82,10 @@ public sealed class AirdropParams : TransactionParams<TransactionReceipt>, INetw
                 entry.sum += xfer.Amount;
                 entry.list.Transfers.Add(new AccountAmount(xfer.Account, xfer.Amount, xfer.Delegated));
             }
+            if (result.TokenTransfers.Capacity < netTransfers.Count)
+            {
+                result.TokenTransfers.Capacity = netTransfers.Count;
+            }
             foreach (var record in netTransfers)
             {
                 if (record.Value.sum != 0)
@@ -89,9 +97,13 @@ public sealed class AirdropParams : TransactionParams<TransactionReceipt>, INetw
         }
         if (NftTransfers is not null)
         {
-            var nftXferList = new Dictionary<Nft, Proto.NftTransfer>();
-            foreach (var xfer in NftTransfers)
+            var nftTransferCount = NftTransfers.Count;
+            var nftXferList = nftTransferCount > 0
+                ? new Dictionary<Nft, Proto.NftTransfer>(nftTransferCount)
+                : [];
+            for (var i = 0; i < nftTransferCount; i++)
             {
+                var xfer = NftTransfers[i];
                 if (xfer.Nft.IsNullOrNone())
                 {
                     throw new ArgumentException("Nft", "The list of NFT transfers cannot contain a null or empty NFT address.");
@@ -115,7 +127,9 @@ public sealed class AirdropParams : TransactionParams<TransactionReceipt>, INetw
                     throw new ArgumentException(nameof(xfer.Nft), "The list of NFT transfers cannot contain the same NFT in multiple transfers at once.");
                 }
             }
-            var netNftTransfers = new Dictionary<EntityId, TokenTransferList>();
+            var netNftTransfers = nftXferList.Count > 0
+                ? new Dictionary<EntityId, TokenTransferList>(nftXferList.Count)
+                : [];
             foreach (var record in nftXferList)
             {
                 ref var entry = ref CollectionsMarshal.GetValueRefOrAddDefault(netNftTransfers, record.Key, out bool exists)!;

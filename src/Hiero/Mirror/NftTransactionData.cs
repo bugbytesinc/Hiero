@@ -99,7 +99,7 @@ public static class NftTransactionDataExtensions
     /// </returns>
     public static IAsyncEnumerable<NftTransactionData> GetNftTransactionHistoryAsync(this MirrorRestClient client, Nft nft, params IMirrorQueryParameter[] filters)
     {
-        var path = GenerateInitialPath($"tokens/{nft.Token}/nfts/{nft.SerialNumber}/transactions", [new PageLimit(100), .. filters]);
+        var path = GenerateInitialPath($"tokens/{nft.Token.ToMirrorString()}/nfts/{nft.SerialNumber}/transactions", new PageLimit(100), filters);
         return client.GetPagedItemsAsync<NftTransactionDataPage, NftTransactionData>(path, MirrorJsonContext.Default.NftTransactionDataPage);
     }
 }

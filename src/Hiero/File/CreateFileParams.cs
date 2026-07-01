@@ -25,7 +25,7 @@ public sealed class CreateFileParams : TransactionParams<FileReceipt>, INetworkP
     /// otherwise manipulating the contents of this file.  Only one key
     /// is required to sign the transaction to delete the file.
     /// </summary>
-    public Endorsement[] Endorsements { get; set; } = default!;
+    public IReadOnlyList<Endorsement> Endorsements { get; set; } = default!;
     /// <summary>
     /// The initial contents of the file.
     /// </summary>
@@ -59,7 +59,7 @@ public sealed class CreateFileParams : TransactionParams<FileReceipt>, INetworkP
         {
             ExpirationTime = new Timestamp(Expiration),
             Keys = new KeyList(Endorsements),
-            Contents = ByteString.CopyFrom(Contents.ToArray()),
+            Contents = ByteString.CopyFrom(Contents.Span),
             Memo = Memo ?? ""
         };
     }

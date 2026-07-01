@@ -70,7 +70,7 @@ public static class NetworkSupplyDataExtensions
         {
             return client.GetSingleItemAsync("network/supply", MirrorJsonContext.Default.NetworkSupplyData);
         }
-        var path = GenerateInitialPath("network/supply", [TimestampFilter.OnOrBefore(consensus.Value)]);
+        var path = GenerateInitialPath("network/supply", TimestampFilter.OnOrBefore(consensus.Value));
         return client.GetSingleItemAsync(path, MirrorJsonContext.Default.NetworkSupplyData);
     }
 }

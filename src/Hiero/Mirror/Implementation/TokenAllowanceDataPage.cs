@@ -18,8 +18,8 @@ internal class TokenAllowanceDataPage : Page<TokenAllowanceData>
     /// <returns>
     /// An enumerator listing the token allowance records in the list.
     /// </returns>
-    public override IEnumerable<TokenAllowanceData> GetItems()
+    public override TokenAllowanceData[] GetItems()
     {
-        return TokenAllowances ?? Array.Empty<TokenAllowanceData>();
+        return TokenAllowances ?? [];
     }
 }

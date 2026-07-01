@@ -22,11 +22,11 @@ public sealed class MintNftParams : TransactionParams<NftMintReceipt>, INetworkP
     /// </summary>
     public EntityId Token { get; set; } = default!;
     /// <summary>
-    /// An array of Metadata, to be associated with the newly
+    /// The list of Metadata entries, to be associated with the newly
     /// created NFTs.  Each metadata entry will correspond to
     /// a newly created NFT.  The metadata value may be empty.
     /// </summary>
-    public IEnumerable<ReadOnlyMemory<byte>> Metadata { get; set; } = default!;
+    public IReadOnlyList<ReadOnlyMemory<byte>> Metadata { get; set; } = default!;
     /// <summary>
     /// Additional private key, keys or signing callback method 
     /// required to authorize the creation.  Typically matches the
@@ -52,11 +52,24 @@ public sealed class MintNftParams : TransactionParams<NftMintReceipt>, INetworkP
     /// </returns>
     INetworkTransaction INetworkParams<NftMintReceipt>.CreateNetworkTransaction()
     {
+        if (Metadata is null)
+        {
+            throw new ArgumentNullException(nameof(Metadata), "The metadata list cannot be null.");
+        }
         var result = new TokenMintTransactionBody
         {
             Token = new TokenID(Token)
         };
-        result.Metadata.AddRange(Metadata.Select(m => ByteString.CopyFrom(m.Span)));
+        var metadataItems = result.Metadata;
+        var count = Metadata.Count;
+        if (metadataItems.Capacity < count)
+        {
+            metadataItems.Capacity = count;
+        }
+        for (var i = 0; i < count; i++)
+        {
+            metadataItems.Add(ByteString.CopyFrom(Metadata[i].Span));
+        }
         return result;
     }
     NftMintReceipt INetworkParams<NftMintReceipt>.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)

@@ -126,7 +126,7 @@ public static class BlockDataExtensions
         {
             throw new ArgumentOutOfRangeException(nameof(blockhash), "Block hash must be 32 bytes (EVM) or 48 bytes (Hedera SHA-384).");
         }
-        return client.GetSingleItemAsync($"blocks/0x{Hex.FromBytes(blockhash.Span)}", MirrorJsonContext.Default.BlockData);
+        return client.GetSingleItemAsync($"blocks/{MirrorHexFormatter.FormatPrefixed(blockhash.Span)}", MirrorJsonContext.Default.BlockData);
     }
     /// <summary>
     /// Retrieves the most recent block observed by the mirror node via
@@ -143,7 +143,8 @@ public static class BlockDataExtensions
     public static async Task<BlockData?> GetLatestBlockAsync(this MirrorRestClient client)
     {
         var list = await client.GetSingleItemAsync("blocks?limit=1&order=desc", MirrorJsonContext.Default.BlockDataPage).ConfigureAwait(false);
-        return list?.Blocks?.FirstOrDefault();
+        var blocks = list?.Blocks;
+        return blocks is { Length: > 0 } ? blocks[0] : null;
     }
     /// <summary>
     /// Retrieves the latest known block before the given consensus timestamp.
@@ -155,9 +156,10 @@ public static class BlockDataExtensions
     /// <returns>Block info for the latest block before the given timestamp</returns>
     public static async Task<BlockData?> GetLatestBlockBeforeConsensusAsync(this MirrorRestClient client, ConsensusTimeStamp consensus)
     {
-        var path = GenerateInitialPath($"blocks", [new PageLimit(1), OrderBy.Descending, TimestampFilter.OnOrBefore(consensus)]);
+        var path = GenerateInitialPath("blocks", new PageLimit(1), OrderBy.Descending, TimestampFilter.OnOrBefore(consensus));
         var list = await client.GetSingleItemAsync(path, MirrorJsonContext.Default.BlockDataPage).ConfigureAwait(false);
-        return list?.Blocks?.FirstOrDefault();
+        var blocks = list?.Blocks;
+        return blocks is { Length: > 0 } ? blocks[0] : null;
     }
     /// <summary>
     /// Enumerates blocks from the chain. Default ordering is
@@ -179,7 +181,7 @@ public static class BlockDataExtensions
     /// </returns>
     public static IAsyncEnumerable<BlockData> GetBlocksAsync(this MirrorRestClient client, params IMirrorQueryParameter[] filters)
     {
-        var path = GenerateInitialPath("blocks", [new PageLimit(100), .. filters]);
+        var path = GenerateInitialPath("blocks", new PageLimit(100), filters);
         return client.GetPagedItemsAsync<BlockDataPage, BlockData>(path, MirrorJsonContext.Default.BlockDataPage);
     }
 }

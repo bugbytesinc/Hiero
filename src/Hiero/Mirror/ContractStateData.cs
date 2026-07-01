@@ -31,7 +31,7 @@ namespace Hiero.Mirror
         /// Timestamp when data was retrieved.
         /// </summary>
         [JsonPropertyName("timestamp")]
-        public ConsensusTimeStamp StakePeriodStart { get; set; }
+        public ConsensusTimeStamp Timestamp { get; set; }
         /// <summary>
         /// Slot ID
         /// </summary>
@@ -79,8 +79,9 @@ public static class ContractStateDataExtensions
     /// </returns>
     public static async Task<ContractStateData?> GetContractStateAsync(this MirrorRestClient client, EntityId contract, BigInteger position, IMirrorQueryParameter[] filters)
     {
-        var path = GenerateInitialPath($"contracts/{MirrorFormat(contract)}/state", [SlotFilter.Is(position), .. filters]);
+        var path = GenerateInitialPath($"contracts/{contract.ToMirrorString()}/state", SlotFilter.Is(position), filters);
         var list = await client.GetSingleItemAsync(path, MirrorJsonContext.Default.ContractStateDataPage).ConfigureAwait(false);
-        return list?.States?.FirstOrDefault();
+        var states = list?.States;
+        return states is { Length: > 0 } ? states[0] : null;
     }
 }

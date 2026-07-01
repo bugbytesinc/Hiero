@@ -19,10 +19,7 @@ internal static class HookCreationDetailsExtensions
         var evmHook = new EvmHook { Spec = spec };
         if (metadata.InitialStorage is not null)
         {
-            foreach (var update in metadata.InitialStorage.ToProto())
-            {
-                evmHook.StorageUpdates.Add(update);
-            }
+            metadata.InitialStorage.AddToProto(evmHook.StorageUpdates);
         }
         var details = new HookCreationDetails
         {

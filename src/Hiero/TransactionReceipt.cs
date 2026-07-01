@@ -134,7 +134,7 @@ public static class TransactionReceiptExtensions
         {
             throw new ConsensusException("Network failed to respond to request for a transaction receipt, it is too busy. It is possible the network may still reach consensus for this transaction.", transactionId.AsTransactionId(), (ResponseCode)responseCode);
         }
-        return createList(transactionId, response.TransactionGetReceipt.Receipt, response.TransactionGetReceipt.ChildTransactionReceipts, response.TransactionGetReceipt.DuplicateTransactionReceipts);
+        return Create(transactionId, response.TransactionGetReceipt.Receipt, response.TransactionGetReceipt.ChildTransactionReceipts, response.TransactionGetReceipt.DuplicateTransactionReceipts);
 
         static bool shouldRetry(Response response)
         {
@@ -142,42 +142,43 @@ public static class TransactionReceiptExtensions
                 response.TransactionGetReceipt?.Header?.NodeTransactionPrecheckCode == ResponseCodeEnum.Busy ||
                 response.TransactionGetReceipt?.Receipt?.Status == ResponseCodeEnum.Unknown;
         }
-        static IReadOnlyList<TransactionReceipt> createList(TransactionID transactionId, Proto.TransactionReceipt rootReceipt, RepeatedField<Proto.TransactionReceipt> childrenReceipts, RepeatedField<Proto.TransactionReceipt> failedReceipts)
-        {
-            var count = (rootReceipt != null ? 1 : 0) + (childrenReceipts?.Count ?? 0) + (failedReceipts?.Count ?? 0);
-            if (count == 0)
-            {
-                return [];
-            }
-            var result = new List<TransactionReceipt>(count);
-            if (rootReceipt is not null)
-            {
-                result.Add(FromProtobuf(transactionId, rootReceipt));
-            }
-            if (childrenReceipts is not null && childrenReceipts.Count > 0)
-            {
-                // The network DOES NOT return the
-                // child transaction ID, so we have
-                // to synthesize it.
-                var nonce = 1;
-                foreach (var entry in childrenReceipts)
-                {
-                    var childTransactionId = transactionId.Clone();
-                    childTransactionId.Nonce = nonce;
-                    result.Add(FromProtobuf(childTransactionId, entry));
-                    nonce++;
-                }
-            }
-            if (failedReceipts is not null && failedReceipts.Count > 0)
-            {
-                foreach (var entry in failedReceipts)
-                {
-                    result.Add(FromProtobuf(transactionId, entry));
-                }
-            }
-            return result;
-        }
     }
+
+    internal static IReadOnlyList<TransactionReceipt> Create(TransactionID transactionId, Proto.TransactionReceipt? rootReceipt, RepeatedField<Proto.TransactionReceipt>? childrenReceipts, RepeatedField<Proto.TransactionReceipt>? failedReceipts)
+    {
+        var childCount = childrenReceipts?.Count ?? 0;
+        var failedCount = failedReceipts?.Count ?? 0;
+        var count = (rootReceipt != null ? 1 : 0) + childCount + failedCount;
+        if (count == 0)
+        {
+            return [];
+        }
+        var result = new TransactionReceipt[count];
+        var index = 0;
+        if (rootReceipt is not null)
+        {
+            result[index++] = FromProtobuf(transactionId, rootReceipt);
+        }
+        if (childCount > 0)
+        {
+            // The network DOES NOT return the child transaction ID, so we have to synthesize it.
+            for (var i = 0; i < childCount; i++)
+            {
+                var childTransactionId = transactionId.Clone();
+                childTransactionId.Nonce = i + 1;
+                result[index++] = FromProtobuf(childTransactionId, childrenReceipts![i]);
+            }
+        }
+        if (failedCount > 0)
+        {
+            for (var i = 0; i < failedCount; i++)
+            {
+                result[index++] = FromProtobuf(transactionId, failedReceipts![i]);
+            }
+        }
+        return result;
+    }
+
     internal static TransactionReceipt FromProtobuf(TransactionID transactionId, Proto.TransactionReceipt receipt)
     {
         if (receipt.AccountID != null)

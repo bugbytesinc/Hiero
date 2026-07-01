@@ -76,12 +76,10 @@ public sealed class EvmTransactionInput
     /// </returns>
     public ReadOnlyMemory<byte> RlpEncode(Signatory signatory)
     {
-        var toAddress = ToEvmAddress.Bytes.ToArray();
-        var valueInWei = ValueInTinybars * TinyBarsToWei;
-        byte[]? data = null;
+        ReadOnlyMemory<byte> data = ReadOnlyMemory<byte>.Empty;
         if (!string.IsNullOrEmpty(MethodName))
         {
-            data = Abi.EncodeFunctionWithArguments(MethodName, MethodParameters ?? []).ToArray();
+            data = Abi.EncodeFunctionWithArguments(MethodName, MethodParameters ?? []);
         }
         else if (MethodParameters?.Length > 0)
         {
@@ -91,9 +89,11 @@ public sealed class EvmTransactionInput
         {
             throw new ArgumentNullException(nameof(signatory), "A Signatory is Required to RLP encode an EVM transaction.");
         }
-        var dataToSign = Rlp.Encode(EvmNonce, GasPrice, GasLimit, toAddress, valueInWei, data, ChainId, null, null);
+        var valueInWei = ValueInTinybars * TinyBarsToWei;
+        var toAddress = ToEvmAddress.Bytes;
+        var dataToSign = Rlp.EncodeEvmTransaction(EvmNonce, GasPrice, GasLimit, toAddress, valueInWei, data, ChainId, null, null);
         var (r, s, rid) = ((ISignatory)signatory).SignEvm(dataToSign);
         var v = (ChainId * 2) + 35 + rid;
-        return Rlp.Encode(EvmNonce, GasPrice, GasLimit, toAddress, valueInWei, data, v, r, s);
+        return Rlp.EncodeEvmTransaction(EvmNonce, GasPrice, GasLimit, toAddress, valueInWei, data, v, r, s);
     }
 }

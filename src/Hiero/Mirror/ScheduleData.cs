@@ -129,7 +129,7 @@ public static class ScheduleDataExtensions
     /// </returns>
     public static IAsyncEnumerable<ScheduleData> GetSchedulesAsync(this MirrorRestClient client, params IMirrorQueryParameter[] filters)
     {
-        var path = GenerateInitialPath("schedules", [new PageLimit(100), .. filters]);
+        var path = GenerateInitialPath("schedules", new PageLimit(100), filters);
         return client.GetPagedItemsAsync<ScheduleDataPage, ScheduleData>(path, MirrorJsonContext.Default.ScheduleDataPage);
     }
     /// <summary>
@@ -147,6 +147,6 @@ public static class ScheduleDataExtensions
     /// </returns>
     public static Task<ScheduleData?> GetScheduleAsync(this MirrorRestClient client, EntityId schedule)
     {
-        return client.GetSingleItemAsync($"schedules/{MirrorFormat(schedule)}", MirrorJsonContext.Default.ScheduleData);
+        return client.GetSingleItemAsync($"schedules/{schedule.ToMirrorString()}", MirrorJsonContext.Default.ScheduleData);
     }
 }

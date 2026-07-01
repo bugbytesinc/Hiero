@@ -48,7 +48,7 @@ public sealed class AppendFileParams : TransactionParams<TransactionReceipt>, IN
         return new FileAppendTransactionBody()
         {
             FileID = new FileID(File),
-            Contents = ByteString.CopyFrom(Contents.ToArray())
+            Contents = ByteString.CopyFrom(Contents.Span)
         };
     }
     TransactionReceipt INetworkParams<TransactionReceipt>.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)

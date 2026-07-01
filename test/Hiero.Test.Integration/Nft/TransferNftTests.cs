@@ -925,7 +925,7 @@ public class TransferNftTests
 
         var transfers = new TransferParams
         {
-            NftTransfers = serialNumbers.Select(sn => new NftTransfer(new Hiero.Nft(fxNft, sn), fxNft.TreasuryAccount, fxTempTreasury)),
+            NftTransfers = [.. serialNumbers.Select(sn => new NftTransfer(new Hiero.Nft(fxNft, sn), fxNft.TreasuryAccount, fxTempTreasury))],
             Signatory = fxNft.TreasuryAccount.PrivateKey
         };
         var receipt = await client.TransferAsync(transfers);
@@ -1046,7 +1046,7 @@ public class TransferNftTests
 
         var transfers = new TransferParams
         {
-            NftTransfers = serialNumbers.Select(sn => new NftTransfer(new Hiero.Nft(fxNft, sn), fxNft.TreasuryAccount, fxAccount)),
+            NftTransfers = [.. serialNumbers.Select(sn => new NftTransfer(new Hiero.Nft(fxNft, sn), fxNft.TreasuryAccount, fxAccount))],
             Signatory = fxNft.TreasuryAccount.PrivateKey
         };
         var receipt = await client.TransferAsync(transfers);

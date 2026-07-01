@@ -18,8 +18,8 @@ internal class TransactionDataPage : Page<TransactionData>
     /// <returns>
     /// Enumerable of TransactionData.
     /// </returns>
-    public override IEnumerable<TransactionData> GetItems()
+    public override TransactionData[] GetItems()
     {
-        return Transactions ?? Array.Empty<TransactionData>();
+        return Transactions ?? [];
     }
 }

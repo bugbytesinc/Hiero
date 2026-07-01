@@ -220,9 +220,7 @@ public class TransactionIdTests
     {
         var txId = new TransactionId(new EntityId(0, 0, 5), 1234567890, 123456789);
         var result = txId.ToString();
-        await Assert.That(result).Contains("0.0.5");
-        await Assert.That(result).Contains("1234567890");
-        await Assert.That(result).Contains("123456789");
+        await Assert.That(result).IsEqualTo("0.0.5@1234567890.123456789");
     }
 
     [Test]
@@ -230,7 +228,7 @@ public class TransactionIdTests
     {
         var txId = new TransactionId(new EntityId(0, 0, 5), 100, 200, scheduled: true);
         var result = txId.ToString();
-        await Assert.That(result).Contains("scheduled");
+        await Assert.That(result).IsEqualTo("0.0.5@100.000000200-scheduled");
     }
 
     [Test]
@@ -238,7 +236,7 @@ public class TransactionIdTests
     {
         var txId = new TransactionId(new EntityId(0, 0, 5), 100, 200, childNonce: 3);
         var result = txId.ToString();
-        await Assert.That(result).Contains(":3");
+        await Assert.That(result).IsEqualTo("0.0.5@100.000000200:3");
     }
 
     [Test]
@@ -246,8 +244,7 @@ public class TransactionIdTests
     {
         var txId = new TransactionId(new EntityId(0, 0, 5), 100, 200, scheduled: true, childNonce: 7);
         var result = txId.ToString();
-        await Assert.That(result).Contains(":7");
-        await Assert.That(result).Contains("scheduled");
+        await Assert.That(result).IsEqualTo("0.0.5@100.000000200:7-scheduled");
     }
 
     [Test]

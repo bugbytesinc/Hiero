@@ -1,10 +1,12 @@
 ﻿// SPDX-License-Identifier: Apache-2.0
+using Hiero.Implementation.Parsing;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace Hiero.Converters;
 /// <summary>
-/// Integer Converter that tolerates null values.
+/// Reads an <see cref="int"/> from a JSON number or numeric string (a mirror node
+/// quirk), treating <c>null</c> or unparseable input as zero.
 /// </summary>
 public sealed class IntMirrorConverter : JsonConverter<int>
 {
@@ -15,7 +17,7 @@ public sealed class IntMirrorConverter : JsonConverter<int>
         {
             JsonTokenType.Null => 0,
             JsonTokenType.Number => reader.TryGetInt32(out int result) ? result : 0,
-            JsonTokenType.String => int.TryParse(reader.GetString(), out int result) ? result : 0,
+            JsonTokenType.String => NumericMirrorStringParser.TryGetInt32(ref reader, out int result) ? result : 0,
             _ => 0
         };
     }

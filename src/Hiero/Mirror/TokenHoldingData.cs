@@ -1,8 +1,8 @@
 ﻿// SPDX-License-Identifier: Apache-2.0
 using Hiero.Converters;
 using Hiero.Mirror.Filters;
-using Hiero.Mirror.Paging;
 using Hiero.Mirror.Implementation;
+using Hiero.Mirror.Paging;
 using System.ComponentModel;
 using System.Text.Json.Serialization;
 using static Hiero.Mirror.Implementation.MirrorRestClientUtils;
@@ -79,7 +79,7 @@ public static class Extensions
     /// </returns>
     public static IAsyncEnumerable<TokenHoldingData> GetAccountTokenHoldingsAsync(this MirrorRestClient client, EntityId account, params IMirrorQueryParameter[] filters)
     {
-        var path = GenerateInitialPath($"accounts/{MirrorFormat(account)}/tokens", [new PageLimit(100), .. filters]);
+        var path = GenerateInitialPath($"accounts/{account.ToMirrorString()}/tokens", new PageLimit(100), filters);
         return client.GetPagedItemsAsync<TokenHoldingDataPage, TokenHoldingData>(path, MirrorJsonContext.Default.TokenHoldingDataPage);
     }
 }

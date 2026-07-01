@@ -154,7 +154,7 @@ public static class ContractActionDataExtensions
     /// </returns>
     public static IAsyncEnumerable<ContractActionData> GetContractActionsByTransactionHashAsync(this MirrorRestClient client, EvmHash evmTransactionHash, params IMirrorQueryParameter[] filters)
     {
-        var path = GenerateInitialPath($"contracts/results/{evmTransactionHash}/actions", [new PageLimit(100), .. filters]);
+        var path = GenerateInitialPath($"contracts/results/{evmTransactionHash}/actions", new PageLimit(100), filters);
         return client.GetPagedItemsAsync<ContractActionDataPage, ContractActionData>(path, MirrorJsonContext.Default.ContractActionDataPage);
     }
     /// <summary>
@@ -179,7 +179,7 @@ public static class ContractActionDataExtensions
     public static IAsyncEnumerable<ContractActionData> GetContractActionsByTransactionIdAsync(this MirrorRestClient client, TransactionId transactionId, params IMirrorQueryParameter[] filters)
     {
         var (txId, txFilters) = MirrorFormat(transactionId);
-        var path = GenerateInitialPath($"contracts/results/{txId}/actions", [new PageLimit(100), .. txFilters, .. filters]);
+        var path = GenerateInitialPath($"contracts/results/{txId}/actions", new PageLimit(100), txFilters, filters);
         return client.GetPagedItemsAsync<ContractActionDataPage, ContractActionData>(path, MirrorJsonContext.Default.ContractActionDataPage);
     }
 }

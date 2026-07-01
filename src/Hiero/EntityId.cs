@@ -1,5 +1,6 @@
 ﻿// SPDX-License-Identifier: Apache-2.0
 using Hiero.Converters;
+using Hiero.Implementation.Parsing;
 using System.Buffers.Binary;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -7,17 +8,17 @@ using System.Text.Json.Serialization;
 
 namespace Hiero;
 /// <summary>
-/// Identifies a Hedera Address, Token, File, Topics, or Contract, typically
+/// Identifies a Hedera Address, Token, File, Topic, or Contract, typically
 /// in the native format of <code>shard.realm.num</code>, but can also hold
-/// a Key Alias or EVM Payer if such an Entity Id type is required.
+/// a Key Alias or EVM Address if such an Entity Id type is required.
 /// </summary>
 [DebuggerDisplay("{ToString(),nq}")]
 [JsonConverter(typeof(EntityIdConverter))]
-public sealed record EntityId : IEquatable<EntityId>
+public sealed record EntityId : IEquatable<EntityId>, ISpanFormattable, IUtf8SpanFormattable
 {
     /// <summary>
-    /// Internal field to hold an EVM Payer if this entity id
-    /// was originally created as an EVM Payer, or null if
+    /// Internal field to hold an EVM Address if this entity id
+    /// was originally created as an EVM Address, or null if
     /// it was not.
     /// </summary>
     private readonly EvmAddress? _evmAddress;
@@ -44,7 +45,7 @@ public sealed record EntityId : IEquatable<EntityId>
     /// </summary>
     public bool IsShardRealmNum => _evmAddress is null && _keyAlias is null;
     /// <summary>
-    /// Indicates if this Entity Id contains an EVM Payer (EIP-1014) format.
+    /// Indicates if this Entity Id contains an EVM Address (EIP-1014) format.
     /// </summary>
     public bool IsEvmAddress => _evmAddress is not null;
     /// <summary>
@@ -154,16 +155,16 @@ public sealed record EntityId : IEquatable<EntityId>
         _evmAddress = evmAddress;
     }
     /// <summary>
-    /// Attempts to retrieve the Evm Payer wrapped by this
+    /// Attempts to retrieve the EVM Address wrapped by this
     /// Entity Id instance.  Will return false if this Entity Id
-    /// does not hold an Evm Payer.
+    /// does not hold an EVM Address.
     /// </summary>
     /// <param name="evmAddress">
-    /// Variable receiving the Evm Payer instance if the 
+    /// Variable receiving the EVM Address instance if the
     /// operation is successful, otherwise <code>null</code>.
     /// </param>
     /// <returns>
-    /// <code>True</code> if the entityId holds an Evm Address,
+    /// <code>True</code> if the entityId holds an EVM Address,
     /// otherwise false.
     /// </returns>
     public bool TryGetEvmAddress([MaybeNullWhen(false)] out EvmAddress evmAddress)
@@ -189,8 +190,8 @@ public sealed record EntityId : IEquatable<EntityId>
     }
     /// <summary>
     /// Outputs a string representation of the Entity Id
-    /// (<code>shard.realm.keyAlias</code>), Key Alias
-    /// or Evm Payer.
+    /// (<code>shard.realm.num</code>), Key Alias
+    /// or EVM Address.
     /// </summary>
     /// <returns>
     /// String representation of this account identifier in its
@@ -198,19 +199,91 @@ public sealed record EntityId : IEquatable<EntityId>
     /// </returns>
     public override string ToString()
     {
-        return _evmAddress?.ToString() ?? _keyAlias?.ToString() ?? $"{ShardNum}.{RealmNum}.{AccountNum}";
+        return $"{this}";
+    }
+    /// <inheritdoc />
+    public string ToString(string? format, IFormatProvider? formatProvider) => ToString();
+    /// <inheritdoc />
+    public bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider)
+    {
+        if (_evmAddress is not null)
+        {
+            return _evmAddress.TryFormat(destination, out charsWritten, format, provider);
+        }
+        if (_keyAlias is not null)
+        {
+            return _keyAlias.TryFormat(destination, out charsWritten, format, provider);
+        }
+        charsWritten = 0;
+        var required = ConverterExtensions.CountDigits(ShardNum) + ConverterExtensions.CountDigits(RealmNum) + ConverterExtensions.CountDigits(AccountNum) + 2;
+        if (destination.Length < required)
+        {
+            return false;
+        }
+        if (!ShardNum.TryFormat(destination, out int w, default, provider)) return false;
+        charsWritten += w;
+        destination = destination[w..];
+        if (destination.IsEmpty) return false;
+        destination[0] = '.';
+        destination = destination[1..];
+        charsWritten++;
+        if (!RealmNum.TryFormat(destination, out w, default, provider)) return false;
+        charsWritten += w;
+        destination = destination[w..];
+        if (destination.IsEmpty) return false;
+        destination[0] = '.';
+        destination = destination[1..];
+        charsWritten++;
+        if (!AccountNum.TryFormat(destination, out w, default, provider)) return false;
+        charsWritten += w;
+        return true;
+    }
+    /// <inheritdoc />
+    public bool TryFormat(Span<byte> utf8Destination, out int bytesWritten, ReadOnlySpan<char> format, IFormatProvider? provider)
+    {
+        if (_evmAddress is not null)
+        {
+            return _evmAddress.TryFormat(utf8Destination, out bytesWritten, format, provider);
+        }
+        if (_keyAlias is not null)
+        {
+            return _keyAlias.TryFormat(utf8Destination, out bytesWritten, format, provider);
+        }
+        bytesWritten = 0;
+        var required = ConverterExtensions.CountDigits(ShardNum) + ConverterExtensions.CountDigits(RealmNum) + ConverterExtensions.CountDigits(AccountNum) + 2;
+        if (utf8Destination.Length < required)
+        {
+            return false;
+        }
+        if (!ShardNum.TryFormat(utf8Destination, out int w, default, provider)) return false;
+        bytesWritten += w;
+        utf8Destination = utf8Destination[w..];
+        if (utf8Destination.IsEmpty) return false;
+        utf8Destination[0] = (byte)'.';
+        utf8Destination = utf8Destination[1..];
+        bytesWritten++;
+        if (!RealmNum.TryFormat(utf8Destination, out w, default, provider)) return false;
+        bytesWritten += w;
+        utf8Destination = utf8Destination[w..];
+        if (utf8Destination.IsEmpty) return false;
+        utf8Destination[0] = (byte)'.';
+        utf8Destination = utf8Destination[1..];
+        bytesWritten++;
+        if (!AccountNum.TryFormat(utf8Destination, out w, default, provider)) return false;
+        bytesWritten += w;
+        return true;
     }
     /// <summary>
-    /// Casts this Entity ID into the Evm Payer format.  
-    /// If this ID already represents an underlying Evm Payer, 
+    /// Casts this Entity ID into the EVM Address format.
+    /// If this ID already represents an underlying EVM Address,
     /// that instance value will be returned, otherwise the
-    /// equivalent long-zero format of an EVM Payer will 
+    /// equivalent long-zero format of an EVM Address will
     /// be computed from shard.realm.num values, or an EOA 20-byte
     /// address will be computed from the Key Alias if it
     /// represents an ECDSA public key.
     /// </summary>
     /// <returns>
-    /// An EVM Payer compatible for use with smart contracts.
+    /// An EVM Address compatible for use with smart contracts.
     /// </returns>
     /// <exception cref="InvalidOperationException">
     /// If this Entity Id represents a Key Alias form of 
@@ -255,7 +328,7 @@ public sealed record EntityId : IEquatable<EntityId>
     /// </returns>
     public static bool TryParseShardRealmNum(string? value, [NotNullWhen(true)] out EntityId? entityId)
     {
-        if (value != null && TryParseShardRealmNum(value.AsSpan(), out entityId))
+        if (value != null && ShardRealmNumParser.TryParse(value.AsSpan(), out entityId))
         {
             return true;
         }
@@ -277,34 +350,7 @@ public sealed record EntityId : IEquatable<EntityId>
     /// </returns>
     public static bool TryParseShardRealmNum(ReadOnlySpan<char> value, [NotNullWhen(true)] out EntityId? entityId)
     {
-        entityId = null;
-        if (value.Length < 5)
-        {
-            return false;
-        }
-        int firstDot = value.IndexOf('.');
-        if (firstDot <= 0 || firstDot >= value.Length - 3)
-        {
-            return false;
-        }
-        int secondDot = value.Slice(firstDot + 1).IndexOf('.');
-        if (secondDot <= 0)
-        {
-            return false;
-        }
-        secondDot += firstDot + 1;
-        if (secondDot >= value.Length - 1)
-        {
-            return false;
-        }
-        if (uint.TryParse(value.Slice(0, firstDot), out uint shard) &&
-            uint.TryParse(value.Slice(firstDot + 1, secondDot - firstDot - 1), out uint realm) &&
-            uint.TryParse(value[(secondDot + 1)..], out uint num))
-        {
-            entityId = new EntityId(shard, realm, num);
-            return true;
-        }
-        return false;
+        return ShardRealmNumParser.TryParse(value, out entityId);
     }
     /// <summary>
     /// Determines if this Entity Id is equal to another Entity Id.
@@ -313,7 +359,7 @@ public sealed record EntityId : IEquatable<EntityId>
     /// The other <code>EntityId</code> object to compare.
     /// </param>
     /// <returns>
-    /// True if these represent the same entity TransactionId, otherwise false.
+    /// True if these represent the same entity, otherwise false.
     /// </returns>
     public bool Equals(EntityId? other)
     {
@@ -352,6 +398,18 @@ public sealed record EntityId : IEquatable<EntityId>
             hash.Add(_keyAlias);
         }
         return hash.ToHashCode();
+    }
+    internal string ToMirrorString()
+    {
+        if (_evmAddress is not null)
+        {
+            return Convert.ToHexStringLower(_evmAddress.Bytes);
+        }
+        if (_keyAlias is not null)
+        {
+            return Convert.ToHexStringLower(_keyAlias.ToBytes(KeyFormat.Mirror).Span);
+        }
+        return $"{ShardNum}.{RealmNum}.{AccountNum}";
     }
 }
 internal static class EntityIdExtensions

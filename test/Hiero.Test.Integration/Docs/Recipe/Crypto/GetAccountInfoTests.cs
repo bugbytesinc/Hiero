@@ -6,12 +6,12 @@ public class GetAccountInfoTests
 {
     // Code Example:  Docs / Recipe / Get Address Info
     static async Task Recipe(string[] args)
-    {                                                 // For Example:
-        var gatewayUrl = new Uri(args[0]);            //   http://2.testnet.hedera.com:50211
-        var gatewayAccountNo = long.Parse(args[1]);   //   5 (gateway node 0.0.5)
-        var payerAccountNo = long.Parse(args[2]);     //   20 (account 0.0.20)
-        var payerPrivateKey = Hex.ToBytes(args[3]);   //   302e0201... (48 byte Ed25519 private in hex)
-        var queryAccountNo = long.Parse(args[4]);     //   2300 (account 0.0.2300)
+    {                                                         // For Example:
+        var gatewayUrl = new Uri(args[0]);                    //   http://2.testnet.hedera.com:50211
+        var gatewayAccountNo = long.Parse(args[1]);           //   5 (gateway node 0.0.5)
+        var payerAccountNo = long.Parse(args[2]);             //   20 (account 0.0.20)
+        var payerPrivateKey = Convert.FromHexString(args[3]); //   302e0201... (48 byte Ed25519 private in hex)
+        var queryAccountNo = long.Parse(args[4]);             //   2300 (account 0.0.2300)
         try
         {
             await using var client = new ConsensusClient(ctx =>
@@ -42,7 +42,7 @@ public class GetAccountInfoTests
         var arg0 = endpoint.Uri;
         var arg1 = endpoint.Node.AccountNum.ToString();
         var arg2 = TestNetwork.Payer.AccountNum.ToString();
-        var arg3 = Hex.FromBytes(TestNetwork.PrivateKey);
+        var arg3 = Convert.ToHexStringLower(TestNetwork.PrivateKey.Span);
         var arg4 = TestNetwork.Payer.AccountNum.ToString();
         await Recipe(new string[] { arg0.ToString(), arg1, arg2, arg3, arg4 });
     }

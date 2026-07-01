@@ -6,8 +6,8 @@ using System.Numerics;
 
 namespace Hiero;
 /// <summary>
-/// The information returned from the GetTokenInfo ConsensusClient 
-/// method call.  It represents the details concerning 
+/// The information returned from the GetTokenInfoAsync ConsensusClient
+/// method call.  It represents the details concerning
 /// Tokens and Assets.
 /// </summary>
 public sealed record TokenInfo
@@ -156,25 +156,28 @@ public sealed record TokenInfo
         SupplyEndorsement = info.SupplyKey?.ToEndorsement();
         MetadataEndorsement = info.MetadataKey?.ToEndorsement();
         RoyaltiesEndorsement = info.FeeScheduleKey?.ToEndorsement();
-        if (info.CustomFees.Count == 0)
+        var customFees = info.CustomFees;
+        var customFeeCount = customFees.Count;
+        if (customFeeCount == 0)
         {
             Royalties = [];
         }
         else
         {
-            var list = new List<IRoyalty>(info.CustomFees.Count);
-            foreach (var fee in info.CustomFees)
+            var royalties = new IRoyalty[customFeeCount];
+            for (var index = 0; index < customFeeCount; index++)
             {
-                list.Add(fee.FeeCase switch
+                var fee = customFees[index];
+                royalties[index] = fee.FeeCase switch
                 {
                     CustomFee.FeeOneofCase.RoyaltyFee => new NftRoyalty(fee),
                     CustomFee.FeeOneofCase.FractionalFee => new TokenRoyalty(fee),
                     CustomFee.FeeOneofCase.FixedFee => new FixedRoyalty(fee),
                     // Should not get here?, if its invalid info, what do we do?
                     _ => new FixedRoyalty(EntityId.None, EntityId.None, 0),
-                });
+                };
             }
-            Royalties = list;
+            Royalties = royalties;
         }
         TradableStatus = (TokenTradableStatus)info.DefaultFreezeStatus;
         PauseStatus = (TokenTradableStatus)info.PauseStatus;

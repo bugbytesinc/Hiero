@@ -1,6 +1,7 @@
 ﻿// SPDX-License-Identifier: Apache-2.0
 using Proto;
 using System.Collections.ObjectModel;
+using System.Runtime.InteropServices;
 
 namespace Hiero;
 /// <summary>
@@ -8,6 +9,9 @@ namespace Hiero;
 /// </summary>
 public sealed record ContractCallResult
 {
+    private static readonly ReadOnlyCollection<ContractEvent> EmptyEvents = Array.AsReadOnly(Array.Empty<ContractEvent>());
+    private static readonly ReadOnlyDictionary<EntityId, long> EmptyNonces = new(new Dictionary<EntityId, long>(0));
+
     /// <summary>
     /// ID of the contract that was called.
     /// </summary>
@@ -17,11 +21,13 @@ public sealed record ContractCallResult
     /// </summary>
     public EncodedParams Result { get; private init; }
     /// <summary>
-    /// An error returned from the system if there was a problem.
+    /// The ABI-encoded error or revert data returned by the EVM if the
+    /// call failed, empty otherwise.
     /// </summary>
     public EncodedParams Error { get; private init; }
     /// <summary>
-    /// Bloom filter for record
+    /// Bloom filter aggregating the topics and addresses of every
+    /// event emitted by this call.
     /// </summary>
     public ReadOnlyMemory<byte> Bloom { get; private init; }
     /// <summary>
@@ -78,15 +84,45 @@ public sealed record ContractCallResult
         Contract = result.ContractID.AsAddress();
         Result = new EncodedParams(result.ContractCallResult.Memory);
         Error = new EncodedParams(result.ErrorMessage);
-        Bloom = result.Bloom.ToArray();
+        Bloom = result.Bloom.Memory;
         GasUsed = result.GasUsed;
         GasLimit = result.Gas;
         PayableAmount = result.Amount;
         MessageSender = result.SenderId.AsAddress();
-        Events = result.LogInfo.Select(log => new ContractEvent(log)).ToList().AsReadOnly();
+        var logs = result.LogInfo;
+        var logCount = logs.Count;
+        if (logCount == 0)
+        {
+            Events = EmptyEvents;
+        }
+        else
+        {
+            var events = new ContractEvent[logCount];
+            for (var i = 0; i < logCount; i++)
+            {
+                events[i] = new ContractEvent(logs[i]);
+            }
+            Events = Array.AsReadOnly(events);
+        }
         EvmAddress = result.EvmAddress is { Length: 20 } ? new EvmAddress(result.EvmAddress.Memory) : EvmAddress.None;
         Input = new EncodedParams(result.FunctionParameters.Memory);
-        Nonces = new ReadOnlyDictionary<EntityId, long>(result.ContractNonces?.ToDictionary(i => i.ContractId.AsAddress(), i => i.Nonce) ?? new Dictionary<EntityId, long>());
+        var contractNonces = result.ContractNonces;
+        var nonceCount = contractNonces?.Count ?? 0;
+        if (nonceCount == 0)
+        {
+            Nonces = EmptyNonces;
+        }
+        else
+        {
+            var nonces = new Dictionary<EntityId, long>(nonceCount);
+            for (var i = 0; i < nonceCount; i++)
+            {
+                var nonce = contractNonces![i];
+                ref var value = ref CollectionsMarshal.GetValueRefOrAddDefault(nonces, nonce.ContractId.AsAddress(), out _);
+                value = nonce.Nonce;
+            }
+            Nonces = new ReadOnlyDictionary<EntityId, long>(nonces);
+        }
     }
 }
 /// <summary>
@@ -103,7 +139,8 @@ public sealed class ContractEvent
     /// </summary>
     public ReadOnlyMemory<byte> Bloom { get; private init; }
     /// <summary>
-    /// Associated Event Topics
+    /// The indexed topics for this event; the first topic is the
+    /// event signature hash, the remainder are the indexed arguments.
     /// </summary>
     public ReadOnlyMemory<byte>[] Topics { get; private init; }
     /// <summary>
@@ -116,8 +153,22 @@ public sealed class ContractEvent
     internal ContractEvent(ContractLoginfo log)
     {
         Contract = log.ContractID.AsAddress();
-        Bloom = log.Bloom.ToArray();
-        Topics = log.Topic.Select(bs => new ReadOnlyMemory<byte>(bs.ToArray())).ToArray();
-        Data = new EncodedParams(log.Data.ToArray());
+        Bloom = log.Bloom.Memory;
+        var topics = log.Topic;
+        var topicCount = topics.Count;
+        if (topicCount == 0)
+        {
+            Topics = Array.Empty<ReadOnlyMemory<byte>>();
+        }
+        else
+        {
+            var topicData = new ReadOnlyMemory<byte>[topicCount];
+            for (var i = 0; i < topicCount; i++)
+            {
+                topicData[i] = topics[i].Memory;
+            }
+            Topics = topicData;
+        }
+        Data = new EncodedParams(log.Data.Memory);
     }
 }

@@ -1,6 +1,7 @@
 ﻿// SPDX-License-Identifier: Apache-2.0
 using Hiero.Converters;
 using Hiero.Implementation;
+using System.Runtime.InteropServices;
 using System.Text.Json.Serialization;
 
 namespace Hiero;
@@ -15,6 +16,10 @@ public sealed class EncodedParams
     /// The raw bytes returned from a function call (in ABI format).
     /// </summary>
     private readonly byte[] _data;
+    private EncodedParams(byte[] data)
+    {
+        _data = data;
+    }
     /// <summary>
     /// Internal Constructor from the Raw Input
     /// </summary>
@@ -27,14 +32,15 @@ public sealed class EncodedParams
     /// </summary>
     internal EncodedParams(string data)
     {
-        if (data?.StartsWith("0x") == true)
+        var dataSpan = data.AsSpan();
+        if (dataSpan.StartsWith("0x"))
         {
-            data = data[2..];
+            dataSpan = dataSpan[2..];
         }
-        if (!string.IsNullOrWhiteSpace(data))
+        if (!dataSpan.IsWhiteSpace())
         {
-            _data = new byte[data.Length / 2];
-            if (!Hex.TryDecode(data.AsSpan(), _data, out _))
+            _data = new byte[dataSpan.Length / 2];
+            if (Convert.FromHexString(dataSpan, _data, out _, out _) != System.Buffers.OperationStatus.Done)
             {
                 // Not good to get here, it is frustrating
                 // that reverts from contract calls return 
@@ -44,7 +50,7 @@ public sealed class EncodedParams
                 // to be REVERTS from contracts, we'll cast this
                 // raw string into an ABI string so downstream
                 // code can have a consistent result type.
-                _data = Abi.EncodeArguments([data]).ToArray();
+                _data = TakeExactArrayOrCopy(Abi.EncodeArguments([dataSpan.ToString()]));
             }
         }
         else
@@ -84,7 +90,7 @@ public sealed class EncodedParams
     /// </returns>
     public T As<T>(int bytesToSkip = 0)
     {
-        return (T)Abi.DecodeArguments(bytesToSkip > 0 ? _data[bytesToSkip..] : _data, typeof(T))[0];
+        return (T)Abi.DecodeArguments(GetDataSlice(bytesToSkip), typeof(T))[0];
     }
     /// <summary>
     /// Retrieves the first and second values from the contract function result cast to the desired types.
@@ -100,7 +106,7 @@ public sealed class EncodedParams
     /// </returns>
     public (T1, T2) As<T1, T2>(int bytesToSkip = 0)
     {
-        var args = Abi.DecodeArguments(bytesToSkip > 0 ? _data[bytesToSkip..] : _data, typeof(T1), typeof(T2));
+        var args = Abi.DecodeArguments(GetDataSlice(bytesToSkip), typeof(T1), typeof(T2));
         return ((T1)args[0], (T2)args[1]);
     }
     /// <summary>
@@ -120,7 +126,7 @@ public sealed class EncodedParams
     /// </returns>
     public (T1, T2, T3) As<T1, T2, T3>(int bytesToSkip = 0)
     {
-        var args = Abi.DecodeArguments(bytesToSkip > 0 ? _data[bytesToSkip..] : _data, typeof(T1), typeof(T2), typeof(T3));
+        var args = Abi.DecodeArguments(GetDataSlice(bytesToSkip), typeof(T1), typeof(T2), typeof(T3));
         return ((T1)args[0], (T2)args[1], (T3)args[2]);
     }
     /// <summary>
@@ -143,7 +149,7 @@ public sealed class EncodedParams
     /// </returns>
     public (T1, T2, T3, T4) As<T1, T2, T3, T4>(int bytesToSkip = 0)
     {
-        var args = Abi.DecodeArguments(bytesToSkip > 0 ? _data[bytesToSkip..] : _data, typeof(T1), typeof(T2), typeof(T3), typeof(T4));
+        var args = Abi.DecodeArguments(GetDataSlice(bytesToSkip), typeof(T1), typeof(T2), typeof(T3), typeof(T4));
         return ((T1)args[0], (T2)args[1], (T3)args[2], (T4)args[3]);
     }
     /// <summary>
@@ -169,7 +175,7 @@ public sealed class EncodedParams
     /// </returns>
     public (T1, T2, T3, T4, T5) As<T1, T2, T3, T4, T5>(int bytesToSkip = 0)
     {
-        var args = Abi.DecodeArguments(bytesToSkip > 0 ? _data[bytesToSkip..] : _data, typeof(T1), typeof(T2), typeof(T3), typeof(T4), typeof(T5));
+        var args = Abi.DecodeArguments(GetDataSlice(bytesToSkip), typeof(T1), typeof(T2), typeof(T3), typeof(T4), typeof(T5));
         return ((T1)args[0], (T2)args[1], (T3)args[2], (T4)args[3], (T5)args[4]);
     }
     /// <summary>
@@ -184,5 +190,21 @@ public sealed class EncodedParams
     public object[] GetAll(params Type[] types)
     {
         return Abi.DecodeArguments(_data, types);
+    }
+    internal static EncodedParams FromOwnedBytes(ReadOnlyMemory<byte> data)
+    {
+        return new EncodedParams(TakeExactArrayOrCopy(data));
+    }
+    private ReadOnlyMemory<byte> GetDataSlice(int bytesToSkip)
+    {
+        return bytesToSkip > 0 ? _data.AsMemory(bytesToSkip) : _data;
+    }
+    private static byte[] TakeExactArrayOrCopy(ReadOnlyMemory<byte> data)
+    {
+        return MemoryMarshal.TryGetArray(data, out var segment) &&
+            segment.Offset == 0 &&
+            segment.Count == segment.Array!.Length
+            ? segment.Array
+            : data.ToArray();
     }
 }

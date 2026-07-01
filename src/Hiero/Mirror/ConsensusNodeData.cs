@@ -157,45 +157,49 @@ public static class ConsensusNodeDataExtensions
     /// </returns>
     public static async Task<IReadOnlyDictionary<ConsensusNodeEndpoint, long>> GetActiveConsensusNodesAsync(this MirrorRestClient client, int maxTimeoutInMilliseconds)
     {
-        var list = new List<Task<(ConsensusNodeEndpoint gatway, long response)>>();
-        await foreach (var node in client.GetConsensusNodesAsync())
+        var list = new List<Task<(ConsensusNodeEndpoint gateway, long response)>>();
+        await foreach (var node in client.GetConsensusNodesAsync().ConfigureAwait(false))
         {
             foreach (var endpoint in node.Endpoints)
             {
                 // Solo does not include address anymore
-                if (endpoint.Port == 50211 && !string.IsNullOrWhiteSpace(endpoint.Address))
+                var address = endpoint.Address;
+                if (endpoint.Port == 50211 && !string.IsNullOrWhiteSpace(address))
                 {
-                    list.Add(Task.Run(async () =>
-                    {
-                        var uri = new Uri($"http://{endpoint.Address}:{endpoint.Port}");
-                        var gateway = new ConsensusNodeEndpoint(node.Account, uri);
-                        var grpClient = new ConsensusClient(cfg => cfg.Endpoint = gateway);
-                        var response = -1L;
-                        var task = grpClient.PingAsync();
-                        if (await Task.WhenAny(task, Task.Delay(maxTimeoutInMilliseconds)) == task)
-                        {
-                            try
-                            {
-                                response = task.Result;
-                            }
-                            catch
-                            {
-                                // fall through with -1
-                            }
-                        }
-                        return (gateway, response);
-                    }));
+                    list.Add(ProbeGatewayAsync(node.Account, address, endpoint.Port, maxTimeoutInMilliseconds));
                 }
             }
         }
-        var result = new Dictionary<ConsensusNodeEndpoint, long>();
-        foreach (var (gatway, response) in await Task.WhenAll(list))
+        var responses = await Task.WhenAll(list).ConfigureAwait(false);
+        var result = new Dictionary<ConsensusNodeEndpoint, long>(responses.Length);
+        foreach (var (gateway, response) in responses)
         {
             if (response > -1)
             {
-                result.Add(gatway, response);
+                result.Add(gateway, response);
             }
         }
         return result;
+
+        static async Task<(ConsensusNodeEndpoint gateway, long response)> ProbeGatewayAsync(EntityId account, string address, int port, int maxTimeoutInMilliseconds)
+        {
+            var uri = new Uri($"http://{address}:{port}");
+            var gateway = new ConsensusNodeEndpoint(account, uri);
+            await using var grpcClient = new ConsensusClient(cfg => cfg.Endpoint = gateway);
+            var response = -1L;
+            var pingTask = grpcClient.PingAsync();
+            if (await Task.WhenAny(pingTask, Task.Delay(maxTimeoutInMilliseconds)).ConfigureAwait(false) == pingTask)
+            {
+                try
+                {
+                    response = await pingTask.ConfigureAwait(false);
+                }
+                catch
+                {
+                    // fall through with -1
+                }
+            }
+            return (gateway, response);
+        }
     }
 }

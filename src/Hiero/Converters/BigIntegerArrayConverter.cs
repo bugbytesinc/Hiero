@@ -1,4 +1,5 @@
 ﻿// SPDX-License-Identifier: Apache-2.0
+using System.Buffers;
 using System.Numerics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -21,13 +22,35 @@ public sealed class BigIntegerArrayConverter : JsonConverter<BigInteger[]>
             throw new JsonException("Expected StartArray token for BigInteger array.");
         }
         reader.Read();
-        var list = new List<BigInteger>();
-        while (reader.TokenType != JsonTokenType.EndArray)
+        if (reader.TokenType == JsonTokenType.EndArray)
         {
-            list.Add(_bigIntegerConverter.Read(ref reader, typeof(BigInteger), options!));
-            reader.Read();
+            return [];
         }
-        return list.ToArray();
+
+        var values = ArrayPool<BigInteger>.Shared.Rent(4);
+        var count = 0;
+        try
+        {
+            while (reader.TokenType != JsonTokenType.EndArray)
+            {
+                if (count == values.Length)
+                {
+                    var next = ArrayPool<BigInteger>.Shared.Rent(values.Length * 2);
+                    Array.Copy(values, next, values.Length);
+                    ArrayPool<BigInteger>.Shared.Return(values, clearArray: true);
+                    values = next;
+                }
+                values[count++] = _bigIntegerConverter.Read(ref reader, typeof(BigInteger), options!);
+                reader.Read();
+            }
+            var result = new BigInteger[count];
+            Array.Copy(values, result, count);
+            return result;
+        }
+        finally
+        {
+            ArrayPool<BigInteger>.Shared.Return(values, clearArray: true);
+        }
     }
     /// <inheritdoc />
     public override void Write(Utf8JsonWriter writer, BigInteger[] values, JsonSerializerOptions options)

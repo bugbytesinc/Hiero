@@ -4,30 +4,24 @@ using System.Text.Json.Serialization;
 
 namespace Hiero.Converters;
 /// <summary>
-/// JSON converter that reads base64-encoded strings and writes them as byte arrays.
+/// Converts a base64-encoded JSON string to a <see cref="ReadOnlyMemory{T}"/> of bytes and back.
 /// </summary>
 public sealed class Base64StringToBytesConverter : JsonConverter<ReadOnlyMemory<byte>>
 {
     /// <inheritdoc />
     public override ReadOnlyMemory<byte> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        var valueInBase64 = reader.GetString();
-        if (!string.IsNullOrWhiteSpace(valueInBase64))
+        if (reader.TokenType != JsonTokenType.String)
         {
-            try
-            {
-                return Convert.FromBase64String(valueInBase64);
-            }
-            catch
-            {
-                // Punt.
-            }
+            return ReadOnlyMemory<byte>.Empty;
         }
-        return ReadOnlyMemory<byte>.Empty;
+        return reader.TryGetBytesFromBase64(out var bytes) && bytes is not null
+            ? bytes
+            : ReadOnlyMemory<byte>.Empty;
     }
     /// <inheritdoc />
     public override void Write(Utf8JsonWriter writer, ReadOnlyMemory<byte> bytes, JsonSerializerOptions options)
     {
-        writer.WriteStringValue(Convert.ToBase64String(bytes.Span));
+        writer.WriteBase64StringValue(bytes.Span);
     }
 }

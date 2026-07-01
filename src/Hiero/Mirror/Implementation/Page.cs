@@ -16,11 +16,11 @@ internal abstract class Page<T>
     [JsonPropertyName("links")]
     public PageLink? Links { get; set; }
     /// <summary>
-    /// Generic iterator object used by low level functions to convert paged 
+    /// Generic item array used by low level functions to convert paged 
     /// information into IAsyncEnumerable helper functions.
     /// </summary>
     /// <returns>
-    /// Enumerable of the items in the list.
+    /// Array of the items in the list.
     /// </returns>
-    public abstract IEnumerable<T> GetItems();
+    public abstract T[] GetItems();
 }

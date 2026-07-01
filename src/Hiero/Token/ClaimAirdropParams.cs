@@ -48,10 +48,19 @@ public sealed class ClaimAirdropParams : TransactionParams<TransactionReceipt>, 
             throw new ArgumentNullException(nameof(Airdrops), "The list of airdrops must not be null.");
         }
         var result = new TokenClaimAirdropTransactionBody();
-        result.PendingAirdrops.AddRange(Airdrops.Select(id => new PendingAirdropId(id)));
-        if (result.PendingAirdrops.Count == 0)
+        var pendingAirdrops = result.PendingAirdrops;
+        var count = Airdrops.Count;
+        if (count == 0)
         {
             throw new ArgumentOutOfRangeException(nameof(Airdrops), "The list of airdrops must not be empty.");
+        }
+        if (pendingAirdrops.Capacity < count)
+        {
+            pendingAirdrops.Capacity = count;
+        }
+        for (var i = 0; i < count; i++)
+        {
+            pendingAirdrops.Add(new PendingAirdropId(Airdrops[i]));
         }
         return result;
     }

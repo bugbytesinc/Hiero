@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
+using Google.Protobuf;
 using Hiero.Test.Helpers;
+using Proto;
 
 namespace Hiero.Test.Unit.Core;
 
@@ -80,5 +82,37 @@ public class ExchangeRateTests
     {
         var rate = new ExchangeRate { HBarEquivalent = 1, USDCentEquivalent = 2, Expiration = Generator.TruncatedFutureDate(1, 500) };
         await Assert.That(rate.Equals(null)).IsFalse();
+    }
+
+    [Test]
+    public async Task FromFile_Parses_Exchange_Rate_Set()
+    {
+        var set = new ExchangeRateSet
+        {
+            CurrentRate = new Proto.ExchangeRate
+            {
+                HbarEquiv = 1,
+                CentEquiv = 12,
+                ExpirationTime = new TimestampSeconds { Seconds = 1000 }
+            },
+            NextRate = new Proto.ExchangeRate
+            {
+                HbarEquiv = 2,
+                CentEquiv = 24,
+                ExpirationTime = new TimestampSeconds { Seconds = 2000 }
+            }
+        };
+        var bytes = set.ToByteArray();
+
+        var result = ExchangeRatesExtensions.FromFile(bytes);
+
+        await Assert.That(result.Current).IsNotNull();
+        await Assert.That(result.Current!.HBarEquivalent).IsEqualTo(1);
+        await Assert.That(result.Current.USDCentEquivalent).IsEqualTo(12);
+        await Assert.That(result.Current.Expiration.Seconds).IsEqualTo(1000);
+        await Assert.That(result.Next).IsNotNull();
+        await Assert.That(result.Next!.HBarEquivalent).IsEqualTo(2);
+        await Assert.That(result.Next.USDCentEquivalent).IsEqualTo(24);
+        await Assert.That(result.Next.Expiration.Seconds).IsEqualTo(2000);
     }
 }

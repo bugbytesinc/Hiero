@@ -1,6 +1,6 @@
 ﻿// SPDX-License-Identifier: Apache-2.0
 using Hiero.Implementation;
-using Org.BouncyCastle.Crypto.Parameters;
+using Hiero.Implementation.Parsing;
 
 namespace Hiero;
 
@@ -11,13 +11,14 @@ namespace Hiero;
 /// for consensus services among other network tasks.
 /// </summary>
 /// <remarks>
-/// A <code>Signatory</code> is presently created with a pre-existing
-/// Ed25519 private key or a callback action having the
-/// information necessary to successfully sign the transaction
-/// as described by its matching <see cref="Endorsement" />
-/// requirements.  RSA-3072, ECDSA and <code>Contract</code> signatures
-/// are not natively supported through the <code>Signatory</code> at this 
-/// time but can be achieved through the callback functionality.
+/// A <code>Signatory</code> is created with a pre-existing
+/// Ed25519 or ECDSA Secp256k1 private key, a combination of other
+/// signatories, or a callback action having the information necessary
+/// to successfully sign the transaction as described by its matching
+/// <see cref="Endorsement" /> requirements.  RSA-3072 and
+/// <code>Contract</code> signatures are not natively supported through
+/// the <code>Signatory</code> at this time but can be achieved through
+/// the callback functionality.
 /// </remarks>
 public sealed class Signatory : ISignatory, IEquatable<Signatory>
 {
@@ -54,9 +55,9 @@ public sealed class Signatory : ISignatory, IEquatable<Signatory>
     private readonly Type _type;
     /// <summary>
     /// Internal union of the types of data this Signatory may hold.
-    /// The contents are a function of the <code>Type</code>.  It can be a 
-    /// list of other signatories, a reference to a callback method, 
-    /// pending transaction schedule information or a private key.
+    /// The contents are a function of the <code>Type</code>.  It can be a
+    /// list of other signatories, a reference to a callback method,
+    /// or a private key.
     /// </summary>
     private readonly object _data;
     /// <summary>
@@ -71,8 +72,7 @@ public sealed class Signatory : ISignatory, IEquatable<Signatory>
     /// </param>
     public Signatory(ReadOnlyMemory<byte> privateKey)
     {
-        var (type, data) = KeyUtils.ParsePrivateKey(privateKey);
-        _data = data;
+        var (type, data) = KeyParser.ParsePrivateKey(privateKey);
         _type = type switch
         {
             KeyType.Ed25519 => Type.Ed25519,
@@ -80,6 +80,7 @@ public sealed class Signatory : ISignatory, IEquatable<Signatory>
             KeyType.List => throw new ArgumentOutOfRangeException(nameof(type), "Only signatories representing a single key are supported with this constructor, please use the list constructor instead."),
             _ => throw new ArgumentOutOfRangeException(nameof(type), "Not a presently supported Signatory key type, please consider the callback signatory as an alternative."),
         };
+        _data = data;
     }
     /// <summary>
     /// Create a signatory that is a combination of a number of other
@@ -134,11 +135,11 @@ public sealed class Signatory : ISignatory, IEquatable<Signatory>
         {
             case KeyType.Ed25519:
                 _type = Type.Ed25519;
-                _data = KeyUtils.ParsePrivateEd25519Key(privateKey);
+                _data = new Ed25519KeyData(KeyParser.ParsePrivateEd25519Key(privateKey));
                 break;
             case KeyType.ECDSASecp256K1:
                 _type = Type.ECDSASecp256K1;
-                _data = KeyUtils.ParsePrivateEcdsaSecp256k1Key(privateKey);
+                _data = new EcdsaSecp256K1KeyData(KeyParser.ParsePrivateEcdsaSecp256k1Key(privateKey));
                 break;
             case KeyType.List:
                 throw new ArgumentOutOfRangeException(nameof(type), "Only signatories representing a single key are supported with this constructor, please use the list constructor instead.");
@@ -227,9 +228,9 @@ public sealed class Signatory : ISignatory, IEquatable<Signatory>
         switch (_type)
         {
             case Type.Ed25519:
-                return ((Ed25519PrivateKeyParameters)_data).GetEncoded().SequenceEqual(((Ed25519PrivateKeyParameters)other._data).GetEncoded());
+                return ((Ed25519KeyData)_data).PublicKey.SequenceEqual(((Ed25519KeyData)other._data).PublicKey);
             case Type.ECDSASecp256K1:
-                return ((ECPrivateKeyParameters)_data).Equals((ECPrivateKeyParameters)other._data);
+                return ((EcdsaSecp256K1KeyData)_data).PublicKey.SequenceEqual(((EcdsaSecp256K1KeyData)other._data).PublicKey);
             case Type.List:
                 var thisList = (Signatory[])_data;
                 var otherList = (Signatory[])other._data;
@@ -289,21 +290,34 @@ public sealed class Signatory : ISignatory, IEquatable<Signatory>
     /// </returns>
     public override int GetHashCode()
     {
-        return _type switch
+        var hash = new HashCode();
+        hash.Add(_type);
+        switch (_type)
         {
-            Type.Ed25519 => $"Signatory:{_type}:{((Ed25519PrivateKeyParameters)_data).GetHashCode()}".GetHashCode(),
-            Type.ECDSASecp256K1 => $"Signatory:{_type}:{((ECPrivateKeyParameters)_data).GetHashCode()}".GetHashCode(),
-            Type.Callback => $"Signatory:{_type}:{_data.GetHashCode()}".GetHashCode(),
-            Type.List => $"Signatory:{_type}:{string.Join(':', ((Signatory[])_data).Select(e => e.GetHashCode().ToString()))}".GetHashCode(),
-            _ => "Signatory:Empty".GetHashCode(),
-        };
+            case Type.Ed25519:
+                hash.AddBytes(((Ed25519KeyData)_data).PublicKey);
+                break;
+            case Type.ECDSASecp256K1:
+                hash.AddBytes(((EcdsaSecp256K1KeyData)_data).PublicKey);
+                break;
+            case Type.Callback:
+                hash.Add(_data);
+                break;
+            case Type.List:
+                foreach (var signatory in (Signatory[])_data)
+                {
+                    hash.Add(signatory);
+                }
+                break;
+        }
+        return hash.ToHashCode();
     }
     /// <summary>
     /// Retrieves a list of Endorsement (Public Keys) held internally
     /// by this Signatory (and/or its child signatories). At this time
     /// only Endorsements backed by Ed25519 and ECDSA keys are
-    /// exported.  If this signatory represents a Scheduled marker
-    /// or Contract, the list returned will be empty.
+    /// exported.  If this signatory only wraps a callback method,
+    /// the list returned will be empty.
     /// </summary>
     /// <returns>
     /// A collection of Ed25519 and/or ECDSA Endorsements, can
@@ -314,20 +328,58 @@ public sealed class Signatory : ISignatory, IEquatable<Signatory>
         switch (_type)
         {
             case Type.Ed25519:
-                return new[] { new Endorsement(KeyType.Ed25519, ((Ed25519PrivateKeyParameters)_data).GeneratePublicKey().GetEncoded()) };
+                return new[] { new Endorsement(KeyType.Ed25519, ((Ed25519KeyData)_data).PublicKey) };
             case Type.ECDSASecp256K1:
-                var keyParam = (ECPrivateKeyParameters)_data;
-                var publicKey = keyParam.Parameters.G.Multiply(keyParam.D).GetEncoded(true);
-                return new[] { new Endorsement(KeyType.ECDSASecp256K1, publicKey) };
+                return new[] { new Endorsement(KeyType.ECDSASecp256K1, ((EcdsaSecp256K1KeyData)_data).PublicKey) };
             case Type.List:
-                var list = new List<Endorsement>();
-                foreach (var child in (Signatory[])_data)
+                var count = CountEndorsements();
+                if (count == 0)
                 {
-                    list.AddRange(child.GetEndorsements());
+                    return Array.Empty<Endorsement>();
                 }
-                return list;
+                var endorsements = new Endorsement[count];
+                FillEndorsements(endorsements, 0);
+                return endorsements;
             default:
                 return Array.Empty<Endorsement>();
+        }
+    }
+    private int CountEndorsements()
+    {
+        switch (_type)
+        {
+            case Type.Ed25519:
+            case Type.ECDSASecp256K1:
+                return 1;
+            case Type.List:
+                var count = 0;
+                foreach (var child in (Signatory[])_data)
+                {
+                    count += child.CountEndorsements();
+                }
+                return count;
+            default:
+                return 0;
+        }
+    }
+    private int FillEndorsements(Endorsement[] endorsements, int index)
+    {
+        switch (_type)
+        {
+            case Type.Ed25519:
+                endorsements[index++] = new Endorsement(KeyType.Ed25519, ((Ed25519KeyData)_data).PublicKey);
+                return index;
+            case Type.ECDSASecp256K1:
+                endorsements[index++] = new Endorsement(KeyType.ECDSASecp256K1, ((EcdsaSecp256K1KeyData)_data).PublicKey);
+                return index;
+            case Type.List:
+                foreach (var child in (Signatory[])_data)
+                {
+                    index = child.FillEndorsements(endorsements, index);
+                }
+                return index;
+            default:
+                return index;
         }
     }
     /// <summary>
@@ -382,27 +434,29 @@ public sealed class Signatory : ISignatory, IEquatable<Signatory>
     /// embedded information making up the transaction.
     /// </param>
     /// <returns>A ValueTask representing the asynchronous signing operation.</returns>
-    async ValueTask ISignatory.SignAsync(IInvoice invoice)
+    ValueTask ISignatory.SignAsync(IInvoice invoice)
     {
         switch (_type)
         {
             case Type.Ed25519:
-                KeyUtils.Sign(invoice, (Ed25519PrivateKeyParameters)_data);
-                break;
+                ((Ed25519KeyData)_data).Sign(invoice);
+                return ValueTask.CompletedTask;
             case Type.ECDSASecp256K1:
-                KeyUtils.Sign(invoice, (ECPrivateKeyParameters)_data);
-                break;
+                ((EcdsaSecp256K1KeyData)_data).Sign(invoice);
+                return ValueTask.CompletedTask;
             case Type.List:
-                foreach (ISignatory signer in (Signatory[])_data)
-                {
-                    await signer.SignAsync(invoice).ConfigureAwait(false);
-                }
-                break;
+                return SignAllAsync(invoice, (Signatory[])_data);
             case Type.Callback:
-                await ((Func<IInvoice, Task>)_data)(invoice).ConfigureAwait(false);
-                break;
+                return new ValueTask(((Func<IInvoice, Task>)_data)(invoice));
             default:
                 throw new InvalidOperationException("Not a presently supported Signatory key type, please consider the callback signatory as an alternative.");
+        }
+    }
+    private static async ValueTask SignAllAsync(IInvoice invoice, Signatory[] signatories)
+    {
+        foreach (ISignatory signer in signatories)
+        {
+            await signer.SignAsync(invoice).ConfigureAwait(false);
         }
     }
     /// <summary>
@@ -428,6 +482,6 @@ public sealed class Signatory : ISignatory, IEquatable<Signatory>
         {
             throw new InvalidOperationException("This Signatory does not support EVM signing, it is not an ECDSA Secp256K1 key.");
         }
-        return KeyUtils.Sign(data, (ECPrivateKeyParameters)_data);
+        return ((EcdsaSecp256K1KeyData)_data).SignEvm(data);
     }
 }

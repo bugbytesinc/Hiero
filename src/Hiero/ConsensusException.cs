@@ -2,8 +2,9 @@
 namespace Hiero;
 /// <summary>
 /// Exception thrown when a network call was accepted by the gateway
-/// node but did not achieve network consensus before the expiration
-/// timeout of the transaction request occurred.
+/// node but its outcome could not be confirmed: either the network
+/// stayed too busy to return a receipt, or the transaction did not
+/// achieve consensus before its expiration timeout elapsed.
 /// </summary>
 /// <remarks>
 /// <para>

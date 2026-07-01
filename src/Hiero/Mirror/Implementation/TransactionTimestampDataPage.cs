@@ -18,8 +18,8 @@ internal class TransactionTimestampDataPage : Page<TransactionTimestampData>
     /// <returns>
     /// Enumerable of TransactionTimestampData.
     /// </returns>
-    public override IEnumerable<TransactionTimestampData> GetItems()
+    public override TransactionTimestampData[] GetItems()
     {
-        return Transactions ?? Array.Empty<TransactionTimestampData>();
+        return Transactions ?? [];
     }
 }

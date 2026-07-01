@@ -7,6 +7,12 @@ namespace Hiero.Mirror.Paging;
 /// page. Paging directive — does not change which records are returned,
 /// only how many fit in one response.
 /// </summary>
+/// <remarks>
+/// The mirror-node <c>limit</c> parameter defaults to 25 and is bounded
+/// to the 1–100 range server-side; this type does not validate the value
+/// locally, so an out-of-range limit is clamped or rejected by the
+/// mirror node rather than throwing client-side.
+/// </remarks>
 public class PageLimit : IMirrorPaging
 {
     /// <summary>

@@ -18,8 +18,8 @@ internal class NftAllowanceDataPage : Page<NftAllowanceData>
     /// <returns>
     /// An enumerator listing the records in the list.
     /// </returns>
-    public override IEnumerable<NftAllowanceData> GetItems()
+    public override NftAllowanceData[] GetItems()
     {
-        return Allowances ?? Array.Empty<NftAllowanceData>();
+        return Allowances ?? [];
     }
 }

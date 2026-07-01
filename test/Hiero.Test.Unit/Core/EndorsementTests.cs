@@ -2,7 +2,11 @@
 #pragma warning disable CS8600, CS8602, CS8604 // Null assignments and dereferences are intentional in these tests
 using Google.Protobuf;
 using Hiero.Implementation;
+using Hiero.Implementation.Parsing;
 using Hiero.Test.Helpers;
+using Org.BouncyCastle.Asn1.Sec;
+using Org.BouncyCastle.Crypto.Parameters;
+using Org.BouncyCastle.Math;
 using Org.BouncyCastle.X509;
 using Proto;
 
@@ -115,6 +119,20 @@ public class EndorsementTests
             new Endorsement(KeyType.ECDSASecp256K1, invalidKey);
         });
         await Assert.That(exception.Message).StartsWith("The public key was not provided in a recognizable ECDSA Secp256K1 format.");
+    }
+
+    [Test]
+    public async Task Non_Secp256K1_EC_Public_Key_Throws_Error()
+    {
+        var curve = SecNamedCurves.GetByName("secp256r1");
+        var domain = new ECDomainParameters(curve.Curve, curve.G, curve.N, curve.H);
+        var publicKey = new ECPublicKeyParameters(domain.G.Multiply(BigInteger.ValueOf(7)), domain);
+        var publicKeyBytes = SubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(publicKey).GetDerEncoded();
+        var exception = Assert.Throws<ArgumentOutOfRangeException>(() =>
+        {
+            new Endorsement(KeyType.ECDSASecp256K1, publicKeyBytes);
+        });
+        await Assert.That(exception.Message).StartsWith("This is not an ECDSA Secp256K1 public key.");
     }
 
     [Test]
@@ -242,6 +260,79 @@ public class EndorsementTests
         await Assert.That(endorsements1).IsNotEqualTo(endorsements2);
         await Assert.That(endorsements1 == endorsements2).IsFalse();
         await Assert.That(endorsements1 != endorsements2).IsTrue();
+    }
+
+    [Test]
+    public async Task Deterministic_Typed_And_Implicit_Endorsement_Equality_Per_Key_Type()
+    {
+        var (ed25519PublicKey1, _) = Generator.Ed25519KeyPair();
+        var (ed25519PublicKey2, _) = Generator.Ed25519KeyPair();
+        var (ecdsaPublicKey1, _) = Generator.Secp256k1KeyPair();
+        var (ecdsaPublicKey2, _) = Generator.Secp256k1KeyPair();
+
+        await AssertEndorsementsEqual(
+            new Endorsement(KeyType.Ed25519, ed25519PublicKey1),
+            new Endorsement(ed25519PublicKey1));
+
+        await AssertEndorsementsNotEqual(
+            new Endorsement(KeyType.Ed25519, ed25519PublicKey1),
+            new Endorsement(KeyType.Ed25519, ed25519PublicKey2));
+
+        await AssertEndorsementsEqual(
+            new Endorsement(KeyType.ECDSASecp256K1, ecdsaPublicKey1),
+            new Endorsement(ecdsaPublicKey1));
+
+        await AssertEndorsementsNotEqual(
+            new Endorsement(KeyType.ECDSASecp256K1, ecdsaPublicKey1),
+            new Endorsement(KeyType.ECDSASecp256K1, ecdsaPublicKey2));
+
+        await AssertEndorsementsNotEqual(
+            new Endorsement(KeyType.Ed25519, ed25519PublicKey1),
+            new Endorsement(KeyType.ECDSASecp256K1, ecdsaPublicKey1));
+    }
+
+    [Test]
+    public async Task Deterministic_Ordered_Multi_Key_Endorsement_Equality()
+    {
+        var (ed25519PublicKey1, _) = Generator.Ed25519KeyPair();
+        var (ed25519PublicKey2, _) = Generator.Ed25519KeyPair();
+        var (ed25519PublicKey3, _) = Generator.Ed25519KeyPair();
+        var (ecdsaPublicKey1, _) = Generator.Secp256k1KeyPair();
+        var (ecdsaPublicKey2, _) = Generator.Secp256k1KeyPair();
+        var (ecdsaPublicKey3, _) = Generator.Secp256k1KeyPair();
+
+        await AssertEndorsementsEqual(
+            new Endorsement(new Endorsement(ed25519PublicKey1), new Endorsement(ecdsaPublicKey1)),
+            new Endorsement(new Endorsement(ed25519PublicKey1), new Endorsement(ecdsaPublicKey1)));
+
+        await AssertEndorsementsNotEqual(
+            new Endorsement(new Endorsement(ed25519PublicKey1), new Endorsement(ecdsaPublicKey1)),
+            new Endorsement(new Endorsement(ecdsaPublicKey1), new Endorsement(ed25519PublicKey1)));
+
+        await AssertEndorsementsNotEqual(
+            new Endorsement(new Endorsement(ed25519PublicKey1), new Endorsement(ed25519PublicKey2)),
+            new Endorsement(new Endorsement(ed25519PublicKey1), new Endorsement(ed25519PublicKey3)));
+
+        await AssertEndorsementsNotEqual(
+            new Endorsement(new Endorsement(ecdsaPublicKey1), new Endorsement(ecdsaPublicKey2)),
+            new Endorsement(new Endorsement(ecdsaPublicKey1), new Endorsement(ecdsaPublicKey3)));
+    }
+
+    [Test]
+    public async Task Deterministic_Nested_Multi_Key_Endorsement_Equality()
+    {
+        var (ed25519PublicKey1, _) = Generator.Ed25519KeyPair();
+        var (ed25519PublicKey2, _) = Generator.Ed25519KeyPair();
+        var (ed25519PublicKey3, _) = Generator.Ed25519KeyPair();
+        var (ecdsaPublicKey1, _) = Generator.Secp256k1KeyPair();
+
+        await AssertEndorsementsEqual(
+            new Endorsement(new Endorsement(ed25519PublicKey1), new Endorsement(new Endorsement(ecdsaPublicKey1), new Endorsement(ed25519PublicKey2))),
+            new Endorsement(new Endorsement(ed25519PublicKey1), new Endorsement(new Endorsement(ecdsaPublicKey1), new Endorsement(ed25519PublicKey2))));
+
+        await AssertEndorsementsNotEqual(
+            new Endorsement(new Endorsement(ed25519PublicKey1), new Endorsement(new Endorsement(ecdsaPublicKey1), new Endorsement(ed25519PublicKey2))),
+            new Endorsement(new Endorsement(ed25519PublicKey1), new Endorsement(new Endorsement(ecdsaPublicKey1), new Endorsement(ed25519PublicKey3))));
     }
 
     [Test]
@@ -478,7 +569,7 @@ public class EndorsementTests
     [Test]
     public async Task Can_Parse_Ed25519_Der_Encoded()
     {
-        var publicKey = Hex.ToBytes("302a300506032b65700321001dd944db2def347f51ef46ab7bafba05e139ed3cadfa9786ce6ab034284d500d");
+        var publicKey = Convert.FromHexString("302a300506032b65700321001dd944db2def347f51ef46ab7bafba05e139ed3cadfa9786ce6ab034284d500d");
 
         var endorsement = new Endorsement(publicKey);
         await Assert.That(endorsement.Type).IsEqualTo(KeyType.Ed25519);
@@ -490,7 +581,7 @@ public class EndorsementTests
     [Test]
     public async Task Can_Parse_Ed25519_Raw_32_Byte_Key()
     {
-        var derPublicKey = Hex.ToBytes("302a300506032b65700321001dd944db2def347f51ef46ab7bafba05e139ed3cadfa9786ce6ab034284d500d");
+        var derPublicKey = Convert.FromHexString("302a300506032b65700321001dd944db2def347f51ef46ab7bafba05e139ed3cadfa9786ce6ab034284d500d");
         var rawPublicKey = derPublicKey[^32..];
 
         var endorsement = new Endorsement(rawPublicKey);
@@ -515,8 +606,8 @@ public class EndorsementTests
     [Test]
     public async Task Can_Parse_Secp256K1_From_Compacted_Der_Encoding()
     {
-        var derPublicKey = Hex.ToBytes("302d300706052b8104000a03220002ffd5a91eb6e55f584718a7da0bc168cddf9dd3dec2a968e574181a8fd9ab95ae");
-        var longFormKey = Hex.ToBytes("308201333081ec06072a8648ce3d02013081e0020101302c06072a8648ce3d0101022100fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f3044042000000000000000000000000000000000000000000000000000000000000000000420000000000000000000000000000000000000000000000000000000000000000704410479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8022100fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd036414102010103420004ffd5a91eb6e55f584718a7da0bc168cddf9dd3dec2a968e574181a8fd9ab95aee07205037c7be54a4b818c79eeec0a44e502a12abf2641e06554d643b7fb4516");
+        var derPublicKey = Convert.FromHexString("302d300706052b8104000a03220002ffd5a91eb6e55f584718a7da0bc168cddf9dd3dec2a968e574181a8fd9ab95ae");
+        var longFormKey = Convert.FromHexString("308201333081ec06072a8648ce3d02013081e0020101302c06072a8648ce3d0101022100fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f3044042000000000000000000000000000000000000000000000000000000000000000000420000000000000000000000000000000000000000000000000000000000000000704410479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8022100fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd036414102010103420004ffd5a91eb6e55f584718a7da0bc168cddf9dd3dec2a968e574181a8fd9ab95aee07205037c7be54a4b818c79eeec0a44e502a12abf2641e06554d643b7fb4516");
 
         var endorsement = new Endorsement(derPublicKey);
         await Assert.That(endorsement.Type).IsEqualTo(KeyType.ECDSASecp256K1);
@@ -528,8 +619,8 @@ public class EndorsementTests
     [Test]
     public async Task Can_Parse_Secp256K1_From_Raw_Form()
     {
-        var derPublicKey = Hex.ToBytes("02ffd5a91eb6e55f584718a7da0bc168cddf9dd3dec2a968e574181a8fd9ab95ae");
-        var longFormKey = Hex.ToBytes("308201333081ec06072a8648ce3d02013081e0020101302c06072a8648ce3d0101022100fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f3044042000000000000000000000000000000000000000000000000000000000000000000420000000000000000000000000000000000000000000000000000000000000000704410479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8022100fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd036414102010103420004ffd5a91eb6e55f584718a7da0bc168cddf9dd3dec2a968e574181a8fd9ab95aee07205037c7be54a4b818c79eeec0a44e502a12abf2641e06554d643b7fb4516");
+        var derPublicKey = Convert.FromHexString("02ffd5a91eb6e55f584718a7da0bc168cddf9dd3dec2a968e574181a8fd9ab95ae");
+        var longFormKey = Convert.FromHexString("308201333081ec06072a8648ce3d02013081e0020101302c06072a8648ce3d0101022100fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f3044042000000000000000000000000000000000000000000000000000000000000000000420000000000000000000000000000000000000000000000000000000000000000704410479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8022100fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd036414102010103420004ffd5a91eb6e55f584718a7da0bc168cddf9dd3dec2a968e574181a8fd9ab95aee07205037c7be54a4b818c79eeec0a44e502a12abf2641e06554d643b7fb4516");
 
         var endorsement = new Endorsement(derPublicKey);
         await Assert.That(endorsement.Type).IsEqualTo(KeyType.ECDSASecp256K1);
@@ -541,7 +632,7 @@ public class EndorsementTests
     [Test]
     public async Task Can_Extract_Ed25519_Bytes_In_Various_Formats()
     {
-        var derPublicKey = Hex.ToBytes("302a300506032b6570032100eeed21c291ef1d6860540370e9907ea9a7cb529dba1c0bfaa6dcf644f28aab31");
+        var derPublicKey = Convert.FromHexString("302a300506032b6570032100eeed21c291ef1d6860540370e9907ea9a7cb529dba1c0bfaa6dcf644f28aab31");
         var rawPublicKey = derPublicKey[^32..];
         var prtPublicKey = (new Proto.Key { Ed25519 = ByteString.CopyFrom(rawPublicKey.ToArray()) }).ToByteString().Memory;
 
@@ -558,9 +649,9 @@ public class EndorsementTests
     [Test]
     public async Task Can_Extract_Secp256K1_Bytes_In_Various_Formats()
     {
-        ReadOnlyMemory<byte> rawPublicKey = Hex.ToBytes("026866c9664a95af2e9d8e7109eb8ccbe74eb822d49be1242b1511d775d1826e2a");
-        ReadOnlyMemory<byte> hdrPublicKey = Hex.ToBytes("302d300706052b8104000a032200026866c9664a95af2e9d8e7109eb8ccbe74eb822d49be1242b1511d775d1826e2a");
-        ReadOnlyMemory<byte> derPublicKey = SubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(KeyUtils.ParsePublicEcdsaSecp256k1Key(rawPublicKey)).GetDerEncoded();
+        ReadOnlyMemory<byte> rawPublicKey = Convert.FromHexString("026866c9664a95af2e9d8e7109eb8ccbe74eb822d49be1242b1511d775d1826e2a");
+        ReadOnlyMemory<byte> hdrPublicKey = Convert.FromHexString("302d300706052b8104000a032200026866c9664a95af2e9d8e7109eb8ccbe74eb822d49be1242b1511d775d1826e2a");
+        ReadOnlyMemory<byte> derPublicKey = SubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(KeyParser.ParsePublicEcdsaSecp256k1Key(rawPublicKey)).GetDerEncoded();
         ReadOnlyMemory<byte> prtPublicKey = (new Proto.Key { ECDSASecp256K1 = ByteString.CopyFrom(rawPublicKey.ToArray()) }).ToByteString().Memory;
 
         var endorsement = new Endorsement(KeyType.ECDSASecp256K1, rawPublicKey);
@@ -617,9 +708,23 @@ public class EndorsementTests
         var message = Generator.Secp256k1KeyPair().publicKey;
         var sigMap = new SignatureMap();
         await sigMap.AddSignatureAsync(message, signatory);
-        var signature = sigMap.SigPair[0].Ed25519.ToByteArray();
+        var signature = sigMap.SigPair[0].Ed25519.Memory;
 
         await Assert.That(endorsement.Verify(message, signature)).IsTrue();
+    }
+
+    [Test]
+    public async Task Can_Verify_Valid_Ed25519_Signature_From_Memory()
+    {
+        var (publicKey, privateKey) = Generator.Ed25519KeyPair();
+
+        var endorsement = new Endorsement(publicKey);
+        var signatory = new Signatory(privateKey);
+        var message = Generator.Secp256k1KeyPair().publicKey;
+        var sigMap = new SignatureMap();
+        await sigMap.AddSignatureAsync(message, signatory);
+
+        await Assert.That(endorsement.Verify(message, sigMap.SigPair[0].Ed25519.Memory)).IsTrue();
     }
 
     [Test]
@@ -633,7 +738,7 @@ public class EndorsementTests
         var message = Generator.Secp256k1KeyPair().publicKey;
         var sigMap = new SignatureMap();
         await sigMap.AddSignatureAsync(message, signatory);
-        var signature = sigMap.SigPair[0].Ed25519.ToByteArray();
+        var signature = sigMap.SigPair[0].Ed25519.Memory;
 
         await Assert.That(endorsement.Verify(message, signature)).IsFalse();
     }
@@ -648,9 +753,23 @@ public class EndorsementTests
         var message = Generator.Ed25519KeyPair().publicKey;
         var sigMap = new SignatureMap();
         await sigMap.AddSignatureAsync(message, signatory);
-        var signature = sigMap.SigPair[0].ECDSASecp256K1.ToByteArray();
+        var signature = sigMap.SigPair[0].ECDSASecp256K1.Memory;
 
         await Assert.That(endorsement.Verify(message, signature)).IsTrue();
+    }
+
+    [Test]
+    public async Task Can_Verify_Valid_Secp256K1_Signature_From_Memory()
+    {
+        var (publicKey, privateKey) = Generator.Secp256k1KeyPair();
+
+        var endorsement = new Endorsement(publicKey);
+        var signatory = new Signatory(privateKey);
+        var message = Generator.Ed25519KeyPair().publicKey;
+        var sigMap = new SignatureMap();
+        await sigMap.AddSignatureAsync(message, signatory);
+
+        await Assert.That(endorsement.Verify(message, sigMap.SigPair[0].ECDSASecp256K1.Memory)).IsTrue();
     }
 
     [Test]
@@ -664,7 +783,7 @@ public class EndorsementTests
         var message = Generator.Ed25519KeyPair().publicKey;
         var sigMap = new SignatureMap();
         await sigMap.AddSignatureAsync(message, signatory);
-        var signature = sigMap.SigPair[0].ECDSASecp256K1.ToByteArray();
+        var signature = sigMap.SigPair[0].ECDSASecp256K1.Memory;
 
         await Assert.That(endorsement.Verify(message, signature)).IsFalse();
     }
@@ -680,7 +799,7 @@ public class EndorsementTests
         var message = Generator.Ed25519KeyPair().publicKey;
         var sigMap = new SignatureMap();
         await sigMap.AddSignatureAsync(message, signatory);
-        var signature = sigMap.SigPair[0].ECDSASecp256K1?.ToByteArray() ?? sigMap.SigPair[0].Ed25519.ToByteArray();
+        var signature = sigMap.SigPair[0].ECDSASecp256K1 is not null ? sigMap.SigPair[0].ECDSASecp256K1.Memory : sigMap.SigPair[0].Ed25519.Memory;
 
         var ex = Assert.Throws<InvalidOperationException>(() =>
         {
@@ -699,7 +818,7 @@ public class EndorsementTests
         var message = Generator.Ed25519KeyPair().publicKey;
         var sigMap = new SignatureMap();
         await sigMap.AddSignatureAsync(message, signatory);
-        var signature = sigMap.SigPair[0].ECDSASecp256K1?.ToByteArray() ?? sigMap.SigPair[0].Ed25519.ToByteArray();
+        var signature = sigMap.SigPair[0].ECDSASecp256K1 is not null ? sigMap.SigPair[0].ECDSASecp256K1.Memory : sigMap.SigPair[0].Ed25519.Memory;
 
         var ex = Assert.Throws<InvalidOperationException>(() =>
         {
@@ -875,5 +994,19 @@ public class EndorsementTests
 
         var listEndorsement = new Endorsement(1, new Endorsement(publicKey));
         await Assert.That(listEndorsement.Contract).IsEqualTo(EntityId.None);
+    }
+
+    private static async Task AssertEndorsementsEqual(Endorsement left, Endorsement right)
+    {
+        await Assert.That(left).IsEqualTo(right);
+        await Assert.That(left == right).IsTrue();
+        await Assert.That(left != right).IsFalse();
+    }
+
+    private static async Task AssertEndorsementsNotEqual(Endorsement left, Endorsement right)
+    {
+        await Assert.That(left).IsNotEqualTo(right);
+        await Assert.That(left == right).IsFalse();
+        await Assert.That(left != right).IsTrue();
     }
 }

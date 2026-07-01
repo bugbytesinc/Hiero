@@ -8,6 +8,12 @@ namespace Hiero;
 /// of the segment and which parent message this
 /// segment correlates with.
 /// </summary>
+/// <remarks>
+/// The network does not validate this metadata, so the values
+/// reported here reflect only what the submitter supplied. A
+/// reconstructed message may have gaps or inconsistencies and
+/// should be validated upon consumption.
+/// </remarks>
 public sealed record MessageSegmentInfo
 {
     /// <summary>

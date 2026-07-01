@@ -89,7 +89,7 @@ public sealed class CreateAccountParams : TransactionParams<CreateAccountReceipt
     /// Optional list of hooks to create on the account immediately
     /// after it is created.
     /// </summary>
-    public IEnumerable<HookMetadata>? Hooks { get; set; }
+    public IReadOnlyList<HookMetadata>? Hooks { get; set; }
     /// <summary>
     /// Additional private key, keys or signing callback method
     /// required to create this account.  Typically matches the
@@ -144,9 +144,15 @@ public sealed class CreateAccountParams : TransactionParams<CreateAccountReceipt
         result.MaxAutomaticTokenAssociations = AutoAssociationLimit;
         if (Hooks is not null)
         {
-            foreach (var hook in Hooks)
+            var count = Hooks.Count;
+            var hookCreationDetails = result.HookCreationDetails;
+            if (hookCreationDetails.Capacity < count)
             {
-                result.HookCreationDetails.Add(hook.ToProto());
+                hookCreationDetails.Capacity = count;
+            }
+            for (var i = 0; i < count; i++)
+            {
+                hookCreationDetails.Add(Hooks[i].ToProto());
             }
         }
         return result;

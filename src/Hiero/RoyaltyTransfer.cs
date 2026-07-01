@@ -10,6 +10,8 @@ namespace Hiero;
 /// </summary>
 public sealed record RoyaltyTransfer
 {
+    private static readonly IReadOnlyList<EntityId> EmptyPayers = Array.AsReadOnly(Array.Empty<EntityId>());
+
     /// <summary>
     /// The token whose coins (or crypto)
     /// have been transferred to pay the royalty.
@@ -34,7 +36,7 @@ public sealed record RoyaltyTransfer
     private RoyaltyTransfer()
     {
         Token = EntityId.None;
-        Payers = new List<EntityId>().AsReadOnly();
+        Payers = EmptyPayers;
         Receiver = EntityId.None;
         Amount = 0;
     }
@@ -47,6 +49,19 @@ public sealed record RoyaltyTransfer
         Token = fee.TokenId.AsAddress();
         Receiver = fee.FeeCollectorAccountId.AsAddress();
         Amount = fee.Amount;
-        Payers = fee.EffectivePayerAccountId.Select(payerID => payerID.AsAddress()).ToList().AsReadOnly();
+        var payerCount = fee.EffectivePayerAccountId.Count;
+        if (payerCount == 0)
+        {
+            Payers = EmptyPayers;
+        }
+        else
+        {
+            var payers = new EntityId[payerCount];
+            for (var i = 0; i < payerCount; i++)
+            {
+                payers[i] = fee.EffectivePayerAccountId[i].AsAddress();
+            }
+            Payers = Array.AsReadOnly(payers);
+        }
     }
 }

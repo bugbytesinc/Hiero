@@ -18,8 +18,8 @@ internal class TopicMessageDataPage : Page<TopicMessageData>
     /// <returns>
     /// An enumerator listing the messages in the list.
     /// </returns>
-    public override IEnumerable<TopicMessageData> GetItems()
+    public override TopicMessageData[] GetItems()
     {
-        return Messages ?? Array.Empty<TopicMessageData>();
+        return Messages ?? [];
     }
 }

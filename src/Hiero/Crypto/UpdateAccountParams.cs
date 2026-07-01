@@ -94,12 +94,12 @@ public sealed class UpdateAccountParams : TransactionParams<TransactionReceipt>,
     /// <summary>
     /// Optional list of hooks to add to the account.
     /// </summary>
-    public IEnumerable<HookMetadata>? AddHooks { get; set; }
+    public IReadOnlyList<HookMetadata>? AddHooks { get; set; }
     /// <summary>
     /// Optional list of hook numeric identifiers to remove
     /// from the account.
     /// </summary>
-    public IEnumerable<long>? RemoveHooks { get; set; }
+    public IReadOnlyList<long>? RemoveHooks { get; set; }
     /// <summary>
     /// Any additional signing keys required to validate the transaction
     /// that are not already specified in the client object's context.
@@ -187,13 +187,27 @@ public sealed class UpdateAccountParams : TransactionParams<TransactionReceipt>,
         }
         if (RemoveHooks is not null)
         {
-            result.HookIdsToDelete.AddRange(RemoveHooks);
+            var hookIdsToDelete = result.HookIdsToDelete;
+            if (hookIdsToDelete.Capacity < RemoveHooks.Count)
+            {
+                hookIdsToDelete.Capacity = RemoveHooks.Count;
+            }
+            for (var i = 0; i < RemoveHooks.Count; i++)
+            {
+                hookIdsToDelete.Add(RemoveHooks[i]);
+            }
         }
         if (AddHooks is not null)
         {
-            foreach (var hook in AddHooks)
+            var count = AddHooks.Count;
+            var hookCreationDetails = result.HookCreationDetails;
+            if (hookCreationDetails.Capacity < count)
             {
-                result.HookCreationDetails.Add(hook.ToProto());
+                hookCreationDetails.Capacity = count;
+            }
+            for (var i = 0; i < count; i++)
+            {
+                hookCreationDetails.Add(AddHooks[i].ToProto());
             }
         }
         return result;

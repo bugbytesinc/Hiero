@@ -1,5 +1,6 @@
 ﻿// SPDX-License-Identifier: Apache-2.0
 using Hiero.Converters;
+using Hiero.Implementation.Formatting;
 using System.Diagnostics;
 using System.Text.Json.Serialization;
 
@@ -72,7 +73,7 @@ public readonly record struct ConsensusTimeStamp : IComparable<ConsensusTimeStam
     /// </returns>
     public override string ToString()
     {
-        return Seconds.ToString("0.000000000");
+        return ConsensusTimeStampFormatter.Format(this);
     }
     /// <summary>
     /// Compares the current consensus time instance with another

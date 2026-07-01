@@ -18,8 +18,8 @@ internal class CryptoAllowanceDataPage : Page<CryptoAllowanceData>
     /// <returns>
     /// An enumerator listing the crypto allowance records in the list.
     /// </returns>
-    public override IEnumerable<CryptoAllowanceData> GetItems()
+    public override CryptoAllowanceData[] GetItems()
     {
-        return CryptoAllowances ?? Array.Empty<CryptoAllowanceData>();
+        return CryptoAllowances ?? [];
     }
 }

@@ -4,19 +4,23 @@ using System.Text.Json.Serialization;
 
 namespace Hiero.Converters;
 /// <summary>
-/// Token Type Converter
+/// Converts the mirror node token-type string (<c>FUNGIBLE_COMMON</c>/<c>NON_FUNGIBLE_UNIQUE</c>)
+/// to and from a <see cref="TokenType"/>.
 /// </summary>
 public sealed class TokenTypeConverter : JsonConverter<TokenType>
 {
     /// <inheritdoc />
     public override TokenType Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        return reader.GetString() switch
+        if (reader.TokenType != JsonTokenType.String)
         {
-            "FUNGIBLE_COMMON" => TokenType.Fungible,
-            "NON_FUNGIBLE_UNIQUE" => TokenType.NonFungible,
-            _ => TokenType.Fungible
-        };
+            return TokenType.Fungible;
+        }
+        if (reader.ValueTextEquals("NON_FUNGIBLE_UNIQUE"u8))
+        {
+            return TokenType.NonFungible;
+        }
+        return TokenType.Fungible;
     }
     /// <inheritdoc />
     public override void Write(Utf8JsonWriter writer, TokenType timeStamp, JsonSerializerOptions options)

@@ -3,7 +3,9 @@ using Hiero.Implementation;
 
 namespace Hiero;
 /// <summary>
-/// A General Marker abstract class for transactions parameters.
+/// Non-generic base marker for all transaction parameter classes,
+/// allowing them to be referenced uniformly regardless of the receipt
+/// type they produce.
 /// </summary>
 public abstract class TransactionParams
 {
@@ -14,8 +16,15 @@ public abstract class TransactionParams
     internal TransactionParams() { }
 }
 /// <summary>
-/// A Transaction Receipt Specific Marker abstract class for transactions parameters.
+/// Base class for transaction parameters, parameterized by the
+/// <typeparamref name="TReceipt"/> type returned when the transaction is
+/// executed.  Derived parameter classes are passed to the client's
+/// <c>ExecuteAsync</c> and <c>SubmitAsync</c> methods.
 /// </summary>
+/// <typeparam name="TReceipt">
+/// The <see cref="TransactionReceipt"/> subtype produced when a transaction
+/// built from these parameters reaches consensus.
+/// </typeparam>
 public abstract class TransactionParams<TReceipt> : TransactionParams where TReceipt : TransactionReceipt
 {
     /// <remarks>

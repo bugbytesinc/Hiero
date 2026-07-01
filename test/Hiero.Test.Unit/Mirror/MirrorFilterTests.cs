@@ -190,7 +190,7 @@ public class MirrorFilterTests
         var bytes = Generator.KeyPair().publicKey[^20..];
         var evmAddress = new EvmAddress(bytes);
         var filter = EvmSenderFilter.Is(evmAddress);
-        var expected = $"0x{Hex.FromBytes(evmAddress.Bytes)}";
+        var expected = $"0x{Convert.ToHexStringLower(evmAddress.Bytes)}";
         await Assert.That(filter.Value).IsEqualTo(expected);
     }
 
@@ -352,7 +352,7 @@ public class MirrorFilterTests
     {
         var slot = new BigInteger(1);
         var filter = SlotFilter.Is(slot);
-        var expected = "0x" + Hex.FromBytes(slot.ToByteArray(true, true)).PadLeft(64, '0');
+        var expected = "0x" + Convert.ToHexStringLower(slot.ToByteArray(true, true)).PadLeft(64, '0');
         await Assert.That(filter.Value).IsEqualTo(expected);
     }
 
@@ -361,7 +361,7 @@ public class MirrorFilterTests
     {
         var slot = new BigInteger(Generator.Integer(1, 1_000_000));
         var filter = SlotFilter.Is(slot);
-        var expected = "0x" + Hex.FromBytes(slot.ToByteArray(true, true)).PadLeft(64, '0');
+        var expected = "0x" + Convert.ToHexStringLower(slot.ToByteArray(true, true)).PadLeft(64, '0');
         await Assert.That(filter.Value).IsEqualTo(expected);
     }
 
@@ -722,7 +722,7 @@ public class MirrorFilterTests
         var endorsement = new Endorsement(pub);
         var filter = PublicKeyFilter.Is(endorsement);
         await Assert.That(filter.Name).IsEqualTo("publickey");
-        await Assert.That(filter.Value).IsEqualTo(Hex.FromBytes(endorsement.ToBytes(KeyFormat.Mirror)));
+        await Assert.That(filter.Value).IsEqualTo(Convert.ToHexStringLower(endorsement.ToBytes(KeyFormat.Mirror).Span));
     }
 
     [Test]
@@ -916,7 +916,7 @@ public class MirrorFilterTests
         var endorsement = new Endorsement(pub);
         var filter = AccountPublicKeyFilter.Is(endorsement);
         await Assert.That(filter.Name).IsEqualTo("account.publickey");
-        await Assert.That(filter.Value).IsEqualTo(Hex.FromBytes(endorsement.ToBytes(KeyFormat.Mirror)));
+        await Assert.That(filter.Value).IsEqualTo(Convert.ToHexStringLower(endorsement.ToBytes(KeyFormat.Mirror).Span));
     }
 
     [Test]
@@ -986,6 +986,15 @@ public class MirrorFilterTests
     public async Task TransactionIndexFilter_Is_Has_Correct_Name_And_Value()
     {
         var idx = Generator.Integer(0, 1000);
+        var filter = TransactionIndexFilter.Is(idx);
+        await Assert.That(filter.Name).IsEqualTo("transaction.index");
+        await Assert.That(filter.Value).IsEqualTo(idx.ToString());
+    }
+
+    [Test]
+    public async Task TransactionIndexFilter_Is_Accepts_Long_Index()
+    {
+        var idx = (long)int.MaxValue + 1;
         var filter = TransactionIndexFilter.Is(idx);
         await Assert.That(filter.Name).IsEqualTo("transaction.index");
         await Assert.That(filter.Value).IsEqualTo(idx.ToString());
@@ -1087,7 +1096,7 @@ public class MirrorFilterTests
         var index = Generator.Integer(0, 3);
         var topic = new BigInteger(Generator.Integer(1, 1_000_000));
         var filter = EvmTopicFilter.Is(index, topic);
-        var expected = "0x" + Hex.FromBytes(topic.ToByteArray(true, true)).PadLeft(64, '0');
+        var expected = "0x" + Convert.ToHexStringLower(topic.ToByteArray(true, true)).PadLeft(64, '0');
         await Assert.That(filter.Value).IsEqualTo(expected);
     }
 

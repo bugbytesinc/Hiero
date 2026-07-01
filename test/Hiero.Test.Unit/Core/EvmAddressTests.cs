@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 #pragma warning disable CS8600, CS8602, CS8604 // Null assignments and dereferences are intentional in these tests
 using Hiero.Test.Helpers;
+using System.Text.Json;
 
 namespace Hiero.Test.Unit.Core;
 
@@ -174,6 +175,25 @@ public class EvmAddressTests
     }
 
     [Test]
+    public async Task ToString_Returns_Known_EIP55_Checksum()
+    {
+        var vectors = new[]
+        {
+            "0x52908400098527886E0F7030069857D2E4169EE7",
+            "0x8617E340B3D01FA5F11F306F4090FD50E238070D",
+            "0xde709f2102306220921060314715629080e2fb77",
+            "0x27b1fdb04752bbc536007a920d24acb045561c26",
+            "0x5AEDA56215b167893e80B4fE645BA6d5Bab767DE",
+        };
+
+        foreach (var expected in vectors)
+        {
+            var evmAddress = new EvmAddress(Convert.FromHexString(expected[2..]));
+            await Assert.That(evmAddress.ToString()).IsEqualTo(expected);
+        }
+    }
+
+    [Test]
     public async Task TryParse_Valid_String_With_Prefix()
     {
         var bytes = Generator.KeyPair().publicKey[^20..];
@@ -237,5 +257,24 @@ public class EvmAddressTests
         await Assert.That(entityId).IsNotNull();
         await Assert.That(entityId.ShardNum).IsEqualTo(0L);
         await Assert.That(entityId.RealmNum).IsEqualTo(0L);
+    }
+
+    [Test]
+    public async Task Json_RoundTrip_Preserves_Value()
+    {
+        var bytes = Generator.KeyPair().publicKey[^20..];
+        var evmAddress = new EvmAddress(bytes);
+        var json = JsonSerializer.Serialize(evmAddress);
+        var parsed = JsonSerializer.Deserialize<EvmAddress>(json);
+        await Assert.That(parsed).IsEqualTo(evmAddress);
+    }
+
+    [Test]
+    public async Task Json_Deserialize_Escaped_Address_Preserves_Value()
+    {
+        var evmAddress = new EvmAddress(Enumerable.Repeat((byte)0xAB, 20).ToArray());
+        var json = JsonSerializer.Serialize(evmAddress).Replace("a", "\\u0061", StringComparison.Ordinal);
+        var parsed = JsonSerializer.Deserialize<EvmAddress>(json);
+        await Assert.That(parsed).IsEqualTo(evmAddress);
     }
 }

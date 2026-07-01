@@ -503,6 +503,42 @@ public class EntityIdTests
     }
 
     [Test]
+    public async Task TryFormat_Writes_ShardRealmNum()
+    {
+        var entityId = new EntityId(10, 20, 30);
+        Span<char> buffer = stackalloc char[16];
+
+        var result = entityId.TryFormat(buffer, out var charsWritten, default, null);
+        var formatted = new string(buffer[..charsWritten]);
+
+        await Assert.That(result).IsTrue();
+        await Assert.That(charsWritten).IsEqualTo(8);
+        await Assert.That(formatted).IsEqualTo("10.20.30");
+    }
+
+    [Test]
+    public async Task TryFormat_Returns_False_When_Destination_Is_Too_Small()
+    {
+        var entityId = new EntityId(10, 20, 30);
+        Span<char> buffer = stackalloc char[7];
+
+        var result = entityId.TryFormat(buffer, out var charsWritten, default, null);
+
+        await Assert.That(result).IsFalse();
+        await Assert.That(charsWritten).IsEqualTo(0);
+    }
+
+    [Test]
+    public async Task Interpolated_String_Formats_ShardRealmNum()
+    {
+        var entityId = new EntityId(10, 20, 30);
+
+        var result = $"ne:{entityId}";
+
+        await Assert.That(result).IsEqualTo("ne:10.20.30");
+    }
+
+    [Test]
     public async Task CastToEvmAddress_From_ShardRealmNum()
     {
         var entityId = new EntityId(0, 0, 10);

@@ -41,7 +41,10 @@ public static class ExchangeRateDataExtensions
 {
     /// <summary>
     /// Retrieves the current and next exchange rate from
-    /// the mirror node.
+    /// <c>/api/v1/network/exchangerate</c>. When
+    /// <paramref name="consensus"/> is supplied, returns the rate pair
+    /// in effect at or before that consensus instant; otherwise returns
+    /// the latest rate.
     /// </summary>
     /// <param name="client">
     /// Mirror Rest Client to use for the request.
@@ -53,7 +56,7 @@ public static class ExchangeRateDataExtensions
     /// <returns>
     /// Exchange rate information for the current and next
     /// rate utilized by the network for determining
-    /// transaction and gas fees.
+    /// transaction and gas fees, or null if not found.
     /// </returns>
     public static Task<ExchangeRateData?> GetExchangeRateAsync(this MirrorRestClient client, ConsensusTimeStamp? consensus = null)
     {
@@ -63,7 +66,7 @@ public static class ExchangeRateDataExtensions
         }
         else
         {
-            var path = GenerateInitialPath($"network/exchangerate", [TimestampFilter.OnOrBefore(consensus.Value)]);
+            var path = GenerateInitialPath("network/exchangerate", TimestampFilter.OnOrBefore(consensus.Value));
             return client.GetSingleItemAsync(path, MirrorJsonContext.Default.ExchangeRateData);
         }
     }

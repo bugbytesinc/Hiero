@@ -17,8 +17,10 @@ namespace Hiero.Mirror.Filters;
 /// Note: this targets the bare <c>publickey</c> query parameter
 /// used by <c>/tokens</c>. The distinct <c>account.publickey</c>
 /// parameter on <c>/accounts</c>, <c>/balances</c>, and
-/// <c>/tokens/{id}/balances</c> is handled by a separate filter
-/// type (not yet introduced).
+/// <c>/tokens/{id}/balances</c> is handled by
+/// <see cref="AccountPublicKeyFilter"/>. Same encoding shape — hex
+/// of the endorsement's mirror-format bytes — but a different wire
+/// name.
 /// </para>
 /// </remarks>
 public sealed class PublicKeyFilter : IMirrorFilter
@@ -47,6 +49,6 @@ public sealed class PublicKeyFilter : IMirrorFilter
     public static PublicKeyFilter Is(Endorsement endorsement)
     {
         ArgumentNullException.ThrowIfNull(endorsement);
-        return new PublicKeyFilter(Hex.FromBytes(endorsement.ToBytes(KeyFormat.Mirror)));
+        return new PublicKeyFilter(Convert.ToHexStringLower(endorsement.ToBytes(KeyFormat.Mirror).Span));
     }
 }

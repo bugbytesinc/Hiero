@@ -21,7 +21,7 @@ public sealed class RevokeNftAllowanceParams : TransactionParams<TransactionRece
     /// <summary>
     /// The Serial Numbers of the NFTs to revoke allowances from.
     /// </summary>
-    public IEnumerable<long> SerialNumbers { get; set; } = default!;
+    public IReadOnlyList<long> SerialNumbers { get; set; } = default!;
     /// <summary>
     /// Additional private key, keys or signing callback method 
     /// required to authorize the transaction.
@@ -51,18 +51,28 @@ public sealed class RevokeNftAllowanceParams : TransactionParams<TransactionRece
         {
             throw new ArgumentNullException(nameof(SerialNumbers), "The list of serial numbers is missing. Please check that it is not null.");
         }
+        var count = SerialNumbers.Count;
+        if (count == 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(SerialNumbers), "The list of serial numbers must contain at least one serial number to remove.");
+        }
         var nftRemoveAllowance = new NftRemoveAllowance()
         {
             TokenId = new TokenID(Token),
             Owner = new AccountID(Owner),
         };
-        nftRemoveAllowance.SerialNumbers.AddRange(SerialNumbers);
-        var result = new CryptoDeleteAllowanceTransactionBody();
-        result.NftAllowances.Add(nftRemoveAllowance);
-        if (result.NftAllowances.Count == 0)
+        var serialNumbers = nftRemoveAllowance.SerialNumbers;
+        if (serialNumbers.Capacity < count)
         {
-            throw new ArgumentOutOfRangeException(nameof(SerialNumbers), "The list of serial numbers must contain at least one serial number to remove.");
+            serialNumbers.Capacity = count;
         }
+        for (var i = 0; i < count; i++)
+        {
+            serialNumbers.Add(SerialNumbers[i]);
+        }
+        var result = new CryptoDeleteAllowanceTransactionBody();
+        result.NftAllowances.Capacity = 1;
+        result.NftAllowances.Add(nftRemoveAllowance);
         return result;
     }
     TransactionReceipt INetworkParams<TransactionReceipt>.CreateReceipt(TransactionID transactionId, Proto.TransactionReceipt receipt)

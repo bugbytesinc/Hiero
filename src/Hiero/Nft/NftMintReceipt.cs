@@ -21,7 +21,7 @@ public sealed record NftMintReceipt : TransactionReceipt
     /// metadata sent to the mint method.
     /// </summary>
     /// <remarks>
-    /// The value will be empty if the update
+    /// The value will be empty if the mint
     /// was scheduled as a pending transaction.
     /// </remarks>
     public IReadOnlyList<long> SerialNumbers { get; internal init; }

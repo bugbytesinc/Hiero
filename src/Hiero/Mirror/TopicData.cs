@@ -88,7 +88,7 @@ public static class TopicDataExtensions
     /// </returns>
     public static Task<TopicData?> GetTopicAsync(this MirrorRestClient client, EntityId topic, params IMirrorQueryParameter[] filters)
     {
-        var path = GenerateInitialPath($"topics/{MirrorFormat(topic)}", filters);
+        var path = GenerateInitialPath($"topics/{topic.ToMirrorString()}", filters);
         return client.GetSingleItemAsync(path, MirrorJsonContext.Default.TopicData);
     }
 }

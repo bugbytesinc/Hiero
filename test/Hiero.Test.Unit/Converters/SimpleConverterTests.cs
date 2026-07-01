@@ -37,6 +37,10 @@ public class SimpleConverterTests
         [property: System.Text.Json.Serialization.JsonConverter(typeof(LongMirrorConverter))]
         long Value);
 
+    private record NullableLongWrapper(
+        [property: System.Text.Json.Serialization.JsonConverter(typeof(NullableLongMirrorConverter))]
+        long? Value);
+
     private record ULongWrapper(
         [property: System.Text.Json.Serialization.JsonConverter(typeof(UnsignedLongMirrorConverter))]
         ulong Value);
@@ -53,6 +57,15 @@ public class SimpleConverterTests
     public async Task Base64_Read_DecodesBase64StringToBytes()
     {
         var json = """{"Data":"AQIDBA=="}""";
+        var result = JsonSerializer.Deserialize<Base64Wrapper>(json);
+        await Assert.That(result).IsNotNull();
+        await Assert.That(result!.Data.ToArray()).IsEquivalentTo(new byte[] { 1, 2, 3, 4 });
+    }
+
+    [Test]
+    public async Task Base64_Read_DecodesEscapedBase64StringToBytes()
+    {
+        var json = """{"Data":"AQ\u0049DBA=="}""";
         var result = JsonSerializer.Deserialize<Base64Wrapper>(json);
         await Assert.That(result).IsNotNull();
         await Assert.That(result!.Data.ToArray()).IsEquivalentTo(new byte[] { 1, 2, 3, 4 });
@@ -103,6 +116,16 @@ public class SimpleConverterTests
     }
 
     [Test]
+    public async Task BigInteger_Read_DecodesEscapedHexString()
+    {
+        var json = """{"Value":"0xdea\u0064beef"}""";
+        var result = JsonSerializer.Deserialize<BigIntWrapper>(json);
+        await Assert.That(result).IsNotNull();
+        var expected = new BigInteger(0xDEADBEEF);
+        await Assert.That(result!.Value).IsEqualTo(expected);
+    }
+
+    [Test]
     public async Task BigInteger_Write_EncodesToHexString()
     {
         var wrapper = new BigIntWrapper(new BigInteger(0xDEADBEEF));
@@ -125,6 +148,37 @@ public class SimpleConverterTests
         var result = JsonSerializer.Deserialize<BigIntWrapper>(json);
         await Assert.That(result).IsNotNull();
         await Assert.That(result!.Value).IsEqualTo(BigInteger.Zero);
+    }
+
+    [Test]
+    public async Task BigInteger_Read_PadsOddLengthHexString()
+    {
+        var json = """{"Value":"0xf"}""";
+        var result = JsonSerializer.Deserialize<BigIntWrapper>(json);
+        await Assert.That(result).IsNotNull();
+        await Assert.That(result!.Value).IsEqualTo(new BigInteger(15));
+    }
+
+    [Test]
+    public async Task BigInteger_Read_PadsOddLengthEscapedHexString()
+    {
+        // The escape sequence forces the char/string parse path (reader.ValueIsEscaped),
+        // which is distinct from the unescaped ValueSpan path covered above. An odd-length
+        // hex value must still decode on that path. Regression test for the inverted
+        // OperationStatus check in the odd-length char branch (returned 0 on success).
+        var json = $$"""{"Value":"0x{{(char)92}}u0066"}"""; // (char)92 = '\' injected => JSON escape u0066 ('f'); unescapes to "0xf" => 15
+        var result = JsonSerializer.Deserialize<BigIntWrapper>(json);
+        await Assert.That(result).IsNotNull();
+        await Assert.That(result!.Value).IsEqualTo(new BigInteger(15));
+    }
+
+    [Test]
+    public async Task BigInteger_Read_DecodesOddLengthEscapedMultiNibbleHexString()
+    {
+        var json = $$"""{"Value":"0xa{{(char)92}}u0062c"}"""; // injected '\' => JSON escape u0062 ('b'); unescapes to "0xabc" (odd) => 0xABC
+        var result = JsonSerializer.Deserialize<BigIntWrapper>(json);
+        await Assert.That(result).IsNotNull();
+        await Assert.That(result!.Value).IsEqualTo(new BigInteger(0xABC));
     }
 
     [Test]
@@ -152,6 +206,15 @@ public class SimpleConverterTests
     }
 
     [Test]
+    public async Task HexBytes_Read_DecodesEscapedHexStringToBytes()
+    {
+        var json = """{"Data":"0xdea\u0064beef"}""";
+        var result = JsonSerializer.Deserialize<HexBytesWrapper>(json);
+        await Assert.That(result).IsNotNull();
+        await Assert.That(result!.Data.ToArray()).IsEquivalentTo(new byte[] { 0xDE, 0xAD, 0xBE, 0xEF });
+    }
+
+    [Test]
     public async Task HexBytes_Write_EncodesBytesToHexString()
     {
         var wrapper = new HexBytesWrapper(new ReadOnlyMemory<byte>(new byte[] { 0xDE, 0xAD, 0xBE, 0xEF }));
@@ -170,6 +233,36 @@ public class SimpleConverterTests
         await Assert.That(deserialized!.Data.ToArray()).IsEquivalentTo(original);
     }
 
+    [Test]
+    public async Task HexBytes_Read_OddLengthHexString_ReturnsEmpty()
+    {
+        // Malformed (odd-length) hex must yield empty rather than throwing, preserving the
+        // pre-span converter's tolerant "punt to empty" contract.
+        var json = """{"Data":"0xabc"}""";
+        var result = JsonSerializer.Deserialize<HexBytesWrapper>(json);
+        await Assert.That(result).IsNotNull();
+        await Assert.That(result!.Data.IsEmpty).IsTrue();
+    }
+
+    [Test]
+    public async Task HexBytes_Read_InvalidHexString_ReturnsEmpty()
+    {
+        var json = """{"Data":"0xZZ"}"""; // non-hex characters
+        var result = JsonSerializer.Deserialize<HexBytesWrapper>(json);
+        await Assert.That(result).IsNotNull();
+        await Assert.That(result!.Data.IsEmpty).IsTrue();
+    }
+
+    [Test]
+    public async Task HexBytes_Read_OddLengthEscapedHexString_ReturnsEmpty()
+    {
+        // Exercises the escaped char path's malformed-input tolerance.
+        var json = $$"""{"Data":"0xa{{(char)92}}u0062c"}"""; // injected '\' => JSON escape u0062 ('b'); unescapes to "0xabc" (odd length)
+        var result = JsonSerializer.Deserialize<HexBytesWrapper>(json);
+        await Assert.That(result).IsNotNull();
+        await Assert.That(result!.Data.IsEmpty).IsTrue();
+    }
+
     // ═══════════════════════════════════════════════════════════════════════
     //  4. FeeLimitFromStringConverter
     // ═══════════════════════════════════════════════════════════════════════
@@ -184,11 +277,39 @@ public class SimpleConverterTests
     }
 
     [Test]
+    public async Task FeeLimit_Read_ParsesWhitespaceStringToLong()
+    {
+        var json = """{"Value":" 1000 "}""";
+        var result = JsonSerializer.Deserialize<FeeLimitWrapper>(json);
+        await Assert.That(result).IsNotNull();
+        await Assert.That(result!.Value).IsEqualTo(1000L);
+    }
+
+    [Test]
+    public async Task FeeLimit_Read_ParsesNumberToLong()
+    {
+        // A raw JSON number token must parse, not throw. Regression test for the orphaned
+        // reader.GetString() that threw InvalidOperationException on a non-string token.
+        var json = """{"Value":1000}""";
+        var result = JsonSerializer.Deserialize<FeeLimitWrapper>(json);
+        await Assert.That(result).IsNotNull();
+        await Assert.That(result!.Value).IsEqualTo(1000L);
+    }
+
+    [Test]
     public async Task FeeLimit_Write_SerializesLongToString()
     {
         var wrapper = new FeeLimitWrapper(1000L);
         var json = JsonSerializer.Serialize(wrapper);
         await Assert.That(json).IsEqualTo("""{"Value":"1000"}""");
+    }
+
+    [Test]
+    public async Task FeeLimit_Write_SerializesMaxLongToString()
+    {
+        var wrapper = new FeeLimitWrapper(long.MaxValue);
+        var json = JsonSerializer.Serialize(wrapper);
+        await Assert.That(json).IsEqualTo("""{"Value":"9223372036854775807"}""");
     }
 
     [Test]
@@ -218,6 +339,24 @@ public class SimpleConverterTests
     public async Task BoolMirror_Read_StringTrue_ReturnsTrue()
     {
         var json = """{"Value":"true"}""";
+        var result = JsonSerializer.Deserialize<BoolWrapper>(json);
+        await Assert.That(result).IsNotNull();
+        await Assert.That(result!.Value).IsTrue();
+    }
+
+    [Test]
+    public async Task BoolMirror_Read_MixedCaseStringTrue_ReturnsTrue()
+    {
+        var json = """{"Value":"TrUe"}""";
+        var result = JsonSerializer.Deserialize<BoolWrapper>(json);
+        await Assert.That(result).IsNotNull();
+        await Assert.That(result!.Value).IsTrue();
+    }
+
+    [Test]
+    public async Task BoolMirror_Read_EscapedStringTrue_ReturnsTrue()
+    {
+        var json = """{"Value":"tr\u0075e"}""";
         var result = JsonSerializer.Deserialize<BoolWrapper>(json);
         await Assert.That(result).IsNotNull();
         await Assert.That(result!.Value).IsTrue();
@@ -257,6 +396,24 @@ public class SimpleConverterTests
     public async Task IntMirror_Read_StringValue_ReturnsInt()
     {
         var json = """{"Value":"42"}""";
+        var result = JsonSerializer.Deserialize<IntWrapper>(json);
+        await Assert.That(result).IsNotNull();
+        await Assert.That(result!.Value).IsEqualTo(42);
+    }
+
+    [Test]
+    public async Task IntMirror_Read_EscapedStringValue_ReturnsInt()
+    {
+        var json = """{"Value":"\u0034\u0032"}""";
+        var result = JsonSerializer.Deserialize<IntWrapper>(json);
+        await Assert.That(result).IsNotNull();
+        await Assert.That(result!.Value).IsEqualTo(42);
+    }
+
+    [Test]
+    public async Task IntMirror_Read_WhitespaceStringValue_ReturnsInt()
+    {
+        var json = """{"Value":" 42 "}""";
         var result = JsonSerializer.Deserialize<IntWrapper>(json);
         await Assert.That(result).IsNotNull();
         await Assert.That(result!.Value).IsEqualTo(42);
@@ -304,6 +461,15 @@ public class SimpleConverterTests
     }
 
     [Test]
+    public async Task LongMirror_Read_EscapedStringValue_ReturnsLong()
+    {
+        var json = """{"Value":"\u0039\u0038\u0037"}""";
+        var result = JsonSerializer.Deserialize<LongWrapper>(json);
+        await Assert.That(result).IsNotNull();
+        await Assert.That(result!.Value).IsEqualTo(987L);
+    }
+
+    [Test]
     public async Task LongMirror_Read_NullValue_ReturnsZero()
     {
         var json = """{"Value":null}""";
@@ -320,6 +486,37 @@ public class SimpleConverterTests
         var deserialized = JsonSerializer.Deserialize<LongWrapper>(json);
         await Assert.That(deserialized).IsNotNull();
         await Assert.That(deserialized!.Value).IsEqualTo(long.MaxValue);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    //  7b. NullableLongMirrorConverter
+    // ═══════════════════════════════════════════════════════════════════════
+
+    [Test]
+    public async Task NullableLongMirror_Read_StringValue_ReturnsLong()
+    {
+        var json = """{"Value":"9876543210"}""";
+        var result = JsonSerializer.Deserialize<NullableLongWrapper>(json);
+        await Assert.That(result).IsNotNull();
+        await Assert.That(result!.Value).IsEqualTo(9876543210L);
+    }
+
+    [Test]
+    public async Task NullableLongMirror_Read_NullValue_ReturnsNull()
+    {
+        var json = """{"Value":null}""";
+        var result = JsonSerializer.Deserialize<NullableLongWrapper>(json);
+        await Assert.That(result).IsNotNull();
+        await Assert.That(result!.Value).IsNull();
+    }
+
+    [Test]
+    public async Task NullableLongMirror_Read_InvalidString_ReturnsNull()
+    {
+        var json = """{"Value":"nope"}""";
+        var result = JsonSerializer.Deserialize<NullableLongWrapper>(json);
+        await Assert.That(result).IsNotNull();
+        await Assert.That(result!.Value).IsNull();
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -342,6 +539,15 @@ public class SimpleConverterTests
         var result = JsonSerializer.Deserialize<ULongWrapper>(json);
         await Assert.That(result).IsNotNull();
         await Assert.That(result!.Value).IsEqualTo(12345678901234UL);
+    }
+
+    [Test]
+    public async Task ULongMirror_Read_EscapedStringValue_ReturnsULong()
+    {
+        var json = """{"Value":"\u0031\u0032\u0033\u0034"}""";
+        var result = JsonSerializer.Deserialize<ULongWrapper>(json);
+        await Assert.That(result).IsNotNull();
+        await Assert.That(result!.Value).IsEqualTo(1234UL);
     }
 
     [Test]
@@ -377,9 +583,55 @@ public class SimpleConverterTests
     }
 
     [Test]
+    public async Task Duration_Read_ParsesFractionalStringToTimeSpan()
+    {
+        var json = """{"Value":"120.5"}""";
+        var result = JsonSerializer.Deserialize<DurationWrapper>(json);
+        await Assert.That(result).IsNotNull();
+        await Assert.That(result!.Value).IsEqualTo(TimeSpan.FromSeconds(120.5));
+    }
+
+    [Test]
+    public async Task Duration_Read_ParsesEscapedFractionalStringToTimeSpan()
+    {
+        var json = """{"Value":"120.\u0035"}""";
+        var result = JsonSerializer.Deserialize<DurationWrapper>(json);
+        await Assert.That(result).IsNotNull();
+        await Assert.That(result!.Value).IsEqualTo(TimeSpan.FromSeconds(120.5));
+    }
+
+    [Test]
+    public async Task Duration_Read_ParsesWhitespaceStringToTimeSpan()
+    {
+        var json = """{"Value":" 120 "}""";
+        var result = JsonSerializer.Deserialize<DurationWrapper>(json);
+        await Assert.That(result).IsNotNull();
+        await Assert.That(result!.Value).IsEqualTo(TimeSpan.FromSeconds(120));
+    }
+
+    [Test]
+    public async Task Duration_Read_ParsesNumberToTimeSpan()
+    {
+        // A raw JSON number token must parse, not throw. Regression test for the orphaned
+        // reader.GetString() that threw InvalidOperationException on a non-string token.
+        var json = """{"Value":120}""";
+        var result = JsonSerializer.Deserialize<DurationWrapper>(json);
+        await Assert.That(result).IsNotNull();
+        await Assert.That(result!.Value).IsEqualTo(TimeSpan.FromSeconds(120));
+    }
+
+    [Test]
     public async Task Duration_Write_SerializesTimeSpanToSecondsString()
     {
         var wrapper = new DurationWrapper(TimeSpan.FromSeconds(120));
+        var json = JsonSerializer.Serialize(wrapper);
+        await Assert.That(json).IsEqualTo("""{"Value":"120"}""");
+    }
+
+    [Test]
+    public async Task Duration_Write_TruncatesFractionalSeconds()
+    {
+        var wrapper = new DurationWrapper(TimeSpan.FromSeconds(120.9));
         var json = JsonSerializer.Serialize(wrapper);
         await Assert.That(json).IsEqualTo("""{"Value":"120"}""");
     }

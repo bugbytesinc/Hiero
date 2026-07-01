@@ -7,12 +7,12 @@ namespace Hiero;
 /// represent a public key or a list of child keys.
 /// For endorsements a list type can represent an n of m
 /// number of child keys that must sign to validate a
-/// transaction.  For signatories, the list 
+/// transaction.  For signatories, the list
 /// type represents simply a collection of keys, all of
 /// which will sign a given transaction.
 /// Presently this library natively supports individual
-/// key types of Ed25519, for signing with other
-/// keys, the <see cref="Signatory" /> should use 
+/// key types of Ed25519 and ECDSA Secp256k1; for signing
+/// with other keys, the <see cref="Signatory" /> should use
 /// the callback form.
 /// </summary>
 public enum KeyType

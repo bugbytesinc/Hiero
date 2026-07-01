@@ -5,9 +5,9 @@ using System.Text.Json.Serialization;
 namespace Hiero.Converters;
 
 /// <summary>
-/// Consensus Timestamp JSON Converter (from long value) that is special
-/// for the EXCHANGE RATE data, because it is a different format from the other 
-/// timestamp formats.
+/// Converts a <see cref="ConsensusTimeStamp"/> to and from a numeric JSON value of
+/// whole seconds. Specific to exchange-rate data, which expresses its expiration as a
+/// bare seconds number rather than the dotted seconds.nanos string used elsewhere.
 /// </summary>
 public sealed class ConsensusTimeStampForExchangeRateConverter : JsonConverter<ConsensusTimeStamp>
 {

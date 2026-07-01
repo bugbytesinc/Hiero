@@ -90,7 +90,7 @@ public static class NftAllowanceDataExtensions
     /// <seealso cref="GetAccountNftAllowancesAsSpenderAsync"/>
     public static IAsyncEnumerable<NftAllowanceData> GetAccountNftAllowancesAsOwnerAsync(this MirrorRestClient client, EntityId account, params IMirrorQueryParameter[] filters)
     {
-        var path = GenerateInitialPath($"accounts/{MirrorFormat(account)}/allowances/nfts", [new PageLimit(100), OwnerFlag.AsOwner, .. filters]);
+        var path = GenerateInitialPath($"accounts/{account.ToMirrorString()}/allowances/nfts", new PageLimit(100), OwnerFlag.AsOwner, filters);
         return client.GetPagedItemsAsync<NftAllowanceDataPage, NftAllowanceData>(path, MirrorJsonContext.Default.NftAllowanceDataPage);
     }
     /// <summary>
@@ -119,7 +119,7 @@ public static class NftAllowanceDataExtensions
     /// <seealso cref="GetAccountNftAllowancesAsOwnerAsync"/>
     public static IAsyncEnumerable<NftAllowanceData> GetAccountNftAllowancesAsSpenderAsync(this MirrorRestClient client, EntityId account, params IMirrorQueryParameter[] filters)
     {
-        var path = GenerateInitialPath($"accounts/{MirrorFormat(account)}/allowances/nfts", [new PageLimit(100), OwnerFlag.AsSpender, .. filters]);
+        var path = GenerateInitialPath($"accounts/{account.ToMirrorString()}/allowances/nfts", new PageLimit(100), OwnerFlag.AsSpender, filters);
         return client.GetPagedItemsAsync<NftAllowanceDataPage, NftAllowanceData>(path, MirrorJsonContext.Default.NftAllowanceDataPage);
     }
 }

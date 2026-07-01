@@ -24,7 +24,8 @@ public class TopicMessageData
     [JsonPropertyName("consensus_timestamp")]
     public ConsensusTimeStamp TimeStamp { get; set; }
     /// <summary>
-    /// Message Payload.
+    /// The message payload as the mirror node reports it — the raw
+    /// submitted bytes in base64-encoded form.
     /// </summary>
     [JsonPropertyName("message")]
     public string Message { get; set; } = default!;
@@ -34,7 +35,8 @@ public class TopicMessageData
     [JsonPropertyName("payer_account_id")]
     public EntityId Payer { get; set; } = default!;
     /// <summary>
-    /// The running hash of the message (for validation purposes)
+    /// The base64-encoded running hash covering this message and all
+    /// prior messages on the topic, used to validate stream integrity.
     /// </summary>
     [JsonPropertyName("running_hash")]
     public string Hash { get; set; } = default!;
@@ -84,7 +86,7 @@ public static class TopicMessageDataExtensions
     /// </returns>
     public static Task<TopicMessageData?> GetTopicMessageAsync(this MirrorRestClient client, EntityId topic, ulong sequenceNumber)
     {
-        return client.GetSingleItemAsync($"topics/{topic}/messages/{sequenceNumber}", MirrorJsonContext.Default.TopicMessageData);
+        return client.GetSingleItemAsync($"topics/{topic.ToMirrorString()}/messages/{sequenceNumber}", MirrorJsonContext.Default.TopicMessageData);
     }
     /// <summary>
     /// Retrieves a topic message by its consensus timestamp, without
@@ -124,7 +126,7 @@ public static class TopicMessageDataExtensions
     /// </returns>
     public static IAsyncEnumerable<TopicMessageData> GetTopicMessagesAsync(this MirrorRestClient client, EntityId topic, params IMirrorQueryParameter[] filters)
     {
-        var path = GenerateInitialPath($"topics/{topic}/messages", [new PageLimit(100), .. filters]);
+        var path = GenerateInitialPath($"topics/{topic.ToMirrorString()}/messages", new PageLimit(100), filters);
         return client.GetPagedItemsAsync<TopicMessageDataPage, TopicMessageData>(path, MirrorJsonContext.Default.TopicMessageDataPage);
     }
 }

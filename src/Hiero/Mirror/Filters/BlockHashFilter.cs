@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
+using Hiero.Mirror.Implementation;
+
 namespace Hiero.Mirror.Filters;
 /// <summary>
 /// Predicate filter on the <c>block.hash</c> query parameter of the
@@ -51,6 +53,6 @@ public sealed class BlockHashFilter : IMirrorFilter
         {
             throw new ArgumentOutOfRangeException(nameof(hash), "Block hash must be 32 bytes (EVM) or 48 bytes (Hedera SHA-384).");
         }
-        return new($"0x{Hex.FromBytes(hash.Span)}");
+        return new(MirrorHexFormatter.FormatPrefixed(hash.Span));
     }
 }

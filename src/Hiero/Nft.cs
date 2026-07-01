@@ -1,5 +1,6 @@
 ﻿// SPDX-License-Identifier: Apache-2.0
 using Hiero.Converters;
+using Hiero.Implementation.Formatting;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
@@ -127,7 +128,7 @@ public sealed record Nft
     /// </returns>
     public override string ToString()
     {
-        return $"{Token}#{SerialNumber}";
+        return NftFormatter.Format(this);
     }
     /// <summary>
     /// Implicit operator for converting an Nft to an EntityId representing

@@ -9,12 +9,14 @@ using static Hiero.Mirror.Implementation.MirrorRestClientUtils;
 
 namespace Hiero.Mirror;
 /// <summary>
-/// Nft (NFT) information retrieved from a mirror node.
+/// A single NFT serial as reported by the mirror node, covering its
+/// current holder, metadata, allowance spenders, and lifecycle
+/// timestamps.
 /// </summary>
 public class NftData
 {
     /// <summary>
-    /// The Current Holder of the Nft (NFT)
+    /// The account that currently holds this NFT serial.
     /// </summary>
     [JsonPropertyName("account_id")]
     public EntityId Owner { get; set; } = default!;
@@ -55,8 +57,8 @@ public class NftData
     [JsonConverter(typeof(LongMirrorConverter))]
     public long SerialNumber { get; set; }
     /// <summary>
-    /// An account that is permitted to transfer this asset
-    /// Nft on the owner's behalf.
+    /// An account that is permitted to transfer this NFT serial on
+    /// the owner's behalf.
     /// </summary>
     [JsonPropertyName("spender")]
     public EntityId Spender { get; set; } = default!;
@@ -94,7 +96,7 @@ public static class NftDataExtensions
     /// </returns>
     public static Task<NftData?> GetNftAsync(this MirrorRestClient client, Nft nft, params IMirrorQueryParameter[] filters)
     {
-        var path = GenerateInitialPath($"tokens/{nft.Token}/nfts/{nft.SerialNumber}", filters);
+        var path = GenerateInitialPath($"tokens/{nft.Token.ToMirrorString()}/nfts/{nft.SerialNumber}", filters);
         return client.GetSingleItemAsync(path, MirrorJsonContext.Default.NftData);
     }
     /// <summary>
@@ -122,7 +124,7 @@ public static class NftDataExtensions
     /// </returns>
     public static IAsyncEnumerable<NftData> GetAccountNftsAsync(this MirrorRestClient client, EntityId account, params IMirrorQueryParameter[] filters)
     {
-        var path = GenerateInitialPath($"accounts/{MirrorFormat(account)}/nfts", [new PageLimit(100), .. filters]);
+        var path = GenerateInitialPath($"accounts/{account.ToMirrorString()}/nfts", new PageLimit(100), filters);
         return client.GetPagedItemsAsync<NftDataPage, NftData>(path, MirrorJsonContext.Default.NftDataPage);
     }
     /// <summary>
@@ -148,7 +150,7 @@ public static class NftDataExtensions
     /// </returns>
     public static IAsyncEnumerable<NftData> GetTokenNftsAsync(this MirrorRestClient client, EntityId token, params IMirrorQueryParameter[] filters)
     {
-        var path = GenerateInitialPath($"tokens/{MirrorFormat(token)}/nfts", [new PageLimit(100), .. filters]);
+        var path = GenerateInitialPath($"tokens/{token.ToMirrorString()}/nfts", new PageLimit(100), filters);
         return client.GetPagedItemsAsync<NftDataPage, NftData>(path, MirrorJsonContext.Default.NftDataPage);
     }
 }

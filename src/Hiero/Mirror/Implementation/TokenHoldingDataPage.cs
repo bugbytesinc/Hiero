@@ -18,8 +18,8 @@ internal class TokenHoldingDataPage : Page<TokenHoldingData>
     /// <returns>
     /// An enumerator listing the token holding records in the list.
     /// </returns>
-    public override IEnumerable<TokenHoldingData> GetItems()
+    public override TokenHoldingData[] GetItems()
     {
-        return TokenHoldings ?? Array.Empty<TokenHoldingData>();
+        return TokenHoldings ?? [];
     }
 }

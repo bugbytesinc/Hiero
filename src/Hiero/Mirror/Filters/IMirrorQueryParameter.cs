@@ -4,8 +4,9 @@ namespace Hiero.Mirror.Filters;
 /// <summary>
 /// Represents a single parameter appended to a Mirror Node REST
 /// query string. Covers three conceptual kinds — predicate filters,
-/// paging directives, and projection toggles — distinguished by
-/// the marker sub-interfaces (see Phase 2 of the refactor).
+/// paging directives, and projection toggles — distinguished by the
+/// marker sub-interfaces <see cref="IMirrorFilter"/>,
+/// <see cref="IMirrorPaging"/>, and <see cref="IMirrorProjection"/>.
 /// </summary>
 public interface IMirrorQueryParameter
 {

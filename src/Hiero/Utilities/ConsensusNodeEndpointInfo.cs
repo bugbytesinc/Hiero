@@ -1,7 +1,7 @@
 ﻿// SPDX-License-Identifier: Apache-2.0
 namespace Hiero;
 /// <summary>
-/// Represents a Hedera Node ConsensusNodeEndpoint IP Address and Port
+/// The IPv4 address and port of a consensus node's gRPC endpoint.
 /// </summary>
 public sealed record ConsensusNodeEndpointInfo
 {

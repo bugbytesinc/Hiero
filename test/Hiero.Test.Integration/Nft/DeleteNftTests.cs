@@ -54,7 +54,7 @@ public class DeleteNftTests
 
         var transferParams = new TransferParams
         {
-            NftTransfers = serialNumbersTransfered.Select(sn => new NftTransfer(new Hiero.Nft(fxNft.CreateReceipt!.Token, sn), fxNft.TreasuryAccount, fxAccount)),
+            NftTransfers = [..serialNumbersTransfered.Select(sn => new NftTransfer(new Hiero.Nft(fxNft.CreateReceipt!.Token, sn), fxNft.TreasuryAccount, fxAccount))],
             Signatory = fxNft.TreasuryAccount
         };
 
@@ -354,7 +354,7 @@ public class DeleteNftTests
 
         var transferParams = new TransferParams
         {
-            NftTransfers = serialNumbersTransfered.Select(sn => new NftTransfer(new Hiero.Nft(fxNft.CreateReceipt!.Token, sn), fxNft.TreasuryAccount, fxAccount2)),
+            NftTransfers = [..serialNumbersTransfered.Select(sn => new NftTransfer(new Hiero.Nft(fxNft.CreateReceipt!.Token, sn), fxNft.TreasuryAccount, fxAccount2))],
             Signatory = fxNft.TreasuryAccount
         };
 

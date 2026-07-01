@@ -26,12 +26,12 @@ public sealed class RelinquishTokenParams : TransactionParams<TransactionReceipt
     /// Fungible token types to relinquish. The full balance of each token
     /// will be returned to the token treasury.
     /// </summary>
-    public IEnumerable<EntityId>? Tokens { get; set; }
+    public IReadOnlyList<EntityId>? Tokens { get; set; }
     /// <summary>
     /// Specific NFT instances to reject. Each NFT will be returned
     /// to the token treasury.
     /// </summary>
-    public IEnumerable<Nft>? Nfts { get; set; }
+    public IReadOnlyList<Nft>? Nfts { get; set; }
     /// <summary>
     /// Additional private key, keys or signing callback method
     /// required to authorize the relinquishment. Typically matches the
@@ -55,31 +55,41 @@ public sealed class RelinquishTokenParams : TransactionParams<TransactionReceipt
         {
             result.Owner = new AccountID(Owner);
         }
+        var rejections = result.Rejections;
+        var tokenCount = Tokens?.Count ?? 0;
+        var nftCount = Nfts?.Count ?? 0;
+        var rejectionCount = tokenCount + nftCount;
+        if (rejectionCount == 0)
+        {
+            throw new ArgumentException("At least one fungible token or NFT must be specified for rejection.", nameof(Tokens));
+        }
+        if (rejectionCount > 0 && rejections.Capacity < rejectionCount)
+        {
+            rejections.Capacity = rejectionCount;
+        }
         if (Tokens is not null)
         {
-            foreach (var token in Tokens)
+            for (var i = 0; i < tokenCount; i++)
             {
+                var token = Tokens[i];
                 if (token.IsNullOrNone())
                 {
                     throw new ArgumentOutOfRangeException(nameof(Tokens), "The list of fungible tokens cannot contain an empty or null token address.");
                 }
-                result.Rejections.Add(new TokenReference { FungibleToken = new TokenID(token) });
+                rejections.Add(new TokenReference { FungibleToken = new TokenID(token) });
             }
         }
         if (Nfts is not null)
         {
-            foreach (var nft in Nfts)
+            for (var i = 0; i < nftCount; i++)
             {
+                var nft = Nfts[i];
                 if (nft.IsNullOrNone())
                 {
                     throw new ArgumentOutOfRangeException(nameof(Nfts), "The list of NFTs cannot contain an empty or null NFT.");
                 }
-                result.Rejections.Add(new TokenReference { Nft = new NftID(nft) });
+                rejections.Add(new TokenReference { Nft = new NftID(nft) });
             }
-        }
-        if (result.Rejections.Count == 0)
-        {
-            throw new ArgumentException("At least one fungible token or NFT must be specified for rejection.", nameof(Tokens));
         }
         return result;
     }

@@ -18,8 +18,8 @@ internal class ConsensusNodeDataPage : Page<ConsensusNodeData>
     /// <returns>
     /// Enumerator of gossip nodes for this paged list.
     /// </returns>
-    public override IEnumerable<ConsensusNodeData> GetItems()
+    public override ConsensusNodeData[] GetItems()
     {
-        return Nodes ?? Array.Empty<ConsensusNodeData>();
+        return Nodes ?? [];
     }
 }

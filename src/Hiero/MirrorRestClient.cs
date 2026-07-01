@@ -10,6 +10,16 @@ namespace Hiero;
 /// <summary>
 /// The Mirror Node REST Client.
 /// </summary>
+/// <remarks>
+/// Wraps a configured <see cref="HttpClient"/> pointed at a mirror node's
+/// base address and queries its REST API for historical and current network
+/// state.  The data-retrieval operations are provided as extension methods on
+/// this client (one per resource family — accounts, tokens, transactions, and
+/// so on); single results are returned as awaitable tasks and paged result
+/// sets as <see cref="IAsyncEnumerable{T}"/> that transparently follow the
+/// mirror node's "next" links.  This client performs read-only queries and
+/// does not submit transactions; use <see cref="ConsensusClient"/> for that.
+/// </remarks>
 [DebuggerDisplay("{ToString(),nq}")]
 public sealed class MirrorRestClient
 {
@@ -70,15 +80,17 @@ public sealed class MirrorRestClient
         var fullPath = $"api/v1/{path}";
         do
         {
-            using var response = await _client.GetAsync(fullPath);
+            using var response = await _client.GetAsync(fullPath).ConfigureAwait(false);
             if (response.IsSuccessStatusCode)
             {
-                var payload = await response.Content.ReadFromJsonAsync(jsonTypeInfo);
+                var payload = await response.Content.ReadFromJsonAsync(jsonTypeInfo).ConfigureAwait(false);
                 if (payload is not null)
                 {
-                    foreach (var item in payload.GetItems())
+                    var items = payload.GetItems();
+                    var count = items.Length;
+                    for (var i = 0; i < count; i++)
                     {
-                        yield return item;
+                        yield return items[i];
                     }
                 }
                 fullPath = payload?.Links?.Next;
@@ -90,7 +102,7 @@ public sealed class MirrorRestClient
             }
             else
             {
-                throw await CreateMirrorExceptionAsync(response);
+                throw await CreateMirrorExceptionAsync(response).ConfigureAwait(false);
             }
         }
         while (!string.IsNullOrWhiteSpace(fullPath));
@@ -100,10 +112,10 @@ public sealed class MirrorRestClient
     /// </summary>
     internal async Task<TItem?> GetSingleItemAsync<TItem>(string path, JsonTypeInfo<TItem> jsonTypeInfo)
     {
-        using var response = await _client.GetAsync($"api/v1/{path}");
+        using var response = await _client.GetAsync($"api/v1/{path}").ConfigureAwait(false);
         if (response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadFromJsonAsync(jsonTypeInfo);
+            return await response.Content.ReadFromJsonAsync(jsonTypeInfo).ConfigureAwait(false);
         }
         else if (response.StatusCode == HttpStatusCode.NotFound)
         {
@@ -111,7 +123,7 @@ public sealed class MirrorRestClient
         }
         else
         {
-            throw await CreateMirrorExceptionAsync(response);
+            throw await CreateMirrorExceptionAsync(response).ConfigureAwait(false);
         }
     }
 }

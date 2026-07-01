@@ -1,6 +1,7 @@
 ﻿// SPDX-License-Identifier: Apache-2.0
 using Google.Protobuf;
 using Proto;
+using System.Runtime.InteropServices;
 
 namespace Hiero.Implementation;
 
@@ -54,7 +55,8 @@ internal sealed class Invoice : IInvoice
                 pair.Contract = value;
                 break;
         }
-        if (_signatures.TryGetValue(key, out SignaturePair? existing))
+        ref var existing = ref CollectionsMarshal.GetValueRefOrAddDefault(_signatures, key, out var exists);
+        if (exists)
         {
             if (!pair.Equals(existing))
             {
@@ -63,7 +65,7 @@ internal sealed class Invoice : IInvoice
         }
         else
         {
-            _signatures.Add(key, pair);
+            existing = pair;
         }
     }
     internal SignedTransaction GenerateSignedTransactionFromSignatures(bool failIfNoSignatures)
@@ -89,39 +91,56 @@ internal sealed class Invoice : IInvoice
         var map = new SignatureMap();
         if (count == 1 && _prefixTrimLimit < 1)
         {
-            map.SigPair.Add(_signatures.Values.First());
+            foreach (var signature in _signatures.Values)
+            {
+                map.SigPair.Add(signature);
+                return map;
+            }
         }
         else
         {
-            var list = _signatures.ToArray();
-            var keys = new byte[count][];
-            for (var length = Math.Max(1, _prefixTrimLimit); true; length++)
+            var prefixLength = FindUniquePrefixLength(_signatures, _prefixTrimLimit);
+            foreach (var entry in _signatures)
             {
-                var unique = true;
-                for (var i = 0; unique && i < count; i++)
-                {
-                    var key = keys[i] = list[i].Key.Memory.Slice(0, Math.Min(list[i].Key.Length, length)).ToArray();
-                    for (var j = 0; j < i; j++)
-                    {
-                        if (Enumerable.SequenceEqual(key, keys[j]))
-                        {
-                            unique = false;
-                            break;
-                        }
-                    }
-                }
-                if (unique)
-                {
-                    break;
-                }
-            }
-            for (var i = 0; i < count; i++)
-            {
-                var sig = list[i].Value;
-                sig.PubKeyPrefix = ByteString.CopyFrom(keys[i]);
+                var key = entry.Key;
+                var sig = entry.Value;
+                var length = Math.Min(key.Length, prefixLength);
+                sig.PubKeyPrefix = ByteString.CopyFrom(key.Span.Slice(0, length));
                 map.SigPair.Add(sig);
             }
         }
-        return map.SigPair.Count > 0 ? map : null;
+        return map;
+
+        static int FindUniquePrefixLength(Dictionary<ByteString, SignaturePair> signatures, int prefixTrimLimit)
+        {
+            var prefixLength = Math.Max(1, prefixTrimLimit);
+            var firstIndex = 0;
+            foreach (var first in signatures.Keys)
+            {
+                var secondIndex = 0;
+                foreach (var second in signatures.Keys)
+                {
+                    if (secondIndex++ > firstIndex)
+                    {
+                        prefixLength = Math.Max(prefixLength, CommonPrefixLength(first.Span, second.Span) + 1);
+                    }
+                }
+                firstIndex++;
+            }
+            return prefixLength;
+        }
+
+        static int CommonPrefixLength(ReadOnlySpan<byte> first, ReadOnlySpan<byte> second)
+        {
+            var length = Math.Min(first.Length, second.Length);
+            for (var i = 0; i < length; i++)
+            {
+                if (first[i] != second[i])
+                {
+                    return i;
+                }
+            }
+            return length;
+        }
     }
 }

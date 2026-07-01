@@ -3,6 +3,7 @@ using Hiero.Implementation;
 using Proto;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Runtime.InteropServices;
 
 namespace Hiero;
 /// <summary>
@@ -10,6 +11,8 @@ namespace Hiero;
 /// </summary>
 public sealed record AccountBalances
 {
+    private static readonly ReadOnlyDictionary<EntityId, CryptoBalance> EmptyTokens = new(new Dictionary<EntityId, CryptoBalance>(0));
+
     /// <summary>
     /// The Hedera address holding the account balance(s).
     /// </summary>
@@ -35,21 +38,31 @@ public sealed record AccountBalances
         var balances = response.CryptogetAccountBalance;
         Holder = balances.AccountID.AsAddress();
         Crypto = balances.Balance;
-        var tokens = new Dictionary<EntityId, CryptoBalance>();
 #pragma warning disable CS0612 // Type or member is obsolete
-        foreach (var entry in balances.TokenBalances)
+        var tokenBalances = balances.TokenBalances;
+        var tokenCount = tokenBalances.Count;
+        if (tokenCount == 0)
+        {
+#pragma warning disable CS0618 // Type or member is obsolete
+            Tokens = EmptyTokens;
+#pragma warning restore CS0618 // Type or member is obsolete
+            return;
+        }
+        var tokens = new Dictionary<EntityId, CryptoBalance>(tokenCount);
+        foreach (var entry in tokenBalances)
         {
             var account = entry.TokenId.AsAddress();
-            if (tokens.TryGetValue(account, out CryptoBalance? crypto))
+            ref var crypto = ref CollectionsMarshal.GetValueRefOrAddDefault(tokens, account, out var exists);
+            if (exists)
             {
-                tokens[account] = crypto with
+                crypto = crypto! with
                 {
                     Balance = crypto.Balance + entry.Balance
                 };
             }
             else
             {
-                tokens[account] = new CryptoBalance
+                crypto = new CryptoBalance
                 {
                     Balance = entry.Balance,
                     Decimals = entry.Decimals

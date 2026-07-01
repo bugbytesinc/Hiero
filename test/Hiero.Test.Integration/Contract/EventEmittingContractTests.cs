@@ -124,7 +124,7 @@ public class EventEmittingContractTests
         await Assert.That(result.Contract).IsEqualTo(fx.ContractReceipt!.Contract);
         await Assert.That(result.Bloom.IsEmpty).IsFalse();
         await Assert.That(result.Topics).HasSingleItem();
-        await Assert.That(Hex.FromBytes(result.Topics[0])).IsEqualTo("9277a4302be4a765ae8585e09a9306bd55da10e20e59ed4f611a04ba606fece8");
+        await Assert.That(Convert.ToHexStringLower(result.Topics[0].Span)).IsEqualTo("9277a4302be4a765ae8585e09a9306bd55da10e20e59ed4f611a04ba606fece8");
 
         /**
          * HEDERA CHURN: THE FOLLOWING WILL BE ADDED BACK IF/WHEN HAPI SUPPORTS IT.

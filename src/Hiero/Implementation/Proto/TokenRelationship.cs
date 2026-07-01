@@ -7,12 +7,13 @@ internal static class TokenRelationshipExtensions
 {
     internal static IReadOnlyList<Hiero.TokenBalance> ToBalances(this RepeatedField<TokenRelationship> list)
     {
-        if (list is { Count: > 0 })
+        var count = list.Count;
+        if (count > 0)
         {
-            var result = new List<Hiero.TokenBalance>(list.Count);
-            foreach (var record in list)
+            var result = new Hiero.TokenBalance[count];
+            for (var i = 0; i < count; i++)
             {
-                result.Add(new Hiero.TokenBalance(record));
+                result[i] = new Hiero.TokenBalance(list[i]);
             }
             return result;
         }

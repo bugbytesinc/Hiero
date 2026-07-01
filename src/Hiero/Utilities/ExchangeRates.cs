@@ -58,7 +58,12 @@ public static class ExchangeRatesExtensions
     {
         // Well known address of the exchange rate file is 0.0.112
         var file = await client.GetFileContentAsync(new EntityId(0, 0, 112), cancellationToken, configure).ConfigureAwait(false);
-        var set = Proto.ExchangeRateSet.Parser.ParseFrom(file.ToArray());
+        return FromFile(file);
+    }
+
+    internal static ExchangeRates FromFile(ReadOnlyMemory<byte> file)
+    {
+        var set = Proto.ExchangeRateSet.Parser.ParseFrom(file.Span);
         return new ExchangeRates(set.CurrentRate?.ToExchangeRate(), set.NextRate?.ToExchangeRate());
     }
 }

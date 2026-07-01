@@ -11,7 +11,7 @@ public class GetFileContentTests
         var gatewayUrl = new Uri(args[0]);            //   http://2.testnet.hedera.com:50211
         var gatewayAccountNo = long.Parse(args[1]);   //   5 (gateway node 0.0.5)
         var payerAccountNo = long.Parse(args[2]);     //   20 (account 0.0.20)
-        var payerPrivateKey = Hex.ToBytes(args[3]);   //   302e0201... (48 byte Ed25519 private in hex)
+        var payerPrivateKey = Convert.FromHexString(args[3]);   //   302e0201... (48 byte Ed25519 private in hex)
         var fileNo = long.Parse(args[4]);             //   1234 (account 0.0.1234)
         try
         {
@@ -46,7 +46,7 @@ public class GetFileContentTests
         var arg0 = endpoint.Uri;
         var arg1 = endpoint.Node.AccountNum.ToString();
         var arg2 = TestNetwork.Payer.AccountNum.ToString();
-        var arg3 = Hex.FromBytes(TestNetwork.PrivateKey);
+        var arg3 = Convert.ToHexStringLower(TestNetwork.PrivateKey.Span);
         var arg4 = file.File.AccountNum.ToString();
         await Recipe(new string[] { arg0.ToString(), arg1, arg2, arg3, arg4 });
     }

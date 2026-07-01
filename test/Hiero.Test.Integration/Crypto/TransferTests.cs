@@ -395,7 +395,7 @@ public class TransferTests
     }
 
     [Test]
-    public async Task Insufficient_Fee_Exception_Includes_Required_Fee_Defect()
+    public async Task Insufficient_Fee_Exception_Includes_Required_Fee()
     {
         await using var fx = await TestAccount.CreateAsync();
         var transferAmount = (long)(fx.CreateParams.InitialBalance / 2);
@@ -414,58 +414,15 @@ public class TransferTests
         await Assert.That(pex.Status).IsEqualTo(ResponseCode.InsufficientTxFee);
         await Assert.That(pex.RequiredFee > 0).IsTrue();
 
-        var ex2 = await Assert.That(async () =>
+        var receipt = await client.TransferAsync(fx.CreateReceipt!.Address, TestNetwork.Payer, transferAmount, ctx =>
         {
-            await client.TransferAsync(fx.CreateReceipt!.Address, TestNetwork.Payer, transferAmount, ctx =>
-            {
-                ctx.Signatory = new Signatory(ctx.Signatory!, fx.PrivateKey);
-                ctx.FeeLimit = (long)pex.RequiredFee;
-            });
-        }).ThrowsException();
-        var tex = ex2 as TransactionException;
-        await Assert.That(tex).IsNotNull();
-        await Assert.That(tex!.Status).IsEqualTo(ResponseCode.InsufficientTxFee);
-        await Assert.That(tex.Message).StartsWith("Transfer failed with status: InsufficientTxFee");
+            ctx.Signatory = new Signatory(ctx.Signatory!, fx.PrivateKey);
+            ctx.FeeLimit = (long)pex.RequiredFee;
+        });
+        await Assert.That(receipt.Status).IsEqualTo(ResponseCode.Success);
 
         var balance = await client.GetAccountBalanceAsync(fx.CreateReceipt!.Address);
-        await Assert.That(balance).IsEqualTo(fx.CreateParams.InitialBalance);
-    }
-
-    [Test]
-    public async Task Insufficient_Fee_Exception_Includes_Required_Fee_For_Record()
-    {
-        await using var fx = await TestAccount.CreateAsync();
-        var transferAmount = (long)(fx.CreateParams.InitialBalance / 2);
-        await using var client = await TestNetwork.CreateClientAsync();
-        var ex = await Assert.That(async () =>
-        {
-            await client.TransferAsync(fx.CreateReceipt!.Address, TestNetwork.Payer, transferAmount, ctx =>
-            {
-                ctx.Signatory = new Signatory(ctx.Signatory!, fx.PrivateKey);
-                ctx.FeeLimit = 1;
-            });
-        }).ThrowsException();
-        var pex = ex as PrecheckException;
-        await Assert.That(pex).IsNotNull();
-        await Assert.That(pex!.Message).StartsWith("Transaction Failed Pre-Check: InsufficientTxFee");
-        await Assert.That(pex.Status).IsEqualTo(ResponseCode.InsufficientTxFee);
-        await Assert.That(pex.RequiredFee > 0).IsTrue();
-
-        var ex2 = await Assert.That(async () =>
-        {
-            await client.TransferAsync(fx.CreateReceipt!.Address, TestNetwork.Payer, transferAmount, ctx =>
-            {
-                ctx.Signatory = new Signatory(ctx.Signatory!, fx.PrivateKey);
-                ctx.FeeLimit = (long)pex.RequiredFee;
-            });
-        }).ThrowsException();
-        var tex = ex2 as TransactionException;
-        await Assert.That(tex).IsNotNull();
-        await Assert.That(tex!.Status).IsEqualTo(ResponseCode.InsufficientTxFee);
-        await Assert.That(tex.Message).StartsWith("Transfer failed with status: InsufficientTxFee");
-
-        var balance = await client.GetAccountBalanceAsync(fx.CreateReceipt!.Address);
-        await Assert.That(balance).IsEqualTo(fx.CreateParams.InitialBalance);
+        await Assert.That(balance).IsEqualTo(fx.CreateParams.InitialBalance - (ulong)transferAmount);
     }
 
     [Test]

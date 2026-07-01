@@ -6,6 +6,13 @@ namespace Hiero.Mirror;
 /// <summary>
 /// Represents a transaction retrieved from a mirror node.
 /// </summary>
+/// <remarks>
+/// This is the base shape shared by the transaction list and
+/// detail endpoints. The single-transaction lookups
+/// (<see cref="TransactionDetailDataExtensions"/>) return the
+/// richer <see cref="TransactionDetailData"/> subclass, which adds
+/// assessed custom fees and NFT transfers.
+/// </remarks>
 public class TransactionData
 {
     /// <summary>

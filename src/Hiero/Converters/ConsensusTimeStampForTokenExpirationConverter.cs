@@ -5,8 +5,9 @@ using System.Text.Json.Serialization;
 namespace Hiero.Converters;
 
 /// <summary>
-/// Consensus Timestamp JSON Converter (from nanoseconds long value)
-/// that is special to ONLY the expiry timestamp returned for token info.
+/// Converts a <see cref="ConsensusTimeStamp"/> to and from a numeric JSON value of
+/// nanoseconds since the epoch. Specific to the expiry timestamp returned in token info,
+/// which is reported in whole nanoseconds rather than the dotted seconds.nanos string used elsewhere.
 /// </summary>
 public sealed class ConsensusTimeStampForTokenExpirationConverter : JsonConverter<ConsensusTimeStamp>
 {

@@ -24,17 +24,17 @@ public sealed class TransferParams : TransactionParams<TransactionReceipt>, INet
     /// Transfer tinybars from an arbitrary set of accounts to
     /// another arbitrary set of accounts.
     /// </summary>
-    public IEnumerable<CryptoTransfer>? CryptoTransfers { get; set; }
+    public IReadOnlyList<CryptoTransfer>? CryptoTransfers { get; set; }
     /// <summary>
     /// A list of tokens transferred from an arbitrary set of accounts to
     /// another arbitrary set of accounts.
     /// </summary>
-    public IEnumerable<TokenTransfer>? TokenTransfers { get; set; }
+    public IReadOnlyList<TokenTransfer>? TokenTransfers { get; set; }
     /// <summary>
     /// A list of NFTs transferred from an arbitrary set of accounts to
     /// another arbitrary set of accounts.
     /// </summary>
-    public IEnumerable<NftTransfer>? NftTransfers { get; set; }
+    public IReadOnlyList<NftTransfer>? NftTransfers { get; set; }
     /// <summary>
     /// Additional private key, keys or signing callback method
     /// required to authorize the transfers.  Typically matches the
@@ -64,9 +64,13 @@ public sealed class TransferParams : TransactionParams<TransactionReceipt>, INet
         if (CryptoTransfers is not null)
         {
             long sum = 0;
-            var netRequests = new Dictionary<EntityId, (long Amount, bool Delegated, HookCall? Hook)>();
-            foreach (var transfer in CryptoTransfers)
+            var cryptoTransferCount = CryptoTransfers.Count;
+            var netRequests = cryptoTransferCount > 0
+                ? new Dictionary<EntityId, (long Amount, bool Delegated, HookCall? Hook)>(cryptoTransferCount)
+                : [];
+            for (var i = 0; i < cryptoTransferCount; i++)
             {
+                var transfer = CryptoTransfers[i];
                 if (transfer.Amount == 0)
                 {
                     throw new ArgumentOutOfRangeException(nameof(CryptoTransfers), $"The amount to transfer crypto to/from {transfer.Address} must be a value, negative for transfers out, and positive for transfers in. A value of zero is not allowed.");
@@ -91,6 +95,10 @@ public sealed class TransferParams : TransactionParams<TransactionReceipt>, INet
                 throw new ArgumentOutOfRangeException(nameof(CryptoTransfers), "The sum of crypto sends and receives does not balance.");
             }
             var xferList = new TransferList();
+            if (xferList.AccountAmounts.Capacity < netRequests.Count)
+            {
+                xferList.AccountAmounts.Capacity = netRequests.Count;
+            }
             foreach (var transfer in netRequests)
             {
                 if (transfer.Value.Amount != 0)
@@ -102,9 +110,13 @@ public sealed class TransferParams : TransactionParams<TransactionReceipt>, INet
         }
         if (TokenTransfers is not null)
         {
-            var netTransfers = new Dictionary<EntityId, (long sum, TokenTransferList list)>();
-            foreach (var xfer in TokenTransfers)
+            var tokenTransferCount = TokenTransfers.Count;
+            var netTransfers = tokenTransferCount > 0
+                ? new Dictionary<EntityId, (long sum, TokenTransferList list)>(tokenTransferCount)
+                : [];
+            for (var i = 0; i < tokenTransferCount; i++)
             {
+                var xfer = TokenTransfers[i];
                 if (xfer.Token.IsNullOrNone())
                 {
                     throw new ArgumentException("Token", "The list of token transfers cannot contain a null or empty Token value.");
@@ -128,6 +140,10 @@ public sealed class TransferParams : TransactionParams<TransactionReceipt>, INet
                 entry.sum += xfer.Amount;
                 entry.list.Transfers.Add(new AccountAmount(xfer.Account, xfer.Amount, xfer.Delegated, xfer.AllowanceHook));
             }
+            if (result.TokenTransfers.Capacity < netTransfers.Count)
+            {
+                result.TokenTransfers.Capacity = netTransfers.Count;
+            }
             foreach (var record in netTransfers)
             {
                 if (record.Value.sum != 0)
@@ -139,9 +155,13 @@ public sealed class TransferParams : TransactionParams<TransactionReceipt>, INet
         }
         if (NftTransfers is not null)
         {
-            var nftXferList = new Dictionary<Nft, Proto.NftTransfer>();
-            foreach (var xfer in NftTransfers)
+            var nftTransferCount = NftTransfers.Count;
+            var nftXferList = nftTransferCount > 0
+                ? new Dictionary<Nft, Proto.NftTransfer>(nftTransferCount)
+                : [];
+            for (var i = 0; i < nftTransferCount; i++)
             {
+                var xfer = NftTransfers[i];
                 if (xfer.Nft.IsNullOrNone())
                 {
                     throw new ArgumentException("Nft", "The list of NFT transfers cannot contain a null or empty Token address.");
@@ -190,7 +210,9 @@ public sealed class TransferParams : TransactionParams<TransactionReceipt>, INet
                     throw new ArgumentException(nameof(xfer.Nft), "The list of NFT transfers cannot contain the same NFT in multiple transfers at once.");
                 }
             }
-            var netTransfers = new Dictionary<EntityId, TokenTransferList>();
+            var netTransfers = nftXferList.Count > 0
+                ? new Dictionary<EntityId, TokenTransferList>(nftXferList.Count)
+                : [];
             foreach (var record in nftXferList)
             {
                 ref var entry = ref CollectionsMarshal.GetValueRefOrAddDefault(netTransfers, record.Key, out bool exists)!;
@@ -252,6 +274,7 @@ internal sealed class TransferOnlyCryptoParams : TransactionParams<TransactionRe
             throw new ArgumentOutOfRangeException("amount", "The amount to transfer must be non-negative.");
         }
         var xferList = new TransferList();
+        xferList.AccountAmounts.Capacity = 2;
         xferList.AccountAmounts.Add(new AccountAmount(_sender, -_amount, false));
         xferList.AccountAmounts.Add(new AccountAmount(_receiver, _amount, false));
         return new CryptoTransferTransactionBody()
@@ -303,6 +326,7 @@ internal sealed class TransferOnlyNftParams : TransactionParams<TransactionRecei
         {
             Token = new TokenID(_nft)
         };
+        transfers.NftTransfers.Capacity = 1;
         transfers.NftTransfers.Add(new Proto.NftTransfer
         {
             SenderAccountID = new AccountID(_sender),
@@ -310,6 +334,7 @@ internal sealed class TransferOnlyNftParams : TransactionParams<TransactionRecei
             SerialNumber = _nft.SerialNumber
         });
         var result = new CryptoTransferTransactionBody();
+        result.TokenTransfers.Capacity = 1;
         result.TokenTransfers.Add(transfers);
         return result;
     }
@@ -359,9 +384,11 @@ internal sealed class TransferOnlyTokenParams : TransactionParams<TransactionRec
         {
             Token = new TokenID(_token)
         };
+        transfers.Transfers.Capacity = 2;
         transfers.Transfers.Add(new AccountAmount(_sender, -_amount, false));
         transfers.Transfers.Add(new AccountAmount(_receiver, _amount, false));
         var result = new CryptoTransferTransactionBody();
+        result.TokenTransfers.Capacity = 1;
         result.TokenTransfers.Add(transfers);
         return result;
     }

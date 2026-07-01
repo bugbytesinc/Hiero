@@ -76,7 +76,7 @@ public static class AccountBalanceDataExtensions
     /// </returns>
     public static IAsyncEnumerable<AccountBalanceData> GetTokenHoldersSnapshotAsync(this MirrorRestClient client, EntityId token, ConsensusTimeStamp asOf, params IMirrorQueryParameter[] filters)
     {
-        var path = GenerateInitialPath($"tokens/{token}/balances", [new PageLimit(100), TimestampFilter.OnOrBefore(asOf), .. filters]);
+        var path = GenerateInitialPath($"tokens/{token.ToMirrorString()}/balances", new PageLimit(100), TimestampFilter.OnOrBefore(asOf), filters);
         return client.GetPagedItemsAsync<AccountBalanceDataPage, AccountBalanceData>(path, MirrorJsonContext.Default.AccountBalanceDataPage);
     }
 }

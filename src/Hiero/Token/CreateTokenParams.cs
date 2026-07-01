@@ -257,9 +257,15 @@ public sealed class CreateTokenParams : TransactionParams<CreateTokenReceipt>, I
         }
         if (Royalties is { Count: > 0 })
         {
-            foreach (var royalty in Royalties)
+            var count = Royalties.Count;
+            var customFees = result.CustomFees;
+            if (customFees.Capacity < count)
             {
-                result.CustomFees.Add(royalty.ToCustomFee());
+                customFees.Capacity = count;
+            }
+            for (var i = 0; i < count; i++)
+            {
+                customFees.Add(Royalties[i].ToCustomFee());
             }
         }
         result.FreezeDefault = InitializeSuspended;

@@ -91,10 +91,11 @@ internal sealed class ExternalTransactionParamsOrchestrator : INetworkParams<Tra
                 throw new ArgumentException("The configured Gateway is not compatible with the Node Account ID of this transaction.", nameof(externalParams.SignedTransactionBytes));
             }
             var cancellationToken = externalParams.CancellationToken ?? default;
-            var signatories = new Signatory?[] { context.Signatory, externalParams.Signatory }.OfType<ISignatory>().ToArray();
+            var contextSignatory = context.Signatory as ISignatory;
+            var externalSignatory = externalParams.Signatory as ISignatory;
             // Only go to the effort of adding signatures if the signatories
             // exist, if they are null we're just a pass-thru in this context.
-            if (signatories.Length > 0)
+            if (contextSignatory is not null || externalSignatory is not null)
             {
                 // Some of the complexity below is necessary to prevent accidental
                 // truncation of signature prefixes and/or duplicate signatures.
@@ -103,9 +104,13 @@ internal sealed class ExternalTransactionParamsOrchestrator : INetworkParams<Tra
                     Math.Max(context.SignaturePrefixTrimLimit, signedTransaction.SigMap.MaxSignaturePrefixLength);
                 var invoice = new Invoice(signedTransaction.BodyBytes.Memory, signaturePrefixTrimLimit, cancellationToken);
                 signedTransaction.SigMap?.AddSignaturesToInvoice(invoice);
-                foreach (var signatory in signatories)
+                if (contextSignatory is not null)
                 {
-                    await signatory.SignAsync(invoice).ConfigureAwait(false);
+                    await contextSignatory.SignAsync(invoice).ConfigureAwait(false);
+                }
+                if (externalSignatory is not null)
+                {
+                    await externalSignatory.SignAsync(invoice).ConfigureAwait(false);
                 }
                 signedTransaction.SigMap = invoice.GenerateSignedTransactionFromSignatures(true).SigMap;
             }
@@ -178,7 +183,7 @@ public static class ExternalTransactionParamsExtensions
     /// </example>
     public static Task<ResponseCode> SubmitExternalTransactionAsync(this ConsensusClient client, ReadOnlyMemory<byte> signedTransactionBytes, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
     {
-        return SubmitExternalTransactionAsync(client, new ExternalTransactionParams { SignedTransactionBytes = signedTransactionBytes }, configure);
+        return SubmitExternalTransactionAsync( client, new ExternalTransactionParams { SignedTransactionBytes = signedTransactionBytes, CancellationToken = cancellationToken }, configure);
     }
     /// <summary>
     /// Submits an arbitrary externally created Hedera Transaction to the network,
@@ -232,7 +237,7 @@ public static class ExternalTransactionParamsExtensions
     public static async Task<ResponseCode> SubmitExternalTransactionAsync(this ConsensusClient client, ExternalTransactionParams externalParams, Action<IConsensusContext>? configure = null)
     {
         await using var context = client.BuildChildContext(configure);
-        var (transactionParams, networkTransaction, signedTransactionBytes, transactionId, cancellationToken) = await ExternalTransactionParamsOrchestrator.CreateSignedTransactionBytesAsync(context, externalParams);
+        var (transactionParams, networkTransaction, signedTransactionBytes, transactionId, cancellationToken) = await ExternalTransactionParamsOrchestrator.CreateSignedTransactionBytesAsync(context, externalParams).ConfigureAwait(false);
         var transaction = new Transaction { SignedTransactionBytes = signedTransactionBytes };
         var precheck = await Engine.SubmitMessageAsync(context, transaction, networkTransaction.InstantiateNetworkRequestMethod, cancellationToken).ConfigureAwait(false);
         return (ResponseCode)precheck.NodeTransactionPrecheckCode;
@@ -275,9 +280,9 @@ public static class ExternalTransactionParamsExtensions
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
+    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
     /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
-    /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
     /// <example>
     /// <code source="../../../samples/DocSnippets/UtilitiesSnippets.cs" region="ExecuteExternal" language="csharp"/>
     /// </example>
@@ -304,13 +309,11 @@ public static class ExternalTransactionParamsExtensions
     /// the necessary final wrapping of the network transaction for final submission.
     /// </remarks>
     /// <param name="client">
-    /// The Consensus Node Client submitting the raw networkTransaction to the network.
+    /// The Consensus Node Client submitting the raw transaction to the network.
     /// </param>
     /// <param name="externalParams">
-    /// The serialized protobuf encoded bytes of a <code>SignedTransaction</code>
-    /// object to be submitted to a Gossip Network Node. These bytes must be 
-    /// manually created from calling code having a knowledge of how to construct the 
-    /// Hedera transaction.
+    /// The externally created transaction parameters, including the serialized protobuf
+    /// encoded bytes of a <code>SignedTransaction</code> object to be submitted to the network.
     /// </param>
     /// <param name="configure">
     /// Optional callback method providing an opportunity to modify 
@@ -323,16 +326,16 @@ public static class ExternalTransactionParamsExtensions
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
-    /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the networkTransaction expired.</exception>
-    /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
+    /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
+    /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
     /// <example>
     /// <code source="../../../samples/DocSnippets/UtilitiesSnippets.cs" region="ExecuteExternalWithParams" language="csharp"/>
     /// </example>
     public static async Task<TransactionReceipt> ExecuteExternalTransactionAsync(this ConsensusClient client, ExternalTransactionParams externalParams, Action<IConsensusContext>? configure = null)
     {
         await using var context = client.BuildChildContext(configure);
-        var (transactionParams, networkTransaction, signedTransactionBytes, transactionId, cancellationToken) = await ExternalTransactionParamsOrchestrator.CreateSignedTransactionBytesAsync(context, externalParams);
+        var (transactionParams, networkTransaction, signedTransactionBytes, transactionId, cancellationToken) = await ExternalTransactionParamsOrchestrator.CreateSignedTransactionBytesAsync(context, externalParams).ConfigureAwait(false);
         return await Engine.ExecuteAsync(context, signedTransactionBytes, transactionParams, networkTransaction, transactionId, cancellationToken).ConfigureAwait(false);
     }
 }

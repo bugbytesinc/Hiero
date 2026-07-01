@@ -1,8 +1,8 @@
 ﻿// SPDX-License-Identifier: Apache-2.0
 using Hiero.Converters;
 using Hiero.Mirror.Filters;
-using Hiero.Mirror.Paging;
 using Hiero.Mirror.Implementation;
+using Hiero.Mirror.Paging;
 using System.ComponentModel;
 using System.Text.Json.Serialization;
 using static Hiero.Mirror.Implementation.MirrorRestClientUtils;
@@ -40,7 +40,8 @@ public class ExtendedContractLogData : ContractLogData
     [JsonPropertyName("timestamp")]
     public ConsensusTimeStamp Consensus { get; set; }
     /// <summary>
-    /// The Hash of the TransactionId
+    /// The EVM transaction hash of the transaction that emitted this
+    /// log event (not the raw HAPI transaction hash).
     /// </summary>
     [JsonPropertyName("transaction_hash")]
     public EvmHash TransactionHash { get; set; } = EvmHash.None;
@@ -93,7 +94,7 @@ public static class ExtendedContractLogDataExtensions
     /// </remarks>
     public static IAsyncEnumerable<ExtendedContractLogData> GetContractLogEventsAsync(this MirrorRestClient client, EntityId contract, params IMirrorQueryParameter[] filters)
     {
-        var path = GenerateInitialPath($"contracts/{MirrorFormat(contract)}/results/logs", [new PageLimit(100), .. filters]);
+        var path = GenerateInitialPath($"contracts/{contract.ToMirrorString()}/results/logs", new PageLimit(100), filters);
         return client.GetPagedItemsAsync<ExtendedContractLogDataPage, ExtendedContractLogData>(path, MirrorJsonContext.Default.ExtendedContractLogDataPage);
     }
     /// <summary>
@@ -121,7 +122,7 @@ public static class ExtendedContractLogDataExtensions
     /// </remarks>
     public static IAsyncEnumerable<ExtendedContractLogData> GetAllContractLogEventsAsync(this MirrorRestClient client, params IMirrorQueryParameter[] filters)
     {
-        var path = GenerateInitialPath($"contracts/results/logs", [new PageLimit(100), .. filters]);
+        var path = GenerateInitialPath("contracts/results/logs", new PageLimit(100), filters);
         return client.GetPagedItemsAsync<ExtendedContractLogDataPage, ExtendedContractLogData>(path, MirrorJsonContext.Default.ExtendedContractLogDataPage);
     }
 }

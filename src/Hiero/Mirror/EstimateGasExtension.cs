@@ -133,14 +133,14 @@ public static class EstimateGasExtension
     /// </returns>
     private static async Task<long> EstimateGasImplementationAsync(MirrorRestClient mirror, EvmCallData callData, int maxIterations)
     {
-        var evmGas = (long)new BigInteger((await mirror.CallEvmAsync(callData)).Data.Span, true, true);
+        var evmGas = (long)new BigInteger((await mirror.CallEvmAsync(callData).ConfigureAwait(false)).Data.Span, true, true);
         for (int i = 1; i < maxIterations && evmGas < callData.Gas; i++)
         {
             var previousEvmGas = evmGas;
             try
             {
                 callData.Gas = evmGas;
-                evmGas = (long)new BigInteger((await mirror.CallEvmAsync(callData)).Data.Span, true, true);
+                evmGas = (long)new BigInteger((await mirror.CallEvmAsync(callData).ConfigureAwait(false)).Data.Span, true, true);
             }
             catch (MirrorException mce) when (i > 3 && (mce.Message == "CONTRACT_REVERT_EXECUTED" || mce.Message == "INSUFFICIENT_GAS"))
             {

@@ -40,7 +40,7 @@ await using var stream = new MirrorGrpcClient(ctx =>
 | `Signatory` | Private key, key list, or `Func<IInvoice, Task>` callback for signing. |
 | `ConsensusTimeStamp` | Nanosecond-precision timestamp. Construct from `DateTime` or `decimal` seconds. |
 | `Nft` | NFT identifier: `new Nft(tokenEntityId, serialNumber)`. |
-| `Hex` | Utility: `Hex.ToBytes("302e...")` converts hex string to `ReadOnlyMemory<byte>`. |
+| hex bytes | No SDK type -- use `Convert.FromHexString("302e...")` (a `byte[]`, usable as `ReadOnlyMemory<byte>`) and `Convert.ToHexStringLower(bytes.Span)`. |
 
 ### Context Configuration (`IConsensusContext`)
 
@@ -811,7 +811,7 @@ var child = client.Clone(ctx => ctx.FeeLimit = 500_000_000);
 var signatory = new Signatory(async invoice =>
 {
     // sign externally (HSM, KMS, hardware wallet, etc.)
-    var signature = await externalSigner.SignAsync(invoice.TxBytes);
+    var signature = await externalSigner.SignAsync(invoice.TransactionBytes);
     invoice.AddSignature(KeyType.Ed25519, publicKey, signature);
 });
 ```

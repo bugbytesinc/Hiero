@@ -110,6 +110,6 @@ public static class QueryContractExtensions
             SenderId = queryContractParams.MessageSender.IsNullOrNone() ? null : new AccountID(queryContractParams.MessageSender),
             ThrowOnFail = queryContractParams.ThrowOnFail
         };
-        return new ContractCallResult(await Engine.QueryAsync(client, query, queryContractParams.CancellationToken ?? default, configure));
+        return new ContractCallResult(await Engine.QueryAsync(client, query, queryContractParams.CancellationToken ?? default, configure).ConfigureAwait(false));
     }
 }

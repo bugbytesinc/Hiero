@@ -64,7 +64,7 @@ public sealed class SubmitMessageParams : TransactionParams<SubmitMessageReceipt
     /// The total number of segments making up
     /// the whole of the message when assembled.
     /// Set to 0 to indicate that this is not a
-    /// a segmented message.
+    /// segmented message.
     /// </summary>
     public int TotalSegmentCount { get; set; } = 0;
     /// <summary>

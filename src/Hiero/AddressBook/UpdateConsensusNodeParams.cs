@@ -39,12 +39,12 @@ public sealed class UpdateConsensusNodeParams : TransactionParams<TransactionRec
     /// If set, replaces the entire list of gossip endpoints.
     /// Must contain between 1 and 10 entries.
     /// </summary>
-    public IEnumerable<Uri>? GossipEndpoints { get; set; }
+    public IReadOnlyList<Uri>? GossipEndpoints { get; set; }
     /// <summary>
     /// If set, replaces the entire list of gRPC service endpoints.
     /// Must contain between 1 and 8 entries.
     /// </summary>
-    public IEnumerable<Uri>? ServiceEndpoints { get; set; }
+    public IReadOnlyList<Uri>? ServiceEndpoints { get; set; }
     /// <summary>
     /// If set, replaces the DER-encoded gossip CA certificate.
     /// </summary>
@@ -91,18 +91,36 @@ public sealed class UpdateConsensusNodeParams : TransactionParams<TransactionRec
         }
         if (GossipEndpoints is not null)
         {
-            result.GossipEndpoint.AddRange(GossipEndpoints.Select(e => new ServiceEndpoint(e)));
-            if (result.GossipEndpoint.Count == 0)
+            var count = GossipEndpoints.Count;
+            if (count == 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(GossipEndpoints), "Gossip endpoints list must not be empty when provided.");
+            }
+            var gossipEndpoints = result.GossipEndpoint;
+            if (gossipEndpoints.Capacity < count)
+            {
+                gossipEndpoints.Capacity = count;
+            }
+            for (var i = 0; i < count; i++)
+            {
+                gossipEndpoints.Add(new ServiceEndpoint(GossipEndpoints[i]));
             }
         }
         if (ServiceEndpoints is not null)
         {
-            result.ServiceEndpoint.AddRange(ServiceEndpoints.Select(e => new ServiceEndpoint(e)));
-            if (result.ServiceEndpoint.Count == 0)
+            var count = ServiceEndpoints.Count;
+            if (count == 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(ServiceEndpoints), "Service endpoints list must not be empty when provided.");
+            }
+            var serviceEndpoints = result.ServiceEndpoint;
+            if (serviceEndpoints.Capacity < count)
+            {
+                serviceEndpoints.Capacity = count;
+            }
+            for (var i = 0; i < count; i++)
+            {
+                serviceEndpoints.Add(new ServiceEndpoint(ServiceEndpoints[i]));
             }
         }
         if (GossipCaCertificate.HasValue)

@@ -1,5 +1,6 @@
 ﻿// SPDX-License-Identifier: Apache-2.0
 using Hiero.Implementation;
+using Hiero.Implementation.Formatting;
 using System.Diagnostics;
 
 namespace Hiero;
@@ -152,18 +153,6 @@ public sealed record TransactionId
     /// </returns>
     public override string ToString()
     {
-        if (Scheduled)
-        {
-            if (ChildNonce != 0)
-            {
-                return $"{Payer}@{ValidStartSeconds}.{ValidStartNanos:D9}:{ChildNonce}-scheduled";
-            }
-            return $"{Payer}@{ValidStartSeconds}.{ValidStartNanos:D9}-scheduled";
-        }
-        else if (ChildNonce != 0)
-        {
-            return $"{Payer}@{ValidStartSeconds}.{ValidStartNanos:D9}:{ChildNonce}";
-        }
-        return $"{Payer}@{ValidStartSeconds}.{ValidStartNanos:D9}";
+        return TransactionIdFormatter.Format(this, TransactionIdFormatStyle.Standard);
     }
 }

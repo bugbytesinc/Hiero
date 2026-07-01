@@ -156,7 +156,7 @@ var multi = new Signatory(key1, key2);                 // multiple keys
 var secp = new Signatory(KeyType.ECDSASecp256K1, key); // ECDSA key
 var callback = new Signatory(async invoice =>           // external signer
 {
-    var sig = await hsm.SignAsync(invoice.TxBytes);
+    var sig = await hsm.SignAsync(invoice.TransactionBytes);
     invoice.AddSignature(KeyType.Ed25519, pubKey, sig);
 });
 ```
@@ -174,11 +174,15 @@ var ts = new ConsensusTimeStamp(1234567890.123456789m);  // seconds
 
 Static: `ConsensusTimeStamp.MinValue`, `MaxValue`, `Now`.
 
-### Hex Utility
+### Hex Encoding
+
+Use the BCL helpers directly -- the SDK does not ship a Hex utility type.
+`Convert.FromHexString` returns a `byte[]` that is implicitly usable wherever
+the SDK expects `ReadOnlyMemory<byte>`.
 
 ```csharp
-ReadOnlyMemory<byte> bytes = Hex.ToBytes("302e0201...");
-string hex = Hex.FromBytes(someBytes);
+ReadOnlyMemory<byte> bytes = Convert.FromHexString("302e0201...");
+string hex = Convert.ToHexStringLower(someBytes.Span);
 ```
 
 ### TransactionId
@@ -292,9 +296,10 @@ AccountBalances all = await client.GetAccountBalancesAsync(account);
 AccountInfo info = await client.GetAccountInfoAsync(account);
 ```
 
-AccountInfo properties: `Address`, `EvmAddress`, `Balance`, `Endorsement`,
-`ReceiveSignatureRequired`, `AutoRenewPeriod`, `Expiration`, `Memo`,
-`Tokens`, `NftCount`, `AutoAssociationLimit`, `Deleted`, `StakingInfo`.
+AccountInfo properties: `Address`, `EvmAddress`, `EvmNonce`, `Balance`,
+`Endorsement`, `KeyAlias`, `ReceiveSignatureRequired`, `AutoRenewPeriod`,
+`Expiration`, `Memo`, `Tokens`, `NftCount`, `AutoAssociationLimit`,
+`Deleted`, `Ledger`, `StakingInfo`.
 
 ```csharp
 AccountDetails detail = await client.GetAccountDetailsAsync(account);
@@ -591,7 +596,7 @@ EntityId topicId = receipt.Topic;
 // Simple
 var receipt = await client.SubmitMessageAsync(topic,
     Encoding.UTF8.GetBytes("Hello HCS!"));
-// receipt.SequenceNumber, receipt.RunningHash, receipt.Status
+// receipt.SequenceNumber, receipt.RunningHash, receipt.RunningHashVersion, receipt.Status
 
 // With params
 var receipt = await client.SubmitMessageAsync(new SubmitMessageParams
@@ -965,8 +970,8 @@ ulong nodeId = receipt.NodeId;
 AddConsensusNodeParams properties:
 - `Account` (EntityId) - account to associate with the node (required)
 - `AdminKey` (Endorsement) - administrative key for the node (required)
-- `GossipEndpoints` (IEnumerable\<Uri\>) - gossip endpoints, 1-10 (required)
-- `ServiceEndpoints` (IEnumerable\<Uri\>) - gRPC endpoints, 1-8 (required)
+- `GossipEndpoints` (IReadOnlyList\<Uri\>) - gossip endpoints, 1-10 (required)
+- `ServiceEndpoints` (IReadOnlyList\<Uri\>) - gRPC endpoints, 1-8 (required)
 - `GossipCaCertificate` (ReadOnlyMemory\<byte\>) - DER-encoded CA cert (required)
 - `Description` (string?) - up to 100 UTF-8 bytes
 - `GrpcCertificateHash` (ReadOnlyMemory\<byte\>?) - SHA-384 of TLS cert
@@ -1073,6 +1078,10 @@ await client.UpdateHookStorageAsync(new UpdateHookStorageParams
     Signatory = new Signatory(hookAdminKey)
 });
 ```
+
+The SDK currently supports attaching, updating, and removing hooks and writing
+hook storage, but exposes no hook-state read-back (there is no `Get*Hook*` query
+and `AccountInfo`/`ContractInfo` carry no hook fields).
 
 ---
 
@@ -1363,7 +1372,7 @@ separate queries.
 | Property | Type | Description |
 |----------|------|-------------|
 | `TransactionId` | `TransactionId` | Unique transaction identifier |
-| `Status` | `ResponseCode` | Result status (e.g., `Ok`) |
+| `Status` | `ResponseCode` | Result status (`Success` on success) |
 | `CurrentExchangeRate` | `ExchangeRate?` | Current USD/hbar rate |
 | `NextExchangeRate` | `ExchangeRate?` | Upcoming rate |
 

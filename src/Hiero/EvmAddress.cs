@@ -2,18 +2,25 @@
 using Hiero.Converters;
 using Hiero.Implementation;
 using Org.BouncyCastle.Crypto.Digests;
+using System.Buffers;
+using System.Buffers.Binary;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Text;
 using System.Text.Json.Serialization;
 
 namespace Hiero;
 /// <summary>
-/// Represents 20-byte EVM Address for Hedera Virtual Machine.
+/// Represents a 20-byte EVM Address for the Hedera Virtual Machine.
 /// </summary>
+/// <remarks>
+/// An address may be a long-zero encoding of a <c>shard.realm.num</c>
+/// id, or an EIP-1014 (CREATE2) / public-key-derived address with no
+/// simple relation to a native id. <see cref="ToString()"/> renders the
+/// address as a <c>0x</c>-prefixed, EIP-55 mixed-case checksum string.
+/// </remarks>
 [DebuggerDisplay("{ToString(),nq}")]
 [JsonConverter(typeof(EvmAddressConverter))]
-public sealed record EvmAddress : IEquatable<EvmAddress>
+public sealed record EvmAddress : IEquatable<EvmAddress>, ISpanFormattable, IUtf8SpanFormattable
 {
     /// <summary>
     /// Internal storage for the 20-byte EVM Address.
@@ -61,12 +68,12 @@ public sealed record EvmAddress : IEquatable<EvmAddress>
         {
             throw new ArgumentException("Can only compute a EvmAddress from an Endorsement of type ECDSASecp256K1.");
         }
-        var publicKey = KeyUtils.ParsePublicEcdsaSecp256k1Key(endorsement.ToBytes(KeyFormat.Raw)).Q.GetEncoded(false);
+        var publicKey = ((EcdsaSecp256K1EndorsementData)endorsement._data).PublicKey.Q.GetEncoded(false);
         var digest = new KeccakDigest(256);
-        digest.BlockUpdate(publicKey, 1, publicKey.Length - 1);
-        byte[] hash = new byte[32];
-        digest.DoFinal(hash, 0);
-        hash.AsSpan(12, 20).CopyTo(_bytes);
+        digest.BlockUpdate(publicKey.AsSpan(1));
+        Span<byte> hash = stackalloc byte[32];
+        digest.DoFinal(hash);
+        hash.Slice(12, 20).CopyTo(_bytes);
     }
     /// <summary>
     /// Public Constructor, a <code>EvmAddress</code> is immutable after
@@ -136,9 +143,9 @@ public sealed record EvmAddress : IEquatable<EvmAddress>
     {
         return HashCode.Combine(
             typeof(EvmAddress),
-            BitConverter.ToInt64(_bytes, 0),
-            BitConverter.ToInt64(_bytes, 8),
-            BitConverter.ToInt32(_bytes, 16)
+            BinaryPrimitives.ReadInt64LittleEndian(_bytes.AsSpan(0, 8)),
+            BinaryPrimitives.ReadInt64LittleEndian(_bytes.AsSpan(8, 8)),
+            BinaryPrimitives.ReadInt32LittleEndian(_bytes.AsSpan(16, 4))
         );
     }
     /// <summary>
@@ -149,23 +156,15 @@ public sealed record EvmAddress : IEquatable<EvmAddress>
     /// </returns>
     public override string ToString()
     {
-        Span<char> hexChars = stackalloc char[40];
-        Span<byte> utf8HexBytes = stackalloc byte[40];
-        Hex.TryEncode(_bytes, hexChars, out _);
-        Encoding.ASCII.GetBytes(hexChars, utf8HexBytes);
-        var keccak = new KeccakDigest(256);
-        keccak.BlockUpdate(utf8HexBytes.ToArray(), 0, 10);
-        byte[] hash = new byte[32];
-        keccak.DoFinal(hash, 0);
-        var checksum = new StringBuilder("0x", 42);
-        for (int i = 0; i < 40; i++)
-        {
-            byte nibble = (byte)((i % 2 == 0) ? hash[i / 2] >> 4 : hash[i / 2] & 0xF);
-            char c = hexChars[i];
-            checksum.Append(nibble >= 8 ? char.ToUpperInvariant(c) : c);
-        }
-        return checksum.ToString();
+        return $"{this}";
     }
+    /// <summary>
+    /// Outputs an EIP-55 Checksum Encoding of EvmAddress 
+    /// </summary>
+    /// <returns>
+    /// String representation of this EVM Address
+    /// </returns>
+    public string ToString(string? format, IFormatProvider? formatProvider) => ToString();
     /// <summary>
     /// Tries to parse a string value into an EVM Address.
     /// </summary>
@@ -199,7 +198,7 @@ public sealed record EvmAddress : IEquatable<EvmAddress>
             return false;
         }
         Span<byte> buffer = stackalloc byte[20];
-        if (Hex.TryDecode(value, buffer, out int bytesWritten) && bytesWritten == 20)
+        if (Convert.FromHexString(value, buffer, out _, out var bytesWritten) == OperationStatus.Done && bytesWritten == 20)
         {
             evmAddress = new EvmAddress(buffer);
             return true;
@@ -239,11 +238,74 @@ public sealed record EvmAddress : IEquatable<EvmAddress>
     {
         return new EntityId(0, 0, evmAddress);
     }
+    /// <inheritdoc/>
+    public bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider)
+    {
+        if (destination.Length < 42)
+        {
+            charsWritten = 0;
+            return false;
+        }
+        Span<byte> utf8HexBytes = stackalloc byte[40];
+        Span<byte> hash = stackalloc byte[32];
+        ComputeChecksumHash(utf8HexBytes, hash);
+        destination[0] = '0';
+        destination[1] = 'x';
+        for (int i = 0; i < _bytes.Length; i++)
+        {
+            WriteChecksumHexByte(destination.Slice(2 + (i * 2), 2), _bytes[i], hash[i]);
+        }
+        charsWritten = 42;
+        return true;
+    }
+    /// <inheritdoc/>
+    public bool TryFormat(Span<byte> utf8Destination, out int bytesWritten, ReadOnlySpan<char> format, IFormatProvider? provider)
+    {
+        if (utf8Destination.Length < 42)
+        {
+            bytesWritten = 0;
+            return false;
+        }
+        Span<byte> utf8HexBytes = stackalloc byte[40];
+        Span<byte> hash = stackalloc byte[32];
+        ComputeChecksumHash(utf8HexBytes, hash);
+        utf8Destination[0] = (byte)'0';
+        utf8Destination[1] = (byte)'x';
+        for (int i = 0; i < _bytes.Length; i++)
+        {
+            WriteChecksumHexByte(utf8Destination.Slice(2 + (i * 2), 2), _bytes[i], hash[i]);
+        }
+        bytesWritten = 42;
+        return true;
+    }
+    private static void WriteChecksumHexByte(Span<char> destination, byte value, byte hash)
+    {
+        destination[0] = ChecksumHexChar(value >> 4, hash >> 4);
+        destination[1] = ChecksumHexChar(value & 0xF, hash & 0xF);
+    }
+    private static void WriteChecksumHexByte(Span<byte> destination, byte value, byte hash)
+    {
+        destination[0] = (byte)ChecksumHexChar(value >> 4, hash >> 4);
+        destination[1] = (byte)ChecksumHexChar(value & 0xF, hash & 0xF);
+    }
+
+    private static char ChecksumHexChar(int value, int hashNibble)
+    {
+        char c = (char)(value < 10 ? '0' + value : 'a' + value - 10);
+        return hashNibble >= 8 ? char.ToUpperInvariant(c) : c;
+    }
+    private void ComputeChecksumHash(Span<byte> utf8HexBytes, Span<byte> hash)
+    {
+        Convert.TryToHexStringLower(_bytes, utf8HexBytes, out _);
+        var keccak = new KeccakDigest(256);
+        keccak.BlockUpdate(utf8HexBytes);
+        keccak.DoFinal(hash);
+    }
 }
 internal static class EvmAddressExtensions
 {
-    internal static bool IsNullOrNone([NotNullWhen(false)] this EvmAddress? moniker)
+    internal static bool IsNullOrNone([NotNullWhen(false)] this EvmAddress? evmAddress)
     {
-        return moniker is null || moniker == EvmAddress.None;
+        return evmAddress is null || evmAddress == EvmAddress.None;
     }
 }

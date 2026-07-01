@@ -12,7 +12,7 @@ public class AbiConversionTests
     {
         var address = new EntityId(2, 1, 3);
         var bytes = Abi.EncodeArguments(new[] { address });
-        var hex = Hex.FromBytes(bytes)[^40..^0];
+        var hex = Convert.ToHexStringLower(bytes.Span)[^40..^0];
         await Assert.That(hex).IsEqualTo("0000000200000000000000010000000000000003");
     }
 
@@ -101,6 +101,54 @@ public class AbiConversionTests
         var bytes = Abi.EncodeArguments(new object[] { expected });
         var decoded = Abi.DecodeArguments(bytes, typeof(long));
         await Assert.That((long)decoded[0]).IsEqualTo(expected);
+    }
+
+    [Test]
+    public async Task Can_Pack_And_Unpack_Negative_Int32()
+    {
+        foreach (var expected in new[] { -1, -42, int.MinValue, int.MaxValue, 0 })
+        {
+            var bytes = Abi.EncodeArguments(new object[] { expected });
+            var decoded = Abi.DecodeArguments(bytes, typeof(int));
+            await Assert.That((int)decoded[0]).IsEqualTo(expected);
+        }
+    }
+
+    [Test]
+    public async Task Can_Pack_And_Unpack_Negative_Int64()
+    {
+        foreach (var expected in new[] { -1L, -42L, long.MinValue, long.MaxValue, 0L })
+        {
+            var bytes = Abi.EncodeArguments(new object[] { expected });
+            var decoded = Abi.DecodeArguments(bytes, typeof(long));
+            await Assert.That((long)decoded[0]).IsEqualTo(expected);
+        }
+    }
+
+    [Test]
+    public async Task Negative_Int32_Is_Sign_Extended_Across_Full_Word()
+    {
+        // The two's-complement int256 must fill all 32 bytes, not just the low 8;
+        // a buggy encoder leaves the high 24 bytes zero, mis-encoding negatives as
+        // large positives on-chain.
+        await Assert.That(Convert.ToHexStringLower(Abi.EncodeArguments(new object[] { -1 }).Span))
+            .IsEqualTo(new string('f', 64));
+        await Assert.That(Convert.ToHexStringLower(Abi.EncodeArguments(new object[] { -2 }).Span))
+            .IsEqualTo(new string('f', 62) + "fe");
+        await Assert.That(Convert.ToHexStringLower(Abi.EncodeArguments(new object[] { int.MinValue }).Span))
+            .IsEqualTo(new string('f', 56) + "80000000");
+        // Positive control: high bytes stay zero.
+        await Assert.That(Convert.ToHexStringLower(Abi.EncodeArguments(new object[] { 5 }).Span))
+            .IsEqualTo(new string('0', 62) + "05");
+    }
+
+    [Test]
+    public async Task Negative_Int64_Is_Sign_Extended_Across_Full_Word()
+    {
+        await Assert.That(Convert.ToHexStringLower(Abi.EncodeArguments(new object[] { -1L }).Span))
+            .IsEqualTo(new string('f', 64));
+        await Assert.That(Convert.ToHexStringLower(Abi.EncodeArguments(new object[] { long.MinValue }).Span))
+            .IsEqualTo(new string('f', 48) + "8000000000000000");
     }
 
     [Test]
@@ -198,6 +246,19 @@ public class AbiConversionTests
     }
 
     [Test]
+    public async Task Negative_BigInteger_Throws_ArgumentOutOfRange()
+    {
+        // BigInteger maps to uint256; a negative value must surface a clear
+        // ArgumentOutOfRangeException rather than the OverflowException that
+        // BigInteger.TryWriteBytes(isUnsigned) would otherwise throw.
+        var exception = Assert.Throws<ArgumentOutOfRangeException>(() =>
+        {
+            Abi.EncodeArguments(new object[] { BigInteger.MinusOne });
+        });
+        await Assert.That(exception.ParamName).IsEqualTo("value");
+    }
+
+    [Test]
     public async Task EncodeFunctionWithArguments_Produces_Selector_Plus_Args()
     {
         var address = new EntityId(0, 0, 5);
@@ -209,6 +270,16 @@ public class AbiConversionTests
         var argsOnly = Abi.EncodeArguments(new object[] { address, amount });
         var resultArgs = result.Slice(4);
         await Assert.That(resultArgs.ToArray().SequenceEqual(argsOnly.ToArray())).IsTrue();
+    }
+
+    [Test]
+    public async Task EncodeFunctionWithArguments_Produces_Known_Erc20_Transfer_Selector()
+    {
+        var address = new EvmAddress(new byte[20]);
+        var amount = new BigInteger(1);
+        var result = Abi.EncodeFunctionWithArguments("transfer", new object[] { address, amount });
+
+        await Assert.That(Convert.ToHexStringLower(result.Slice(0, 4).Span)).IsEqualTo("a9059cbb");
     }
 
     [Test]

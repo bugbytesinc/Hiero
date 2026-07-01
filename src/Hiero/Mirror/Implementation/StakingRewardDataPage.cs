@@ -18,8 +18,8 @@ internal class StakingRewardDataPage : Page<StakingRewardData>
     /// <returns>
     /// An enumerator listing the staking reward records in the list.
     /// </returns>
-    public override IEnumerable<StakingRewardData> GetItems()
+    public override StakingRewardData[] GetItems()
     {
-        return Rewards ?? Array.Empty<StakingRewardData>();
+        return Rewards ?? [];
     }
 }

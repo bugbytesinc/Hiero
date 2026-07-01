@@ -24,7 +24,7 @@ public sealed class UpdateHookStorageParams : TransactionParams<TransactionRecei
     /// <summary>
     /// The storage updates to apply to the hook.
     /// </summary>
-    public IEnumerable<HookStorageEntry>? StorageUpdates { get; set; }
+    public IReadOnlyList<HookStorageEntry>? StorageUpdates { get; set; }
     /// <summary>
     /// Additional private key, keys or signing callback method
     /// required to authorize the storage update. Typically the
@@ -53,10 +53,7 @@ public sealed class UpdateHookStorageParams : TransactionParams<TransactionRecei
         };
         if (StorageUpdates is not null)
         {
-            foreach (var update in StorageUpdates.ToProto())
-            {
-                body.StorageUpdates.Add(update);
-            }
+            StorageUpdates.AddToProto(body.StorageUpdates);
         }
         return body;
     }

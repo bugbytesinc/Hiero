@@ -126,19 +126,6 @@ public sealed class MirrorGrpcClient : IAsyncDisposable
         return new MirrorGrpcClient(_context, configure);
     }
     /// <summary>
-    /// Creates a new child context based on the current context instance.  
-    /// Includes an optional configuration method that can be immediately 
-    /// applied to the new context.  This method is used internally to create 
-    /// contexts for cloned clients and network method calls having custom 
-    /// configuration callbacks.
-    /// </summary>
-    private MirrorContextStack CreateChildContext(Action<IMirrorGrpcContext>? configure)
-    {
-        var context = new MirrorContextStack(_context);
-        configure?.Invoke(context);
-        return context;
-    }
-    /// <summary>
     /// .NET Asynchronous dispose method.
     /// </summary>
     /// <remarks>
@@ -279,7 +266,7 @@ public sealed class MirrorGrpcClient : IAsyncDisposable
                 };
                 if (!writer.TryWrite(message))
                 {
-                    while (await writer.WaitToWriteAsync().ConfigureAwait(false))
+                    while (await writer.WaitToWriteAsync(cancelTokenSource.Token).ConfigureAwait(false))
                     {
                         if (!writer.TryWrite(message))
                         {
@@ -290,6 +277,19 @@ public sealed class MirrorGrpcClient : IAsyncDisposable
                 }
             }
         }
+    }
+    /// <summary>
+    /// Creates a new child context based on the current context instance.
+    /// Includes an optional configuration method that can be immediately
+    /// applied to the new context.  This method is used internally to create
+    /// contexts for cloned clients and network method calls having custom
+    /// configuration callbacks.
+    /// </summary>
+    private MirrorContextStack CreateChildContext(Action<IMirrorGrpcContext>? configure)
+    {
+        var context = new MirrorContextStack(_context);
+        configure?.Invoke(context);
+        return context;
     }
     /// <summary>
     /// The default algorithm for creating channels for the

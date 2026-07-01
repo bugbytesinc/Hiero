@@ -1,46 +1,47 @@
 // SPDX-License-Identifier: Apache-2.0
 using Google.Protobuf;
+using Google.Protobuf.Collections;
 using Hiero;
+using System.Runtime.InteropServices;
 
 namespace Com.Hedera.Hapi.Node.Hooks;
 
 internal static class HookStorageEntryExtensions
 {
-    internal static IEnumerable<EvmHookStorageUpdate> ToProto(this IEnumerable<HookStorageEntry> entries)
+    internal static void AddToProto(this IReadOnlyList<HookStorageEntry> entries, RepeatedField<EvmHookStorageUpdate> updates)
     {
-        var mappingGroups = new Dictionary<string, (ReadOnlyMemory<byte> Slot, List<HookStorageEntry> Entries)>();
-        foreach (var entry in entries)
+        Dictionary<ReadOnlyMemory<byte>, EvmHookMappingEntries>? mappingGroups = null;
+        var count = entries.Count;
+        var capacity = updates.Count + count;
+        if (updates.Capacity < capacity)
         {
+            updates.Capacity = capacity;
+        }
+        for (var i = 0; i < count; i++)
+        {
+            var entry = entries[i];
             if (entry.IndexKey is null)
             {
-                yield return new EvmHookStorageUpdate
+                updates.Add(new EvmHookStorageUpdate
                 {
                     StorageSlot = new EvmHookStorageSlot
                     {
                         Key = ByteString.CopyFrom(entry.Key.Span),
                         Value = ByteString.CopyFrom(entry.Value.Span)
                     }
-                };
+                });
             }
             else
             {
-                var groupKey = Convert.ToHexString(entry.Key.Span);
-                if (!mappingGroups.TryGetValue(groupKey, out var group))
+                mappingGroups ??= new Dictionary<ReadOnlyMemory<byte>, EvmHookMappingEntries>(count, ReadOnlyMemoryComparer.Instance);
+                ref var group = ref CollectionsMarshal.GetValueRefOrAddDefault(mappingGroups, entry.Key, out var exists);
+                if (!exists)
                 {
-                    group = (entry.Key, new List<HookStorageEntry>());
-                    mappingGroups[groupKey] = group;
+                    group = new EvmHookMappingEntries
+                    {
+                        MappingSlot = ByteString.CopyFrom(entry.Key.Span)
+                    };
                 }
-                group.Entries.Add(entry);
-            }
-        }
-        foreach (var group in mappingGroups.Values)
-        {
-            var mappingEntries = new EvmHookMappingEntries
-            {
-                MappingSlot = ByteString.CopyFrom(group.Slot.Span)
-            };
-            foreach (var entry in group.Entries)
-            {
                 var protoEntry = new EvmHookMappingEntry
                 {
                     Value = ByteString.CopyFrom(entry.Value.Span)
@@ -53,9 +54,34 @@ internal static class HookStorageEntryExtensions
                 {
                     protoEntry.Key = ByteString.CopyFrom(entry.IndexKey!.Value.Span);
                 }
-                mappingEntries.Entries.Add(protoEntry);
+                group!.Entries.Add(protoEntry);
             }
-            yield return new EvmHookStorageUpdate { MappingEntries = mappingEntries };
+        }
+        if (mappingGroups is not null)
+        {
+            foreach (var group in mappingGroups.Values)
+            {
+                updates.Add(new EvmHookStorageUpdate { MappingEntries = group });
+            }
+        }
+    }
+    private sealed class ReadOnlyMemoryComparer : IEqualityComparer<ReadOnlyMemory<byte>>
+    {
+        internal static readonly ReadOnlyMemoryComparer Instance = new();
+
+        public bool Equals(ReadOnlyMemory<byte> x, ReadOnlyMemory<byte> y)
+        {
+            return x.Span.SequenceEqual(y.Span);
+        }
+
+        public int GetHashCode(ReadOnlyMemory<byte> obj)
+        {
+            var hash = new HashCode();
+            foreach (var b in obj.Span)
+            {
+                hash.Add(b);
+            }
+            return hash.ToHashCode();
         }
     }
 }

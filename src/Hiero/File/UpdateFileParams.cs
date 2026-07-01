@@ -35,7 +35,7 @@ public sealed class UpdateFileParams : TransactionParams<TransactionReceipt>, IN
     /// otherwise manipulating the contents of this file. Set to
     /// <code>null</code> to leave unchanged.
     /// </summary>
-    public Endorsement[]? Endorsements { get; set; }
+    public IReadOnlyList<Endorsement>? Endorsements { get; set; }
     /// <summary>
     /// Replace the contents of the file with these new contents.  Set to
     /// <code>null</code> to leave the existing content unchanged.
@@ -44,7 +44,7 @@ public sealed class UpdateFileParams : TransactionParams<TransactionReceipt>, IN
     /// <summary>
     /// Additional private key, keys or signing callback method 
     /// required to replace the contents of this file.  Typically
-    /// matches all the Endorsements in the Endorsement array
+    /// matches all the Endorsements in the Endorsement list
     /// associated with this file.
     /// </summary>
     /// <remarks>
@@ -78,7 +78,7 @@ public sealed class UpdateFileParams : TransactionParams<TransactionReceipt>, IN
         }
         if (Contents.HasValue)
         {
-            result.Contents = ByteString.CopyFrom(Contents.Value.ToArray());
+            result.Contents = ByteString.CopyFrom(Contents.Value.Span);
         }
         if (Memo is not null)
         {

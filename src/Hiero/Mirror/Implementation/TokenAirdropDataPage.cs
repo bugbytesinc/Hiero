@@ -20,8 +20,8 @@ internal class TokenAirdropDataPage : Page<TokenAirdropData>
     /// <returns>
     /// An enumerator listing the records in the list.
     /// </returns>
-    public override IEnumerable<TokenAirdropData> GetItems()
+    public override TokenAirdropData[] GetItems()
     {
-        return Airdrops ?? Array.Empty<TokenAirdropData>();
+        return Airdrops ?? [];
     }
 }

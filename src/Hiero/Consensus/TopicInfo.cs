@@ -6,8 +6,9 @@ using System.Numerics;
 
 namespace Hiero;
 /// <summary>
-/// The information returned from the GetTopicInfo ConsensusClient 
-/// method call.  It represents the details concerning a 
+/// The information returned from the
+/// <see cref="TopicInfoExtensions.GetTopicInfoAsync"/> ConsensusClient
+/// method call.  It represents the details concerning a
 /// Hedera Network Consensus Topic.
 /// </summary>
 public sealed record TopicInfo
@@ -72,7 +73,7 @@ public sealed record TopicInfo
     {
         var info = response.ConsensusGetTopicInfo.TopicInfo;
         Memo = info.Memo;
-        RunningHash = info.RunningHash.ToArray();
+        RunningHash = info.RunningHash.Memory;
         SequenceNumber = info.SequenceNumber;
         Expiration = info.ExpirationTime.ToConsensusTimeStamp();
         Administrator = info.AdminKey?.ToEndorsement();

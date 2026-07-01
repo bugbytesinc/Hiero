@@ -72,7 +72,7 @@ public static class NetworkFeesExtensions
     /// </remarks>
     public static Task<NetworkFeesData?> GetNetworkFeesAsync(this MirrorRestClient client, ConsensusTimeStamp consensus)
     {
-        var path = GenerateInitialPath($"network/fees", [TimestampFilter.OnOrBefore(consensus)]);
+        var path = GenerateInitialPath("network/fees", TimestampFilter.OnOrBefore(consensus));
         return client.GetSingleItemAsync(path, MirrorJsonContext.Default.NetworkFeesData);
     }
     /// <summary>

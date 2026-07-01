@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 using Hiero.Converters;
+using System.Buffers.Binary;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
@@ -93,10 +94,10 @@ public sealed record EvmHash : IEquatable<EvmHash>
     {
         return HashCode.Combine(
             typeof(EvmHash),
-            BitConverter.ToInt64(_bytes, 0),
-            BitConverter.ToInt64(_bytes, 8),
-            BitConverter.ToInt64(_bytes, 16),
-            BitConverter.ToInt64(_bytes, 24)
+            BinaryPrimitives.ReadInt64LittleEndian(_bytes.AsSpan(0, 8)),
+            BinaryPrimitives.ReadInt64LittleEndian(_bytes.AsSpan(8, 8)),
+            BinaryPrimitives.ReadInt64LittleEndian(_bytes.AsSpan(16, 8)),
+            BinaryPrimitives.ReadInt64LittleEndian(_bytes.AsSpan(24, 8))
         );
     }
     /// <summary>
@@ -105,9 +106,12 @@ public sealed record EvmHash : IEquatable<EvmHash>
     /// </summary>
     public override string ToString()
     {
-        Span<char> hexChars = stackalloc char[64];
-        Hex.TryEncode(_bytes, hexChars, out _);
-        return string.Concat("0x", hexChars);
+        return string.Create(66, _bytes, static (destination, bytes) =>
+        {
+            destination[0] = '0';
+            destination[1] = 'x';
+            Convert.TryToHexStringLower(bytes, destination[2..], out _);
+        });
     }
     /// <summary>
     /// Tries to parse a string value into an <c>EvmHash</c>.
@@ -154,7 +158,7 @@ public sealed record EvmHash : IEquatable<EvmHash>
             return false;
         }
         Span<byte> buffer = stackalloc byte[32];
-        if (Hex.TryDecode(value, buffer, out int bytesWritten) && bytesWritten == 32)
+        if (Convert.FromHexString(value, buffer, out _, out int bytesWritten) == System.Buffers.OperationStatus.Done && bytesWritten == 32)
         {
             hash = new EvmHash(buffer);
             return true;

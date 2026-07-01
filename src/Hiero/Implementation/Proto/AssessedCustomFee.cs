@@ -8,12 +8,13 @@ internal static class AssessedCustomFeeExtensions
 {
     internal static IReadOnlyList<RoyaltyTransfer> AsRoyaltyTransferList(this RepeatedField<AssessedCustomFee> list)
     {
-        if (list is { Count: > 0 })
+        var count = list?.Count ?? 0;
+        if (count > 0)
         {
-            var result = new List<RoyaltyTransfer>(list.Count);
-            for (int i = 0; i < list.Count; i++)
+            var result = new RoyaltyTransfer[count];
+            for (var i = 0; i < count; i++)
             {
-                result.Add(new RoyaltyTransfer(list[i]));
+                result[i] = new RoyaltyTransfer(list![i]);
             }
             return result;
         }

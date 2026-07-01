@@ -174,7 +174,7 @@ public static class AccountDataExtensions
     /// </remarks>
     public static Task<AccountData?> GetAccountAsync(this MirrorRestClient client, EntityId account, params IMirrorQueryParameter[] filters)
     {
-        var path = GenerateInitialPath($"accounts/{MirrorFormat(account)}", [SuppressTransactions, .. filters]);
+        var path = GenerateInitialPath($"accounts/{account.ToMirrorString()}", SuppressTransactions, filters);
         return client.GetSingleItemAsync(path, MirrorJsonContext.Default.AccountData);
     }
     /// <summary>
@@ -201,7 +201,7 @@ public static class AccountDataExtensions
     /// </returns>
     public static IAsyncEnumerable<AccountData> GetAccountsAsync(this MirrorRestClient client, params IMirrorQueryParameter[] filters)
     {
-        var path = GenerateInitialPath("accounts", [new PageLimit(100), .. filters]);
+        var path = GenerateInitialPath("accounts", new PageLimit(100), filters);
         return client.GetPagedItemsAsync<AccountDataPage, AccountData>(path, MirrorJsonContext.Default.AccountDataPage);
     }
 }

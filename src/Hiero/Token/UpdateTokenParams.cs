@@ -265,8 +265,8 @@ public static class UpdateTokenExtensions
     /// The Consensus Node Client orchestrating the update.
     /// </param>
     /// <param name="updateParameters">
-    /// The Token update parameters, includes a required 
-    /// <see cref="EntityId"/> or <code>Symbol</code> reference to the Token 
+    /// The Token update parameters, includes a required
+    /// <see cref="EntityId"/> reference to the Token
     /// to update plus a number of changeable properties of the Token.
     /// </param>
     /// <param name="configure">

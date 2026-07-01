@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
-using System.Text.Json;
 using Hiero.Mirror;
+using System.Text.Json;
 
 namespace Hiero.Test.Unit.Mirror;
 
@@ -40,15 +40,15 @@ public class ContractActionDataTests
         await Assert.That(a.Gas).IsEqualTo(50000L);
         await Assert.That(a.GasUsed).IsEqualTo(31415L);
         await Assert.That(a.Index).IsEqualTo(0);
-        await Assert.That(Hex.FromBytes(a.Input)).IsEqualTo("deadbeef");
+        await Assert.That(Convert.ToHexStringLower(a.Input.Span)).IsEqualTo("deadbeef");
         await Assert.That(a.Recipient).IsEqualTo(new EntityId(0, 0, 2002));
         await Assert.That(a.RecipientType).IsEqualTo("CONTRACT");
-        await Assert.That(Hex.FromBytes(a.ResultData)).IsEqualTo("1234");
+        await Assert.That(Convert.ToHexStringLower(a.ResultData.Span)).IsEqualTo("1234");
         await Assert.That(a.ResultDataType).IsEqualTo("OUTPUT");
         await Assert.That(a.Timestamp).IsEqualTo(new ConsensusTimeStamp(1_700_000_000L, 123_456_789));
         await Assert.That(a.Value).IsEqualTo(100L);
         await Assert.That(a.To).IsNotNull();
-        await Assert.That(a.From.ToString()).IsEqualTo("0x00000000000000000000000000000000000003E9");
+        await Assert.That(a.From.ToString()).IsEqualTo("0x00000000000000000000000000000000000003e9");
         await Assert.That(a.To!.ToString()).IsEqualTo("0x00000000000000000000000000000000000007D2");
     }
 

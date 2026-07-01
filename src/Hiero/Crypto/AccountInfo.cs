@@ -102,7 +102,7 @@ public sealed record AccountInfo
     {
         var info = response.CryptoGetInfo.AccountInfo;
         Address = info.AccountID.AsAddress();
-        EvmAddress = string.IsNullOrWhiteSpace(info.ContractAccountID) ? EvmAddress.None : new EvmAddress(Hex.ToBytes(info.ContractAccountID));
+        EvmAddress = string.IsNullOrWhiteSpace(info.ContractAccountID) ? EvmAddress.None : new EvmAddress(Convert.FromHexString(info.ContractAccountID));
         EvmNonce = info.EthereumNonce;
         Deleted = info.Deleted;
         Endorsement = info.Key.ToEndorsement();

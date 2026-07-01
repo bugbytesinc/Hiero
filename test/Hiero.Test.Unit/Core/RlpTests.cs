@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 #pragma warning disable CS8625 // Null arguments are intentional in these tests
+using Hiero.Test.Helpers;
 using System.Numerics;
 using System.Text;
-using Hiero.Test.Helpers;
 
 namespace Hiero.Test.Unit.Core;
 
@@ -71,7 +71,7 @@ public class RlpTests
         await Assert.That(output.Length).IsEqualTo(1);
         var result = output[0] as byte[];
         await Assert.That(result).IsNotNull();
-        await Assert.That(Hex.FromBytes(result!)).IsEqualTo(Hex.FromBytes(input));
+        await Assert.That(Convert.ToHexStringLower(result!)).IsEqualTo(Convert.ToHexStringLower(input));
     }
 
     [Test]
@@ -92,9 +92,9 @@ public class RlpTests
         byte[] encoded = Rlp.Encode(input);
         object[] output = Rlp.Decode(encoded);
         byte[] rencoded = Rlp.Encode(output);
-        await Assert.That(Hex.FromBytes(rencoded)).IsEqualTo(Hex.FromBytes(encoded));
+        await Assert.That(Convert.ToHexStringLower(rencoded)).IsEqualTo(Convert.ToHexStringLower(encoded));
         byte[] rerencoded = Rlp.Encode(output[0]);
-        await Assert.That(Hex.FromBytes(rerencoded)).IsEqualTo(Hex.FromBytes(encoded));
+        await Assert.That(Convert.ToHexStringLower(rerencoded)).IsEqualTo(Convert.ToHexStringLower(encoded));
     }
 
     [Test]
@@ -189,5 +189,19 @@ public class RlpTests
         byte[] encoded = Rlp.Encode(Array.Empty<byte>());
         await Assert.That(encoded.Length).IsEqualTo(1);
         await Assert.That(encoded[0]).IsEqualTo((byte)0x80);
+    }
+
+    [Test]
+    public async Task Can_Decode_Multiple_Top_Level_Items()
+    {
+        byte[] encoded = [0x01, 0x02, 0x80, 0xc0];
+
+        object[] output = Rlp.Decode(encoded);
+
+        await Assert.That(output.Length).IsEqualTo(4);
+        await Assert.That(((byte[])output[0])[0]).IsEqualTo((byte)0x01);
+        await Assert.That(((byte[])output[1])[0]).IsEqualTo((byte)0x02);
+        await Assert.That((byte[])output[2]).IsEmpty();
+        await Assert.That((object[])output[3]).IsEmpty();
     }
 }

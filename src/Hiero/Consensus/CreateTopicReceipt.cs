@@ -8,7 +8,7 @@ namespace Hiero;
 public sealed record CreateTopicReceipt : TransactionReceipt
 {
     /// <summary>
-    /// The newly created or associated topic instance address.
+    /// The address of the newly created topic instance.
     /// </summary>
     /// <remarks>
     /// The value will be <code>None</code> if the create topic

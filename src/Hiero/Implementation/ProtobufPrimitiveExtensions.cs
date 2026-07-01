@@ -7,12 +7,13 @@ internal static class ProtobufPrimitiveExtensions
 {
     internal static IReadOnlyList<T> CopyToReadOnlyList<T>(this RepeatedField<T> field)
     {
-        if (field is null || field.Count == 0)
+        var count = field?.Count ?? 0;
+        if (count == 0)
         {
             return [];
         }
-        var data = new T[field.Count];
-        field.CopyTo(data, 0);
+        var data = new T[count];
+        field!.CopyTo(data, 0);
         return data;
     }
 }

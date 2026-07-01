@@ -62,13 +62,20 @@ public sealed class AllowanceParams : TransactionParams<TransactionReceipt>, INe
         var result = new CryptoApproveAllowanceTransactionBody();
         if (CryptoAllowances is { Count: > 0 })
         {
-            foreach (var allowance in CryptoAllowances)
+            var count = CryptoAllowances.Count;
+            var cryptoAllowances = result.CryptoAllowances;
+            if (cryptoAllowances.Capacity < count)
             {
+                cryptoAllowances.Capacity = count;
+            }
+            for (var i = 0; i < count; i++)
+            {
+                var allowance = CryptoAllowances[i];
                 if (allowance.Amount < 0)
                 {
                     throw new ArgumentOutOfRangeException(nameof(allowance.Amount), "The allowance amount must be greater than or equal to zero.");
                 }
-                result.CryptoAllowances.Add(new Proto.CryptoAllowance
+                cryptoAllowances.Add(new Proto.CryptoAllowance
                 {
                     Owner = new AccountID(allowance.Owner),
                     Spender = new AccountID(allowance.Spender),
@@ -78,13 +85,20 @@ public sealed class AllowanceParams : TransactionParams<TransactionReceipt>, INe
         }
         if (TokenAllowances is { Count: > 0 })
         {
-            foreach (var allowance in TokenAllowances)
+            var count = TokenAllowances.Count;
+            var tokenAllowances = result.TokenAllowances;
+            if (tokenAllowances.Capacity < count)
             {
+                tokenAllowances.Capacity = count;
+            }
+            for (var i = 0; i < count; i++)
+            {
+                var allowance = TokenAllowances[i];
                 if (allowance.Amount < 0)
                 {
                     throw new ArgumentOutOfRangeException(nameof(allowance.Amount), "The allowance amount must be greater than or equal to zero.");
                 }
-                result.TokenAllowances.Add(new Proto.TokenAllowance
+                tokenAllowances.Add(new Proto.TokenAllowance
                 {
                     TokenId = new TokenID(allowance.Token),
                     Owner = new AccountID(allowance.Owner),
@@ -95,8 +109,15 @@ public sealed class AllowanceParams : TransactionParams<TransactionReceipt>, INe
         }
         if (NftAllowances is { Count: > 0 })
         {
-            foreach (var allowance in NftAllowances)
+            var count = NftAllowances.Count;
+            var nftAllowances = result.NftAllowances;
+            if (nftAllowances.Capacity < count)
             {
+                nftAllowances.Capacity = count;
+            }
+            for (var i = 0; i < count; i++)
+            {
+                var allowance = NftAllowances[i];
                 var nftAllowance = new Proto.NftAllowance
                 {
                     TokenId = new TokenID(allowance.Token),
@@ -109,13 +130,22 @@ public sealed class AllowanceParams : TransactionParams<TransactionReceipt>, INe
                 }
                 else
                 {
-                    nftAllowance.SerialNumbers.AddRange(allowance.SerialNumbers);
+                    var serialNumbers = nftAllowance.SerialNumbers;
+                    var serialNumberCount = allowance.SerialNumbers.Count;
+                    if (serialNumbers.Capacity < serialNumberCount)
+                    {
+                        serialNumbers.Capacity = serialNumberCount;
+                    }
+                    for (var j = 0; j < serialNumberCount; j++)
+                    {
+                        serialNumbers.Add(allowance.SerialNumbers[j]);
+                    }
                 }
                 if (!allowance.DelegatingSpender.IsNullOrNone())
                 {
                     nftAllowance.DelegatingSpender = new AccountID(allowance.DelegatingSpender);
                 }
-                result.NftAllowances.Add(nftAllowance);
+                nftAllowances.Add(nftAllowance);
             }
         }
         if (result.CryptoAllowances.Count == 0 && result.TokenAllowances.Count == 0 && result.NftAllowances.Count == 0)

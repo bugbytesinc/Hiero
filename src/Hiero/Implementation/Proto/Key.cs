@@ -1,7 +1,7 @@
 ﻿// SPDX-License-Identifier: Apache-2.0
 using Google.Protobuf;
 using Hiero;
-using Org.BouncyCastle.Crypto.Parameters;
+using Hiero.Implementation;
 
 namespace Proto;
 
@@ -12,10 +12,10 @@ public sealed partial class Key
         switch (endorsement.Type)
         {
             case KeyType.Ed25519:
-                Ed25519 = ByteString.CopyFrom(((Ed25519PublicKeyParameters)endorsement._data).GetEncoded());
+                Ed25519 = ByteString.CopyFrom(((Ed25519EndorsementData)endorsement._data).RawPublicKey);
                 break;
             case KeyType.ECDSASecp256K1:
-                ECDSASecp256K1 = ByteString.CopyFrom(((ECPublicKeyParameters)endorsement._data).Q.GetEncoded(true));
+                ECDSASecp256K1 = ByteString.CopyFrom(((EcdsaSecp256K1EndorsementData)endorsement._data).RawPublicKey);
                 break;
             case KeyType.Contract:
                 ContractID = new ContractID((EntityId)endorsement._data);

@@ -18,8 +18,8 @@ internal class TokenSummaryDataPage : Page<TokenSummaryData>
     /// <returns>
     /// An enumerator listing the records in the list.
     /// </returns>
-    public override IEnumerable<TokenSummaryData> GetItems()
+    public override TokenSummaryData[] GetItems()
     {
-        return Tokens ?? Array.Empty<TokenSummaryData>();
+        return Tokens ?? [];
     }
 }

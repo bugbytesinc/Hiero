@@ -99,7 +99,7 @@ public static class TokenSummaryDataExtensions
     /// </returns>
     public static IAsyncEnumerable<TokenSummaryData> GetTokensAsync(this MirrorRestClient client, params IMirrorQueryParameter[] filters)
     {
-        var path = GenerateInitialPath("tokens", [new PageLimit(100), .. filters]);
+        var path = GenerateInitialPath("tokens", new PageLimit(100), filters);
         return client.GetPagedItemsAsync<TokenSummaryDataPage, TokenSummaryData>(path, MirrorJsonContext.Default.TokenSummaryDataPage);
     }
 }

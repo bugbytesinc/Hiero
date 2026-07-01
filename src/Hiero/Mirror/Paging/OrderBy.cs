@@ -8,6 +8,12 @@ namespace Hiero.Mirror.Paging;
 /// the order they appear in the response. Use the static <see cref="Ascending"/>
 /// or <see cref="Descending"/> instances; the constructor is private.
 /// </summary>
+/// <remarks>
+/// The wire value is the OpenAPI enum <c>asc | desc</c>. The server's
+/// default direction is endpoint-dependent (most listings default to
+/// <c>asc</c>; a few — such as <c>/api/v1/transactions</c> — default to
+/// <c>desc</c>), so pass an explicit instance when ordering matters.
+/// </remarks>
 public class OrderBy : IMirrorPaging
 {
     /// <summary>

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
+using Hiero.Mirror.Implementation;
 using System.Numerics;
 
 namespace Hiero.Mirror.Filters;
@@ -42,5 +43,5 @@ public sealed class SlotFilter : IMirrorFilter
     /// </summary>
     /// <param name="slot">The slot position as a big integer.</param>
     public static SlotFilter Is(BigInteger slot) =>
-        new($"0x{Hex.FromBytes(slot.ToByteArray(true, true)).PadLeft(64, '0')}");
+        new(MirrorHexFormatter.FormatPrefixedPadded32(slot));
 }

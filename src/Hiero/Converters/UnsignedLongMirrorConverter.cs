@@ -1,10 +1,12 @@
 ﻿// SPDX-License-Identifier: Apache-2.0
+using Hiero.Implementation.Parsing;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace Hiero.Converters;
 /// <summary>
-/// Unsigned Long Converter that tolerates null values.
+/// Reads a <see cref="ulong"/> from a JSON number or numeric string (a mirror node
+/// quirk), treating <c>null</c> or unparseable input as zero.
 /// </summary>
 public sealed class UnsignedLongMirrorConverter : JsonConverter<ulong>
 {
@@ -15,7 +17,7 @@ public sealed class UnsignedLongMirrorConverter : JsonConverter<ulong>
         {
             JsonTokenType.Null => 0,
             JsonTokenType.Number => reader.TryGetUInt64(out ulong result) ? result : 0,
-            JsonTokenType.String => ulong.TryParse(reader.GetString(), out ulong result) ? result : 0,
+            JsonTokenType.String => NumericMirrorStringParser.TryGetUInt64(ref reader, out ulong result) ? result : 0,
             _ => 0
         };
     }

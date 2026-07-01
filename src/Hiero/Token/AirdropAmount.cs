@@ -28,13 +28,13 @@ public sealed record AirdropAmount
         {
             if (airdrop.TokenReferenceCase == PendingAirdropId.TokenReferenceOneofCase.FungibleTokenType)
             {
-                Airdrop = new(airdrop.SenderId.AsAddress(), airdrop.ReceiverId.AsAddress(), airdrop.FungibleTokenType.AsAddress());
+                Airdrop = new(airdrop.FungibleTokenType.AsAddress(), airdrop.SenderId.AsAddress(), airdrop.ReceiverId.AsAddress());
                 Amount = record!.PendingAirdropValue?.Amount ?? 0;
                 return;
             }
             else if (airdrop.TokenReferenceCase == PendingAirdropId.TokenReferenceOneofCase.NonFungibleToken)
             {
-                Airdrop = new(airdrop.SenderId.AsAddress(), airdrop.ReceiverId.AsAddress(), airdrop.NonFungibleToken.AsNft());
+                Airdrop = new(airdrop.NonFungibleToken.AsNft(), airdrop.SenderId.AsAddress(), airdrop.ReceiverId.AsAddress());
                 Amount = 1;
                 return;
             }

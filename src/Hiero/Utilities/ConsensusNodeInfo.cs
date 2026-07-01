@@ -1,4 +1,5 @@
 ﻿// SPDX-License-Identifier: Apache-2.0
+using Google.Protobuf.Collections;
 using Proto;
 using System.ComponentModel;
 
@@ -67,23 +68,46 @@ public static class ConsensusNodeInfoExtensions
         // Well known address of the address book file is 0.0.102
         var file = await client.GetFileContentAsync(new EntityId(0, 0, 102), cancellationToken, configure).ConfigureAwait(false);
         var book = NodeAddressBook.Parser.ParseFrom(file.Span);
-        if (book.NodeAddress is { Count: > 0 })
+        return FromAddressBook(book);
+    }
+
+    internal static ConsensusNodeInfo[] FromAddressBook(NodeAddressBook book)
+    {
+        var nodes = book.NodeAddress;
+        var count = nodes.Count;
+        if (count > 0)
         {
-            var list = new List<ConsensusNodeInfo>();
-            foreach (var node in book.NodeAddress)
+            var result = new ConsensusNodeInfo[count];
+            for (var i = 0; i < count; i++)
             {
-                list.Add(new ConsensusNodeInfo
+                var node = nodes[i];
+                result[i] = new ConsensusNodeInfo
                 {
                     Id = node.NodeId,
                     RsaPublicKey = node.RSAPubKey,
                     Address = node.NodeAccountId.AsAddress(),
-                    CertificateHash = new ReadOnlyMemory<byte>(node.NodeCertHash.ToArray()),
-                    Endpoints = node.ServiceEndpoint?.Select(e => new ConsensusNodeEndpointInfo(e)).ToArray() ?? [],
+                    CertificateHash = node.NodeCertHash.Memory,
+                    Endpoints = ToEndpointArray(node.ServiceEndpoint),
                     Description = node.Description
-                });
+                };
             }
-            return list.ToArray();
+            return result;
         }
         return [];
+    }
+
+    private static ConsensusNodeEndpointInfo[] ToEndpointArray(RepeatedField<ServiceEndpoint> endpoints)
+    {
+        var count = endpoints.Count;
+        if (count == 0)
+        {
+            return [];
+        }
+        var result = new ConsensusNodeEndpointInfo[count];
+        for (var i = 0; i < count; i++)
+        {
+            result[i] = new ConsensusNodeEndpointInfo(endpoints[i]);
+        }
+        return result;
     }
 }

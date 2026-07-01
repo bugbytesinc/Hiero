@@ -1,4 +1,6 @@
 ﻿// SPDX-License-Identifier: Apache-2.0
+using Hiero.Implementation.Parsing;
+using System.Buffers.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -11,7 +13,11 @@ public sealed class FeeLimitFromStringConverter : JsonConverter<long>
     /// <inheritdoc />
     public override long Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        if (long.TryParse(reader.GetString(), out var value))
+        if (reader.TokenType == JsonTokenType.Null)
+        {
+            return 0;
+        }
+        if (NumericMirrorStringParser.TryGetInt64(ref reader, out var value))
         {
             return value;
         }
@@ -20,6 +26,11 @@ public sealed class FeeLimitFromStringConverter : JsonConverter<long>
     /// <inheritdoc />
     public override void Write(Utf8JsonWriter writer, long feeLimit, JsonSerializerOptions options)
     {
-        writer.WriteStringValue(feeLimit.ToString());
+        Span<byte> buffer = stackalloc byte[20];
+        if (!Utf8Formatter.TryFormat(feeLimit, buffer, out var bytesWritten))
+        {
+            throw new JsonException("Unable to format fee limit.");
+        }
+        writer.WriteStringValue(buffer[..bytesWritten]);
     }
 }

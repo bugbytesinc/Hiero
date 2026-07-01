@@ -75,7 +75,12 @@ public static class FeeSchedulesExtensions
     {
         // Well known address of the fee schedule file is 0.0.111
         var file = await client.GetFileContentAsync(new EntityId(0, 0, 111), cancellationToken, configure).ConfigureAwait(false);
-        var set = Proto.CurrentAndNextFeeSchedule.Parser.ParseFrom(file.ToArray());
+        return FromFile(file);
+    }
+
+    internal static FeeSchedules FromFile(ReadOnlyMemory<byte> file)
+    {
+        var set = Proto.CurrentAndNextFeeSchedule.Parser.ParseFrom(file.Span);
         return new FeeSchedules(set.CurrentFeeSchedule?.ToFeeSchedule(), set.NextFeeSchedule?.ToFeeSchedule());
     }
 }

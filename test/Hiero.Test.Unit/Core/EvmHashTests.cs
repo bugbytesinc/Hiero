@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 #pragma warning disable CS8600, CS8602, CS8604
 using System.Security.Cryptography;
+using System.Text.Json;
 
 namespace Hiero.Test.Unit.Core;
 
@@ -208,5 +209,23 @@ public class EvmHashTests
         EvmHash hash = raw.AsSpan();
         await Assert.That(hash).IsNotNull();
         await Assert.That(hash.Bytes.ToArray().SequenceEqual(raw)).IsTrue();
+    }
+
+    [Test]
+    public async Task Json_RoundTrip_Preserves_Value()
+    {
+        var hash = new EvmHash(RandomHashBytes());
+        var json = JsonSerializer.Serialize(hash);
+        var parsed = JsonSerializer.Deserialize<EvmHash>(json);
+        await Assert.That(parsed).IsEqualTo(hash);
+    }
+
+    [Test]
+    public async Task Json_Deserialize_Escaped_Hash_Preserves_Value()
+    {
+        var hash = new EvmHash(Enumerable.Repeat((byte)0xAB, 32).ToArray());
+        var json = JsonSerializer.Serialize(hash).Replace("a", "\\u0061", StringComparison.Ordinal);
+        var parsed = JsonSerializer.Deserialize<EvmHash>(json);
+        await Assert.That(parsed).IsEqualTo(hash);
     }
 }

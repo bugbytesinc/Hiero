@@ -19,8 +19,8 @@ internal class ContractResultDataPage : Page<ContractResultData>
     /// Enumerator of contract result objects for this
     /// paged list.
     /// </returns>
-    public override IEnumerable<ContractResultData> GetItems()
+    public override ContractResultData[] GetItems()
     {
-        return Results ?? Array.Empty<ContractResultData>();
+        return Results ?? [];
     }
 }

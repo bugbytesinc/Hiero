@@ -1,6 +1,8 @@
 ﻿// SPDX-License-Identifier: Apache-2.0
+using Hiero.Implementation.Formatting;
 using Hiero.Mirror.Filters;
 using System.Diagnostics;
+using System.Text;
 using System.Text.Json;
 using System.Web;
 
@@ -23,39 +25,111 @@ internal static class MirrorRestClientUtils
     /// </returns>
     internal static string GenerateInitialPath(string rootPath, IMirrorQueryParameter[] filters)
     {
-        if (filters.Length == 0)
+        var filterCount = filters.Length;
+        if (filterCount == 0)
         {
             return rootPath;
         }
-        var query = string.Join("&", filters.Select(f => $"{HttpUtility.UrlEncode(f.Name)}={HttpUtility.UrlEncode(f.Value)}"));
-        var separator = rootPath.Contains('?') ? '&' : '?';
-        return $"{rootPath}{separator}{query}";
+        var builder = CreatePathBuilder(rootPath, filterCount);
+        var addSeparator = false;
+        for (var i = 0; i < filterCount; i++)
+        {
+            AppendFilter(builder, filters[i], ref addSeparator);
+        }
+        return builder.ToString();
     }
-    /// <summary>
-    /// Cast an entityId into a valid entityId or evm entityId format
-    /// recognizable by the mirror node.
-    /// </summary>
-    /// <param name="entityId">
-    /// The HAPI entityId (or embedded EvmAddress or Alias)
-    /// </param>
-    /// <returns>
-    /// Mirror node compatible addressOrEvmAddress string.
-    /// </returns>
-    internal static string MirrorFormat(EntityId entityId)
+    internal static string GenerateInitialPath(string rootPath, IMirrorQueryParameter[] firstFilters, IMirrorQueryParameter[] secondFilters)
     {
-        if (entityId == null)
+        var firstCount = firstFilters.Length;
+        var secondCount = secondFilters.Length;
+        var filterCount = firstCount + secondCount;
+        if (filterCount == 0)
         {
-            return "0.0.0";
+            return rootPath;
         }
-        if (entityId.TryGetEvmAddress(out var evmAddress))
+        var builder = CreatePathBuilder(rootPath, filterCount);
+        var addSeparator = false;
+        for (var i = 0; i < firstCount; i++)
         {
-            return Hex.FromBytes(evmAddress.Bytes);
+            AppendFilter(builder, firstFilters[i], ref addSeparator);
         }
-        if (entityId.TryGetKeyAlias(out var keyAlias))
+        for (var i = 0; i < secondCount; i++)
         {
-            return Hex.FromBytes(keyAlias.ToBytes(KeyFormat.Mirror));
+            AppendFilter(builder, secondFilters[i], ref addSeparator);
         }
-        return $"{entityId.ShardNum}.{entityId.RealmNum}.{entityId.AccountNum}";
+        return builder.ToString();
+    }
+    internal static string GenerateInitialPath(string rootPath, IMirrorQueryParameter filter)
+    {
+        EncodeFilter(filter, out var encodedName, out var encodedValue);
+        var separator = rootPath.Contains('?') ? '&' : '?';
+        return $"{rootPath}{separator}{encodedName}={encodedValue}";
+    }
+    internal static string GenerateInitialPath(string rootPath, IMirrorQueryParameter firstFilter, IMirrorQueryParameter secondFilter)
+    {
+        EncodeFilter(firstFilter, out var firstName, out var firstValue);
+        EncodeFilter(secondFilter, out var secondName, out var secondValue);
+        var separator = rootPath.Contains('?') ? '&' : '?';
+        return $"{rootPath}{separator}{firstName}={firstValue}&{secondName}={secondValue}";
+    }
+    internal static string GenerateInitialPath(string rootPath, IMirrorQueryParameter firstFilter, IMirrorQueryParameter secondFilter, IMirrorQueryParameter thirdFilter)
+    {
+        EncodeFilter(firstFilter, out var firstName, out var firstValue);
+        EncodeFilter(secondFilter, out var secondName, out var secondValue);
+        EncodeFilter(thirdFilter, out var thirdName, out var thirdValue);
+        var separator = rootPath.Contains('?') ? '&' : '?';
+        return $"{rootPath}{separator}{firstName}={firstValue}&{secondName}={secondValue}&{thirdName}={thirdValue}";
+    }
+    internal static string GenerateInitialPath(string rootPath, IMirrorQueryParameter requiredFilter, IMirrorQueryParameter[] filters)
+    {
+        var filterCount = filters.Length;
+        if (filterCount == 0)
+        {
+            return GenerateInitialPath(rootPath, requiredFilter);
+        }
+        var builder = CreatePathBuilder(rootPath, filterCount + 1);
+        var addSeparator = false;
+        AppendFilter(builder, requiredFilter, ref addSeparator);
+        for (var i = 0; i < filterCount; i++)
+        {
+            AppendFilter(builder, filters[i], ref addSeparator);
+        }
+        return builder.ToString();
+    }
+    internal static string GenerateInitialPath(string rootPath, IMirrorQueryParameter firstFilter, IMirrorQueryParameter secondFilter, IMirrorQueryParameter[] filters)
+    {
+        var filterCount = filters.Length;
+        if (filterCount == 0)
+        {
+            return GenerateInitialPath(rootPath, firstFilter, secondFilter);
+        }
+        var builder = CreatePathBuilder(rootPath, filterCount + 2);
+        var addSeparator = false;
+        AppendFilter(builder, firstFilter, ref addSeparator);
+        AppendFilter(builder, secondFilter, ref addSeparator);
+        for (var i = 0; i < filterCount; i++)
+        {
+            AppendFilter(builder, filters[i], ref addSeparator);
+        }
+        return builder.ToString();
+    }
+    internal static string GenerateInitialPath(string rootPath, IMirrorQueryParameter requiredFilter, IMirrorQueryParameter[] firstFilters, IMirrorQueryParameter[] secondFilters)
+    {
+        var firstCount = firstFilters.Length;
+        var secondCount = secondFilters.Length;
+        var filterCount = firstCount + secondCount;
+        var builder = CreatePathBuilder(rootPath, filterCount + 1);
+        var addSeparator = false;
+        AppendFilter(builder, requiredFilter, ref addSeparator);
+        for (var i = 0; i < firstCount; i++)
+        {
+            AppendFilter(builder, firstFilters[i], ref addSeparator);
+        }
+        for (var i = 0; i < secondCount; i++)
+        {
+            AppendFilter(builder, secondFilters[i], ref addSeparator);
+        }
+        return builder.ToString();
     }
     /// <summary>
     /// Builds the path segment plus any required query string for a transaction-id-addressed
@@ -77,7 +151,7 @@ internal static class MirrorRestClientUtils
         {
             return (string.Empty, []);
         }
-        var mirrorTxId = $"{txId.Payer}-{txId.ValidStartSeconds}-{txId.ValidStartNanos:000000000}";
+        var mirrorTxId = TransactionIdFormatter.Format(txId, TransactionIdFormatStyle.Mirror);
         if (txId.ChildNonce != 0)
         {
             if (txId.Scheduled)
@@ -105,7 +179,7 @@ internal static class MirrorRestClientUtils
     [StackTraceHidden]
     internal static async Task<Exception> CreateMirrorExceptionAsync(HttpResponseMessage response)
     {
-        var reason = await response.Content.ReadAsStringAsync();
+        var reason = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
         MirrorError[]? messages = null;
         try
         {
@@ -115,12 +189,36 @@ internal static class MirrorRestClientUtils
         {
             // format not known
         }
-        if (messages != null && messages.Length > 0)
+        var messageCount = messages?.Length ?? 0;
+        if (messageCount > 0)
         {
-            var summary = messages[0].Message ?? $"Mirror Call Failed: {response.StatusCode}";
-            throw new MirrorException(summary, messages, response.StatusCode);
+            var errorMessages = messages!;
+            var summary = errorMessages[0].Message ?? $"Mirror Call Failed: {response.StatusCode}";
+            throw new MirrorException(summary, errorMessages, response.StatusCode);
         }
         return new MirrorException($"Mirror Call Failed: {reason}", Array.Empty<MirrorError>(), response.StatusCode);
+    }
+    private static StringBuilder CreatePathBuilder(string rootPath, int filterCount)
+    {
+        var builder = new StringBuilder(rootPath, rootPath.Length + (filterCount * 16));
+        builder.Append(rootPath.Contains('?') ? '&' : '?');
+        return builder;
+    }
+    private static void EncodeFilter(IMirrorQueryParameter filter, out string encodedName, out string encodedValue)
+    {
+        encodedName = HttpUtility.UrlEncode(filter.Name) ?? string.Empty;
+        encodedValue = HttpUtility.UrlEncode(filter.Value) ?? string.Empty;
+    }
+    private static void AppendFilter(StringBuilder builder, IMirrorQueryParameter filter, ref bool addSeparator)
+    {
+        if (addSeparator)
+        {
+            builder.Append('&');
+        }
+        builder.Append(HttpUtility.UrlEncode(filter.Name));
+        builder.Append('=');
+        builder.Append(HttpUtility.UrlEncode(filter.Value));
+        addSeparator = true;
     }
 }
 /// <summary>

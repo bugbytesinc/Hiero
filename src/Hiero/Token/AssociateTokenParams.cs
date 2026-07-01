@@ -15,13 +15,13 @@ namespace Hiero;
 public sealed class AssociateTokenParams : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
 {
     /// <summary>
-    /// The Holder that will be associated with the Token or NFT class(es)
+    /// The account that will be associated with the Token or NFT class(es).
     /// </summary>
     public EntityId Account { get; set; } = default!;
     /// <summary>
     /// List of Token or NFT class IDs to associate with the account.
     /// </summary>
-    public IEnumerable<EntityId> Tokens { get; set; } = default!;
+    public IReadOnlyList<EntityId> Tokens { get; set; } = default!;
     /// <summary>
     /// Additional private key, keys or signing callback method 
     /// required to authorize the associations.  Typically matches the
@@ -45,21 +45,28 @@ public sealed class AssociateTokenParams : TransactionParams<TransactionReceipt>
         {
             throw new ArgumentNullException(nameof(Tokens), "The list of tokens cannot be null.");
         }
+        var count = Tokens.Count;
+        if (count == 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(Tokens), "The list of tokens cannot be empty.");
+        }
         var result = new TokenAssociateTransactionBody()
         {
             Account = new AccountID(Account)
         };
-        result.Tokens.AddRange(Tokens.Select(token =>
+        var tokens = result.Tokens;
+        if (tokens.Capacity < count)
         {
+            tokens.Capacity = count;
+        }
+        for (var i = 0; i < count; i++)
+        {
+            var token = Tokens[i];
             if (token.IsNullOrNone())
             {
                 throw new ArgumentOutOfRangeException(nameof(Tokens), "The list of tokens cannot contain an empty or null address.");
             }
-            return new TokenID(token);
-        }));
-        if (result.Tokens.Count == 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(Tokens), "The list of tokens cannot be empty.");
+            tokens.Add(new TokenID(token));
         }
         return result;
     }

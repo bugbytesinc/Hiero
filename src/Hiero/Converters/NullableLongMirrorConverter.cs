@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
+using Hiero.Implementation.Parsing;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -17,7 +18,7 @@ public sealed class NullableLongMirrorConverter : JsonConverter<long?>
         {
             JsonTokenType.Null => null,
             JsonTokenType.Number => reader.TryGetInt64(out long result) ? result : (long?)null,
-            JsonTokenType.String => long.TryParse(reader.GetString(), out long result) ? result : (long?)null,
+            JsonTokenType.String => NumericMirrorStringParser.TryGetInt64(ref reader, out long result) ? result : (long?)null,
             _ => null
         };
     }

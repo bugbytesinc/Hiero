@@ -34,7 +34,16 @@ public sealed class TransactionIndexFilter : IMirrorFilter
     /// <param name="index">
     /// The zero-based in-block position; must not be negative.
     /// </param>
-    public static TransactionIndexFilter Is(int index)
+    public static TransactionIndexFilter Is(int index) => Is((long)index);
+
+    /// <summary>
+    /// Records whose in-block transaction index equals the given
+    /// value.
+    /// </summary>
+    /// <param name="index">
+    /// The zero-based in-block position; must not be negative.
+    /// </param>
+    public static TransactionIndexFilter Is(long index)
     {
         if (index < 0)
         {

@@ -5,12 +5,27 @@ namespace Proto;
 
 public sealed partial class KeyList
 {
-    internal KeyList(Endorsement[] endorsements) : this()
+    internal KeyList(IReadOnlyList<Endorsement> endorsements) : this()
     {
-        Keys.AddRange(endorsements.Select(endorsement => new Key(endorsement)));
+        var count = endorsements.Count;
+        if (Keys.Capacity < count)
+        {
+            Keys.Capacity = count;
+        }
+        for (var i = 0; i < count; i++)
+        {
+            Keys.Add(new Key(endorsements[i]));
+        }
     }
     internal Endorsement[] ToEndorsements()
     {
-        return Keys.Select(key => key.ToEndorsement()).ToArray();
+        var keys = Keys;
+        var count = keys.Count;
+        var endorsements = new Endorsement[count];
+        for (var i = 0; i < count; i++)
+        {
+            endorsements[i] = keys[i].ToEndorsement();
+        }
+        return endorsements;
     }
 }

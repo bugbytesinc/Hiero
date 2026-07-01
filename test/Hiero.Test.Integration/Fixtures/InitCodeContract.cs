@@ -20,7 +20,7 @@ public class InitCodeContract : IAsyncDisposable
         var (publicKey, privateKey) = Generator.KeyPair();
         var contractParams = new CreateContractParams
         {
-            ByteCode = Hex.ToBytes(CONTRACT_BYTECODE),
+            ByteCode = Convert.FromHexString(CONTRACT_BYTECODE),
             Administrator = publicKey,
             Signatory = privateKey,
             Gas = await TestNetwork.EstimateGasFromCentsAsync(3),

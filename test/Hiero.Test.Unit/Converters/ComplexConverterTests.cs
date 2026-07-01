@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
-using System.Numerics;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using Hiero.Converters;
 using Hiero.Test.Helpers;
+using System.Numerics;
+using System.Security.Cryptography.X509Certificates;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Hiero.Test.Unit.Converters;
 
@@ -66,6 +67,21 @@ public class ComplexConverterTests
         await Assert.That(deserialized!.Values.Length).IsEqualTo(0);
     }
 
+    [Test]
+    public async Task BigIntegerArrayConverter_Deserializes_Array_That_Grows_Buffer()
+    {
+        var json = """{"Values":["0x1","0x2","0x3","0x4","0x5","0x6"]}""";
+
+        var result = JsonSerializer.Deserialize<BigIntArrayWrapper>(json);
+
+        await Assert.That(result).IsNotNull();
+        await Assert.That(result!.Values.Length).IsEqualTo(6);
+        for (var i = 0; i < result.Values.Length; i++)
+        {
+            await Assert.That(result.Values[i]).IsEqualTo(new BigInteger(i + 1));
+        }
+    }
+
     // ========================================================================
     // 2. EntityIdArrayConverter
     // ========================================================================
@@ -115,6 +131,21 @@ public class ComplexConverterTests
         await Assert.That(deserialized!.Values.Length).IsEqualTo(0);
     }
 
+    [Test]
+    public async Task EntityIdArrayConverter_Deserializes_Array_That_Grows_Buffer()
+    {
+        var json = """{"Values":["0.0.1","0.0.2","0.0.3","0.0.4","0.0.5","0.0.6"]}""";
+
+        var result = JsonSerializer.Deserialize<EntityIdArrayWrapper>(json);
+
+        await Assert.That(result).IsNotNull();
+        await Assert.That(result!.Values.Length).IsEqualTo(6);
+        for (var i = 0; i < result.Values.Length; i++)
+        {
+            await Assert.That(result.Values[i]).IsEqualTo(new EntityId(0, 0, i + 1));
+        }
+    }
+
     // ========================================================================
     // 3. EvmAddressArrayConverter
     // ========================================================================
@@ -126,8 +157,8 @@ public class ComplexConverterTests
         addr1Bytes[19] = 0x01;
         var addr2Bytes = new byte[20];
         addr2Bytes[19] = 0x02;
-        var addr1Hex = "0x" + Hex.FromBytes(addr1Bytes);
-        var addr2Hex = "0x" + Hex.FromBytes(addr2Bytes);
+        var addr1Hex = "0x" + Convert.ToHexStringLower(addr1Bytes.AsSpan());
+        var addr2Hex = "0x" + Convert.ToHexStringLower(addr2Bytes.AsSpan());
         var json = $$$"""{"Values":["{{{addr1Hex}}}","{{{addr2Hex}}}"]}""";
         var result = JsonSerializer.Deserialize<EvmAddressArrayWrapper>(json);
         await Assert.That(result).IsNotNull();
@@ -163,6 +194,30 @@ public class ComplexConverterTests
         for (int i = 0; i < original.Values.Length; i++)
         {
             await Assert.That(deserialized.Values[i]).IsEqualTo(original.Values[i]);
+        }
+    }
+
+    [Test]
+    public async Task EvmAddressArrayConverter_Deserializes_Array_That_Grows_Buffer()
+    {
+        var addresses = new EvmAddress[6];
+        var values = new string[addresses.Length];
+        for (var i = 0; i < addresses.Length; i++)
+        {
+            var bytes = new byte[20];
+            bytes[19] = (byte)(i + 1);
+            addresses[i] = new EvmAddress(bytes);
+            values[i] = "\"0x" + Convert.ToHexStringLower(bytes.AsSpan()) + "\"";
+        }
+        var json = $$"""{"Values":[{{string.Join(',', values)}}]}""";
+
+        var result = JsonSerializer.Deserialize<EvmAddressArrayWrapper>(json);
+
+        await Assert.That(result).IsNotNull();
+        await Assert.That(result!.Values.Length).IsEqualTo(addresses.Length);
+        for (var i = 0; i < addresses.Length; i++)
+        {
+            await Assert.That(result.Values[i]).IsEqualTo(addresses[i]);
         }
     }
 
@@ -210,6 +265,21 @@ public class ComplexConverterTests
         }
     }
 
+    [Test]
+    public async Task HexStringArraytoBytesArrayConverter_Deserializes_Array_That_Grows_Buffer()
+    {
+        var json = """{"Values":["0x01","0x02","0x03","0x04","0x05","0x06"]}""";
+
+        var result = JsonSerializer.Deserialize<HexArrayWrapper>(json);
+
+        await Assert.That(result).IsNotNull();
+        await Assert.That(result!.Values.Length).IsEqualTo(6);
+        for (var i = 0; i < result.Values.Length; i++)
+        {
+            await Assert.That(result.Values[i].Span.SequenceEqual([(byte)(i + 1)])).IsTrue();
+        }
+    }
+
     // ========================================================================
     // 5. EndorsementConverter
     // ========================================================================
@@ -234,6 +304,17 @@ public class ComplexConverterTests
         var deserialized = JsonSerializer.Deserialize<Endorsement>(json);
         await Assert.That(deserialized).IsNotNull();
         await Assert.That(deserialized!.Type).IsEqualTo(KeyType.Ed25519);
+    }
+
+    [Test]
+    public async Task EndorsementConverter_Deserializes_Escaped_Ed25519_Key()
+    {
+        var expected = new Endorsement(Generator.Ed25519KeyPair().publicKey);
+        var hex = Convert.ToHexStringLower(expected.ToBytes(KeyFormat.Raw).Span);
+        var escapedHex = $"\\u00{(int)hex[0]:x2}{hex[1..]}";
+        var json = $$"""{"_type":"ED\u00325519","key":"{{escapedHex}}"}""";
+        var deserialized = JsonSerializer.Deserialize<Endorsement>(json);
+        await Assert.That(deserialized).IsEqualTo(expected);
     }
 
     [Test]
@@ -278,6 +359,18 @@ public class ComplexConverterTests
         await Assert.That(deserialized).IsEqualTo(original);
     }
 
+    [Test]
+    public async Task EndorsementConverter_Round_Trips_ProtobufEncoded_Contract()
+    {
+        var original = new Endorsement(new EntityId(0, 0, 1234));
+        var json = JsonSerializer.Serialize(original);
+
+        var deserialized = JsonSerializer.Deserialize<Endorsement>(json);
+
+        await Assert.That(json).Contains("ProtobufEncoded");
+        await Assert.That(deserialized).IsEqualTo(original);
+    }
+
     // ========================================================================
     // 6. TransactionIdStructuredConverter
     // ========================================================================
@@ -297,6 +390,17 @@ public class ComplexConverterTests
     }
 
     [Test]
+    public async Task TransactionIdStructuredConverter_Deserializes_Escaped_Property_Names()
+    {
+        var json = """{"Value":{"account\u005fid":"0.0.5","nonce":0,"scheduled":false,"transaction\u005fvalid\u005fstart":"1234567890.123456789"}}""";
+        var result = JsonSerializer.Deserialize<TxIdStructuredWrapper>(json);
+        await Assert.That(result).IsNotNull();
+        await Assert.That(result!.Value.Payer).IsEqualTo(new EntityId(0, 0, 5));
+        await Assert.That(result.Value.ValidStartSeconds).IsEqualTo(1234567890L);
+        await Assert.That(result.Value.ValidStartNanos).IsEqualTo(123456789);
+    }
+
+    [Test]
     public async Task TransactionIdStructuredConverter_Serializes_To_Structured_Json()
     {
         var payer = new EntityId(0, 0, 5);
@@ -309,6 +413,16 @@ public class ComplexConverterTests
         await Assert.That(json).Contains("1234567890.123456789");
         await Assert.That(json).Contains("nonce");
         await Assert.That(json).Contains("scheduled");
+    }
+
+    [Test]
+    public async Task TransactionIdStructuredConverter_Serializes_Pads_Nanos_To_Nine_Digits()
+    {
+        var payer = new EntityId(0, 0, 5);
+        var txId = new TransactionId(payer, 1234567890L, 1);
+        var wrapper = new TxIdStructuredWrapper(txId);
+        var json = JsonSerializer.Serialize(wrapper);
+        await Assert.That(json).Contains("\"transaction_valid_start\":\"1234567890.000000001\"");
     }
 
     [Test]

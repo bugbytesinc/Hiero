@@ -31,7 +31,7 @@ public sealed record HookMetadata
     /// <summary>
     /// Optional initial storage values for the hook.
     /// </summary>
-    public IEnumerable<HookStorageEntry>? InitialStorage { get; private init; }
+    public IReadOnlyList<HookStorageEntry>? InitialStorage { get; private init; }
     /// <summary>
     /// Public Constructor, a <code>HookMetadata</code> is immutable after creation.
     /// </summary>
@@ -47,7 +47,7 @@ public sealed record HookMetadata
     /// <param name="initialStorage">
     /// Optional initial storage values for the hook.
     /// </param>
-    public HookMetadata(long id, EntityId contract, Endorsement? adminKey = null, IEnumerable<HookStorageEntry>? initialStorage = null)
+    public HookMetadata(long id, EntityId contract, Endorsement? adminKey = null, IReadOnlyList<HookStorageEntry>? initialStorage = null)
     {
         if (contract.IsNullOrNone())
         {

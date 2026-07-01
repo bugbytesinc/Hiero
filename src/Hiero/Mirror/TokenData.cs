@@ -144,12 +144,15 @@ public class TokenData
     [JsonConverter(typeof(Base64StringToBytesConverter))]
     public ReadOnlyMemory<byte> Metadata { get; set; }
     /// <summary>
-    /// The current default suspended/frozen status of the token.
+    /// When <c>true</c>, accounts are suspended (frozen) for this
+    /// token by default on association and must be explicitly
+    /// resumed before they can transact in it.
     /// </summary>
     [JsonPropertyName("freeze_default")]
     public bool SuspendedByDefault { get; set; }
     /// <summary>
-    /// The current paused/frozen status of the token for all accounts.
+    /// The current network-wide pause status of the token — when
+    /// paused, no account may transfer it until it is unpaused.
     /// </summary>
     [JsonPropertyName("pause_status")]
     [JsonConverter(typeof(PauseStatusConverter))]
@@ -185,8 +188,8 @@ public class TokenData
     [JsonConverter(typeof(BooleanMirrorConverter))]
     public bool Deleted { get; set; }
     /// <summary>
-    /// The list of royalties assessed on transactions
-    /// by the network when transferring this token.
+    /// The custom-fee schedule (fixed, fractional, and royalty
+    /// fees) assessed by the network when transferring this token.
     /// </summary>
     [JsonPropertyName("custom_fees")]
     public CustomFeeData Royalties { get; set; } = default!;
@@ -219,7 +222,7 @@ public static class TokenDataExtensions
     /// </returns>
     public static Task<TokenData?> GetTokenAsync(this MirrorRestClient client, EntityId token, params IMirrorQueryParameter[] filters)
     {
-        var path = GenerateInitialPath($"tokens/{token}", filters);
+        var path = GenerateInitialPath($"tokens/{token.ToMirrorString()}", filters);
         return client.GetSingleItemAsync(path, MirrorJsonContext.Default.TokenData);
     }
 }

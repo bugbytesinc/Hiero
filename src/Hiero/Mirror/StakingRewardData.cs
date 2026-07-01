@@ -68,7 +68,7 @@ public static class StakingRewardDataExtensions
     /// </returns>
     public static IAsyncEnumerable<StakingRewardData> GetAccountStakingRewardsAsync(this MirrorRestClient client, EntityId account, params IMirrorQueryParameter[] filters)
     {
-        var path = GenerateInitialPath($"accounts/{MirrorFormat(account)}/rewards", [new PageLimit(100), .. filters]);
+        var path = GenerateInitialPath($"accounts/{account.ToMirrorString()}/rewards", new PageLimit(100), filters);
         return client.GetPagedItemsAsync<StakingRewardDataPage, StakingRewardData>(path, MirrorJsonContext.Default.StakingRewardDataPage);
     }
 }
