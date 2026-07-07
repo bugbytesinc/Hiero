@@ -1417,7 +1417,7 @@ public class TransferTokenTests
     }
 
     [Test]
-    public async Task Can_Transfer_Via_Ethereum_Transaction_From_Non_Hydrated_EVM_Account()
+    public async Task Can_Transfer_Token_Via_Ethereum_Transaction_From_Non_Hydrated_EVM_Account()
     {
         await using var fxToken = await TestToken.CreateAsync(fx =>
         {
@@ -1436,7 +1436,7 @@ public class TransferTokenTests
         var receipts = await client.GetAllReceiptsAsync(receipt.TransactionId);
         var senderHapiAddress = ((CreateAccountReceipt)receipts[1]).Address;
         var mirror = await TestNetwork.GetMirrorRestClientAsync();
-        var chainId = await mirror.GetChainIdAsync();
+        var chainId = await TestNetwork.GetChainIdAsync();
         var balanceData = (await mirror.GetAccountAsync(senderEvmAddress))!.Balances.Tokens.FirstOrDefault(t => t.Token == fxToken.CreateReceipt!.Token);
         await Assert.That(balanceData).IsNotNull();
         var balance = balanceData!.Balance;

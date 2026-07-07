@@ -16,6 +16,7 @@ public sealed class ConsensusNodeEndpointConverter : JsonConverter<ConsensusNode
     {
         EntityId? node = null;
         string? urlAsString = null;
+        string? certHashAsString = null;
         if (reader.TokenType != JsonTokenType.StartObject)
         {
             throw new JsonException();
@@ -49,6 +50,14 @@ public sealed class ConsensusNodeEndpointConverter : JsonConverter<ConsensusNode
                     reader.Read();
                     urlAsString = reader.GetString();
                 }
+                else if (reader.ValueTextEquals("certHash"u8))
+                {
+                    reader.Read();
+                    if (reader.TokenType != JsonTokenType.Null)
+                    {
+                        certHashAsString = reader.GetString();
+                    }
+                }
                 else
                 {
                     reader.Skip();
@@ -57,7 +66,12 @@ public sealed class ConsensusNodeEndpointConverter : JsonConverter<ConsensusNode
         }
         if (node is not null && !string.IsNullOrEmpty(urlAsString))
         {
-            return new ConsensusNodeEndpoint(node, new Uri(urlAsString));
+            var uri = new Uri(urlAsString);
+            if (!string.IsNullOrEmpty(certHashAsString))
+            {
+                return new ConsensusNodeEndpoint(node, uri, Convert.FromHexString(certHashAsString));
+            }
+            return new ConsensusNodeEndpoint(node, uri);
         }
         throw new JsonException("Not an appropriately formatted Consensus Node Endpoint Object.");
     }
@@ -76,6 +90,10 @@ public sealed class ConsensusNodeEndpointConverter : JsonConverter<ConsensusNode
             writer.WriteString("address"u8, gateway.Node.ToString());
         }
         writer.WriteString("url"u8, gateway.Uri.AbsoluteUri);
+        if (!gateway.CertificateHash.IsEmpty)
+        {
+            writer.WriteString("certHash"u8, Convert.ToHexStringLower(gateway.CertificateHash.Span));
+        }
         writer.WriteEndObject();
     }
 }

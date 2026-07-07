@@ -2,7 +2,11 @@
 using Grpc.Net.Client;
 using Hiero.Implementation;
 using System.Diagnostics;
+using System.Net.Security;
 using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
+using System.Text;
 
 [assembly: InternalsVisibleTo("Hiero.Test.Helpers")]
 [assembly: InternalsVisibleTo("Hiero.Test.Unit")]
@@ -248,8 +252,19 @@ public sealed class ConsensusClient : IAsyncDisposable
     }
     /// <summary>
     /// The default algorithm for creating channels for the client.
-    /// It defaults to the underlying system gRPC defaults.
     /// </summary>
+    /// <remarks>
+    /// When the endpoint is an <c>https</c> endpoint carrying an expected TLS
+    /// certificate hash (<see cref="ConsensusNodeEndpoint.CertificateHash"/>),
+    /// the channel is built with a validation callback that pins the connection
+    /// to that hash instead of using standard chain/hostname validation.  This is
+    /// required because Hiero consensus nodes present self-signed placeholder
+    /// certificates that cannot pass ordinary TLS validation (see the address
+    /// book's published <c>node_cert_hash</c>).  Otherwise — a plaintext endpoint,
+    /// or an <c>https</c> endpoint with no supplied hash such as a proxy-fronted
+    /// DNS endpoint that presents a chain-valid certificate — the underlying
+    /// system gRPC / TLS defaults are used unchanged.
+    /// </remarks>
     /// <param name="endpoint">
     /// A ConsensusNodeEndpoint holding the address information for the channel
     /// to be created.
@@ -259,6 +274,37 @@ public sealed class ConsensusClient : IAsyncDisposable
     /// </returns>
     private static GrpcChannel DefaultChannelFactory(ConsensusNodeEndpoint endpoint)
     {
+        if (endpoint.Uri.Scheme == Uri.UriSchemeHttps && !endpoint.CertificateHash.IsEmpty)
+        {
+            var expectedHash = endpoint.CertificateHash;
+            var options = new GrpcChannelOptions
+            {
+                HttpHandler = new SocketsHttpHandler
+                {
+                    SslOptions = new SslClientAuthenticationOptions
+                    {
+                        RemoteCertificateValidationCallback = (_, cert, _, _) =>
+                            cert is not null && CryptographicOperations.FixedTimeEquals(ComputeCertHash(cert), expectedHash.Span),
+                    },
+                },
+            };
+            return GrpcChannel.ForAddress(endpoint.Uri, options);
+        }
         return GrpcChannel.ForAddress(endpoint.Uri);
+    }
+    /// <summary>
+    /// Computes the address-book certificate hash for a presented TLS certificate:
+    /// the SHA-384 of the certificate's standard PEM text including exactly one
+    /// trailing newline after the <c>-----END CERTIFICATE-----</c> line.
+    /// <see cref="System.Security.Cryptography.X509Certificates.X509Certificate2.ExportCertificatePem"/>
+    /// emits that PEM text without a trailing newline, so one is appended before
+    /// hashing to match the value the network publishes as <c>node_cert_hash</c>.
+    /// </summary>
+    /// <param name="cert">The certificate presented during the TLS handshake.</param>
+    /// <returns>The 48-byte SHA-384 hash to compare against the expected value.</returns>
+    internal static byte[] ComputeCertHash(X509Certificate cert)
+    {
+        using var cert2 = cert as X509Certificate2 ?? X509CertificateLoader.LoadCertificate(cert.GetRawCertData());
+        return SHA384.HashData(Encoding.ASCII.GetBytes(cert2.ExportCertificatePem() + "\n"));
     }
 }

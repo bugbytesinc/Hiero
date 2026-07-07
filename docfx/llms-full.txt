@@ -52,6 +52,41 @@ queries and transactions also require `Payer` and `Signatory`.
 | `OnSendingRequest` | `Action<IMessage>?` | null | Callback invoked with the raw protobuf just before sending to the network |
 | `OnResponseReceived` | `Action<int, IMessage>?` | null | Callback invoked with (retryAttempt, response) after each network response |
 
+#### TLS certificate pinning
+
+Consensus nodes expose a plaintext gRPC port (`50211`) and a TLS port (`50212`).
+The TLS port presents a self-signed placeholder certificate (issuer == subject,
+SAN `127.0.0.1`), so standard chain/hostname validation can never succeed against
+it. Instead the SDK's default channel validates TLS by **pinning to the address
+book's published SHA-384 certificate hash** — computed as
+`SHA-384(X509Certificate2.ExportCertificatePem() + "\n")`, matching the network's
+`node_cert_hash`.
+
+This is automatic when the endpoint carries the hash:
+
+```csharp
+// Discover TLS endpoints (each carries its node's certificate hash):
+var tlsNodes = await mirror.GetActiveConsensusNodesAsync(2000, ConsensusNodeTransport.Tls);
+await using var client = new ConsensusClient(ctx => ctx.Endpoint = tlsNodes.Keys.First());
+
+// ...or construct a pinned endpoint directly:
+var endpoint = new ConsensusNodeEndpoint(
+    new EntityId(0, 0, 3),
+    new Uri("https://13.62.169.41:50212"),
+    certHashBytes);                       // 48-byte SHA-384 (ConsensusNodeData.CertificateHash)
+```
+
+`ConsensusNodeEndpoint.CertificateHash` participates in equality by content, so
+pinned, unpinned, and differently-pinned endpoints to the same URI are distinct
+(and receive distinct gRPC channels). An `https` endpoint with **no** hash falls
+back to standard TLS validation — appropriate for proxy-fronted DNS endpoints
+(e.g. `*.hedera.com`) that present chain-valid certificates.
+
+For callers who discover nodes some other way, the
+`ConsensusClient(Func<ConsensusNodeEndpoint, GrpcChannel> channelFactory, ...)`
+constructor overload is the escape hatch for supplying a fully custom channel
+(and thus custom validation).
+
 #### HAPI request/response logging
 
 The `OnSendingRequest` and `OnResponseReceived` hooks give full visibility
@@ -1300,7 +1335,9 @@ IAsyncEnumerable<ScheduleData> schedules = mirror.GetSchedulesAsync(AccountFilte
 ```csharp
 IAsyncEnumerable<ConsensusNodeData> nodes = mirror.GetConsensusNodesAsync();
 IReadOnlyDictionary<ConsensusNodeEndpoint, long> active =
-    await mirror.GetActiveConsensusNodesAsync(timeoutMs);
+    await mirror.GetActiveConsensusNodesAsync(timeoutMs);                              // plaintext :50211 (default)
+IReadOnlyDictionary<ConsensusNodeEndpoint, long> activeTls =                           // pinned TLS :50212 (ConsensusNodeTransport.All for both)
+    await mirror.GetActiveConsensusNodesAsync(timeoutMs, ConsensusNodeTransport.Tls);
 NetworkStakeData?  stake    = await mirror.GetNetworkStakeAsync();
 NetworkSupplyData? supply   = await mirror.GetNetworkSupplyAsync();
 ExchangeRateData?  rate     = await mirror.GetExchangeRateAsync();
@@ -1488,6 +1525,12 @@ These compile but fail at runtime -- check for them before submitting code:
 
 Mirror REST: `https://testnet.mirrornode.hedera.com`
 Mirror gRPC: `https://hcs.testnet.mirrornode.hedera.com:5600`
+
+These `*.hedera.com` DNS endpoints are proxy-fronted and present chain-valid
+certificates, so they work with standard TLS validation. To connect over TLS
+directly to a node (port `50212`), discover endpoints with
+`ConsensusNodeTransport.Tls` so each `ConsensusNodeEndpoint` carries the
+certificate hash the SDK pins against (see "TLS certificate pinning" above).
 
 ### Mainnet
 

@@ -749,7 +749,7 @@ public class TransferTests
         var receipts = await client.GetAllReceiptsAsync(receipt.TransactionId);
         var senderHapiAddress = ((CreateAccountReceipt)receipts[1]).Address;
         var mirror = await TestNetwork.GetMirrorRestClientAsync();
-        var chainId = await mirror.GetChainIdAsync();
+        var chainId = await TestNetwork.GetChainIdAsync();
         var balance = (await mirror.GetAccountAsync(senderEvmAddress))!.Balances.Balance;
         await Assert.That(balance).IsEqualTo(senderInitialBalance);
 
@@ -785,7 +785,7 @@ public class TransferTests
     }
 
     [Test]
-    public async Task Can_Transfer_Via_Ethereum_Transaction_From_Non_Hydrated_EVM_Account()
+    public async Task Can_Transfer_Hbar_Via_Ethereum_Transaction_From_Non_Hydrated_EVM_Account()
     {
         await using var fxReceiver = await TestAccount.CreateAsync();
         var (publicKey, privateKey) = Generator.Secp256k1KeyPair();
@@ -797,7 +797,7 @@ public class TransferTests
         var receipts = await client.GetAllReceiptsAsync(receipt.TransactionId);
         var senderHapiAddress = ((CreateAccountReceipt)receipts[1]).Address;
         var mirror = await TestNetwork.GetMirrorRestClientAsync();
-        var chainId = await mirror.GetChainIdAsync();
+        var chainId = await TestNetwork.GetChainIdAsync();
         var balance = (await mirror.GetAccountAsync(senderEvmAddress))!.Balances.Balance;
         await Assert.That(balance).IsEqualTo(senderInitialBalance);
 

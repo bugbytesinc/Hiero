@@ -135,6 +135,44 @@ public class ConsensusNodeEndpointTests
     }
 
     [Test]
+    public async Task CertificateHash_Defaults_To_Empty()
+    {
+        var endpoint = new ConsensusNodeEndpoint(new EntityId(0, 0, 3), new Uri("https://testnet.hedera.com:50212"));
+        await Assert.That(endpoint.CertificateHash.IsEmpty).IsTrue();
+    }
+
+    [Test]
+    public async Task CertificateHash_Constructor_Maps_Value()
+    {
+        var hash = new byte[] { 0xea, 0xdd, 0x72, 0xfc };
+        var endpoint = new ConsensusNodeEndpoint(new EntityId(0, 0, 3), new Uri("https://testnet.hedera.com:50212"), hash);
+        await Assert.That(endpoint.CertificateHash.Span.SequenceEqual(hash)).IsTrue();
+    }
+
+    [Test]
+    public async Task CertificateHash_Participates_In_Equality_By_Content()
+    {
+        // Different pinning targets are different endpoints (and therefore
+        // different channel cache keys); a pinned endpoint is not equal to an
+        // unpinned one to the same URI.
+        var node = new EntityId(0, 0, 3);
+        var uri = new Uri("https://testnet.hedera.com:50212");
+        var withHash = new ConsensusNodeEndpoint(node, uri, new byte[] { 0x01, 0x02, 0x03 });
+        var withoutHash = new ConsensusNodeEndpoint(node, uri);
+        var withOtherHash = new ConsensusNodeEndpoint(node, uri, new byte[] { 0x09, 0x08 });
+        await Assert.That(withHash).IsNotEqualTo(withoutHash);
+        await Assert.That(withHash).IsNotEqualTo(withOtherHash);
+        await Assert.That(withHash == withoutHash).IsFalse();
+
+        // ...but equal hash *content* in a separate array is equal (compared by
+        // value, not by backing-array reference), and yields an equal hash code.
+        var sameHashDifferentArray = new ConsensusNodeEndpoint(node, uri, new byte[] { 0x01, 0x02, 0x03 });
+        await Assert.That(withHash).IsEqualTo(sameHashDifferentArray);
+        await Assert.That(withHash == sameHashDifferentArray).IsTrue();
+        await Assert.That(withHash.GetHashCode()).IsEqualTo(sameHashDifferentArray.GetHashCode());
+    }
+
+    [Test]
     public async Task Equals_Null_Returns_False()
     {
         var endpoint = new ConsensusNodeEndpoint(new EntityId(0, 0, 3), new Uri("http://testnet.hedera.com:50211"));

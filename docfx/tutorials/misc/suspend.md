@@ -15,7 +15,7 @@ class Program
         var endpointUrl = args[0];
         EntityId.TryParseShardRealmNum(args[1], out var nodeAccount);
         EntityId.TryParseShardRealmNum(args[2], out var payerAccount);
-        var payerPrivateKey = Hex.ToBytes(args[3]);
+        var payerPrivateKey = Convert.FromHexString(args[3]);
         try
         {
             await using var client = new ConsensusClient(ctx =>

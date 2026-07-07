@@ -16,7 +16,7 @@ The simplest approach for CI/CD, containers, and local dev:
 ```csharp
 var privateKeyHex = Environment.GetEnvironmentVariable("HIERO_PAYER_KEY")
     ?? throw new InvalidOperationException("HIERO_PAYER_KEY is not set.");
-var payerKey = Hex.ToBytes(privateKeyHex);
+var payerKey = Convert.FromHexString(privateKeyHex);
 
 await using var client = new ConsensusClient(ctx =>
 {
@@ -45,7 +45,7 @@ For ASP.NET Core or Generic Host applications:
 ```csharp
 var config = builder.Configuration;
 var payerNum = long.Parse(config["Hedera:PayerAccountId"]!.Split('.')[2]);
-var payerKey = Hex.ToBytes(config["Hedera:PayerPrivateKey"]!);
+var payerKey = Convert.FromHexString(config["Hedera:PayerPrivateKey"]!);
 ```
 
 ## Load from .NET User Secrets (development only)
@@ -67,7 +67,7 @@ The value appears in `IConfiguration` identically to `appsettings.json` but is s
 | Raw 32-byte hex | Just the private scalar | `a0b1c2...` (64 hex chars) |
 | PEM | Base64-armored DER | `-----BEGIN PRIVATE KEY-----` |
 
-The Hiero SDK's [`Hex.ToBytes`](xref:Hiero.Hex) accepts hex strings. Both DER and raw formats work with [`Signatory`](xref:Hiero.Signatory) — DER is preferred because it encodes the key type (Ed25519 vs ECDSA).
+Parse a hex string into bytes with .NET's `Convert.FromHexString`. Both DER and raw formats work with [`Signatory`](xref:Hiero.Signatory) — DER is preferred because it encodes the key type (Ed25519 vs ECDSA).
 
 ## Production: external signing via async callback
 
@@ -97,7 +97,7 @@ Some transactions require multiple signers (e.g., the sender and the payer are d
 
 ```csharp
 // Both keys sign every transaction
-var combined = new Signatory(payerKey, senderKey);
+var combined = new Signatory(new Signatory(payerKey), new Signatory(senderKey));
 
 // Mix local keys with external signers
 var combined = new Signatory(

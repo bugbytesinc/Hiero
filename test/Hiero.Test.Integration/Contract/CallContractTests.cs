@@ -452,7 +452,7 @@ public class CallContractTests
         await Assert.That(createReceipt.Status).IsEqualTo(ResponseCode.Success);
         var contract = createReceipt.Contract;
         var mirror = await TestNetwork.GetMirrorRestClientAsync();
-        var chainId = await mirror.GetChainIdAsync();
+        var chainId = await TestNetwork.GetChainIdAsync();
 
         var newMessage = Generator.Code(50);
         var evmInput = new EvmTransactionInput
@@ -532,7 +532,7 @@ public class CallContractTests
         await Assert.That(createReceipt.Status).IsEqualTo(ResponseCode.Success);
         var contract = createReceipt.Contract;
         var mirror = await TestNetwork.GetMirrorRestClientAsync();
-        var chainId = await mirror.GetChainIdAsync();
+        var chainId = await TestNetwork.GetChainIdAsync();
 
         var newMessage = Generator.Code(50);
         var evmInput = new EvmTransactionInput
@@ -612,7 +612,7 @@ public class CallContractTests
         await Assert.That(createReceipt.Status).IsEqualTo(ResponseCode.Success);
         var contract = createReceipt.Contract;
         var mirror = await TestNetwork.GetMirrorRestClientAsync();
-        var chainId = await mirror.GetChainIdAsync();
+        var chainId = await TestNetwork.GetChainIdAsync();
 
         var newMessage = Generator.Code(50);
         var evmInput = new EvmTransactionInput

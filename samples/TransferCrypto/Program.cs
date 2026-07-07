@@ -7,9 +7,9 @@ using Hiero;
 var endpointUrl = args[0];
 var nodeNum = long.Parse(args[1]);
 var payerNum = long.Parse(args[2]);
-var payerKey = Hex.ToBytes(args[3]);
+var payerKey = Convert.FromHexString(args[3]);
 var fromNum = long.Parse(args[4]);
-var fromKey = Hex.ToBytes(args[5]);
+var fromKey = Convert.FromHexString(args[5]);
 var toNum = long.Parse(args[6]);
 var amount = long.Parse(args[7]);
 
@@ -19,7 +19,7 @@ await using var client = new ConsensusClient(ctx =>
         new EntityId(0, 0, nodeNum),
         new Uri(endpointUrl));
     ctx.Payer = new EntityId(0, 0, payerNum);
-    ctx.Signatory = new Signatory(payerKey, new Signatory(fromKey));
+    ctx.Signatory = new Signatory(new Signatory(payerKey), new Signatory(fromKey));
 });
 
 var from = new EntityId(0, 0, fromNum);

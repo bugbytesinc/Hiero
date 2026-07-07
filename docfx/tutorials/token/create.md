@@ -17,7 +17,7 @@ class Program
         var endpointUrl = args[0];
         EntityId.TryParseShardRealmNum(args[1], out var nodeAccount);
         EntityId.TryParseShardRealmNum(args[2], out var payerAccount);
-        var payerKey = Hex.ToBytes(args[3]);          // DER-encoded Ed25519 private key hex
+        var payerKey = Convert.FromHexString(args[3]);          // DER-encoded Ed25519 private key hex
 
         await using var client = new ConsensusClient(ctx =>
         {

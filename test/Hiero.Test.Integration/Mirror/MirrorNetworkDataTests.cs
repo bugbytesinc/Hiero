@@ -122,10 +122,12 @@ public class MirrorNetworkDataTests
     [Test]
     public async Task Can_Get_Chain_Id()
     {
-        // Per user direction: GetChainIdAsync may be flaky at the mirror level.
-        // The method scans recent contract-result records and returns the first
-        // non-zero chain_id; on testnet this is normally reliable, but if the
-        // most recent page lacks chain_id values the call throws. Tolerate that.
+        // GetChainIdAsync locates the most recent Ethereum-wrapped transaction and
+        // reads the chain id off its contract result. This is reliable on any
+        // network with EVM/relay traffic in its history (testnet always has it),
+        // but a network that has never processed an EthereumTransaction (e.g. a
+        // freshly-started local network) exposes the value nowhere and the call
+        // throws by design rather than fabricating one. Tolerate that here.
         var mirror = await TestNetwork.GetMirrorRestClientAsync();
         try
         {

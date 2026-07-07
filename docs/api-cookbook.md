@@ -31,6 +31,30 @@ await using var stream = new MirrorGrpcClient(ctx =>
 });
 ```
 
+### TLS connections
+
+Consensus nodes expose a plaintext port (`50211`) and a TLS port (`50212`). TLS
+nodes present self-signed certificates, so the SDK validates them by pinning to
+the address book's published SHA-384 certificate hash instead of standard chain /
+hostname validation (which those certs can never pass). This is automatic —
+discover nodes with `ConsensusNodeTransport.Tls` (or `.All`) and the returned
+`ConsensusNodeEndpoint`s carry the hash the default channel validates against:
+
+```csharp
+var tlsNodes = await mirror.GetActiveConsensusNodesAsync(2000, ConsensusNodeTransport.Tls);
+await using var client = new ConsensusClient(ctx => ctx.Endpoint = tlsNodes.Keys.First());
+
+// ...or pin an endpoint manually:
+ctx.Endpoint = new ConsensusNodeEndpoint(
+    new EntityId(0, 0, 3),
+    new Uri("https://13.62.169.41:50212"),
+    certHashBytes);   // 48-byte SHA-384, e.g. from ConsensusNodeData.CertificateHash
+```
+
+An `https` endpoint with no attached hash falls back to standard TLS validation,
+so proxy-fronted DNS endpoints (e.g. `*.hedera.com`) that present chain-valid
+certificates keep working unchanged.
+
 ### Key Types
 
 | Type | Description |
@@ -39,6 +63,7 @@ await using var stream = new MirrorGrpcClient(ctx =>
 | `Endorsement` | Public key or N-of-M key list representing signing requirements. |
 | `Signatory` | Private key, key list, or `Func<IInvoice, Task>` callback for signing. |
 | `ConsensusTimeStamp` | Nanosecond-precision timestamp. Construct from `DateTime` or `decimal` seconds. |
+| `ConsensusNodeEndpoint` | Gossip node target: node `EntityId` + gRPC `Uri`, plus an optional TLS certificate hash for pinning (see TLS connections below). |
 | `Nft` | NFT identifier: `new Nft(tokenEntityId, serialNumber)`. |
 | hex bytes | No SDK type -- use `Convert.FromHexString("302e...")` (a `byte[]`, usable as `ReadOnlyMemory<byte>`) and `Convert.ToHexStringLower(bytes.Span)`. |
 
@@ -769,7 +794,9 @@ IAsyncEnumerable<ScheduleData>  schedules = mirror.GetSchedulesAsync(AccountFilt
 ```csharp
 IAsyncEnumerable<ConsensusNodeData> nodes = mirror.GetConsensusNodesAsync();
 IReadOnlyDictionary<ConsensusNodeEndpoint, long> active =
-    await mirror.GetActiveConsensusNodesAsync(timeoutMs);
+    await mirror.GetActiveConsensusNodesAsync(timeoutMs);                              // plaintext :50211 (default)
+IReadOnlyDictionary<ConsensusNodeEndpoint, long> activeTls =                           // pinned TLS :50212 (or .All for both)
+    await mirror.GetActiveConsensusNodesAsync(timeoutMs, ConsensusNodeTransport.Tls);
 NetworkStakeData?  stake    = await mirror.GetNetworkStakeAsync();
 NetworkSupplyData? supply   = await mirror.GetNetworkSupplyAsync();
 ExchangeRateData?  rate     = await mirror.GetExchangeRateAsync();

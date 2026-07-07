@@ -29,6 +29,26 @@ public sealed record ConsensusNodeEndpoint
     /// </summary>
     public EntityId Node { get; private init; }
     /// <summary>
+    /// The expected SHA-384 hash of the node's TLS certificate, as published by
+    /// the network's address book (the mirror node's <c>node_cert_hash</c> field
+    /// or the classic address book's <c>NodeAddress.cert_hash</c>).
+    /// </summary>
+    /// <remarks>
+    /// Hiero consensus nodes present self-signed certificates whose subject
+    /// alternative name does not match their real address, so standard TLS chain
+    /// and hostname validation can never succeed against a TLS (port 50212)
+    /// endpoint.  When this hash is supplied and the <see cref="Uri"/> scheme is
+    /// <c>https</c>, the client's default channel factory pins the connection to
+    /// this hash instead of using chain/hostname validation.  When empty, the
+    /// default factory falls back to standard TLS validation (appropriate for
+    /// proxy-fronted DNS endpoints that present a chain-valid certificate).
+    /// This value participates in equality (by content): two endpoints that pin
+    /// to different certificate hashes — or one that pins and one that does not —
+    /// are distinct endpoints and receive distinct, independently validated gRPC
+    /// channels.
+    /// </remarks>
+    public ReadOnlyMemory<byte> CertificateHash { get; private init; }
+    /// <summary>
     /// Public Constructor, a <code>ConsensusNodeEndpoint</code> is immutable after creation.
     /// </summary>
     /// <param name="node">
@@ -39,7 +59,29 @@ public sealed record ConsensusNodeEndpoint
     /// A consensus node may actually have multiple gRPC endpoints mapped to the same
     /// wallet address (shard.realm.num).
     /// </param>
-    public ConsensusNodeEndpoint(EntityId node, Uri uri)
+    public ConsensusNodeEndpoint(EntityId node, Uri uri) : this(node, uri, default)
+    {
+    }
+    /// <summary>
+    /// Public Constructor accepting the node's expected TLS certificate hash, a
+    /// <code>ConsensusNodeEndpoint</code> is immutable after creation.
+    /// </summary>
+    /// <param name="node">
+    /// Main Network Consensus Node's Address.
+    /// </param>
+    /// <param name="uri">
+    /// The URL and port of the public Hiero Network Consensus Node's gRPC access point.
+    /// A consensus node may actually have multiple gRPC endpoints mapped to the same
+    /// wallet address (shard.realm.num).
+    /// </param>
+    /// <param name="certificateHash">
+    /// The expected SHA-384 hash of the node's TLS certificate (see
+    /// <see cref="CertificateHash"/>).  Supply this for <c>https</c> endpoints
+    /// dialed directly by node address so the default channel factory can pin
+    /// the TLS connection; leave empty for endpoints presenting a chain-valid
+    /// certificate.
+    /// </param>
+    public ConsensusNodeEndpoint(EntityId node, Uri uri, ReadOnlyMemory<byte> certificateHash)
     {
         if (uri is null)
         {
@@ -59,6 +101,38 @@ public sealed record ConsensusNodeEndpoint
         }
         Uri = uri;
         Node = node;
+        CertificateHash = certificateHash;
+    }
+    /// <summary>
+    /// Determines equality with another <see cref="ConsensusNodeEndpoint"/>.
+    /// Two endpoints are equal when they share the same <see cref="Node"/>,
+    /// <see cref="Uri"/>, and <see cref="CertificateHash"/> content.  The hash is
+    /// compared by value (not by backing-array reference) so endpoints built from
+    /// equal hash bytes are equal, and so distinct pinning targets remain distinct
+    /// channel cache keys.
+    /// </summary>
+    /// <param name="other">The endpoint to compare against.</param>
+    /// <returns>True when the node address, URI, and certificate hash all match.</returns>
+    public bool Equals(ConsensusNodeEndpoint? other)
+    {
+        return other is not null
+            && Node == other.Node
+            && Uri == other.Uri
+            && CertificateHash.Span.SequenceEqual(other.CertificateHash.Span);
+    }
+    /// <summary>
+    /// Returns a hash code consistent with <see cref="Equals(ConsensusNodeEndpoint)"/>,
+    /// derived from <see cref="Node"/>, <see cref="Uri"/>, and the
+    /// <see cref="CertificateHash"/> content.
+    /// </summary>
+    /// <returns>A hash code for this endpoint.</returns>
+    public override int GetHashCode()
+    {
+        var code = new HashCode();
+        code.Add(Node);
+        code.Add(Uri);
+        code.AddBytes(CertificateHash.Span);
+        return code.ToHashCode();
     }
     /// <summary>
     /// Implicit operator for converting a ConsensusNodeEndpoint to an EntityId.

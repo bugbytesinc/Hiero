@@ -10,7 +10,7 @@ using Hiero;
 var endpointUrl = args[0];
 var nodeNum = long.Parse(args[1]);
 var payerNum = long.Parse(args[2]);
-var payerKey = Hex.ToBytes(args[3]);
+var payerKey = Convert.FromHexString(args[3]);
 var contractNum = long.Parse(args[4]);
 var methodName = args[5];
 

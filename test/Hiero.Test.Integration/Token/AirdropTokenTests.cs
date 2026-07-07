@@ -21,7 +21,7 @@ public class AirdropTokenTests
         });
 
         // Schedule an airdrop WITHOUT the sender signing.
-        var tex = await Assert.That(async () =>
+        var ex = await Assert.That(async () =>
         {
             await client.ScheduleAsync(new ScheduleParams
             {
@@ -36,7 +36,18 @@ public class AirdropTokenTests
                 Memo = Generator.Memo(20),
             });
         }).ThrowsException();
-        await Assert.That(tex).IsTypeOf<PrecheckException>();
-        await Assert.That(((PrecheckException)tex!).Status).IsEqualTo(ResponseCode.Busy);
+        // SOLO VS TESTNET
+        if(ex is PrecheckException pex)
+        {
+            await Assert.That(pex.Status).IsEqualTo(ResponseCode.Busy);
+        }
+        else if(ex is TransactionException tex)
+        {
+            await Assert.That(tex.Status).IsEqualTo(ResponseCode.ScheduledTransactionNotInWhitelist);
+        }
+        else
+        {
+            Assert.Fail($"Unexpected Exception Type {ex}");
+        }
     }
 }

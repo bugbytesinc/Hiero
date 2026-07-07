@@ -18,7 +18,7 @@ builder.Services.AddSingleton<ConsensusClient>(sp =>
             new EntityId(0, 0, long.Parse(config["Hedera:NodeAccountId"]!.Split('.')[2])),
             new Uri(config["Hedera:NodeEndpoint"]!));
         ctx.Payer = new EntityId(0, 0, long.Parse(config["Hedera:PayerAccountId"]!.Split('.')[2]));
-        ctx.Signatory = new Signatory(Hex.ToBytes(config["Hedera:PayerPrivateKey"]!));
+        ctx.Signatory = new Signatory(Convert.FromHexString(config["Hedera:PayerPrivateKey"]!));
     });
 });
 ```

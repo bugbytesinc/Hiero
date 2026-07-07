@@ -331,6 +331,33 @@ public class DomainConverterTests
         await Assert.That(deserialized.Uri).IsEqualTo(original.Uri);
     }
 
+    [Test]
+    public async Task ConsensusNodeEndpoint_RoundTrip_PreservesCertificateHash()
+    {
+        var hash = new byte[] { 0xea, 0xdd, 0x72, 0xfc, 0xf6, 0x0f, 0xab, 0x34 };
+        var original = new ConsensusNodeEndpoint(
+            new EntityId(0, 0, 5),
+            new Uri("https://2.testnet.hedera.com:50212"),
+            hash);
+        var json = JsonSerializer.Serialize(original);
+        await Assert.That(json).Contains("\"certHash\"");
+        var deserialized = JsonSerializer.Deserialize<ConsensusNodeEndpoint>(json);
+        await Assert.That(deserialized).IsNotNull();
+        await Assert.That(deserialized!.Node).IsEqualTo(original.Node);
+        await Assert.That(deserialized.Uri).IsEqualTo(original.Uri);
+        await Assert.That(deserialized.CertificateHash.Span.SequenceEqual(hash)).IsTrue();
+    }
+
+    [Test]
+    public async Task ConsensusNodeEndpoint_Serialize_OmitsEmptyCertificateHash()
+    {
+        var endpoint = new ConsensusNodeEndpoint(
+            new EntityId(0, 0, 3),
+            new Uri("https://0.testnet.hedera.com:50211"));
+        var json = JsonSerializer.Serialize(endpoint);
+        await Assert.That(json).DoesNotContain("certHash");
+    }
+
     // ═══════════════════════════════════════════════════════════════════════
     //  6. ConsensusTimeStampForExchangeRateConverter (wrapper needed)
     // ═══════════════════════════════════════════════════════════════════════

@@ -151,22 +151,49 @@ public static class ConsensusNodeDataExtensions
     /// in the node not being considered active and included
     /// on this list.
     /// </param>
+    /// <param name="transport">
+    /// Which transport(s) to return endpoints for.  Defaults to
+    /// <see cref="ConsensusNodeTransport.Plaintext"/> (unencrypted port 50211) to
+    /// preserve historical behavior.  <see cref="ConsensusNodeTransport.Tls"/>
+    /// returns encrypted (port 50212) endpoints, each carrying the node's
+    /// certificate hash so the client's default channel factory can pin the TLS
+    /// connection; a node with no usable certificate hash is excluded from the
+    /// TLS results.  <see cref="ConsensusNodeTransport.All"/> probes and returns
+    /// both.
+    /// </param>
     /// <returns>
     /// A dictionary of gateways and the corresponding response
     /// time (in milliseconds).
     /// </returns>
-    public static async Task<IReadOnlyDictionary<ConsensusNodeEndpoint, long>> GetActiveConsensusNodesAsync(this MirrorRestClient client, int maxTimeoutInMilliseconds)
+    public static async Task<IReadOnlyDictionary<ConsensusNodeEndpoint, long>> GetActiveConsensusNodesAsync(this MirrorRestClient client, int maxTimeoutInMilliseconds, ConsensusNodeTransport transport = ConsensusNodeTransport.Plaintext)
     {
+        var wantPlaintext = transport is ConsensusNodeTransport.Plaintext or ConsensusNodeTransport.All;
+        var wantTls = transport is ConsensusNodeTransport.Tls or ConsensusNodeTransport.All;
         var list = new List<Task<(ConsensusNodeEndpoint gateway, long response)>>();
         await foreach (var node in client.GetConsensusNodesAsync().ConfigureAwait(false))
         {
+            // The certificate hash is published per node, not per endpoint; parse
+            // it once and attach it to any TLS endpoint built for this node.
+            var hasCertHash = TryParseCertificateHash(node.CertificateHash, out var certHash);
             foreach (var endpoint in node.Endpoints)
             {
                 // Solo does not include address anymore
                 var address = endpoint.Address;
-                if (endpoint.Port == 50211 && !string.IsNullOrWhiteSpace(address))
+                if (string.IsNullOrWhiteSpace(address))
                 {
-                    list.Add(ProbeGatewayAsync(node.Account, address, endpoint.Port, maxTimeoutInMilliseconds));
+                    continue;
+                }
+                if (wantPlaintext && endpoint.Port == 50211)
+                {
+                    var gateway = new ConsensusNodeEndpoint(node.Account, new Uri($"http://{address}:{endpoint.Port}"));
+                    list.Add(ProbeGatewayAsync(gateway, maxTimeoutInMilliseconds));
+                }
+                // A TLS endpoint can't be validated without a hash to pin against,
+                // so exclude nodes whose address-book entry lacks a usable one.
+                if (wantTls && endpoint.Port == 50212 && hasCertHash)
+                {
+                    var gateway = new ConsensusNodeEndpoint(node.Account, new Uri($"https://{address}:{endpoint.Port}"), certHash);
+                    list.Add(ProbeGatewayAsync(gateway, maxTimeoutInMilliseconds));
                 }
             }
         }
@@ -181,10 +208,8 @@ public static class ConsensusNodeDataExtensions
         }
         return result;
 
-        static async Task<(ConsensusNodeEndpoint gateway, long response)> ProbeGatewayAsync(EntityId account, string address, int port, int maxTimeoutInMilliseconds)
+        static async Task<(ConsensusNodeEndpoint gateway, long response)> ProbeGatewayAsync(ConsensusNodeEndpoint gateway, int maxTimeoutInMilliseconds)
         {
-            var uri = new Uri($"http://{address}:{port}");
-            var gateway = new ConsensusNodeEndpoint(account, uri);
             await using var grpcClient = new ConsensusClient(cfg => cfg.Endpoint = gateway);
             var response = -1L;
             var pingTask = grpcClient.PingAsync();
@@ -201,5 +226,42 @@ public static class ConsensusNodeDataExtensions
             }
             return (gateway, response);
         }
+    }
+    /// <summary>
+    /// Parses the mirror node's hex-encoded <c>node_cert_hash</c> value (with or
+    /// without a <c>0x</c> prefix) into raw bytes suitable for TLS certificate
+    /// pinning.  Returns <c>false</c> for a null, empty, or unparseable value —
+    /// such a node has no basis for TLS validation and should be excluded rather
+    /// than trusted.
+    /// </summary>
+    /// <param name="value">The hex-encoded certificate hash from the address book.</param>
+    /// <param name="hash">The decoded hash bytes when parsing succeeds.</param>
+    /// <returns>True when a non-empty hash was decoded.</returns>
+    internal static bool TryParseCertificateHash(string? value, out ReadOnlyMemory<byte> hash)
+    {
+        hash = default;
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return false;
+        }
+        var span = value.AsSpan().Trim();
+        if (span.StartsWith("0x") || span.StartsWith("0X"))
+        {
+            span = span[2..];
+        }
+        if (span.Length == 0 || (span.Length & 1) != 0)
+        {
+            return false;
+        }
+        try
+        {
+            hash = Convert.FromHexString(span);
+        }
+        catch (FormatException)
+        {
+            hash = default;
+            return false;
+        }
+        return !hash.IsEmpty;
     }
 }

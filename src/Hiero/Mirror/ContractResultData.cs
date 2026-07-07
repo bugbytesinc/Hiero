@@ -404,35 +404,48 @@ public static class ContractResultDataExtensions
         return client.GetPagedItemsAsync<ContractResultDataPage, ContractResultData>(path, MirrorJsonContext.Default.ContractResultDataPage);
     }
     /// <summary>
-    /// Retrieves the EVM chain id that this mirror's network uses,
-    /// derived by scanning recent results from
-    /// <c>/api/v1/contracts/results</c> for the first record that
-    /// carries a non-zero chain id. There is no dedicated chain-id
-    /// endpoint on the mirror node.
+    /// Retrieves the EVM chain id (EIP-155) that this mirror's network uses.
     /// </summary>
+    /// <remarks>
+    /// The mirror node has no dedicated chain-id endpoint: <c>chain_id</c> is
+    /// only populated on contract results that wrapped an
+    /// <c>EthereumTransaction</c> — HAPI-native contract calls report it as
+    /// zero. This method therefore locates the most recent Ethereum-wrapped
+    /// transaction (<c>/api/v1/transactions?transactiontype=ethereumtransaction</c>)
+    /// and reads the chain id from its contract result, which is reliable across
+    /// the network's whole history rather than just a recent window. It remains
+    /// best-effort: a network that has never processed an <c>EthereumTransaction</c>
+    /// (e.g. a freshly-started local network) exposes the value nowhere, and the
+    /// method throws rather than returning a fabricated value — a wrong or zero
+    /// chain id would sign a transaction the network later rejects with
+    /// <see cref="ResponseCode.WrongChainId"/>. Chain id is static network
+    /// configuration, so callers should cache the result rather than re-derive
+    /// it per call, or supply a known value directly.
+    /// </remarks>
     /// <param name="client">
     /// Mirror Rest Client to use for the request.
     /// </param>
     /// <returns>
-    /// The Chain ID of the Hedera network, or zero if no record in the
-    /// scanned page had one set.
+    /// The Chain ID of the network.
     /// </returns>
     /// <exception cref="MirrorException">
-    /// Thrown when the mirror node has no contract-result records to
-    /// scan (typically a freshly-started local network).
+    /// Thrown when the mirror node holds no Ethereum-wrapped transaction from
+    /// which to read the chain id (typically a network with no EVM/relay traffic
+    /// yet, such as a freshly-started local network).
     /// </exception>
     public static async Task<BigInteger> GetChainIdAsync(this MirrorRestClient client)
     {
-        var path = GenerateInitialPath("contracts/results", new PageLimit(10), OrderBy.Descending);
-        var data = (await client.GetSingleItemAsync(path, MirrorJsonContext.Default.ContractResultDataPage).ConfigureAwait(false))?.Results ?? throw new MirrorException("Contract results are empty, unable to find Chain ID.", [], System.Net.HttpStatusCode.NotFound);
-        for (int i = 0; i < data.Length; i++)
+        await foreach (var transaction in client.GetTransactionsAsync(TransactionTypeFilter.EthereumTransaction, OrderBy.Descending).ConfigureAwait(false))
         {
-            var result = data[i];
-            if (result.ChainId != BigInteger.Zero)
+            var result = await client.GetContractResultByTransactionIdAsync(transaction.TransactionId).ConfigureAwait(false);
+            if (result is not null && result.ChainId != BigInteger.Zero)
             {
                 return result.ChainId;
             }
+            // Only the most recent Ethereum transaction is needed; if its result
+            // is unavailable or lacks a chain id, fall through and fail loudly.
+            break;
         }
-        throw new MirrorException("Chain ID not found in contract results.", [], System.Net.HttpStatusCode.NotFound);
+        throw new MirrorException("No Ethereum-wrapped transaction found on the mirror node; unable to determine the network Chain ID.", [], System.Net.HttpStatusCode.NotFound);
     }
 }

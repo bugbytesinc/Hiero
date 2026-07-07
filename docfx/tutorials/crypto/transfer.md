@@ -18,9 +18,9 @@ class Program
         var endpointUrl = args[0];
         EntityId.TryParseShardRealmNum(args[1], out var nodeAccount);
         EntityId.TryParseShardRealmNum(args[2], out var payerAccount);
-        var payerPrivateKey = Hex.ToBytes(args[3]);
+        var payerPrivateKey = Convert.FromHexString(args[3]);
         EntityId.TryParseShardRealmNum(args[4], out var fromAccount);
-        var fromPrivateKey = Hex.ToBytes(args[5]);
+        var fromPrivateKey = Convert.FromHexString(args[5]);
         EntityId.TryParseShardRealmNum(args[6], out var toAccount);
         var amount = long.Parse(args[7]);             //   100000000 (1 hBar)
         try
@@ -29,7 +29,7 @@ class Program
             {
                 ctx.Endpoint = new ConsensusNodeEndpoint(nodeAccount!, new Uri(endpointUrl));
                 ctx.Payer = payerAccount;
-                ctx.Signatory = new Signatory(payerPrivateKey, new Signatory(fromPrivateKey));
+                ctx.Signatory = new Signatory(new Signatory(payerPrivateKey), new Signatory(fromPrivateKey));
             });
 
             var receipt = await client.TransferAsync(fromAccount!, toAccount!, amount);

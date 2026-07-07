@@ -4,6 +4,7 @@ using Hiero.Mirror.Filters;
 using Microsoft.Extensions.Configuration;
 using Proto;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Numerics;
 
 namespace Hiero.Test.Integration.Fixtures;
@@ -18,6 +19,10 @@ internal class TestNetwork
     private static ConsensusNodeEndpoint? _fixedEndpoint;
     private static TransactionId _latestKnownMutatingTransaction = TransactionId.None;
     private static ConsensusTimeStamp _latestKnownMirrorTimestamp = ConsensusTimeStamp.MinValue;
+    private static BigInteger? _chainId;
+    // Hedera testnet EIP-155 chain id; used when neither configuration nor the
+    // mirror can supply one (mainnet 295, testnet 296, previewnet 297, Solo 298).
+    private const int DefaultChainId = 296;
 
     public static EntityId Payer => _rootPayer.Account;
     public static Endorsement Endorsement => _rootPayer.Endorsement;
@@ -45,6 +50,11 @@ internal class TestNetwork
         var payerPrivateKey = configuration["PayerPrivateKey"] ?? throw new InvalidOperationException("Payer Private Key [PayerPrivateKey] is missing from configuration.");
         var consensusEndpoint = configuration["ConsensusEndpoint"];
         var consensusNodeId = configuration["ConsensusNodeId"] ?? "0.0.3";
+        var configuredChainId = configuration["ChainId"];
+        if (!string.IsNullOrWhiteSpace(configuredChainId))
+        {
+            _chainId = ParseChainId(configuredChainId);
+        }
         if (!string.IsNullOrWhiteSpace(consensusEndpoint))
         {
             var parts = consensusNodeId.Split('.');
@@ -97,6 +107,43 @@ internal class TestNetwork
         await WaitForMirrorConsensusCatchUpAsync();
         return _mirrorClient;
     }
+    /// <summary>
+    /// Resolves the network's EIP-155 chain id for building EVM transactions,
+    /// resilient across both testnet and a clean Solo instance. A configured
+    /// <c>ChainId</c> (user secrets / environment / appsettings) wins; otherwise
+    /// it is derived from the mirror node (reliable on any network with EVM
+    /// history, e.g. testnet); if the network has never processed an Ethereum
+    /// transaction (e.g. a freshly-started Solo, where the value exists nowhere
+    /// to derive) it falls back to the testnet default. Set <c>ChainId=298</c>
+    /// in configuration when bootstrapping against Solo. The result is cached —
+    /// chain id is static for the life of a network.
+    /// </summary>
+    public static async Task<BigInteger> GetChainIdAsync()
+    {
+        if (_chainId.HasValue)
+        {
+            return _chainId.Value;
+        }
+        try
+        {
+            _chainId = await _mirrorClient.GetChainIdAsync();
+        }
+        catch (MirrorException)
+        {
+            _chainId = DefaultChainId;
+        }
+        return _chainId.Value;
+    }
+    private static BigInteger ParseChainId(string value)
+    {
+        value = value.Trim();
+        if (value.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+        {
+            // Leading zero keeps BigInteger from reading a high bit as a sign.
+            return BigInteger.Parse("0" + value[2..], NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+        }
+        return BigInteger.Parse(value, CultureInfo.InvariantCulture);
+    }
     public static async Task<long> EstimateGasFromCentsAsync(int cents)
     {
         var fees = await _mirrorClient.GetNetworkFeesAsync(ConsensusTimeStamp.Now);
@@ -120,7 +167,12 @@ internal class TestNetwork
         }
         try
         {
-            var list = (await _mirrorClient.GetActiveConsensusNodesAsync(2000)).Keys.ToArray();
+            // Discover both plaintext (50211) and TLS (50212) endpoints so the
+            // suite randomly exercises hash-pinned TLS channels as well as
+            // plaintext ones. On a network without usable TLS cert hashes (e.g.
+            // Solo), the TLS endpoints are excluded and this degrades to
+            // plaintext-only automatically.
+            var list = (await _mirrorClient.GetActiveConsensusNodesAsync(2000, ConsensusNodeTransport.All)).Keys.ToArray();
             if (list.Length == 0)
             {
                 throw new InvalidOperationException("Unable to find a consensus node, no consensus endpoints are responding.");
