@@ -54,9 +54,11 @@ public interface IInvoice
     /// more identical public prefixes producing different signature
     /// values).  However, if too small of a prefix is sent to
     /// the network, the network may reject the transaction under
-    /// certain circumstances.  It is recommended to return at 
-    /// least the first 6 bytes of the raw public key value when
-    /// the prefix size is zero, so that the sdk can orchestrate 
+    /// certain circumstances.  It is recommended to pass at
+    /// least the first 6 bytes of the raw public key value as the
+    /// <c>publicPrefix</c> argument of <see cref="AddSignature"/>
+    /// (the larger of 6 and this value, as the library's own
+    /// signatories do), so that the sdk can orchestrate
     /// multiple signatures with reasonable probability of not
     /// producing a conflict as described above.
     /// </remarks>

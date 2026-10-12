@@ -20,9 +20,9 @@ public class TokenTransferData
     [JsonPropertyName("account")]
     public EntityId Account { get; set; } = default!;
     /// <summary>
-    /// The amount of token transferred (positive
-    /// value means the account received token, 
-    /// negative value means the account sent the token)
+    /// The amount of token transferred, in the token's smallest unit (not
+    /// scaled by its decimals): positive when the account received the
+    /// token, negative when it sent it.
     /// </summary>
     [JsonPropertyName("amount")]
     [JsonConverter(typeof(LongMirrorConverter))]

@@ -14,6 +14,11 @@ public sealed class ConsensusTimeStampForTokenExpirationConverter : JsonConverte
     /// <inheritdoc />
     public override ConsensusTimeStamp Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
+        if (reader.TokenType == JsonTokenType.Null)
+        {
+            // The mirror node reports a token without one as null.
+            return ConsensusTimeStamp.MinValue;
+        }
         return new ConsensusTimeStamp(reader.GetDecimal() / 1000000000m);
     }
     /// <inheritdoc />

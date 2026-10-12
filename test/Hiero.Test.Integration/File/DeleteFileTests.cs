@@ -86,7 +86,7 @@ public class DeleteFileTests
     }
 
     [Test]
-    public async Task Can_Schedule_And_Sign_Delete_File()
+    public async Task Can_Not_Schedule_And_Sign_Delete_File()
     {
         await using var fxFile = await TestFile.CreateAsync();
         await using var fxPayer = await TestAccount.CreateAsync(fx => fx.CreateParams.InitialBalance = 20_00_000_000);

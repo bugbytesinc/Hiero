@@ -204,4 +204,32 @@ public class RlpTests
         await Assert.That((byte[])output[2]).IsEmpty();
         await Assert.That((object[])output[3]).IsEmpty();
     }
+
+    [Test]
+    [Arguments(new byte[] { 0xBB, 0xFF, 0xFF, 0xFF, 0xFB })]
+    [Arguments(new byte[] { 0xFB, 0xFF, 0xFF, 0xFF, 0xFB })]
+    public async Task A_Length_That_Overflows_Fails_Instead_Of_Hanging(byte[] data)
+    {
+        // These lengths once read as negative numbers, leaving the decoder
+        // spinning in place forever.
+        var decode = Task.Run(() => Rlp.Decode(data));
+        await Assert.ThrowsAsync<FormatException>(async () => await decode.WaitAsync(TimeSpan.FromSeconds(10)));
+    }
+
+    [Test]
+    [Arguments(new byte[] { 0x83, 0x61 })]
+    [Arguments(new byte[] { 0xC3, 0x01 })]
+    [Arguments(new byte[] { 0xB9, 0x01 })]
+    [Arguments(new byte[] { 0xB8, 0x05, 0x61 })]
+    public async Task Truncated_Input_Fails_With_A_Format_Error(byte[] data)
+    {
+        await Assert.ThrowsAsync<FormatException>(async () => await Task.Run(() => Rlp.Decode(data)));
+    }
+
+    [Test]
+    public async Task A_Length_Prefix_Longer_Than_Four_Bytes_Is_Rejected()
+    {
+        byte[] data = [0xBC, 0x00, 0x00, 0x00, 0x00, 0x01, 0x61];
+        await Assert.ThrowsAsync<FormatException>(async () => await Task.Run(() => Rlp.Decode(data)));
+    }
 }

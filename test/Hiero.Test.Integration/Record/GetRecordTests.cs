@@ -131,8 +131,9 @@ public class GetRecordTests
         await using var client = await TestNetwork.CreateClientAsync();
         var receipt = await client.TransferAsync(TestNetwork.Payer, new EntityId(0, 0, 800), 1);
         var records = await client.GetAllTransactionRecordsAsync(receipt.TransactionId);
-        await Assert.That(records.Count).IsEqualTo(1);
-        await Assert.That(records[0].Status).IsEqualTo(ResponseCode.Success);
+        await Assert.That(records.Parent!.Status).IsEqualTo(ResponseCode.Success);
+        await Assert.That(records.Children).IsEmpty();
+        await Assert.That(records.Duplicates).IsEmpty();
     }
 
     [Test]
@@ -141,7 +142,9 @@ public class GetRecordTests
         await using var client = await TestNetwork.CreateClientAsync();
         var txid = client.CreateNewTransactionId();
         var records = await client.GetAllTransactionRecordsAsync(txid);
-        await Assert.That(records.Count).IsEqualTo(0);
+        await Assert.That(records.Parent).IsNull();
+        await Assert.That(records.Children).IsEmpty();
+        await Assert.That(records.Duplicates).IsEmpty();
     }
 
     [Test]
@@ -150,8 +153,8 @@ public class GetRecordTests
         await using var fx = await TestToken.CreateAsync();
         await using var client = await TestNetwork.CreateClientAsync();
         var records = await client.GetAllTransactionRecordsAsync(fx.CreateReceipt!.TransactionId);
-        await Assert.That(records.Count).IsEqualTo(1);
-        var createRecord = records[0] as CreateTokenRecord;
+        await Assert.That(records.Children).IsEmpty();
+        var createRecord = records.Parent as CreateTokenRecord;
         await Assert.That(createRecord).IsNotNull();
         await Assert.That(createRecord!.TransactionId).IsEqualTo(fx.CreateReceipt.TransactionId);
         await Assert.That(createRecord.Status).IsEqualTo(ResponseCode.Success);

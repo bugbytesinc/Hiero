@@ -64,7 +64,9 @@ public class ContractData
     [JsonPropertyName("file_id")]
     public EntityId File { get; set; } = default!;
     /// <summary>
-    /// The number of auto-associations for this contract.
+    /// The maximum number of automatic token associations
+    /// allowed for this contract (-1 means unlimited). This is
+    /// the configured limit, not a count of current associations.
     /// </summary>
     [JsonPropertyName("max_automatic_token_associations")]
     [JsonConverter(typeof(IntMirrorConverter))]
@@ -107,13 +109,15 @@ public class ContractData
     [JsonPropertyName("timestamp")]
     public TimestampRangeData TimestampRange { get; set; } = default!;
     /// <summary>
-    /// The contract bytecode in hex during deployment
+    /// The contract bytecode during deployment, decoded
+    /// from the hex the mirror node sends.
     /// </summary>
     [JsonPropertyName("bytecode")]
     [JsonConverter(typeof(HexStringToBytesConverter))]
     public ReadOnlyMemory<byte> Bytecode { get; set; }
     /// <summary>
-    /// The contract bytecode in hex after deployment
+    /// The contract bytecode after deployment, decoded
+    /// from the hex the mirror node sends.
     /// </summary>
     [JsonPropertyName("runtime_bytecode")]
     [JsonConverter(typeof(HexStringToBytesConverter))]
@@ -139,6 +143,9 @@ public static class ContractDataExtensions
     /// <param name="contract">
     /// The entityId of the contract to retrieve.
     /// </param>
+    /// <param name="cancellationToken">
+    /// Token that cancels the request.
+    /// </param>
     /// <param name="filters">
     /// Additional query parameters. The endpoint supports
     /// <see cref="TimestampFilter"/>.
@@ -146,10 +153,15 @@ public static class ContractDataExtensions
     /// <returns>
     /// The contract information, or null if not found.
     /// </returns>
-    public static Task<ContractData?> GetContractAsync(this MirrorRestClient client, EntityId contract, params IMirrorQueryParameter[] filters)
+    public static Task<ContractData?> GetContractAsync(this MirrorRestClient client, EntityId contract, CancellationToken cancellationToken, params IMirrorQueryParameter[] filters)
     {
         var path = GenerateInitialPath($"contracts/{contract.ToMirrorString()}", filters);
-        return client.GetSingleItemAsync(path, MirrorJsonContext.Default.ContractData);
+        return client.GetSingleItemAsync(path, MirrorJsonContext.Default.ContractData, cancellationToken);
+    }
+    /// <inheritdoc cref="GetContractAsync(MirrorRestClient, EntityId, CancellationToken, IMirrorQueryParameter[])"/>
+    public static Task<ContractData?> GetContractAsync(this MirrorRestClient client, EntityId contract, params IMirrorQueryParameter[] filters)
+    {
+        return client.GetContractAsync(contract, CancellationToken.None, filters);
     }
     /// <summary>
     /// Enumerates smart-contract entities across the network from
@@ -167,6 +179,10 @@ public static class ContractDataExtensions
     /// <param name="client">
     /// Mirror Rest Client to use for the request.
     /// </param>
+    /// <param name="cancellationToken">
+    /// Token that cancels the enumeration, including a page request in
+    /// flight. <c>WithCancellation</c> on the result works as well.
+    /// </param>
     /// <param name="filters">
     /// Additional query filters. The endpoint supports
     /// <see cref="ContractFilter"/>, <see cref="PageLimit"/>,
@@ -175,9 +191,14 @@ public static class ContractDataExtensions
     /// <returns>
     /// An async enumerable of contract records.
     /// </returns>
-    public static IAsyncEnumerable<ContractData> GetContractsAsync(this MirrorRestClient client, params IMirrorQueryParameter[] filters)
+    public static IAsyncEnumerable<ContractData> GetContractsAsync(this MirrorRestClient client, CancellationToken cancellationToken, params IMirrorQueryParameter[] filters)
     {
         var path = GenerateInitialPath("contracts", new PageLimit(100), filters);
-        return client.GetPagedItemsAsync<ContractDataPage, ContractData>(path, MirrorJsonContext.Default.ContractDataPage);
+        return client.GetPagedItemsAsync<ContractDataPage, ContractData>(path, MirrorJsonContext.Default.ContractDataPage, cancellationToken);
+    }
+    /// <inheritdoc cref="GetContractsAsync(MirrorRestClient, CancellationToken, IMirrorQueryParameter[])"/>
+    public static IAsyncEnumerable<ContractData> GetContractsAsync(this MirrorRestClient client, params IMirrorQueryParameter[] filters)
+    {
+        return client.GetContractsAsync(CancellationToken.None, filters);
     }
 }

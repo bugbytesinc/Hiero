@@ -19,18 +19,36 @@ public class CryptoAllowanceData
     [JsonPropertyName("owner")]
     public EntityId Owner { get; set; } = default!;
     /// <summary>
-    /// ID of the account allowed to spend the token.
+    /// ID of the account allowed to spend hBar from the
+    /// owner's account.
     /// </summary>
     [JsonPropertyName("spender")]
     public EntityId Spender { get; set; } = default!;
     /// <summary>
-    /// The amount of hBar (in tinybars) the allowed spender may
-    /// spend from the owner account (denominated
-    /// in smallest denomination)
+    /// The amount of hBar (in tinybars) the allowed spender
+    /// was originally granted.
     /// </summary>
     [JsonPropertyName("amount_granted")]
     [JsonConverter(typeof(LongMirrorConverter))]
+    public long AmountGranted { get; set; }
+    /// <summary>
+    /// The remaining amount of hBar (in tinybars) the allowed
+    /// spender may spend from the owner account.
+    /// </summary>
+    /// <remarks>
+    /// Before 3.0.0 this property held the amount originally granted,
+    /// now <see cref="AmountGranted"/>; it now matches
+    /// <see cref="TokenAllowanceData.Amount"/>.
+    /// </remarks>
+    [JsonPropertyName("amount")]
+    [JsonConverter(typeof(LongMirrorConverter))]
     public long Amount { get; set; }
+    /// <summary>
+    /// The consensus-timestamp range during which this
+    /// allowance record is valid.
+    /// </summary>
+    [JsonPropertyName("timestamp")]
+    public TimestampRangeData? Timestamp { get; set; }
 }
 /// <summary>
 /// Extension methods for querying crypto allowance data from the mirror node.
@@ -51,6 +69,10 @@ public static class CryptoAllowanceDataExtensions
     /// <param name="account">
     /// The account whose crypto-allowance grants are requested.
     /// </param>
+    /// <param name="cancellationToken">
+    /// Token that cancels the enumeration, including a page request in
+    /// flight. <c>WithCancellation</c> on the result works as well.
+    /// </param>
     /// <param name="filters">
     /// Additional query parameters. The endpoint supports
     /// <see cref="SpenderFilter"/>, <see cref="PageLimit"/>, and
@@ -60,9 +82,14 @@ public static class CryptoAllowanceDataExtensions
     /// An async enumerable of crypto-allowance records granted by the
     /// given account.
     /// </returns>
-    public static IAsyncEnumerable<CryptoAllowanceData> GetAccountCryptoAllowancesAsync(this MirrorRestClient client, EntityId account, params IMirrorQueryParameter[] filters)
+    public static IAsyncEnumerable<CryptoAllowanceData> GetAccountCryptoAllowancesAsync(this MirrorRestClient client, EntityId account, CancellationToken cancellationToken, params IMirrorQueryParameter[] filters)
     {
         var path = GenerateInitialPath($"accounts/{account.ToMirrorString()}/allowances/crypto", new PageLimit(100), filters);
-        return client.GetPagedItemsAsync<CryptoAllowanceDataPage, CryptoAllowanceData>(path, MirrorJsonContext.Default.CryptoAllowanceDataPage);
+        return client.GetPagedItemsAsync<CryptoAllowanceDataPage, CryptoAllowanceData>(path, MirrorJsonContext.Default.CryptoAllowanceDataPage, cancellationToken);
+    }
+    /// <inheritdoc cref="GetAccountCryptoAllowancesAsync(MirrorRestClient, EntityId, CancellationToken, IMirrorQueryParameter[])"/>
+    public static IAsyncEnumerable<CryptoAllowanceData> GetAccountCryptoAllowancesAsync(this MirrorRestClient client, EntityId account, params IMirrorQueryParameter[] filters)
+    {
+        return client.GetAccountCryptoAllowancesAsync(account, CancellationToken.None, filters);
     }
 }

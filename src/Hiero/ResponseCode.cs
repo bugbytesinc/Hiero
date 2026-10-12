@@ -7,11 +7,52 @@ namespace Hiero;
 
 /// <summary>
 /// Pre-Check and Receipt Response Codes - 1to1 mapping with protobuf ResponseCodeEnum
-/// except RpcError indicating a fundamental inability to communicate with a Hedera Node
+/// except for the negative values, which are reserved for conditions the SDK itself
+/// reports and the network has no code for (<see cref="RpcError"/> and
+/// <see cref="Unrecognized"/>).
 /// </summary>
 [JsonConverter(typeof(ResponseCodeConverter))]
 public enum ResponseCode
 {
+    /// <summary>
+    /// The JSON payload carried a status this build of the SDK does not know,
+    /// or one that could not be read as a status at all.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This is a deserialization outcome only — the network never returns it.
+    /// It is produced by <see cref="Converters.ResponseCodeConverter"/> when
+    /// reading JSON, in three cases:
+    /// </para>
+    /// <list type="bullet">
+    /// <item><description>
+    /// The value is a valid string, but not one this SDK maps.  This is by far
+    /// the most common cause and it is benign: the Hedera network adds response
+    /// codes over time, so an SDK build inevitably predates some of them.
+    /// Seeing this generally means <b>upgrade the SDK</b>, not that anything
+    /// went wrong.
+    /// </description></item>
+    /// <item><description>
+    /// The value is JSON <c>null</c>.
+    /// </description></item>
+    /// <item><description>
+    /// The value is present but is not a JSON string.
+    /// </description></item>
+    /// </list>
+    /// <para>
+    /// All three degrade to this code rather than throwing, deliberately: these
+    /// values arrive inside larger Mirror Node payloads, and one unreadable
+    /// status should not fail the deserialization of an entire page of results.
+    /// The trade-off is that the original text is not preserved — this code
+    /// records only that a status could not be resolved.
+    /// </para>
+    /// <para>
+    /// Serializing it emits <c>UNRECOGNIZED</c>, which reads back as this same
+    /// value.  <c>UNRECOGNIZED</c> is not a network status and will not be
+    /// accepted by one.
+    /// </para>
+    /// </remarks>
+    [Description("UNRECOGNIZED")] Unrecognized = -2,
     /// <summary>
     /// A RPC Error occurred preventing the transaction from being submitted to the network.
     /// </summary>
@@ -1608,7 +1649,7 @@ public enum ResponseCode
     /// </summary>
     [Description("HOOK_ID_REPEATED_IN_CREATION_DETAILS")] HookIdRepeatedInCreationDetails = 509,
     /// <summary>
-    /// Hooks are not not enabled on the target Hiero network.
+    /// Hooks are not enabled on the target Hiero network.
     /// </summary>
     [Description("HOOKS_NOT_ENABLED")] HooksNotEnabled = 510,
     /// <summary>
@@ -1691,4 +1732,37 @@ public enum ResponseCode
     /// The number of hook invocations exceeds the maximum allowed per transaction.
     /// </summary>
     [Description("TOO_MANY_HOOK_INVOCATIONS")] TooManyHookInvocations = 528,
+    /// <summary>
+    /// A registered node ID is invalid or does not exist.
+    /// </summary>
+    [Description("INVALID_REGISTERED_NODE_ID")] InvalidRegisteredNodeId = 529,
+    /// <summary>
+    /// A registered service endpoint is invalid.
+    /// The port is out of range, or the address field is not set.
+    /// </summary>
+    [Description("INVALID_REGISTERED_ENDPOINT")] InvalidRegisteredEndpoint = 530,
+    /// <summary>
+    /// The number of registered service endpoints exceeds the configured limit.
+    /// </summary>
+    [Description("REGISTERED_ENDPOINTS_EXCEEDED_LIMIT")] RegisteredEndpointsExceededLimit = 531,
+    /// <summary>
+    /// A registered service endpoint has an invalid address.
+    /// The IP address length is not 4 (IPv4) or 16 (IPv6), or the
+    /// domain name is not a valid ASCII FQDN.
+    /// </summary>
+    [Description("INVALID_REGISTERED_ENDPOINT_ADDRESS")] InvalidRegisteredEndpointAddress = 532,
+    /// <summary>
+    /// A registered service endpoint does not specify an endpoint type.
+    /// Exactly one of block_node, mirror_node, or rpc_relay MUST be set.
+    /// </summary>
+    [Description("INVALID_REGISTERED_ENDPOINT_TYPE")] InvalidRegisteredEndpointType = 533,
+    /// <summary>
+    /// A registered node cannot be deleted because it is still associated
+    /// with a consensus node via their associated registered node list.
+    /// </summary>
+    [Description("REGISTERED_NODE_STILL_ASSOCIATED")] RegisteredNodeStillAssociated = 534,
+    /// <summary>
+    /// The number of associated registered nodes exceeds the maximum allowed limit.
+    /// </summary>
+    [Description("MAX_REGISTERED_NODES_EXCEEDED")] MaxRegisteredNodesExceeded = 535,
 }

@@ -13,7 +13,8 @@ namespace Hiero.Mirror;
 public class NetworkFeeData
 {
     /// <summary>
-    /// The basic charge in gas for the paired transaction type.
+    /// The gas price for the paired transaction type, in tinybars per unit
+    /// of gas.
     /// </summary>
     [JsonPropertyName("gas")]
     [JsonConverter(typeof(UnsignedLongMirrorConverter))]
@@ -60,6 +61,9 @@ public static class NetworkFeesExtensions
     /// <param name="consensus">
     /// Timestamp to retrieve the network fee schedule at or before.
     /// </param>
+    /// <param name="cancellationToken">
+    /// Optional token that cancels the request.
+    /// </param>
     /// <returns>
     /// The fee schedule in effect at the requested timestamp, or null
     /// if the mirror node has no snapshot from that era.
@@ -70,10 +74,10 @@ public static class NetworkFeesExtensions
     /// timestamp filter and lets the server return the most recent
     /// snapshot.
     /// </remarks>
-    public static Task<NetworkFeesData?> GetNetworkFeesAsync(this MirrorRestClient client, ConsensusTimeStamp consensus)
+    public static Task<NetworkFeesData?> GetNetworkFeesAsync(this MirrorRestClient client, ConsensusTimeStamp consensus, CancellationToken cancellationToken = default)
     {
         var path = GenerateInitialPath("network/fees", TimestampFilter.OnOrBefore(consensus));
-        return client.GetSingleItemAsync(path, MirrorJsonContext.Default.NetworkFeesData);
+        return client.GetSingleItemAsync(path, MirrorJsonContext.Default.NetworkFeesData, cancellationToken);
     }
     /// <summary>
     /// Retrieves the current network fee schedule via
@@ -83,11 +87,14 @@ public static class NetworkFeesExtensions
     /// <param name="client">
     /// Mirror Rest Client to use for the request.
     /// </param>
+    /// <param name="cancellationToken">
+    /// Optional token that cancels the request.
+    /// </param>
     /// <returns>
     /// The current Network fee data or null if not found.
     /// </returns>
-    public static Task<NetworkFeesData?> GetLatestNetworkFeesAsync(this MirrorRestClient client)
+    public static Task<NetworkFeesData?> GetLatestNetworkFeesAsync(this MirrorRestClient client, CancellationToken cancellationToken = default)
     {
-        return client.GetSingleItemAsync("network/fees", MirrorJsonContext.Default.NetworkFeesData);
+        return client.GetSingleItemAsync("network/fees", MirrorJsonContext.Default.NetworkFeesData, cancellationToken);
     }
 }

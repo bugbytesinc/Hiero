@@ -50,9 +50,9 @@ public static class VersionInfoExtensions
     /// <returns>
     /// Version information regarding the gossip network node.
     /// </returns>
-    /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
+    /// <exception cref="ArgumentException">If required arguments are missing or invalid.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
+    /// <exception cref="PrecheckException">If the gateway node refused the query.</exception>
     public static async Task<VersionInfo> GetVersionInfoAsync(this ConsensusClient client, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
     {
         return new VersionInfo(await Engine.QueryAsync(client, new NetworkGetVersionInfoQuery(), cancellationToken, configure).ConfigureAwait(false));

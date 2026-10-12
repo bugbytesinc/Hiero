@@ -21,10 +21,11 @@ public class CreateAccountByAliasTests
         // with the address is a "child receipt" of the transfer
         // receipt and must be explictly asked for.
         var allReceipts = await client.GetAllReceiptsAsync(receipt.TransactionId);
-        await Assert.That(allReceipts.Count).IsEqualTo(2);
-        await Assert.That(allReceipts[0]).IsEqualTo(receipt);
+        await Assert.That(allReceipts.Parent).IsEqualTo(receipt);
+        await Assert.That(allReceipts.Children.Count).IsEqualTo(1);
+        await Assert.That(allReceipts.Duplicates).IsEmpty();
 
-        var createReceipt = allReceipts[1] as CreateAccountReceipt;
+        var createReceipt = allReceipts.Children[0] as CreateAccountReceipt;
         await Assert.That(createReceipt).IsNotNull();
         await Assert.That(createReceipt!.Address).IsNotNull();
         await Assert.That(createReceipt.Address.RealmNum).IsEqualTo(0L);
@@ -40,7 +41,7 @@ public class CreateAccountByAliasTests
         await Assert.That(createReceiptByTx.Address).IsEqualTo(createReceipt.Address);
         await Assert.That(createReceiptByTx.TransactionId).IsEqualTo(createReceipt.TransactionId);
 
-        await Assert.That(await client.GetAccountBalanceAsync(alias)).IsEqualTo((ulong)initialPayment);
+        await Assert.That(await TestNetwork.GetCryptoBalanceAsync(alias)).IsEqualTo((ulong)initialPayment);
 
         var infoFromAccount = await client.GetAccountInfoAsync(createReceipt.Address);
         await Assert.That(infoFromAccount.Address).IsEqualTo(createReceipt.Address);
@@ -131,10 +132,10 @@ public class CreateAccountByAliasTests
         //await Assert.That(allReceipts[0].TransactionId).IsEqualTo(receipt.Scheduled.TransactionId);
         // BUT NOW YOU NEED TO GET THE RECEIPT FROM THE SCHEDULE SIGN ACCOUNT
         var allReceipts = await client.GetAllReceiptsAsync(signingReceipt.TransactionId);
-        await Assert.That(allReceipts.Count).IsEqualTo(2);
-        await Assert.That(allReceipts[0].TransactionId).IsEqualTo(signingReceipt.TransactionId);
+        await Assert.That(allReceipts.Parent!.TransactionId).IsEqualTo(signingReceipt.TransactionId);
+        await Assert.That(allReceipts.Children.Count).IsEqualTo(1);
 
-        var createReceipt = allReceipts[1] as CreateAccountReceipt;
+        var createReceipt = allReceipts.Children[0] as CreateAccountReceipt;
         await Assert.That(createReceipt).IsNotNull();
         await Assert.That(createReceipt!.Address).IsNotNull();
         await Assert.That(createReceipt.Address.RealmNum).IsEqualTo(0L);
@@ -150,7 +151,7 @@ public class CreateAccountByAliasTests
         await Assert.That(createReceiptByTx.Address).IsEqualTo(createReceipt.Address);
         await Assert.That(createReceiptByTx.TransactionId).IsEqualTo(createReceipt.TransactionId);
 
-        await Assert.That(await client.GetAccountBalanceAsync(alias)).IsEqualTo((ulong)initialPayment);
+        await Assert.That(await TestNetwork.GetCryptoBalanceAsync(alias)).IsEqualTo((ulong)initialPayment);
 
         var infoFromAccount = await client.GetAccountInfoAsync(createReceipt.Address);
         await Assert.That(infoFromAccount.Address).IsEqualTo(createReceipt.Address);
@@ -220,10 +221,10 @@ public class CreateAccountByAliasTests
         // with the address is a "child receipt" of the transfer
         // receipt and must be explictly asked for.
         var allRecords = await client.GetAllTransactionRecordsAsync(receipt.TransactionId);
-        await Assert.That(allRecords.Count).IsEqualTo(2);
-        await Assert.That(allRecords[0].ParentTransactionConsensus).IsNull();
+        await Assert.That(allRecords.Parent!.ParentTransactionConsensus).IsNull();
+        await Assert.That(allRecords.Children.Count).IsEqualTo(1);
 
-        var createRecord = allRecords[1] as CreateAccountRecord;
+        var createRecord = allRecords.Children[0] as CreateAccountRecord;
         await Assert.That(createRecord).IsNotNull();
         await Assert.That(createRecord!.Address).IsNotNull();
         await Assert.That(createRecord.Address.RealmNum).IsEqualTo(0L);
@@ -251,7 +252,7 @@ public class CreateAccountByAliasTests
         await Assert.That(createRecordByTx.ParentTransactionConsensus).IsNull();
         // NETWORK V0.21.0 UNSUPPORTED ^^^^
 
-        await Assert.That(await client.GetAccountBalanceAsync(alias)).IsEqualTo((ulong)initialPayment);
+        await Assert.That(await TestNetwork.GetCryptoBalanceAsync(alias)).IsEqualTo((ulong)initialPayment);
 
         var infoFromAccount = await client.GetAccountInfoAsync(createRecord.Address);
         await Assert.That(infoFromAccount.Address).IsEqualTo(createRecord.Address);
@@ -324,10 +325,10 @@ public class CreateAccountByAliasTests
         // with the address is a "child receipt" of the transfer
         // receipt and must be explictly asked for.
         var allRecords = await client.GetAllTransactionRecordsAsync(receipt.TransactionId);
-        await Assert.That(allRecords.Count).IsEqualTo(2);
-        await Assert.That(allRecords[0].ParentTransactionConsensus).IsNull();
+        await Assert.That(allRecords.Parent!.ParentTransactionConsensus).IsNull();
+        await Assert.That(allRecords.Children.Count).IsEqualTo(1);
 
-        var createRecord = allRecords[1] as CreateAccountRecord;
+        var createRecord = allRecords.Children[0] as CreateAccountRecord;
         await Assert.That(createRecord).IsNotNull();
         await Assert.That(createRecord!.Address).IsNotNull();
         await Assert.That(createRecord.Address.RealmNum).IsEqualTo(0L);
@@ -355,7 +356,7 @@ public class CreateAccountByAliasTests
         await Assert.That(createRecordByTx.ParentTransactionConsensus).IsNull();
         // NETWORK V0.21.0 UNSUPPORTED ^^^^
 
-        await Assert.That(await client.GetAccountBalanceAsync(alias)).IsEqualTo((ulong)initialPayment);
+        await Assert.That(await TestNetwork.GetCryptoBalanceAsync(alias)).IsEqualTo((ulong)initialPayment);
 
         var infoFromAccount = await client.GetAccountInfoAsync(createRecord.Address);
         await Assert.That(infoFromAccount.Address).IsEqualTo(createRecord.Address);

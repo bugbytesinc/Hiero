@@ -439,8 +439,8 @@ public class TransferNftTests
         await Assert.That(receipt.NextExchangeRate).IsNotNull();
         await Assert.That(receipt.TransactionId.Payer).IsEqualTo(TestNetwork.Payer);
 
-        await Assert.That(await client.GetAccountBalanceAsync(fxAccount1)).IsEqualTo(fxAccount1.CreateParams.InitialBalance + (ulong)cryptoAmount);
-        await Assert.That(await client.GetAccountBalanceAsync(fxAccount2)).IsEqualTo(fxAccount2.CreateParams.InitialBalance + (ulong)cryptoAmount);
+        await Assert.That(await TestNetwork.GetCryptoBalanceAsync(fxAccount1)).IsEqualTo(fxAccount1.CreateParams.InitialBalance + (ulong)cryptoAmount);
+        await Assert.That(await TestNetwork.GetCryptoBalanceAsync(fxAccount2)).IsEqualTo(fxAccount2.CreateParams.InitialBalance + (ulong)cryptoAmount);
         await Assert.That(await fxAccount1.GetTokenBalanceAsync(fxNft)).IsEqualTo(1);
         await Assert.That(await fxAccount2.GetTokenBalanceAsync(fxNft)).IsEqualTo(1);
         await Assert.That(await fxNft.TreasuryAccount.GetTokenBalanceAsync(fxNft)).IsEqualTo(fxNft.Metadata.Length - 2);
@@ -499,8 +499,8 @@ public class TransferNftTests
         await Assert.That(xferTo2.Sender).IsEqualTo(fxNft.TreasuryAccount.CreateReceipt!.Address);
         await Assert.That(xferTo2.Nft.SerialNumber).IsEqualTo(2U);
 
-        await Assert.That(await client.GetAccountBalanceAsync(fxAccount1)).IsEqualTo(fxAccount1.CreateParams.InitialBalance + (ulong)cryptoAmount);
-        await Assert.That(await client.GetAccountBalanceAsync(fxAccount2)).IsEqualTo(fxAccount2.CreateParams.InitialBalance + (ulong)cryptoAmount);
+        await Assert.That(await TestNetwork.GetCryptoBalanceAsync(fxAccount1)).IsEqualTo(fxAccount1.CreateParams.InitialBalance + (ulong)cryptoAmount);
+        await Assert.That(await TestNetwork.GetCryptoBalanceAsync(fxAccount2)).IsEqualTo(fxAccount2.CreateParams.InitialBalance + (ulong)cryptoAmount);
         await Assert.That(await fxAccount1.GetTokenBalanceAsync(fxNft)).IsEqualTo(1);
         await Assert.That(await fxAccount2.GetTokenBalanceAsync(fxNft)).IsEqualTo(1);
         await Assert.That(await fxNft.TreasuryAccount.GetTokenBalanceAsync(fxNft)).IsEqualTo(fxNft.Metadata.Length - 2);
@@ -935,20 +935,42 @@ public class TransferNftTests
         await Assert.That(await fxNft.TreasuryAccount.GetTokenBalanceAsync(fxNft)).IsEqualTo(0);
         await Assert.That(await fxNewTreasury.GetTokenBalanceAsync(fxNft)).IsEqualTo(0);
 
-        // Move the treasury to a new account having a token balance
-        await client.UpdateTokenAsync(new UpdateTokenParams
+        // Moving the treasury to an account owning serials of the NFT is
+        // refused from consensus node v0.78, even though the outgoing
+        // treasury is now empty; v0.77 allowed it. (TokenUpdateHandler: the
+        // incoming treasury must own no serials, or a later handoff away
+        // from it could orphan the ones it owns.)
+        var ex = await Assert.That(async () =>
         {
-            Token = fxNft,
-            Treasury = fxTempTreasury,
-            Signatory = new Signatory(fxNft.AdminPrivateKey, fxTempTreasury.PrivateKey)
-        });
+            await client.UpdateTokenAsync(new UpdateTokenParams
+            {
+                Token = fxNft,
+                Treasury = fxTempTreasury,
+                Signatory = new Signatory(fxNft.AdminPrivateKey, fxTempTreasury.PrivateKey)
+            });
+        }).ThrowsException();
+        await Assert.That(ex).IsTypeOf<TransactionException>();
+        var tex = (TransactionException)ex!;
+        await Assert.That(tex.Status).IsEqualTo(ResponseCode.TransactionRequiresZeroTokenBalances);
+        await Assert.That(tex.Receipt.Status).IsEqualTo(ResponseCode.TransactionRequiresZeroTokenBalances);
+        await Assert.That(tex.Message).StartsWith("Update Token failed with status: TransactionRequiresZeroTokenBalances");
 
         await Assert.That(await fxTempTreasury.GetTokenBalanceAsync(fxNft)).IsEqualTo(fxNft.Metadata.Length);
         await Assert.That(await fxNft.TreasuryAccount.GetTokenBalanceAsync(fxNft)).IsEqualTo(0);
         await Assert.That(await fxNewTreasury.GetTokenBalanceAsync(fxNft)).IsEqualTo(0);
 
         var info = await client.GetTokenInfoAsync(fxNft.CreateReceipt!.Token);
-        await Assert.That(info.Treasury).IsEqualTo(fxTempTreasury.CreateReceipt!.Address);
+        await Assert.That(info.Treasury).IsEqualTo(fxNft.TreasuryAccount.CreateReceipt!.Address);
+
+        // Recover: return the serials to the treasury, so the handoff
+        // below carries them with it.
+        await client.TransferAsync(new TransferParams
+        {
+            NftTransfers = [.. serialNumbers.Select(sn => new NftTransfer(new Hiero.Nft(fxNft, sn), fxTempTreasury, fxNft.TreasuryAccount))],
+            Signatory = fxTempTreasury.PrivateKey
+        });
+        await Assert.That(await fxTempTreasury.GetTokenBalanceAsync(fxNft)).IsEqualTo(0);
+        await Assert.That(await fxNft.TreasuryAccount.GetTokenBalanceAsync(fxNft)).IsEqualTo(fxNft.Metadata.Length);
 
         // Move the treasury to a new account having zero token balance
         await client.UpdateTokenAsync(new UpdateTokenParams

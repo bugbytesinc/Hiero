@@ -30,7 +30,10 @@ public class TimeDriftTests
         await using var client = await TestNetwork.CreateClientAsync();
         var startInstant = Epoch.UniqueClockNanos();
         Epoch.AddToClockDrift(-5_000_000_000);
-        var balance = await client.GetAccountBalanceAsync(TestNetwork.Payer, default, ctx => ctx.AdjustForLocalClockDrift = true);
+        // A paid query: its payment transaction carries a valid-start time,
+        // which is what drift adjustment corrects.
+        var info = await client.GetAccountInfoAsync(TestNetwork.Payer, default, ctx => ctx.AdjustForLocalClockDrift = true);
+        await Assert.That(info.Address).IsEqualTo(TestNetwork.Payer);
         var duration = Epoch.UniqueClockNanos() - startInstant;
         await Assert.That(duration).IsBetween(4L, 240_000_000_000L);
     }

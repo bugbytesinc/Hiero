@@ -1,19 +1,21 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<PackageId>Hiero</PackageId>
-		<Version>2.3.0</Version>
+		<Version>3.0.0</Version>
 		<TargetFramework>net10.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<IsAotCompatible>true</IsAotCompatible>
 		<Nullable>enable</Nullable>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<RootNamespace>Hiero</RootNamespace>
+		<!-- HIERO001: the experimental BlockNodeClient surface; internal code consumes it freely -->
+		<NoWarn>$(NoWarn);HIERO001</NoWarn>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<Authors>BugBytes, Inc.</Authors>
 		<Company>BugBytes, Inc.</Company>
 		<Title>Hiero .NET SDK</Title>
-		<Description>Idiomatic .NET SDK for the Hedera network (Hiero). Provides async access to cryptocurrency transfers, fungible and non-fungible tokens (NFTs), Hedera Consensus Service (HCS) messaging, smart contracts, file storage, scheduled transactions, airdrops, and mirror node queries. Built on gRPC with full AOT compatibility.</Description>
+		<Description>Idiomatic .NET SDK for the Hedera network (Hiero). Provides async access to cryptocurrency transfers, fungible and non-fungible tokens (NFTs), Hedera Consensus Service (HCS) messaging, smart contracts, file storage, scheduled transactions, airdrops, and mirror node queries. Adds experimental Block Node support (HIP-1081) for subscribing to, verifying and publishing block streams, with registered-node discovery (HIP-1137). Built on gRPC with full AOT compatibility.</Description>
 		<Copyright>Copyright 2025-2026 BugBytes, Inc. All Rights Reserved.</Copyright>
 		<PackageProjectUrl>https://hashgraph.bugbytes.com/</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/bugbytesinc/Hiero.git</RepositoryUrl>
@@ -21,7 +23,7 @@
 		<EmbedUntrackedSources>true</EmbedUntrackedSources>
 		<IncludeSymbols>true</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
-		<PackageTags>Hiero;Hedera;Hashgraph;HBAR;web3;blockchain;DLT;distributed-ledger;cryptocurrency;smart-contracts;NFT;HCS;consensus;token;airdrop;EVM;dApp;decentralized;protobuf;gRPC;staking;mirror-node;SDK;dotnet</PackageTags>
+		<PackageTags>Hiero;Hedera;Hashgraph;HBAR;web3;blockchain;DLT;distributed-ledger;cryptocurrency;smart-contracts;NFT;HCS;consensus;token;airdrop;EVM;dApp;decentralized;protobuf;gRPC;staking;mirror-node;block-node;block-stream;HIP-1081;SDK;dotnet</PackageTags>
 		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
 		<RepositoryType>GitHub</RepositoryType>
 		<PackageIcon>icon.png</PackageIcon>
@@ -48,6 +50,9 @@
 		</Protobuf>
 		<Protobuf Include="..\..\reference\hedera-mirror\proto\ConsensusService-Mirror.proto" GrpcServices="Client">
 			<Link>Proto\%(RecursiveDir)%(Filename)%(Extension)</Link>
+		</Protobuf>
+		<Protobuf Include="..\..\reference\hiero-block-node\block-node\api\*.proto" GrpcServices="Client" ProtoRoot="..\..\reference\hiero-block-node" AdditionalImportDirs="..\..\reference\hedera-protobufs">
+			<Link>Proto\BlockNode\%(Filename)%(Extension)</Link>
 		</Protobuf>
 	</ItemGroup>
 </Project>

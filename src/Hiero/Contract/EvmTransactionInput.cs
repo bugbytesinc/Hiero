@@ -21,7 +21,9 @@ public sealed class EvmTransactionInput
     public long EvmNonce { get; set; } = 0;
     /// <summary>
     /// The gas price the signing account is willing to pay
-    /// for computational resources to execute the transaction.
+    /// for computational resources to execute the transaction, in weibars
+    /// (one tinybar is 10^10 weibars), as the EVM transaction carries it.
+    /// Unlike <see cref="ValueInTinybars"/>, it is sent unconverted.
     /// </summary>
     public long GasPrice { get; set; } = 0;
     /// <summary>
@@ -64,16 +66,19 @@ public sealed class EvmTransactionInput
     public BigInteger ChainId { get; set; } = BigInteger.Zero;
     /// <summary>
     /// Generates an RLP encoded byte array representing the transaction input
-    /// values, including the signature if the Signatory is provided.
+    /// values, signed by the required Signatory.  The output is always signed.
     /// </summary>
     /// <param name="signatory">
     /// Signatory (Private Key) that will sign the transaction, it must
     /// be a single ECDSA key that corresponds to the EVM address of the account
-    /// paying for the transaction.
+    /// paying for the transaction.  This argument is required.
     /// </param>
     /// <returns>
-    /// An array of bytes representing the transaction in EVM RLP encoding.
+    /// An array of bytes representing the signed transaction in EVM RLP encoding.
     /// </returns>
+    /// <exception cref="ArgumentNullException">If the signatory is null.</exception>
+    /// <exception cref="ArgumentException">If method parameters are provided without a method name.</exception>
+    /// <exception cref="InvalidOperationException">If the signatory is not a single ECDSA Secp256K1 key.</exception>
     public ReadOnlyMemory<byte> RlpEncode(Signatory signatory)
     {
         ReadOnlyMemory<byte> data = ReadOnlyMemory<byte>.Empty;

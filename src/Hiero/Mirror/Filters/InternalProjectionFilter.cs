@@ -4,8 +4,10 @@ namespace Hiero.Mirror.Filters;
 /// Projection toggle on the <c>internal</c> query parameter —
 /// controls whether the mirror node includes child (internal)
 /// transactions alongside top-level results. Implements
-/// <see cref="IMirrorProjection"/>: reshapes each listing's
-/// inclusion rather than narrowing which records are returned.
+/// <see cref="IMirrorProjection"/>, but it does change which
+/// records are returned: rather than narrowing the listing, it
+/// widens it, adding each child result as a separate record
+/// (which also changes page contents and counts).
 /// </summary>
 /// <remarks>
 /// <para>

@@ -6,7 +6,50 @@ namespace Hiero.Test.Integration.Token;
 public class CancelAirdropTokenTests
 {
     [Test]
-    public async Task Can_Schedule_And_Sign_Cancel_Airdrop()
+    public async Task Can_Cancel_Airdrop()
+    {
+        // The receiver has no auto-association slots and is not associated
+        // with the token, so the airdrop is left pending.
+        await using var fxReceiver = await TestAccount.CreateAsync(fx => fx.CreateParams.AutoAssociationLimit = 0);
+        await using var fxToken = await TestToken.CreateAsync(fx => fx.CreateParams.GrantKycEndorsement = null);
+        await using var client = await TestNetwork.CreateClientAsync();
+
+        var token = fxToken.CreateReceipt!.Token;
+        var sender = fxToken.TreasuryAccount.CreateReceipt!.Address;
+        var receiver = fxReceiver.CreateReceipt!.Address;
+        var amount = (long)(fxToken.CreateParams.Circulation / 3);
+        var airdrop = new Airdrop(token, sender, receiver);
+
+        await client.AirdropTokenAsync(token, sender, receiver, amount, ctx =>
+        {
+            ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
+        });
+
+        // Only the sender signs a cancel.
+        var receipt = await client.CancelAirdropAsync(airdrop, ctx =>
+        {
+            ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
+        });
+        await Assert.That(receipt.Status).IsEqualTo(ResponseCode.Success);
+
+        // A pending airdrop is not debited from the sender, and once it is
+        // cancelled the receiver can no longer claim it.
+        await AssertHg.TokenBalanceAsync(fxToken, fxToken.TreasuryAccount, fxToken.CreateParams.Circulation);
+        var ex = await Assert.That(async () =>
+        {
+            await client.ClaimAirdropAsync(airdrop, ctx =>
+            {
+                ctx.Signatory = new Signatory(ctx.Signatory!, fxReceiver.PrivateKey);
+            });
+        }).ThrowsException();
+        var tex = ex as TransactionException;
+        await Assert.That(tex).IsNotNull();
+        await Assert.That(tex!.Status).IsEqualTo(ResponseCode.InvalidPendingAirdropId);
+        await Assert.That(await fxReceiver.GetTokenBalanceAsync(token)).IsNull();
+    }
+
+    [Test]
+    public async Task Can_Not_Schedule_Cancel_Airdrop()
     {
         await using var fxSender = await TestAccount.CreateAsync();
         await using var fxReceiver = await TestAccount.CreateAsync(fx => fx.CreateParams.AutoAssociationLimit = 0);
@@ -32,7 +75,8 @@ public class CancelAirdropTokenTests
             Signatory = fxSender.PrivateKey,
         });
 
-        // Schedule a cancel airdrop WITHOUT the sender signing.
+        // A cancel can't be scheduled: TokenCancelAirdrop is not in the
+        // network's scheduling whitelist.
         var airdrop = new Airdrop(fxToken.CreateReceipt!.Token, fxSender.CreateReceipt!.Address, fxReceiver.CreateReceipt!.Address);
         var ex = await Assert.That(async () =>
         {
@@ -43,6 +87,13 @@ public class CancelAirdropTokenTests
                     Airdrops = [airdrop],
                 },
                 Memo = Generator.Memo(20),
+            }, ctx =>
+            {
+                // Testnet answers BUSY rather than naming the whitelist.
+                // Keep the retry window short so that BUSY surfaces, rather
+                // than the default ~3 minute window outliving the transaction's
+                // validity and ending in TRANSACTION_EXPIRED.
+                ctx.RetryCount = 5;
             });
         }).ThrowsException();
         // SOLO VS TESTNET

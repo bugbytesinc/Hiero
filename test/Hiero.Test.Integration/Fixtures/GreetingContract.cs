@@ -62,8 +62,7 @@ public class GreetingContract : IHasCryptoBalance, IHasTokenBalance, IAsyncDispo
     }
     public async Task<ulong> GetCryptoBalanceAsync()
     {
-        await using var client = await TestNetwork.CreateClientAsync();
-        return await client.GetContractBalanceAsync(ContractReceipt!.Contract);
+        return await TestNetwork.GetCryptoBalanceAsync(ContractReceipt!.Contract);
     }
     public async Task<long?> GetTokenBalanceAsync(EntityId token)
     {

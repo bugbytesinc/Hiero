@@ -426,7 +426,7 @@ public class UpdateTopicTests
     }
 
     [Test]
-    public async Task Can_Schedule_And_Sign_Update_Topic()
+    public async Task Can_Not_Schedule_And_Sign_Update_Topic()
     {
         await using var fxTopic = await TestTopic.CreateAsync();
         await using var client = await TestNetwork.CreateClientAsync();

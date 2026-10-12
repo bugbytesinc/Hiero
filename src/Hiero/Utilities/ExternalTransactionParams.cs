@@ -30,7 +30,10 @@ public sealed class ExternalTransactionParams : TransactionParams<TransactionRec
     /// </summary>
     public Signatory? Signatory { get; set; }
     /// <summary>
-    /// Optional Cancellation token that interrupts the network transaction submission process.
+    /// Optional cancellation token.  Cancelling stops the client waiting;
+    /// it cannot recall a transaction already sent.  Cancelled after the
+    /// send, the outcome is unknown: settle it by its transaction id on a
+    /// mirror node rather than resubmitting it.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
     /// <summary>
@@ -171,7 +174,7 @@ public static class ExternalTransactionParamsExtensions
     /// not return a receipt.  However, it will retry sending the transaction
     /// when it receives a <code>BUSY</code> response from the remote node.
     /// </returns>
-    /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
+    /// <exception cref="ArgumentException">If required arguments are missing or invalid.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
     /// <exception cref="PrecheckException">If transaction submission failed due to network communication errors.
     /// The PrecheckException will not be thrown for PRECHECK error codes returned from the remote gRPC endpoint.
@@ -224,7 +227,7 @@ public static class ExternalTransactionParamsExtensions
     /// not return a receipt.  However, it will retry sending the transaction
     /// when it receives a <code>BUSY</code> response from the remote node.
     /// </returns>
-    /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
+    /// <exception cref="ArgumentException">If required arguments are missing or invalid.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
     /// <exception cref="PrecheckException">If transaction submission failed due to network communication errors.
     /// The PrecheckException will not be thrown for PRECHECK error codes returned from the remote gRPC endpoint.
@@ -278,10 +281,10 @@ public static class ExternalTransactionParamsExtensions
     /// A receipt for the submitted transaction, if successful, 
     /// otherwise an exception is thrown.
     /// </returns>
-    /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
+    /// <exception cref="ArgumentException">If required arguments are missing or invalid.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
-    /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
+    /// <exception cref="PrecheckException">If the gateway node refused the transaction. Only a code about the transaction itself proves it did not execute; any other code leaves the outcome unknown, so settle it by its transaction id on a mirror node rather than resubmitting it (see <see cref="PrecheckException"/>).</exception>
+    /// <exception cref="ConsensusException">If the outcome could not be confirmed: the transaction may have executed, so settle it by its transaction id on a mirror node rather than resubmitting it.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
     /// <example>
     /// <code source="../../../samples/DocSnippets/UtilitiesSnippets.cs" region="ExecuteExternal" language="csharp"/>
@@ -324,10 +327,10 @@ public static class ExternalTransactionParamsExtensions
     /// A receipt for the submitted network transaction, if successful, 
     /// otherwise an exception is thrown.
     /// </returns>
-    /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
+    /// <exception cref="ArgumentException">If required arguments are missing or invalid.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
-    /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
+    /// <exception cref="PrecheckException">If the gateway node refused the transaction. Only a code about the transaction itself proves it did not execute; any other code leaves the outcome unknown, so settle it by its transaction id on a mirror node rather than resubmitting it (see <see cref="PrecheckException"/>).</exception>
+    /// <exception cref="ConsensusException">If the outcome could not be confirmed: the transaction may have executed, so settle it by its transaction id on a mirror node rather than resubmitting it.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
     /// <example>
     /// <code source="../../../samples/DocSnippets/UtilitiesSnippets.cs" region="ExecuteExternalWithParams" language="csharp"/>

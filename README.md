@@ -20,15 +20,18 @@ dotnet add package Hiero
 
 ### Hello World — Query an Account Balance
 
+Balances are read from a mirror node — free, and no account is needed:
+
 ```csharp
-await using var client = new ConsensusClient(ctx =>
+using Hiero;
+using Hiero.Mirror;
+
+var mirror = new MirrorRestClient(new HttpClient
 {
-    ctx.Endpoint = new ConsensusNodeEndpoint(
-        new EntityId(0, 0, 3),
-        new Uri("https://2.testnet.hedera.com:50211"));
+    BaseAddress = new Uri("https://testnet.mirrornode.hedera.com")
 });
 
-var balance = await client.GetAccountBalanceAsync(new EntityId(0, 0, 98));
+var balance = await mirror.GetAccountBalanceAsync(new EntityId(0, 0, 98));
 Console.WriteLine($"Balance: {balance:#,#} tinybars");
 ```
 
@@ -44,11 +47,30 @@ await using var client = new ConsensusClient(ctx =>
     ctx.Signatory = new Signatory(payerPrivateKey);
 });
 
-var receipt = await client.TransferAsync(
-    new EntityId(0, 0, senderAccountId),
-    new EntityId(0, 0, receiverAccountId),
-    amount);
+// Keep the transaction id: if the outcome turns out to be unknown,
+// it is how you find out what happened.
+var txId = client.CreateNewTransactionId();
+try
+{
+    var receipt = await client.TransferAsync(
+        new EntityId(0, 0, senderAccountId),
+        new EntityId(0, 0, receiverAccountId),
+        amount,
+        ctx => ctx.TransactionId = txId);
+}
+catch (TransactionException)
+{
+    // Reached consensus and failed: nothing moved. Its Status says why.
+}
+catch (Exception ex) when (ex is not ArgumentException)
+{
+    // Outcome unknown: it may have executed. Don't resend it and don't
+    // report it as failed; settle txId on a mirror node (see below).
+}
 ```
+
+Before writing code that moves value, read
+[Did it go through?](#did-it-go-through) below.
 
 ### Create a Token
 
@@ -65,6 +87,96 @@ var receipt = await client.CreateTokenAsync(new CreateTokenParams
 });
 Console.WriteLine($"Token ID: {receipt.Token}");
 ```
+
+## Did it go through?
+
+Hedera finalises a transaction seconds after a node accepts it, sometimes
+longer. A client that stops waiting before the transaction's validity ends
+cannot tell "failed" from "still deciding". Treating the second as the first
+sends value twice or refunds a payment that happened. The defaults wait out
+the whole window:
+
+| Setting | Default | Meaning |
+|---------|---------|---------|
+| `TransactionDuration` | 180 s | How long a transaction stays valid: the network's maximum |
+| `RetryCount` | 43 | Retries on BUSY, on transport failures, and while polling for the receipt |
+| `RetryDelay` | 200 ms | The n-th retry waits n × 200 ms, so the client keeps trying for 189 s in all |
+
+If you change them, keep `RetryDelay × RetryCount × (RetryCount + 1) / 2` at
+least `TransactionDuration`. A caller that must answer sooner should wait a
+bounded time and answer "pending", not shorten the window.
+
+The rules for any code that moves value:
+
+1. **Choose the transaction id before submitting and store it**
+   (`client.CreateNewTransactionId()`, passed with `ctx.TransactionId`). It is
+   the idempotency key, the mirror lookup and the expiry clock.
+2. **Only a receipt with `Status == Success` is a known success.**
+3. **`TransactionException`** means it reached consensus and failed: nothing
+   moved. (From a record lookup such as `GetTransactionRecordAsync`, it means
+   the lookup failed, and its `Status` is the lookup's, not the
+   transaction's.)
+4. **`PrecheckException`** is definite only for codes about the transaction
+   itself (`InvalidSignature`, `InsufficientPayerBalance`, `InvalidAccountId`,
+   ...). `Unknown`, `RpcError`, `Busy`, `PlatformTransactionNotCreated`,
+   `PlatformNotActive`, `DuplicateTransaction` and `TransactionExpired` prove
+   nothing. The safest choice for payments is to treat every precheck
+   failure as unknown.
+5. **`ConsensusException`, and any other exception once the transaction may
+   have been sent, means the outcome is unknown.**
+6. **Never resubmit and never report "failed" on an unknown outcome.** A
+   resubmission is a new transaction, so the value could move twice. Report
+   "pending" and settle it on a mirror node:
+
+```csharp
+// Settles a transaction whose outcome is unknown, on a mirror node. Returns
+// Success if it executed; the failure code if it reached consensus and
+// failed; TransactionExpired if it never executed and now never can; or
+// null while it may still execute, so ask again later. validDuration is the
+// TransactionDuration it was sent with (180 seconds by default).
+public static async Task<ResponseCode?> ResolveOutcomeAsync(
+    MirrorRestClient mirror,
+    TransactionId txId,
+    TimeSpan validDuration,
+    CancellationToken cancellationToken = default)
+{
+    // Read the mirror's clock FIRST (never this machine's): the lookup
+    // that follows then sees at least everything the mirror held at
+    // that time, so absence below is judged against it.
+    var mirrorNow = await mirror.GetLatestConsensusTimestampAsync(cancellationToken);
+    // The records of the transaction itself: not its child records
+    // (Nonce > 0), not the execution of a schedule it created, and not the
+    // inner transactions of a batch.
+    var records = (await mirror.GetTransactionGroupAsync(txId, cancellationToken))
+        .Where(t => t.Nonce == 0 && !t.IsScheduled && t.TransactionId == txId)
+        .ToArray();
+    // A resend can leave a DUPLICATE_TRANSACTION record beside the one that
+    // executed, so a success anywhere wins.
+    if (records.Any(t => t.Status == ResponseCode.Success))
+    {
+        return ResponseCode.Success;
+    }
+    var failure = records.FirstOrDefault(t => t.Status != ResponseCode.DuplicateTransaction);
+    if (failure is not null)
+    {
+        return failure.Status;
+    }
+    // Nothing decisive recorded. The transaction can no longer execute
+    // once that clock is past its valid start plus its duration; the
+    // 60-second margin covers mirror replicas that lag one another.
+    var validStart = new ConsensusTimeStamp(txId.ValidStartSeconds, txId.ValidStartNanos);
+    if (mirrorNow - validStart > (decimal)(validDuration + TimeSpan.FromSeconds(60)).TotalSeconds)
+    {
+        return ResponseCode.TransactionExpired;
+    }
+    return null;
+}
+```
+
+Send again, with a new transaction id, only once the mirror says the first did
+not execute. The [error handling guide](https://hashgraph.bugbytes.com/tutorials/errorhandling.html)
+has the full rules, a worked classification of every ending, and how to watch
+the client's traffic with `OnSendingRequest` and `OnResponseReceived`.
 
 ## Architecture
 
@@ -143,15 +255,14 @@ Unit tests (no network required):
 dotnet test --project test/Hiero.Test.Unit/
 ```
 
-Integration tests against a local Solo network (requires Docker with 12GB+ RAM):
+Integration tests need a live network, testnet or a Solo network reached
+through SSH tunnels. See
+[`docs/integration-testing.md`](docs/integration-testing.md) for the
+settings, the Solo setup and how to run a subset:
 
 ```sh
-./solo/up.sh                # Start local Hiero network
-./solo/test.sh              # Run integration tests
-./solo/down.sh              # Tear down when done
+dotnet test --project test/Hiero.Test.Integration/
 ```
-
-See [`solo/`](solo/) for details.
 
 ### Build Documentation
 
@@ -179,7 +290,6 @@ src/
     ├── Converters/        JSON serialization
     └── Implementation/    Internal machinery
 test/                      Unit and integration tests (TUnit)
-solo/                      Local Solo network for testing (Docker only)
 reference/                 Upstream protobuf definitions (do not modify)
 docfx/                     DocFX documentation site
 docs/                      API cookbook and reference

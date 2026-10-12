@@ -78,6 +78,10 @@ public static class NftAllowanceDataExtensions
     /// The owner account whose outgoing NFT allowances are
     /// requested.
     /// </param>
+    /// <param name="cancellationToken">
+    /// Token that cancels the enumeration, including a page request in
+    /// flight. <c>WithCancellation</c> on the result works as well.
+    /// </param>
     /// <param name="filters">
     /// Additional query filters. The endpoint supports
     /// <see cref="AccountFilter"/> (for a specific spender),
@@ -87,11 +91,16 @@ public static class NftAllowanceDataExtensions
     /// <returns>
     /// An async enumerable of NFT-allowance records.
     /// </returns>
-    /// <seealso cref="GetAccountNftAllowancesAsSpenderAsync"/>
-    public static IAsyncEnumerable<NftAllowanceData> GetAccountNftAllowancesAsOwnerAsync(this MirrorRestClient client, EntityId account, params IMirrorQueryParameter[] filters)
+    /// <seealso cref="GetAccountNftAllowancesAsSpenderAsync(MirrorRestClient, EntityId, CancellationToken, IMirrorQueryParameter[])"/>
+    public static IAsyncEnumerable<NftAllowanceData> GetAccountNftAllowancesAsOwnerAsync(this MirrorRestClient client, EntityId account, CancellationToken cancellationToken, params IMirrorQueryParameter[] filters)
     {
         var path = GenerateInitialPath($"accounts/{account.ToMirrorString()}/allowances/nfts", new PageLimit(100), OwnerFlag.AsOwner, filters);
-        return client.GetPagedItemsAsync<NftAllowanceDataPage, NftAllowanceData>(path, MirrorJsonContext.Default.NftAllowanceDataPage);
+        return client.GetPagedItemsAsync<NftAllowanceDataPage, NftAllowanceData>(path, MirrorJsonContext.Default.NftAllowanceDataPage, cancellationToken);
+    }
+    /// <inheritdoc cref="GetAccountNftAllowancesAsOwnerAsync(MirrorRestClient, EntityId, CancellationToken, IMirrorQueryParameter[])"/>
+    public static IAsyncEnumerable<NftAllowanceData> GetAccountNftAllowancesAsOwnerAsync(this MirrorRestClient client, EntityId account, params IMirrorQueryParameter[] filters)
+    {
+        return client.GetAccountNftAllowancesAsOwnerAsync(account, CancellationToken.None, filters);
     }
     /// <summary>
     /// Enumerates NFT allowances <b>granted to</b> this account —
@@ -107,6 +116,10 @@ public static class NftAllowanceDataExtensions
     /// The spender account whose incoming NFT allowances are
     /// requested.
     /// </param>
+    /// <param name="cancellationToken">
+    /// Token that cancels the enumeration, including a page request in
+    /// flight. <c>WithCancellation</c> on the result works as well.
+    /// </param>
     /// <param name="filters">
     /// Additional query filters. The endpoint supports
     /// <see cref="AccountFilter"/> (for a specific owner),
@@ -116,11 +129,16 @@ public static class NftAllowanceDataExtensions
     /// <returns>
     /// An async enumerable of NFT-allowance records.
     /// </returns>
-    /// <seealso cref="GetAccountNftAllowancesAsOwnerAsync"/>
-    public static IAsyncEnumerable<NftAllowanceData> GetAccountNftAllowancesAsSpenderAsync(this MirrorRestClient client, EntityId account, params IMirrorQueryParameter[] filters)
+    /// <seealso cref="GetAccountNftAllowancesAsOwnerAsync(MirrorRestClient, EntityId, CancellationToken, IMirrorQueryParameter[])"/>
+    public static IAsyncEnumerable<NftAllowanceData> GetAccountNftAllowancesAsSpenderAsync(this MirrorRestClient client, EntityId account, CancellationToken cancellationToken, params IMirrorQueryParameter[] filters)
     {
         var path = GenerateInitialPath($"accounts/{account.ToMirrorString()}/allowances/nfts", new PageLimit(100), OwnerFlag.AsSpender, filters);
-        return client.GetPagedItemsAsync<NftAllowanceDataPage, NftAllowanceData>(path, MirrorJsonContext.Default.NftAllowanceDataPage);
+        return client.GetPagedItemsAsync<NftAllowanceDataPage, NftAllowanceData>(path, MirrorJsonContext.Default.NftAllowanceDataPage, cancellationToken);
+    }
+    /// <inheritdoc cref="GetAccountNftAllowancesAsSpenderAsync(MirrorRestClient, EntityId, CancellationToken, IMirrorQueryParameter[])"/>
+    public static IAsyncEnumerable<NftAllowanceData> GetAccountNftAllowancesAsSpenderAsync(this MirrorRestClient client, EntityId account, params IMirrorQueryParameter[] filters)
+    {
+        return client.GetAccountNftAllowancesAsSpenderAsync(account, CancellationToken.None, filters);
     }
 }
 

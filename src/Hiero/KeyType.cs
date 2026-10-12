@@ -34,5 +34,13 @@ public enum KeyType
     /// A list of keys, for endorsements it may represent an n-to-m list, 
     /// for signatories its simply a bag of keys that will sign the transaction.
     /// </summary>
-    List = 5
+    List = 5,
+    /// <summary>
+    /// A delegatable contract key: like <see cref="Contract"/>, it is
+    /// satisfied by the identified contract rather than by a signature,
+    /// but it is also satisfied when that contract's code runs through a
+    /// <c>DELEGATECALL</c>, as behind a proxy.  Tokens whose keys are
+    /// managed by a proxy contract commonly carry it.
+    /// </summary>
+    DelegatableContract = 6
 }

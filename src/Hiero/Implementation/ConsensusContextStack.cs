@@ -46,9 +46,7 @@ namespace Hiero.Implementation
         }
         public ConsensusContextStack CloneAndConfigure(Action<IConsensusContext> configure)
         {
-            var context = new ConsensusContextStack(this);
-            configure.Invoke(context);
-            return context;
+            return Configure(new ConsensusContextStack(this), configure);
         }
         public override void Reset(string name)
         {

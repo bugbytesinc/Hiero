@@ -74,8 +74,10 @@ public sealed class SubmitMessageParams : TransactionParams<SubmitMessageReceipt
     /// </summary>
     public Signatory? Signatory { get; set; }
     /// <summary>
-    /// Optional cancellation token that can interrupt the
-    /// submission process.
+    /// Optional cancellation token.  Cancelling stops the client waiting;
+    /// it cannot recall a transaction already sent.  Cancelled after the
+    /// send, the outcome is unknown: settle it by its transaction id on a
+    /// mirror node rather than resubmitting it.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
 
@@ -164,10 +166,10 @@ public static class SubmitMessageExtensions
     /// A Submit Message Receipt indicating success, includes information
     /// about the sequence number of the message and its running hash.
     /// </returns>
-    /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
+    /// <exception cref="ArgumentException">If required arguments are missing or invalid.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
-    /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
+    /// <exception cref="PrecheckException">If the gateway node refused the transaction. Only a code about the transaction itself proves it did not execute; any other code leaves the outcome unknown, so settle it by its transaction id on a mirror node rather than resubmitting it (see <see cref="PrecheckException"/>).</exception>
+    /// <exception cref="ConsensusException">If the outcome could not be confirmed: the transaction may have executed, so settle it by its transaction id on a mirror node rather than resubmitting it.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
     /// <example>
     /// <code source="../../../samples/ConsensusService/Program.cs" region="SubmitMessage" language="csharp"/>
@@ -198,10 +200,10 @@ public static class SubmitMessageExtensions
     /// A Submit Message Receipt indicating success, includes information
     /// about the sequence number of the message and its running hash.
     /// </returns>
-    /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
+    /// <exception cref="ArgumentException">If required arguments are missing or invalid.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
-    /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
+    /// <exception cref="PrecheckException">If the gateway node refused the transaction. Only a code about the transaction itself proves it did not execute; any other code leaves the outcome unknown, so settle it by its transaction id on a mirror node rather than resubmitting it (see <see cref="PrecheckException"/>).</exception>
+    /// <exception cref="ConsensusException">If the outcome could not be confirmed: the transaction may have executed, so settle it by its transaction id on a mirror node rather than resubmitting it.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
     /// <example>
     /// Submit to a submit-key-gated topic by attaching the key via params:
@@ -236,8 +238,9 @@ public static class SubmitMessageExtensions
             // Generate the TransactionId manually (or extract it because
             // it was set by the caller), since we need it as
             // a part of the chunk payload and can't let things
-            // just work automatically.
-            var initialChunkTransactionId = client.CreateNewTransactionId();
+            // just work automatically.  It must come from the configured
+            // client: that is where a caller-chosen id or payer lives.
+            var initialChunkTransactionId = configuredClient.CreateNewTransactionId();
             // This is smelly too, but we don't want to alter the original
             // submit params since we don't control how it was created or
             // how it might be re-used, so we work with a clone with the

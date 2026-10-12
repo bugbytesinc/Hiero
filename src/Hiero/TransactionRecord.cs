@@ -108,11 +108,6 @@ public static class TransactionRecordExtensions
 {
     internal static readonly ReadOnlyDictionary<EntityId, long> EMPTY_TRANSFERS = new(new Dictionary<EntityId, long>(0));
     /// <summary>
-    /// Empty Result when no records are returned from the network.
-    /// </summary>
-    private static readonly ReadOnlyCollection<TransactionRecord> EMPTY_RESULT = Array.AsReadOnly(Array.Empty<TransactionRecord>());
-
-    /// <summary>
     /// Retrieves the transaction records for a given transaction ID that was
     /// successfully processed, otherwise the first one to reach consensus.
     /// </summary>
@@ -132,14 +127,26 @@ public static class TransactionRecordExtensions
     /// A transaction record with the specified id, or an exception if not found.
     /// </returns>
     /// <remarks>
+    /// <para>
     /// Generally there is only one record per transaction, but in certain cases
     /// where there is a transaction ID collision (deliberate or accidental) there
     /// may be more, the <see cref="GetAllTransactionRecordsAsync"/>
     /// method may be used to retrieve all records.
+    /// </para>
+    /// <para>
+    /// Record types are resolved on a <b>best-effort</b> basis. Four kinds are
+    /// identified by fields the wire format cannot distinguish from unset when
+    /// their value is zero — <see cref="TokenRecord"/>,
+    /// <see cref="NftMintRecord"/>, <see cref="ConsensusNodeRecord"/> and
+    /// <see cref="RegisteredNodeRecord"/> — and resolve to the base
+    /// <see cref="TransactionRecord"/> in that case. Prefer an <c>is</c>
+    /// pattern over a hard cast, which would throw. No data is lost, since the
+    /// fallback occurs only when the value is zero.
+    /// </para>
     /// </remarks>
-    /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
+    /// <exception cref="ArgumentException">If required arguments are missing or invalid.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
+    /// <exception cref="PrecheckException">If the gateway node refused the query.</exception>
     /// <exception cref="TransactionException">If the network has no records of the transaction or request has invalid or had missing data.</exception>
     public static async Task<TransactionRecord> GetTransactionRecordAsync(this ConsensusClient client, TransactionId transaction, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
     {
@@ -153,10 +160,13 @@ public static class TransactionRecordExtensions
         return FromProtobuf(record);
     }
     /// <summary>
-    /// Retrieves all records having the given transaction ID, including duplicates
-    /// that were rejected or produced errors during execution.  Typically there is
-    /// only one record per transaction, but in some cases, deliberate or accidental
-    /// there may be more than one for a given transaction ID.
+    /// Retrieves every record the network holds for the given transaction
+    /// ID, grouped into the submitted transaction's own record, the records
+    /// of any child transactions it spawned, and the records of any
+    /// duplicate submissions of the same transaction ID.  Typically only
+    /// the parent record is present, but a transaction that causes the
+    /// network to act on its behalf — or that was submitted more than once
+    /// — will populate the other groups.
     /// </summary>
     /// <param name="client">
     /// The Consensus Node Client to query.
@@ -174,7 +184,23 @@ public static class TransactionRecordExtensions
     /// A collection of all the transaction records known to the system
     /// at the time of query having the identified transaction id.
     /// </returns>
-    public static async Task<ReadOnlyCollection<TransactionRecord>> GetAllTransactionRecordsAsync(this ConsensusClient client, TransactionId transaction, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
+    /// <remarks>
+    /// <para>
+    /// Record types are resolved on a <b>best-effort</b> basis. Four kinds are
+    /// identified by fields the wire format cannot distinguish from unset when
+    /// their value is zero — <see cref="TokenRecord"/>,
+    /// <see cref="NftMintRecord"/>, <see cref="ConsensusNodeRecord"/> and
+    /// <see cref="RegisteredNodeRecord"/> — and resolve to the base
+    /// <see cref="TransactionRecord"/> in that case. Prefer an <c>is</c>
+    /// pattern over a hard cast, which would throw. No data is lost, since the
+    /// fallback occurs only when the value is zero.
+    /// </para>
+    /// </remarks>
+    /// <exception cref="ArgumentException">If required arguments are missing or invalid.</exception>
+    /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
+    /// <exception cref="PrecheckException">If the gateway node refused the query.</exception>
+    /// <exception cref="TransactionException">If the node refuses the paid lookup with any status other than RECORD_NOT_FOUND, for example when the network changes the query's price mid-request. Its receipt is a stand-in carrying that status, not a verdict on the transaction. A transaction id the node holds no records for does not throw: <see cref="TransactionRecords.Parent"/> is then <code>null</code>.</exception>
+    public static async Task<TransactionRecords> GetAllTransactionRecordsAsync(this ConsensusClient client, TransactionId transaction, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
     {
         await using var context = client.BuildChildContext(configure);
         var transactionId = new TransactionID(transaction);
@@ -211,9 +237,21 @@ public static class TransactionRecordExtensions
     /// <returns>
     /// An array of transaction records associated with the given account.
     /// </returns>
-    /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
+    /// <exception cref="ArgumentException">If required arguments are missing or invalid.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
+    /// <exception cref="PrecheckException">If the gateway node refused the query.</exception>
+    /// <remarks>
+    /// <para>
+    /// Record types are resolved on a <b>best-effort</b> basis. Four kinds are
+    /// identified by fields the wire format cannot distinguish from unset when
+    /// their value is zero — <see cref="TokenRecord"/>,
+    /// <see cref="NftMintRecord"/>, <see cref="ConsensusNodeRecord"/> and
+    /// <see cref="RegisteredNodeRecord"/> — and resolve to the base
+    /// <see cref="TransactionRecord"/> in that case. Prefer an <c>is</c>
+    /// pattern over a hard cast, which would throw. No data is lost, since the
+    /// fallback occurs only when the value is zero.
+    /// </para>
+    /// </remarks>
     public static async Task<TransactionRecord[]> GetAccountRecordsAsync(this ConsensusClient client, EntityId account, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
     {
         var records = (await Engine.QueryAsync(client, new CryptoGetAccountRecordsQuery { AccountID = new AccountID(account) }, cancellationToken, configure).ConfigureAwait(false)).CryptoGetAccountRecords;
@@ -230,49 +268,47 @@ public static class TransactionRecordExtensions
         return [];
     }
     /// <summary>
-    /// Helper Function to create a collection of transaction records from a network query.
+    /// Helper Function to group the transaction records returned by a network query.
     /// </summary>
-    /// <param name="rootRecord">If exists, the parent record</param>
-    /// <param name="childrenRecords">Collection of child transaction records spawned by the root transaction.</param>
-    /// <param name="failedRecords">Collection of failed duplicate transaction records.</param>
-    /// <returns>A read-only collection of all transaction records associated with the transaction.</returns>
-    internal static ReadOnlyCollection<TransactionRecord> Create(Proto.TransactionRecord? rootRecord, RepeatedField<Proto.TransactionRecord>? childrenRecords, RepeatedField<Proto.TransactionRecord>? failedRecords)
+    /// <param name="parentRecord">The submitted transaction's own record, if the network has one.</param>
+    /// <param name="childRecords">Records of the child transactions the network executed as part of the parent.</param>
+    /// <param name="duplicateRecords">Records of additional submissions of the same transaction ID.</param>
+    /// <returns>The records grouped by the role the network reported them in.</returns>
+    internal static TransactionRecords Create(Proto.TransactionRecord? parentRecord, RepeatedField<Proto.TransactionRecord>? childRecords, RepeatedField<Proto.TransactionRecord>? duplicateRecords)
     {
-        var childCount = childrenRecords?.Count ?? 0;
-        var failedCount = failedRecords?.Count ?? 0;
-        var count = (rootRecord != null ? 1 : 0) + childCount + failedCount;
-        if (count > 0)
+        var childCount = childRecords?.Count ?? 0;
+        var duplicateCount = duplicateRecords?.Count ?? 0;
+        var children = Array.Empty<TransactionRecord>();
+        var duplicates = Array.Empty<TransactionRecord>();
+        if (childCount > 0)
         {
-            var result = new TransactionRecord[count];
-            var index = 0;
-            if (rootRecord is not null)
+            // The network DOES NOT return the
+            // child transaction ID, so we have
+            // to synthesize it.
+            children = new TransactionRecord[childCount];
+            for (var i = 0; i < childCount; i++)
             {
-                result[index++] = FromProtobuf(rootRecord);
+                var entry = childRecords![i];
+                var childTransactionId = entry.TransactionID.Clone();
+                childTransactionId.Nonce = i + 1;
+                entry.TransactionID = childTransactionId;
+                children[i] = FromProtobuf(entry);
             }
-            if (childCount > 0)
-            {
-                // The network DOES NOT return the
-                // child transaction ID, so we have
-                // to synthesize it.
-                for (var i = 0; i < childCount; i++)
-                {
-                    var entry = childrenRecords![i];
-                    var childTransactionId = entry.TransactionID.Clone();
-                    childTransactionId.Nonce = i + 1;
-                    entry.TransactionID = childTransactionId;
-                    result[index++] = FromProtobuf(entry);
-                }
-            }
-            if (failedCount > 0)
-            {
-                for (var i = 0; i < failedCount; i++)
-                {
-                    result[index++] = FromProtobuf(failedRecords![i]);
-                }
-            }
-            return new ReadOnlyCollection<TransactionRecord>(result);
         }
-        return EMPTY_RESULT;
+        if (duplicateCount > 0)
+        {
+            duplicates = new TransactionRecord[duplicateCount];
+            for (var i = 0; i < duplicateCount; i++)
+            {
+                duplicates[i] = FromProtobuf(duplicateRecords![i]);
+            }
+        }
+        return new TransactionRecords
+        {
+            Parent = parentRecord is not null ? FromProtobuf(parentRecord) : null,
+            Children = children,
+            Duplicates = duplicates
+        };
     }
 
     internal static ReadOnlyDictionary<EntityId, long> AsStakingRewards(this RepeatedField<AccountAmount> rewards)
@@ -349,6 +385,10 @@ public static class TransactionRecordExtensions
         else if (receipt.NodeId > 0)
         {
             return new ConsensusNodeRecord(record);
+        }
+        else if (receipt.RegisteredNodeId > 0)
+        {
+            return new RegisteredNodeRecord(record);
         }
         else if (record.ContractCreateResult != null)
         {

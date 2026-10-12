@@ -45,7 +45,29 @@ public sealed record AccountInfo
     /// <summary>
     /// [DEPRECATED] Balances of tokens and NFTs associated with this account.
     /// </summary>
-    [Obsolete("This field is deprecated by HIP-367")]
+    /// <remarks>
+    /// <para>
+    /// <b>This list may be silently incomplete.</b> HIP-367 removed the limit on
+    /// how many tokens an account may be associated with, so the network caps
+    /// what it returns here and does not report that it has done so. An account
+    /// with few associations yields a correct list; one with many yields a
+    /// truncated list and no error — which makes the shortfall easy to miss in
+    /// testing and easy to hit in production.
+    /// </para>
+    /// <para>
+    /// For a complete result, query the Mirror Node instead:
+    /// <see cref="Mirror.TokenHoldingDataExtensions.GetAccountTokenHoldingsAsync(MirrorRestClient, EntityId, CancellationToken, Mirror.Filters.IMirrorQueryParameter[])"/>
+    /// pages through every holding, and
+    /// <see cref="Mirror.TokenBalanceDataExtensions.GetAccountTokenBalanceAsync(MirrorRestClient, EntityId, EntityId, CancellationToken, Mirror.Filters.IMirrorQueryParameter[])"/>
+    /// fetches one token's balance directly.
+    /// </para>
+    /// <para>
+    /// This member is retained because the network still populates it and
+    /// turning it off has been deferred repeatedly; removing it would break
+    /// systems that depend on it today.
+    /// </para>
+    /// </remarks>
+    [Obsolete("Deprecated by HIP-367: the network caps this list and does not report truncation, so it may be silently incomplete. Use MirrorRestClient.GetAccountTokenHoldingsAsync for a complete, paged result.")]
     public IReadOnlyList<TokenBalance> Tokens { get; private init; }
     /// <summary>
     /// <code>True</code> if any receipt of funds requires
@@ -75,9 +97,10 @@ public sealed record AccountInfo
     /// </summary>
     public long NftCount { get; private init; }
     /// <summary>
-    /// The maximum number of tokens or NFTs that this account may
-    /// be implicitly associated with (by means of being made a treasury
-    /// or other related actions).
+    /// The maximum number of tokens (fungible or NFT) that this account may
+    /// be automatically associated with, which happens when it receives a
+    /// token it is not yet associated with.  A value of -1 means no limit;
+    /// 0 means every token must be associated explicitly.
     /// </summary>
     public int AutoAssociationLimit { get; private init; }
     /// <summary>
@@ -149,9 +172,9 @@ public static class AccountInfoExtensions
     /// <returns>
     /// A detailed description of the account.
     /// </returns>
-    /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
+    /// <exception cref="ArgumentException">If required arguments are missing or invalid.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
+    /// <exception cref="PrecheckException">If the gateway node refused the query.</exception>
     public static async Task<AccountInfo> GetAccountInfoAsync(this ConsensusClient client, EntityId account, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
     {
         return new AccountInfo(await Engine.QueryAsync(client, new CryptoGetInfoQuery { AccountID = new AccountID(account) }, cancellationToken, configure).ConfigureAwait(false));

@@ -4,9 +4,6 @@ using Hiero.Implementation;
 using System.Diagnostics;
 using System.Net.Security;
 using System.Runtime.CompilerServices;
-using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
 
 [assembly: InternalsVisibleTo("Hiero.Test.Helpers")]
 [assembly: InternalsVisibleTo("Hiero.Test.Unit")]
@@ -23,6 +20,21 @@ namespace Hiero;
 /// shields the client code from directly interacting with the 
 /// underlying protobuf communication layer but does provide hooks 
 /// allowing advanced low-level manipulation of messages if necessary.
+/// <para>
+/// <b>Thread safety.</b> An instance is safe for concurrent use and is
+/// intended to be shared — a singleton registered with dependency injection
+/// is the expected pattern. Each operation builds its own child context, so
+/// concurrent calls share no mutable state, and the underlying gRPC channels
+/// are pooled in a thread-safe cache.
+/// </para>
+/// <para>
+/// <see cref="Configure"/> is the exception. It mutates this instance's own
+/// context in place, which every in-flight operation reads through, and is
+/// meant for setup before the client is used or while it is otherwise idle.
+/// To vary settings on a live client, pass the per-call <c>configure</c>
+/// argument — it applies only to that one call — or take a separately
+/// configured instance with <see cref="Clone"/>.
+/// </para>
 /// </remarks>
 [DebuggerDisplay("{ToString(),nq}")]
 public sealed class ConsensusClient : IAsyncDisposable
@@ -36,6 +48,11 @@ public sealed class ConsensusClient : IAsyncDisposable
     /// for the value, and to its parent until a value has been set.
     /// </summary>
     private readonly ConsensusContextStack _context;
+    /// <summary>
+    /// Set once this client has released its context, so a second
+    /// dispose cannot release the shared parent chain a second time.
+    /// </summary>
+    private int _disposed;
     /// <summary>
     /// Creates a new instance of a Hiero Network ConsensusClient.
     /// </summary>
@@ -71,7 +88,13 @@ public sealed class ConsensusClient : IAsyncDisposable
     /// <param name="channelFactory">
     /// A custom callback method returning a new channel given the target ConsensusNodeEndpoint.
     /// Note, this method is only called once for each unique ConsensusNodeEndpoint requested by 
-    /// the ConsensusClient (which is a function of the current context's ConsensusNodeEndpoint parameter)
+    /// the ConsensusClient (which is a function of the current context's ConsensusNodeEndpoint parameter).
+    /// The factory replaces the default one entirely, including its TLS certificate pinning:
+    /// consensus nodes' <c>https</c> endpoints present self-signed certificates that standard
+    /// validation rejects, so for an endpoint carrying a
+    /// <see cref="ConsensusNodeEndpoint.CertificateHash"/> the factory's
+    /// <c>RemoteCertificateValidationCallback</c> should call
+    /// <see cref="ConsensusNodeEndpoint.MatchesCertificate"/> instead.
     /// </param>
     /// <param name="configure">
     /// Optional configuration method that can set the location of the network node 
@@ -88,8 +111,12 @@ public sealed class ConsensusClient : IAsyncDisposable
         _context = new ConsensusContextStack(channelFactory)
         {
             FeeLimit = 30_00_000_000,
-            TransactionDuration = TimeSpan.FromSeconds(120),
-            RetryCount = 5,
+            // The network's maximum validity, waited out in full: 43
+            // retries at a linearly growing 200 ms step span 189 s, so a
+            // receipt still pending is followed until the transaction can
+            // no longer execute (see IConsensusContext.RetryCount).
+            TransactionDuration = TimeSpan.FromSeconds(180),
+            RetryCount = 43,
             RetryDelay = TimeSpan.FromMilliseconds(200),
             QueryTip = 0,
             SignaturePrefixTrimLimit = 0,
@@ -122,6 +149,15 @@ public sealed class ConsensusClient : IAsyncDisposable
     /// the configuration details of this client instance.  Values can be retrieved 
     /// and set within the context of the method invocation.
     /// </param>
+    /// <remarks>
+    /// Mutates this client's own context in place. Every operation already in
+    /// flight reads its inherited settings through that context, so calling
+    /// this concurrently with active work can let a call observe a partially
+    /// applied configuration. Configure before use, or while the client is
+    /// idle. For a live client, prefer the per-call <c>configure</c> argument
+    /// (scoped to that call alone) or <see cref="Clone"/> for a separately
+    /// configured instance.
+    /// </remarks>
     public void Configure(Action<IConsensusContext> configure)
     {
         if (configure == null)
@@ -155,20 +191,35 @@ public sealed class ConsensusClient : IAsyncDisposable
     /// input scenarios.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// This method will wait for the target consensus node to respond with 
     /// a code other than <see cref="ResponseCode.Busy"/> or 
     /// <see cref="ResponseCode.InvalidTransactionStart"/> if applicable, 
     /// until such time as the retry count is exhausted, in which case it 
     /// is possible to receive a <see cref="ResponseCode.Busy"/> response.
+    /// </para>
+    /// <para>
+    /// The code returned is the node's answer to the submission, not the
+    /// transaction's outcome.  <see cref="ResponseCode.Ok"/> means only that
+    /// the node accepted it and the network has yet to decide, and a final
+    /// <see cref="ResponseCode.Busy"/> leaves the outcome unknown, since an
+    /// earlier attempt in the call may have been accepted.  This method does
+    /// not return the transaction id, so choose one first with
+    /// <see cref="UtilityExtensions.CreateNewTransactionId"/>, set it as
+    /// <see cref="IConsensusContext.TransactionId"/>, and keep it: it is the
+    /// only way to learn the outcome, from a receipt or a mirror node.
+    /// </para>
     /// </remarks>
     /// <typeparam name="T">
-    /// The type of <see cref="TransactionReceipt"/> returned by the request.
+    /// The type of <see cref="TransactionReceipt"/> tied to the transaction
+    /// parameters.  This method produces no receipt; it returns only the
+    /// precheck code.
     /// </typeparam>
     /// <param name="transactionParams">
     /// Transaction input parameters.
     /// </param>
     /// <param name="configure">
-    /// Optional callback to configure the calling context immediately 
+    /// Optional callback to configure the calling context immediately
     /// before assembling the transaction for submission.
     /// </param>
     /// <returns>
@@ -201,16 +252,14 @@ public sealed class ConsensusClient : IAsyncDisposable
     /// <returns>
     /// A receipt object.
     /// </returns>
-    /// <exception cref="PrecheckException">
-    /// If there was a problem submitting the request, including the consensus node
-    /// considering the request invalid.
-    /// </exception>
+    /// <exception cref="PrecheckException">If the gateway node refused the transaction. Only a code about the transaction itself proves it did not execute; any other code leaves the outcome unknown, so settle it by its transaction id on a mirror node rather than resubmitting it (see <see cref="PrecheckException"/>).</exception>
     /// <exception cref="TransactionException">
     /// If the consensus node returned a failure code and throw on failure is set to
     /// <code>true</code> in the client context configuration.
     /// </exception>
     /// <exception cref="ConsensusException">
-    /// Under heavy load, the network may not process the transaction before it expires.
+    /// If the outcome could not be confirmed: the transaction may have executed, so settle it
+    /// by its transaction id on a mirror node rather than resubmitting it.
     /// </exception>
     public async Task<T> ExecuteAsync<T>(TransactionParams<T> transactionParams, Action<IConsensusContext>? configure = null) where T : TransactionReceipt
     {
@@ -237,6 +286,10 @@ public sealed class ConsensusClient : IAsyncDisposable
     /// </returns>
     public ValueTask DisposeAsync()
     {
+        if (Interlocked.Exchange(ref _disposed, 1) != 0)
+        {
+            return ValueTask.CompletedTask;
+        }
         return _context.DisposeAsync();
     }
     /// <summary>
@@ -276,35 +329,25 @@ public sealed class ConsensusClient : IAsyncDisposable
     {
         if (endpoint.Uri.Scheme == Uri.UriSchemeHttps && !endpoint.CertificateHash.IsEmpty)
         {
-            var expectedHash = endpoint.CertificateHash;
             var options = new GrpcChannelOptions
             {
                 HttpHandler = new SocketsHttpHandler
                 {
                     SslOptions = new SslClientAuthenticationOptions
                     {
-                        RemoteCertificateValidationCallback = (_, cert, _, _) =>
-                            cert is not null && CryptographicOperations.FixedTimeEquals(ComputeCertHash(cert), expectedHash.Span),
+                        RemoteCertificateValidationCallback = (_, cert, _, _) => endpoint.MatchesCertificate(cert),
                     },
                 },
+                // The channel must dispose the handler it was given:
+                // without this, a disposed client leaves the handler's
+                // connection pool holding a live connection to the
+                // consensus node until garbage collection, so
+                // applications that create and dispose clients
+                // repeatedly accumulate live connections.
+                DisposeHttpClient = true
             };
             return GrpcChannel.ForAddress(endpoint.Uri, options);
         }
         return GrpcChannel.ForAddress(endpoint.Uri);
-    }
-    /// <summary>
-    /// Computes the address-book certificate hash for a presented TLS certificate:
-    /// the SHA-384 of the certificate's standard PEM text including exactly one
-    /// trailing newline after the <c>-----END CERTIFICATE-----</c> line.
-    /// <see cref="System.Security.Cryptography.X509Certificates.X509Certificate2.ExportCertificatePem"/>
-    /// emits that PEM text without a trailing newline, so one is appended before
-    /// hashing to match the value the network publishes as <c>node_cert_hash</c>.
-    /// </summary>
-    /// <param name="cert">The certificate presented during the TLS handshake.</param>
-    /// <returns>The 48-byte SHA-384 hash to compare against the expected value.</returns>
-    internal static byte[] ComputeCertHash(X509Certificate cert)
-    {
-        using var cert2 = cert as X509Certificate2 ?? X509CertificateLoader.LoadCertificate(cert.GetRawCertData());
-        return SHA384.HashData(Encoding.ASCII.GetBytes(cert2.ExportCertificatePem() + "\n"));
     }
 }

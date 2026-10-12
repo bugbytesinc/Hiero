@@ -21,8 +21,9 @@ public sealed record CryptoAllowance
     /// </summary>
     public EntityId Spender { get; private init; }
     /// <summary>
-    /// The specific amount of hBars that the 
-    /// spender may spend from the owner's account.
+    /// The amount, in tinybars, that the spender may spend from the
+    /// owner's account.  Setting an allowance replaces any earlier one for
+    /// the same owner and spender; zero revokes it.
     /// </summary>
     public long Amount { get; private init; }
     /// <summary>
@@ -39,8 +40,9 @@ public sealed record CryptoAllowance
     /// allowance of hBars
     /// </param>
     /// <param name="amount">
-    /// The specific amount of hBars that the 
-    /// spender may spend from the owner's account.
+    /// The amount, in tinybars, that the spender may spend from the
+    /// owner's account.  Setting an allowance replaces any earlier one for
+    /// the same owner and spender; zero revokes it.
     /// </param>
     /// <exception cref="ArgumentException">
     /// If any of the addresses are null or empty.

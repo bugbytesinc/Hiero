@@ -22,6 +22,8 @@
   href: ./airdrop/toc.yml
 - name: Mirror Node Queries
   href: ./mirror/toc.yml
+- name: Block Node Streaming (Experimental)
+  href: ./blocknode/toc.yml
 - name: Key Management
   href: ./security/keymanagement.md
 - name: Dependency Injection

@@ -1,4 +1,6 @@
 ﻿// SPDX-License-Identifier: Apache-2.0
+using Hiero.Implementation;
+
 namespace Hiero;
 /// <summary>
 /// Represents a single transaction within a batch, identifying
@@ -29,4 +31,12 @@ public sealed class BatchedTransactionMetadata : TransactionParams<TransactionRe
     /// Optional memo to attach to the transaction memo field.
     /// </summary>
     public string Memo { get; set; } = default!;
+    /// <summary>
+    /// Metadata describes a transaction inside a batch and cannot be sent
+    /// on its own; say so plainly rather than fail with an invalid cast.
+    /// </summary>
+    internal override INetworkParams<TransactionReceipt> GetNetworkParams()
+    {
+        throw new ArgumentException("A BatchedTransactionMetadata describes one transaction within a batch and cannot be submitted on its own; add it to BatchedTransactionParams.TransactionParams and submit the batch.");
+    }
 }

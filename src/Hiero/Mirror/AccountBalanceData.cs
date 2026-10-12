@@ -26,6 +26,13 @@ public class AccountBalanceData
     [JsonPropertyName("balance")]
     [JsonConverter(typeof(LongMirrorConverter))]
     public long Balance { get; set; }
+    /// <summary>
+    /// The number of decimal places the token divides into, the scale
+    /// of <see cref="Balance"/>.
+    /// </summary>
+    [JsonPropertyName("decimals")]
+    [JsonConverter(typeof(IntMirrorConverter))]
+    public int Decimals { get; set; }
 }
 /// <summary>
 /// Extension methods for querying account balance data from the mirror node.
@@ -49,7 +56,7 @@ public static class AccountBalanceDataExtensions
     /// </para>
     /// <para>
     /// If you need a live per-account token balance, call
-    /// <see cref="TokenBalanceDataExtensions.GetAccountTokenBalanceAsync"/>
+    /// <see cref="TokenBalanceDataExtensions.GetAccountTokenBalanceAsync(MirrorRestClient, EntityId, EntityId, CancellationToken, IMirrorQueryParameter[])"/>
     /// instead — that method hits the fresher
     /// <c>/api/v1/accounts/{id}/tokens</c> surface.
     /// </para>
@@ -64,6 +71,10 @@ public static class AccountBalanceDataExtensions
     /// The consensus timestamp defining the snapshot instant. Translated
     /// internally to the <c>timestamp=lte:{asOf}</c> query parameter.
     /// </param>
+    /// <param name="cancellationToken">
+    /// Token that cancels the enumeration, including a page request in
+    /// flight. <c>WithCancellation</c> on the result works as well.
+    /// </param>
     /// <param name="filters">
     /// Additional query parameters (paging, account/key predicates) to
     /// refine the request. Do not pass another <c>timestamp</c> filter —
@@ -74,9 +85,14 @@ public static class AccountBalanceDataExtensions
     /// including possibly zero balance values indicating a token
     /// association without a balance.
     /// </returns>
-    public static IAsyncEnumerable<AccountBalanceData> GetTokenHoldersSnapshotAsync(this MirrorRestClient client, EntityId token, ConsensusTimeStamp asOf, params IMirrorQueryParameter[] filters)
+    public static IAsyncEnumerable<AccountBalanceData> GetTokenHoldersSnapshotAsync(this MirrorRestClient client, EntityId token, ConsensusTimeStamp asOf, CancellationToken cancellationToken, params IMirrorQueryParameter[] filters)
     {
         var path = GenerateInitialPath($"tokens/{token.ToMirrorString()}/balances", new PageLimit(100), TimestampFilter.OnOrBefore(asOf), filters);
-        return client.GetPagedItemsAsync<AccountBalanceDataPage, AccountBalanceData>(path, MirrorJsonContext.Default.AccountBalanceDataPage);
+        return client.GetPagedItemsAsync<AccountBalanceDataPage, AccountBalanceData>(path, MirrorJsonContext.Default.AccountBalanceDataPage, cancellationToken);
+    }
+    /// <inheritdoc cref="GetTokenHoldersSnapshotAsync(MirrorRestClient, EntityId, ConsensusTimeStamp, CancellationToken, IMirrorQueryParameter[])"/>
+    public static IAsyncEnumerable<AccountBalanceData> GetTokenHoldersSnapshotAsync(this MirrorRestClient client, EntityId token, ConsensusTimeStamp asOf, params IMirrorQueryParameter[] filters)
+    {
+        return client.GetTokenHoldersSnapshotAsync(token, asOf, CancellationToken.None, filters);
     }
 }

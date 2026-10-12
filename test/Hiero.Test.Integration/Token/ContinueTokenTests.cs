@@ -361,7 +361,7 @@ public class ContinueTokenTests
     //}
 
     [Test]
-    public async Task Can_Schedule_And_Sign_Continue_Token()
+    public async Task Can_Not_Schedule_And_Sign_Continue_Token()
     {
         await using var fxToken = await TestToken.CreateAsync(fx =>
         {

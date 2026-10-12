@@ -35,12 +35,12 @@ public sealed class TransactionIdStructuredConverter : JsonConverter<Transaction
                 else if (reader.ValueTextEquals("nonce"u8))
                 {
                     reader.Read();
-                    nonce = reader.GetInt32();
+                    nonce = reader.TokenType == JsonTokenType.Null ? null : reader.GetInt32();
                 }
                 else if (reader.ValueTextEquals("scheduled"u8))
                 {
                     reader.Read();
-                    scheduled = reader.GetBoolean();
+                    scheduled = reader.TokenType == JsonTokenType.Null ? null : reader.GetBoolean();
                 }
                 else if (reader.ValueTextEquals("transaction_valid_start"u8))
                 {
@@ -54,8 +54,9 @@ public sealed class TransactionIdStructuredConverter : JsonConverter<Transaction
                 }
             }
         }
-        if (accountId is null || validStart is null)
+        if (accountId is null || validStart is null || validStart == ConsensusTimeStamp.MinValue)
         {
+            // A missing, null or unreadable valid start reads as MinValue.
             throw new JsonException("Invalid Transaction Id");
         }
         var seconds = (long)validStart.Value.Seconds;

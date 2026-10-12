@@ -167,19 +167,47 @@ internal static class MirrorRestClientUtils
         return (mirrorTxId, []);
     }
     /// <summary>
+    /// Formats a transaction id for a contract-result route, which accepts
+    /// only some of the query parameters that select a transaction variant.
+    /// A variant the route cannot select is rejected rather than dropped,
+    /// since dropping it would quietly return another transaction's data.
+    /// </summary>
+    /// <param name="txId">transaction id</param>
+    /// <param name="nonceSupported">Whether the route accepts <c>nonce</c>.</param>
+    /// <param name="paramName">The caller's parameter name, for the exception.</param>
+    /// <exception cref="ArgumentException">
+    /// If the id is scheduled, or carries a child nonce the route cannot accept.
+    /// </exception>
+    internal static (string, IMirrorFilter[]) MirrorFormatForContractResult(TransactionId txId, bool nonceSupported, string paramName)
+    {
+        ArgumentNullException.ThrowIfNull(txId, paramName);
+        if (txId.Scheduled)
+        {
+            throw new ArgumentException("This mirror node route cannot select a scheduled transaction; look up the executed transaction with GetTransactionGroupAsync instead.", paramName);
+        }
+        if (txId.ChildNonce != 0 && !nonceSupported)
+        {
+            throw new ArgumentException("This mirror node route cannot select a child transaction by nonce; pass the parent transaction id.", paramName);
+        }
+        return MirrorFormat(txId);
+    }
+    /// <summary>
     /// Helper method that extracts extra error information returned from
     /// the mirror node and attempts to sort out the reason for the failure.
     /// </summary>
     /// <param name="response">
     /// A failed HTTP Response.
     /// </param>
+    /// <param name="cancellationToken">
+    /// Token that cancels reading the response body.
+    /// </param>
     /// <exception cref="MirrorException">
     /// Throws a mirror call exception with extracted details regarding the error.
     /// </exception>
     [StackTraceHidden]
-    internal static async Task<Exception> CreateMirrorExceptionAsync(HttpResponseMessage response)
+    internal static async Task<Exception> CreateMirrorExceptionAsync(HttpResponseMessage response, CancellationToken cancellationToken)
     {
-        var reason = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+        var reason = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
         MirrorError[]? messages = null;
         try
         {

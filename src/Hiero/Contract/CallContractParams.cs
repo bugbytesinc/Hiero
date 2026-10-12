@@ -30,7 +30,11 @@ public sealed class CallContractParams : TransactionParams<TransactionReceipt>, 
     /// </summary>
     public long PayableAmount { get; set; } = 0;
     /// <summary>
-    /// Name of the contract function to call.
+    /// Name of the contract function to call.  Leave it empty (or
+    /// <code>null</code>), with no <see cref="MethodArgs"/>, to call the
+    /// contract with no call data: that runs its <c>receive</c> function, or
+    /// its <c>fallback</c> if it has none, as when sending it hbar with
+    /// <see cref="PayableAmount"/>.
     /// </summary>
     public string MethodName { get; set; } = default!;
     /// <summary>
@@ -51,8 +55,10 @@ public sealed class CallContractParams : TransactionParams<TransactionReceipt>, 
     /// </remarks>
     public Signatory? Signatory { get; set; }
     /// <summary>
-    /// Optional Cancellation token that can interrupt the contract
-    /// call.
+    /// Optional cancellation token.  Cancelling stops the client waiting;
+    /// it cannot recall a transaction already sent.  Cancelled after the
+    /// send, the outcome is unknown: settle it by its transaction id on a
+    /// mirror node rather than resubmitting it.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
     INetworkTransaction INetworkParams<TransactionReceipt>.CreateNetworkTransaction()
@@ -79,9 +85,13 @@ public static class CallContractExtensions
 {
     /// <summary>
     /// Calls a smart contract returning a receipt indicating success.  
-    /// This call does not return the data emitted from the contract, to
-    /// obtain that data, use a mirror node to fetch the results by transaction
-    /// id or retrieve the transaction record from the mirror node
+    /// This call does not return the data emitted from the contract.  To
+    /// obtain that data, fetch the contract result from a mirror node by
+    /// transaction id
+    /// (<see cref="Mirror.ContractResultDataExtensions.GetContractResultByTransactionIdAsync(MirrorRestClient, TransactionId, CancellationToken, Mirror.Filters.IMirrorProjection[])"/>),
+    /// or, within about three minutes of consensus, retrieve the record from
+    /// a consensus node with
+    /// <see cref="TransactionRecordExtensions.GetTransactionRecordAsync"/>
     /// and cast the result to a <see cref="CallContractRecord"/>.
     /// </summary>
     /// <param name="client">
@@ -100,11 +110,11 @@ public static class CallContractExtensions
     /// A contract transaction receipt indicating success, it does not
     /// include any output parameters returned from the contract.
     /// </returns>
-    /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
+    /// <exception cref="ArgumentException">If required arguments are missing or invalid.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
-    /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
-    /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    /// <exception cref="PrecheckException">If the gateway node refused the transaction. Only a code about the transaction itself proves it did not execute; any other code leaves the outcome unknown, so settle it by its transaction id on a mirror node rather than resubmitting it (see <see cref="PrecheckException"/>).</exception>
+    /// <exception cref="ConsensusException">If the outcome could not be confirmed: the transaction may have executed, so settle it by its transaction id on a mirror node rather than resubmitting it.</exception>
+    /// <exception cref="TransactionException">If the contract call reached consensus and failed, for example with <see cref="ResponseCode.ContractRevertExecuted"/> or <see cref="ResponseCode.InsufficientGas"/>.</exception>
     /// <example>
     /// Call a payable method — <c>PayableAmount</c> in tinybars is debited
     /// from the Payer and credited to the contract's crypto account:

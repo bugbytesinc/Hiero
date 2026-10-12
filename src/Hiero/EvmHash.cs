@@ -11,11 +11,14 @@ namespace Hiero;
 /// hash or block hash returned by the Mirror Node REST API.
 /// </summary>
 /// <remarks>
-/// This is a value-type wrapper that distinguishes an EVM-style
+/// This is an immutable reference type with value equality (it can be
+/// <c>null</c>) that distinguishes an EVM-style
 /// 32-byte hash from arbitrary <c>ReadOnlyMemory&lt;byte&gt;</c> payloads
-/// at the type level. Use it for transaction hashes, block hashes,
-/// and log topic values where the wire representation is a
-/// 32-byte keccak output. Hedera-native hashes (e.g., SHA-384
+/// at the type level. Use it for transaction hashes and block hashes,
+/// where the wire representation is a 32-byte keccak output. Log
+/// topics are not represented with this type: indexed topics are
+/// arbitrary 32-byte words that can be all zeros, which would collide
+/// with <see cref="None"/>. Hedera-native hashes (e.g., SHA-384
 /// record-file hashes) are not 32 bytes and should not be represented
 /// with this type.
 /// </remarks>

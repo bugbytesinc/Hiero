@@ -101,8 +101,9 @@ public static class ExternalExtensions
     /// </param>
     /// <param name="configure">
     /// Optional callback method providing an opportunity to modify 
-    /// the execution configuration for just this method call. 
-    /// It is executed prior to submitting the request to the network.
+    /// the execution configuration for just this method call.
+    /// It is executed before the transaction is built and signed; this
+    /// method does not submit anything to the network.
     /// </param>
     /// <returns>
     /// Binary serialized encoding of a SignedTransaction Protobuf primitive
@@ -114,8 +115,8 @@ public static class ExternalExtensions
         {
             await using var configuredClient = client.Clone(configure);
             var batchParams = new BatchedTransactionParams { TransactionParams = [batchMetadata] };
-            var outerNetworkParams = (await BatchedParamsOrchestrator.CreateAsync(batchParams, configuredClient).ConfigureAwait(false)) as INetworkParams<TransactionReceipt>;
-            var atomicBatch = (AtomicBatchTransactionBody)outerNetworkParams!.CreateNetworkTransaction();
+            using var orchestrator = await BatchedParamsOrchestrator.CreateAsync(batchParams, configuredClient).ConfigureAwait(false);
+            var atomicBatch = (AtomicBatchTransactionBody)((INetworkParams<TransactionReceipt>)orchestrator).CreateNetworkTransaction();
             return atomicBatch.Transactions[0].Memory;
         }
         await using var context = client.BuildChildContext(configure);

@@ -107,6 +107,20 @@ public class TransferParamsTests
         await Assert.That(body.TokenTransfers[0].NftTransfers.Count).IsEqualTo(1);
     }
 
+    [Test]
+    public async Task Invalid_Input_Names_The_Parameter_And_Says_What_Is_Wrong()
+    {
+        var empty = await Assert.ThrowsAsync<ArgumentException>(async () => await Task.Run(() => CreateBody(new TransferParams())));
+        await Assert.That(empty!.ParamName).IsEqualTo("TransferParams");
+        await Assert.That(empty.Message).StartsWith("Both crypto, token and NFT transfer lists are null or empty.");
+        var noAccount = await Assert.ThrowsAsync<ArgumentException>(async () => await Task.Run(() => CreateBody(new TransferParams
+        {
+            TokenTransfers = [new TokenTransfer(new EntityId(0, 0, 2001), EntityId.None, 10)]
+        })));
+        await Assert.That(noAccount!.ParamName).IsEqualTo("Account");
+        await Assert.That(noAccount.Message).StartsWith("The list of token transfers cannot contain a null or empty account value.");
+    }
+
     private static CryptoTransferTransactionBody CreateBody(INetworkParams<TransactionReceipt> parameters)
     {
         return (CryptoTransferTransactionBody)parameters.CreateNetworkTransaction();

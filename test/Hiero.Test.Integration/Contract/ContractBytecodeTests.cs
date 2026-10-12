@@ -64,13 +64,18 @@ public class ContractBytecodeTests
     }
 
     [Test]
-    public async Task Retrieving_Non_Existent_Contract_Bytecode_From_Account_ID_Returns_Default_Bytecode()
+    public async Task Retrieving_Non_Existent_Contract_Bytecode_From_Account_ID_Returns_Empty_Bytecode()
     {
+        // Consensus node v0.77 returns no bytecode for an account that is not a
+        // contract (unless it carries an EIP-7702 code delegation, which yields
+        // the delegation indicator). Earlier versions returned the HIP-906
+        // account proxy (redirect) bytecode. Tokens and schedules still return
+        // their facade bytecode.
         await using var fx = await TestAccount.CreateAsync();
         await using var client = await TestNetwork.CreateClientAsync();
 
         var grpcBytecode = await client.GetContractBytecodeAsync(fx.CreateReceipt!.Address);
-        await Assert.That(grpcBytecode.IsEmpty).IsFalse();
+        await Assert.That(grpcBytecode.IsEmpty).IsTrue();
 
         var mirror = await TestNetwork.GetMirrorRestClientAsync();
         await Assert.That(await mirror.GetContractAsync(fx.CreateReceipt!.Address)).IsNull();
@@ -93,11 +98,13 @@ public class ContractBytecodeTests
     }
 
     [Test]
-    public async Task Payer_Account_Has_Bytecode()
+    public async Task Payer_Account_Has_No_Bytecode()
     {
+        // See Retrieving_Non_Existent_Contract_Bytecode_From_Account_ID_Returns_Empty_Bytecode:
+        // since consensus node v0.77 a plain account has no bytecode.
         await using var client = await TestNetwork.CreateClientAsync();
         var grpcBytecode = await client.GetContractBytecodeAsync(TestNetwork.Payer);
-        await Assert.That(grpcBytecode.IsEmpty).IsFalse();
+        await Assert.That(grpcBytecode.IsEmpty).IsTrue();
 
         var mirror = await TestNetwork.GetMirrorRestClientAsync();
         await Assert.That(await mirror.GetContractAsync(TestNetwork.Payer)).IsNull();

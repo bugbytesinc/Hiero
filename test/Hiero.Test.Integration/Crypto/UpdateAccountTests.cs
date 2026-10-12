@@ -338,7 +338,7 @@ public class UpdateAccountTests
         var receipt = await client.TransferAsync(createResult.Address, TestNetwork.Payer, 5, ctx => ctx.Signatory = new Signatory(ctx.Signatory!, originalPrivateKey));
         await Assert.That(receipt.Status).IsEqualTo(ResponseCode.Success);
 
-        var newBalance = await client.GetAccountBalanceAsync(createResult.Address);
+        var newBalance = await TestNetwork.GetCryptoBalanceAsync(createResult.Address);
         await Assert.That(newBalance).IsEqualTo(5ul);
     }
 
@@ -372,7 +372,7 @@ public class UpdateAccountTests
         var receipt = await client.TransferAsync(createResult.Address, TestNetwork.Payer, 5, ctx => ctx.Signatory = new Signatory(ctx.Signatory!, originalPrivateKey));
         await Assert.That(receipt.Status).IsEqualTo(ResponseCode.Success);
 
-        var newBalance = await client.GetAccountBalanceAsync(createResult.Address);
+        var newBalance = await TestNetwork.GetCryptoBalanceAsync(createResult.Address);
         await Assert.That(newBalance).IsEqualTo(5ul);
     }
 

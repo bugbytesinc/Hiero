@@ -5,9 +5,9 @@ namespace Proto;
 
 public sealed partial class NftID
 {
-    internal NftID(Nft nft) : this()
+    internal NftID(Hiero.Nft nft) : this()
     {
-        if (nft is null || nft == Nft.None)
+        if (nft is null || nft == Hiero.Nft.None)
         {
             throw new ArgumentNullException(nameof(nft), "NFT is missing. Please check that it is not null or empty.");
         }
@@ -21,8 +21,8 @@ internal static class NftIDExtensions
     {
         if (id is not null && id.TokenID is not null)
         {
-            return new Nft(new EntityId(id.TokenID.ShardNum, id.TokenID.RealmNum, id.TokenID.TokenNum), id.SerialNumber);
+            return new Hiero.Nft(new EntityId(id.TokenID.ShardNum, id.TokenID.RealmNum, id.TokenID.TokenNum), id.SerialNumber);
         }
-        return Nft.None;
+        return Hiero.Nft.None;
     }
 }

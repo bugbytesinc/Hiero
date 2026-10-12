@@ -136,14 +136,17 @@ public sealed class CreateTokenParams : TransactionParams<CreateTokenReceipt>, I
     public EntityId? RenewAccount { get; set; }
     /// <summary>
     /// Additional private key, keys or signing callback method 
-    /// required to create this token.  Typically matches the
-    /// Administrator, KycEndorsement, FreezeEndorsement and other
-    /// listed endorsements associated with this token.
+    /// required to create this token: typically the
+    /// <see cref="Administrator"/> key (when set) and the keys of the
+    /// <see cref="Treasury"/> and <see cref="RenewAccount"/> (when set)
+    /// accounts.  The token's other endorsements, such as
+    /// <see cref="GrantKycEndorsement"/> or <see cref="SuspendEndorsement"/>,
+    /// do not need to sign its creation.
     /// </summary>
     /// <remarks>
     /// Keys/callbacks added here will be combined with those already
-    /// identified in the client object's context when signing this 
-    /// transaction to change the state of this account.
+    /// identified in the client object's context when signing this
+    /// transaction to create the token.
     /// </remarks>
     public Signatory? Signatory { get; set; }
     /// <summary>
@@ -151,8 +154,10 @@ public sealed class CreateTokenParams : TransactionParams<CreateTokenReceipt>, I
     /// </summary>
     public string Memo { get; set; } = default!;
     /// <summary>
-    /// Optional cancellation token to interrupt the token
-    /// creation submission process.
+    /// Optional cancellation token.  Cancelling stops the client waiting;
+    /// it cannot recall a transaction already sent.  Cancelled after the
+    /// send, the outcome is unknown: settle it by its transaction id on a
+    /// mirror node rather than resubmitting it.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
 
@@ -310,10 +315,10 @@ public static class CreateTokenExtensions
     /// <returns>
     /// A transaction receipt with a description of the newly created token.
     /// </returns>
-    /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
+    /// <exception cref="ArgumentException">If required arguments are missing or invalid.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node create rejected the request upon submission.</exception>
-    /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
+    /// <exception cref="PrecheckException">If the gateway node refused the transaction. Only a code about the transaction itself proves it did not execute; any other code leaves the outcome unknown, so settle it by its transaction id on a mirror node rather than resubmitting it (see <see cref="PrecheckException"/>).</exception>
+    /// <exception cref="ConsensusException">If the outcome could not be confirmed: the transaction may have executed, so settle it by its transaction id on a mirror node rather than resubmitting it.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task<CreateTokenReceipt> CreateTokenAsync(this ConsensusClient client, CreateTokenParams createParameters, Action<IConsensusContext>? configure = null)

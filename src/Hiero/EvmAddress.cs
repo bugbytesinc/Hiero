@@ -27,22 +27,27 @@ public sealed record EvmAddress : IEquatable<EvmAddress>, ISpanFormattable, IUtf
     /// </summary>
     private readonly byte[] _bytes = new byte[20];
     /// <summary>
-    /// The 20-byte EVM Address of the contract.
-    /// 
+    /// The raw 20 bytes of the EVM Address: a long-zero encoding of a
+    /// <code>shard.realm.num</code> id, an address derived from an
+    /// ECDSA secp256k1 public key (an account alias), or a CREATE2 address.
+    ///
     /// Every contract has an EVM Address determined by its<code>shard.realm.num</code> id.
-    /// 
+    ///
     /// This Address is as follows:
-    /// 
+    ///
     ///     The first 4 bytes are the big-endian representation of the shard.
     ///     The next 8 bytes are the big-endian representation of the realm.
     ///     The final 8 bytes are the big-endian representation of the number.
-    ///     
+    ///
     /// In the above format, the shard and realm should match the encoded values.
-    /// 
-    /// Contracts created via CREATE2 have an <b>additional, primary address</b> that is 
-    /// derived from the<a href="https://eips.ethereum.org/EIPS/eip-1014"> EIP-1014</a> 
+    ///
+    /// Contracts created via CREATE2 have an <b>additional, primary address</b> that is
+    /// derived from the<a href="https://eips.ethereum.org/EIPS/eip-1014"> EIP-1014</a>
     /// specification, and does not have a simple relation to a<tt> shard.realm.num</tt> id.
     /// (therefore shard and realm values do not match the encoded bytes)
+    /// Public-key-derived addresses (the last 20 bytes of the Keccak-256
+    /// hash of the public key) likewise have no <tt>shard.realm.num</tt>
+    /// layout; only decode shard, realm and number from a long-zero address.
     /// </summary>
     public ReadOnlySpan<byte> Bytes => _bytes;
     /// <summary>
@@ -229,7 +234,10 @@ public sealed record EvmAddress : IEquatable<EvmAddress>, ISpanFormattable, IUtf
     }
     /// <summary>
     /// Implicitly wraps an EVM Address within an
-    /// <code>EntityId</code> construct.
+    /// <code>EntityId</code> construct, assuming shard 0 and realm 0
+    /// (the result is <code>new EntityId(0, 0, evmAddress)</code>).
+    /// Construct the <code>EntityId</code> explicitly for other shards
+    /// or realms.
     /// </summary>
     /// <param name="evmAddress">
     /// The EVM Address to wrap within an <code>EntityId</code>.

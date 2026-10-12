@@ -18,12 +18,12 @@ option java_package = "com.hederahashgraph.api.proto.java";
 // <<<pbj.java_package = "com.hedera.hapi.node.transaction">>> This comment is special code for setting PBJ Compiler java package
 option java_multiple_files = true;
 
+
 import "services/contract_call_local.proto";
 import "services/contract_get_bytecode.proto";
 import "services/contract_get_info.proto";
 import "services/contract_get_records.proto";
 
-import "services/crypto_get_account_balance.proto";
 import "services/crypto_get_account_records.proto";
 import "services/crypto_get_info.proto";
 
@@ -103,7 +103,7 @@ message Response {
          * A response for a query requesting the HBAR balance of an account
          * or contract.
          */
-        CryptoGetAccountBalanceResponse cryptogetAccountBalance = 7;
+        //CryptoGetAccountBalanceResponse cryptogetAccountBalance = 7;
 
         /**
          * A response for a query requesting records of all "recent"

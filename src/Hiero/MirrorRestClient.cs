@@ -3,6 +3,7 @@ using Hiero.Mirror.Implementation;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Json;
+using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization.Metadata;
 using static Hiero.Mirror.Implementation.MirrorRestClientUtils;
 
@@ -19,6 +20,23 @@ namespace Hiero;
 /// sets as <see cref="IAsyncEnumerable{T}"/> that transparently follow the
 /// mirror node's "next" links.  This client performs read-only queries and
 /// does not submit transactions; use <see cref="ConsensusClient"/> for that.
+/// <para>
+/// <b>Thread safety.</b> An instance is immutable once constructed — it holds
+/// only the <see cref="HttpClient"/> it was given — so it is safe for
+/// concurrent use and carries none of the configuration caveats the
+/// context-configured clients do. Concurrency is bounded by the supplied
+/// <see cref="HttpClient"/>, which is itself safe to share.
+/// </para>
+/// <para>
+/// <b>Cancellation.</b> Every method takes a <see cref="CancellationToken"/>:
+/// as its last parameter or, for a method that ends in a list of filters, in
+/// an overload taking it just before the list. Paged results also honor
+/// <see cref="TaskAsyncEnumerableExtensions.WithCancellation{T}(IAsyncEnumerable{T}, CancellationToken)"/>.
+/// A cancelled call throws <see cref="OperationCanceledException"/>. A request
+/// that outlasts <see cref="HttpClient.Timeout"/> throws a
+/// <see cref="TaskCanceledException"/> whose inner exception is a
+/// <see cref="TimeoutException"/>.
+/// </para>
 /// </remarks>
 [DebuggerDisplay("{ToString(),nq}")]
 public sealed class MirrorRestClient
@@ -66,24 +84,30 @@ public sealed class MirrorRestClient
     /// <param name="jsonTypeInfo">
     /// The source-generated JSON type info for the payload type.
     /// </param>
+    /// <param name="cancellationToken">
+    /// Token that cancels the request.
+    /// </param>
     /// <returns>The HTTP response message from the mirror node REST API.</returns>
-    internal Task<HttpResponseMessage> PostPayload<TValue>(string path, TValue payload, JsonTypeInfo<TValue> jsonTypeInfo)
+    internal Task<HttpResponseMessage> PostPayload<TValue>(string path, TValue payload, JsonTypeInfo<TValue> jsonTypeInfo, CancellationToken cancellationToken)
     {
-        return _client.PostAsJsonAsync($"api/v1/{path}", payload, jsonTypeInfo);
+        return _client.PostAsJsonAsync($"api/v1/{path}", payload, jsonTypeInfo, cancellationToken);
     }
     /// <summary>
     /// Internal helper function to retrieve a paged items structured
     /// object, converting it into an IAsyncEnumerable for consumption.
+    /// The token is combined with any given to
+    /// <see cref="TaskAsyncEnumerableExtensions.WithCancellation{T}(IAsyncEnumerable{T}, CancellationToken)"/>,
+    /// and either cancels the page request in flight.
     /// </summary>
-    internal async IAsyncEnumerable<TItem> GetPagedItemsAsync<TList, TItem>(string path, JsonTypeInfo<TList> jsonTypeInfo) where TList : Page<TItem>
+    internal async IAsyncEnumerable<TItem> GetPagedItemsAsync<TList, TItem>(string path, JsonTypeInfo<TList> jsonTypeInfo, [EnumeratorCancellation] CancellationToken cancellationToken) where TList : Page<TItem>
     {
         var fullPath = $"api/v1/{path}";
         do
         {
-            using var response = await _client.GetAsync(fullPath).ConfigureAwait(false);
+            using var response = await _client.GetAsync(fullPath, cancellationToken).ConfigureAwait(false);
             if (response.IsSuccessStatusCode)
             {
-                var payload = await response.Content.ReadFromJsonAsync(jsonTypeInfo).ConfigureAwait(false);
+                var payload = await response.Content.ReadFromJsonAsync(jsonTypeInfo, cancellationToken).ConfigureAwait(false);
                 if (payload is not null)
                 {
                     var items = payload.GetItems();
@@ -93,7 +117,10 @@ public sealed class MirrorRestClient
                         yield return items[i];
                     }
                 }
-                fullPath = payload?.Links?.Next;
+                // The mirror's next link is root-relative (/api/v1/...);
+                // resolve it against the base address, as for the first
+                // page, so a gateway's path prefix is kept.
+                fullPath = payload?.Links?.Next?.TrimStart('/');
             }
             else if (response.StatusCode == HttpStatusCode.NotFound)
             {
@@ -102,7 +129,7 @@ public sealed class MirrorRestClient
             }
             else
             {
-                throw await CreateMirrorExceptionAsync(response).ConfigureAwait(false);
+                throw await CreateMirrorExceptionAsync(response, cancellationToken).ConfigureAwait(false);
             }
         }
         while (!string.IsNullOrWhiteSpace(fullPath));
@@ -110,12 +137,12 @@ public sealed class MirrorRestClient
     /// <summary>
     /// Helper function to retrieve a single item from the rest api call.
     /// </summary>
-    internal async Task<TItem?> GetSingleItemAsync<TItem>(string path, JsonTypeInfo<TItem> jsonTypeInfo)
+    internal async Task<TItem?> GetSingleItemAsync<TItem>(string path, JsonTypeInfo<TItem> jsonTypeInfo, CancellationToken cancellationToken)
     {
-        using var response = await _client.GetAsync($"api/v1/{path}").ConfigureAwait(false);
+        using var response = await _client.GetAsync($"api/v1/{path}", cancellationToken).ConfigureAwait(false);
         if (response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadFromJsonAsync(jsonTypeInfo).ConfigureAwait(false);
+            return await response.Content.ReadFromJsonAsync(jsonTypeInfo, cancellationToken).ConfigureAwait(false);
         }
         else if (response.StatusCode == HttpStatusCode.NotFound)
         {
@@ -123,7 +150,7 @@ public sealed class MirrorRestClient
         }
         else
         {
-            throw await CreateMirrorExceptionAsync(response).ConfigureAwait(false);
+            throw await CreateMirrorExceptionAsync(response, cancellationToken).ConfigureAwait(false);
         }
     }
 }

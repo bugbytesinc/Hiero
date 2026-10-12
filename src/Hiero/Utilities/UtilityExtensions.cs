@@ -14,7 +14,10 @@ namespace Hiero;
 public static class UtilityExtensions
 {
     /// <summary>
-    /// Creates a new Transaction ID within the given context.
+    /// Creates a new Transaction ID within the given context, from its
+    /// <see cref="IConsensusContext.Payer"/> and the current time.  If the
+    /// context already has a <see cref="IConsensusContext.TransactionId"/>,
+    /// that id is returned instead.
     /// </summary>
     /// <param name="client">
     /// The Consensus Node Client having the configuration necessary
@@ -25,7 +28,8 @@ public static class UtilityExtensions
     /// the configuration details of this particular method call invocation.
     /// </param>
     /// <returns>
-    /// A new Transaction ID that can be used to identify a transaction.
+    /// A Transaction ID that can be used to identify a transaction: new,
+    /// unless the context already sets one.
     /// </returns>
     public static TransactionId CreateNewTransactionId(this ConsensusClient client, Action<IConsensusContext>? configure = null)
     {

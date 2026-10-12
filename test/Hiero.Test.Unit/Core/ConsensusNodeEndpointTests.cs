@@ -185,4 +185,11 @@ public class ConsensusNodeEndpointTests
         var endpoint = new ConsensusNodeEndpoint(new EntityId(0, 0, 3), new Uri("http://testnet.hedera.com:50211"));
         await Assert.That(endpoint.Equals("not an endpoint")).IsFalse();
     }
+
+    [Test]
+    public async Task A_Gossip_Endpoint_Uri_Without_A_Port_Is_Rejected()
+    {
+        // tcp:// has no default port, so Uri.Port is -1.
+        await Assert.ThrowsAsync<ArgumentException>(async () => await Task.Run(() => new Proto.ServiceEndpoint(new Uri("tcp://node.example.com"))));
+    }
 }

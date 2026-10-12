@@ -7,15 +7,17 @@ namespace Hiero.Test.Unit.Core;
 public class TransactionRecordTests
 {
     [Test]
-    public async Task Create_Returns_Empty_Collection_For_No_Records()
+    public async Task Create_Returns_Empty_Groups_For_No_Records()
     {
         var records = TransactionRecordExtensions.Create(null, null, null);
 
-        await Assert.That(records).IsEmpty();
+        await Assert.That(records.Parent).IsNull();
+        await Assert.That(records.Children).IsEmpty();
+        await Assert.That(records.Duplicates).IsEmpty();
     }
 
     [Test]
-    public async Task Create_Materializes_Root_Child_And_Duplicate_Records()
+    public async Task Create_Groups_Parent_Child_And_Duplicate_Records()
     {
         var transactionId = new TransactionID(new TransactionId(new EntityId(0, 0, 1001), 100, 200));
         var rootRecord = new Proto.TransactionRecord
@@ -43,12 +45,15 @@ public class TransactionRecordTests
 
         var records = TransactionRecordExtensions.Create(rootRecord, childRecords, duplicateRecords);
 
-        await Assert.That(records.Count).IsEqualTo(4);
-        await Assert.That(records[0].TransactionId.ChildNonce).IsEqualTo(0);
-        await Assert.That(records[1].TransactionId.ChildNonce).IsEqualTo(1);
-        await Assert.That(records[2].TransactionId.ChildNonce).IsEqualTo(2);
-        await Assert.That(records[3].TransactionId.ChildNonce).IsEqualTo(0);
-        await Assert.That(records[3].Status).IsEqualTo(ResponseCode.DuplicateTransaction);
+        // The parent keeps the submitted transaction ID; children get a
+        // synthesized nonce; duplicates share the parent's ID.
+        await Assert.That(records.Parent!.TransactionId.ChildNonce).IsEqualTo(0);
+        await Assert.That(records.Children.Count).IsEqualTo(2);
+        await Assert.That(records.Children[0].TransactionId.ChildNonce).IsEqualTo(1);
+        await Assert.That(records.Children[1].TransactionId.ChildNonce).IsEqualTo(2);
+        await Assert.That(records.Duplicates.Count).IsEqualTo(1);
+        await Assert.That(records.Duplicates[0].TransactionId.ChildNonce).IsEqualTo(0);
+        await Assert.That(records.Duplicates[0].Status).IsEqualTo(ResponseCode.DuplicateTransaction);
     }
 
     [Test]
@@ -76,5 +81,29 @@ public class TransactionRecordTests
         await Assert.That(result.Count).IsEqualTo(2);
         await Assert.That(result[accountOne]).IsEqualTo(25);
         await Assert.That(result[accountTwo]).IsEqualTo(20);
+    }
+
+    [Test]
+    public async Task Create_Types_A_Registered_Node_Record()
+    {
+        // The record side was worse off than the receipt side: no
+        // RegisteredNodeRecord type existed at all, so a registered-node id
+        // could never be surfaced through GetAllTransactionRecordsAsync.
+        var transactionId = new TransactionID(new TransactionId(new EntityId(0, 0, 1001), 100, 200));
+        var record = new Proto.TransactionRecord
+        {
+            TransactionID = transactionId.Clone(),
+            Receipt = new Proto.TransactionReceipt
+            {
+                Status = ResponseCodeEnum.Success,
+                RegisteredNodeId = 42
+            }
+        };
+
+        var result = TransactionRecordExtensions.Create(record, null, null);
+
+        var typed = result.Parent as RegisteredNodeRecord;
+        await Assert.That(typed).IsNotNull();
+        await Assert.That(typed!.RegisteredNodeId).IsEqualTo(42ul);
     }
 }

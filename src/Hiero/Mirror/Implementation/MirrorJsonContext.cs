@@ -12,6 +12,7 @@ namespace Hiero.Mirror.Implementation;
 [JsonSerializable(typeof(BlockData))]
 [JsonSerializable(typeof(BlockDataPage))]
 [JsonSerializable(typeof(ConsensusNodeDataPage))]
+[JsonSerializable(typeof(RegisteredNodeDataPage))]
 [JsonSerializable(typeof(ContractActionDataPage))]
 [JsonSerializable(typeof(ContractData))]
 [JsonSerializable(typeof(ContractDataPage))]

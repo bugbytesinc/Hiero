@@ -33,8 +33,9 @@ public class AccountData
     [JsonConverter(typeof(LongMirrorConverter))]
     public long AutoRenewPeriod { get; set; }
     /// <summary>
-    /// Structure enumerating the account balance and the
-    /// first 100 token balances for the account.
+    /// Structure enumerating the account balance and a
+    /// capped list of token balances for the account (see
+    /// <see cref="AccountBalancesData"/>).
     /// </summary>
     [JsonPropertyName("balance")]
     public AccountBalancesData Balances { get; set; } = default!;
@@ -56,6 +57,14 @@ public class AccountData
     [JsonPropertyName("deleted")]
     [JsonConverter(typeof(BooleanMirrorConverter))]
     public bool Deleted { get; set; }
+    /// <summary>
+    /// The address an EIP-7702 delegation points the account's code
+    /// at; null when the account has no delegation (or the mirror node
+    /// does not report one).
+    /// </summary>
+    [JsonPropertyName("delegation_address")]
+    [JsonConverter(typeof(NullableEvmAddressConverter))]
+    public EvmAddress? DelegationAddress { get; set; }
     /// <summary>
     /// The account's associated EVM nonce.
     /// </summary>
@@ -82,7 +91,9 @@ public class AccountData
     [JsonPropertyName("key")]
     public Endorsement Endorsement { get; set; } = default!;
     /// <summary>
-    /// The number of auto-associations for this account.
+    /// The maximum number of automatic token associations
+    /// allowed for this account (-1 means unlimited). This is
+    /// the configured limit, not a count of current associations.
     /// </summary>
     [JsonPropertyName("max_automatic_token_associations")]
     [JsonConverter(typeof(IntMirrorConverter))]
@@ -124,8 +135,8 @@ public class AccountData
     /// The staking period during which either the staking settings 
     /// for this account changed (such as starting staking or 
     /// changing stakedNode) or the most recent reward was earned, 
-    /// whichever is later. If this account is not currently staked 
-    /// to a node, then the value is null
+    /// whichever is later. If this account is not currently staked
+    /// to a node, then the value is <see cref="ConsensusTimeStamp.MinValue"/>.
     /// </summary>
     [JsonPropertyName("stake_period_start")]
     public ConsensusTimeStamp StakePeriodStart { get; set; }
@@ -158,6 +169,9 @@ public static class AccountDataExtensions
     /// <param name="account">
     /// The id of the account to retrieve.
     /// </param>
+    /// <param name="cancellationToken">
+    /// Token that cancels the request.
+    /// </param>
     /// <param name="filters">
     /// Additional query parameters. The endpoint meaningfully supports
     /// <see cref="TimestampFilter"/> for historical state lookup; other
@@ -172,10 +186,70 @@ public static class AccountDataExtensions
     /// For the account's transaction listing, call
     /// <c>GetTransactionsAsync(AccountFilter.Is(account))</c>.
     /// </remarks>
-    public static Task<AccountData?> GetAccountAsync(this MirrorRestClient client, EntityId account, params IMirrorQueryParameter[] filters)
+    public static Task<AccountData?> GetAccountAsync(this MirrorRestClient client, EntityId account, CancellationToken cancellationToken, params IMirrorQueryParameter[] filters)
     {
         var path = GenerateInitialPath($"accounts/{account.ToMirrorString()}", SuppressTransactions, filters);
-        return client.GetSingleItemAsync(path, MirrorJsonContext.Default.AccountData);
+        return client.GetSingleItemAsync(path, MirrorJsonContext.Default.AccountData, cancellationToken);
+    }
+    /// <inheritdoc cref="GetAccountAsync(MirrorRestClient, EntityId, CancellationToken, IMirrorQueryParameter[])"/>
+    public static Task<AccountData?> GetAccountAsync(this MirrorRestClient client, EntityId account, params IMirrorQueryParameter[] filters)
+    {
+        return client.GetAccountAsync(account, CancellationToken.None, filters);
+    }
+    /// <summary>
+    /// Retrieves the hbar balance, in tinybars, of an account or a
+    /// contract (contracts are accounts on the mirror node) from
+    /// <c>/api/v1/accounts/{id}</c>. Use <see cref="TimestampFilter"/>
+    /// to retrieve the balance at a historical consensus instant;
+    /// otherwise returns the current balance.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This replaces the consensus node balance query, which public
+    /// Hedera networks removed in July 2026; consensus nodes now answer
+    /// it with <c>BUSY</c>.
+    /// </para>
+    /// <para>
+    /// The mirror node trails consensus by a few seconds. To observe the
+    /// effect of a transaction just submitted, wait until the mirror
+    /// node's latest consensus timestamp
+    /// (<see cref="TransactionTimestampDataExtensions.GetLatestConsensusTimestampAsync"/>)
+    /// reaches the transaction's consensus timestamp before reading.
+    /// </para>
+    /// <para>
+    /// For token balances, use
+    /// <see cref="TokenBalanceDataExtensions.GetAccountTokenBalanceAsync(MirrorRestClient, EntityId, EntityId, CancellationToken, IMirrorQueryParameter[])"/>
+    /// for a single token or
+    /// <see cref="TokenHoldingDataExtensions.GetAccountTokenHoldingsAsync(MirrorRestClient, EntityId, CancellationToken, IMirrorQueryParameter[])"/>
+    /// for all of an account's holdings.
+    /// </para>
+    /// </remarks>
+    /// <param name="client">
+    /// Mirror Rest Client to use for the request.
+    /// </param>
+    /// <param name="account">
+    /// The id of the account or contract.
+    /// </param>
+    /// <param name="cancellationToken">
+    /// Token that cancels the request.
+    /// </param>
+    /// <param name="filters">
+    /// Additional query parameters; <see cref="TimestampFilter"/> selects
+    /// a historical balance.
+    /// </param>
+    /// <returns>
+    /// The balance in tinybars, or null if the mirror node does not
+    /// know the account or reports no balance for it.
+    /// </returns>
+    public static async Task<long?> GetAccountBalanceAsync(this MirrorRestClient client, EntityId account, CancellationToken cancellationToken, params IMirrorQueryParameter[] filters)
+    {
+        var data = await client.GetAccountAsync(account, cancellationToken, filters).ConfigureAwait(false);
+        return data?.Balances?.Balance;
+    }
+    /// <inheritdoc cref="GetAccountBalanceAsync(MirrorRestClient, EntityId, CancellationToken, IMirrorQueryParameter[])"/>
+    public static Task<long?> GetAccountBalanceAsync(this MirrorRestClient client, EntityId account, params IMirrorQueryParameter[] filters)
+    {
+        return client.GetAccountBalanceAsync(account, CancellationToken.None, filters);
     }
     /// <summary>
     /// Enumerates accounts across the network. Use
@@ -189,6 +263,10 @@ public static class AccountDataExtensions
     /// <param name="client">
     /// Mirror Rest Client to use for the request.
     /// </param>
+    /// <param name="cancellationToken">
+    /// Token that cancels the enumeration, including a page request in
+    /// flight. <c>WithCancellation</c> on the result works as well.
+    /// </param>
     /// <param name="filters">
     /// Additional query parameters. The endpoint supports
     /// <see cref="AccountFilter"/>, <see cref="AccountPublicKeyFilter"/>,
@@ -199,9 +277,14 @@ public static class AccountDataExtensions
     /// <returns>
     /// An async enumerable of account records.
     /// </returns>
-    public static IAsyncEnumerable<AccountData> GetAccountsAsync(this MirrorRestClient client, params IMirrorQueryParameter[] filters)
+    public static IAsyncEnumerable<AccountData> GetAccountsAsync(this MirrorRestClient client, CancellationToken cancellationToken, params IMirrorQueryParameter[] filters)
     {
         var path = GenerateInitialPath("accounts", new PageLimit(100), filters);
-        return client.GetPagedItemsAsync<AccountDataPage, AccountData>(path, MirrorJsonContext.Default.AccountDataPage);
+        return client.GetPagedItemsAsync<AccountDataPage, AccountData>(path, MirrorJsonContext.Default.AccountDataPage, cancellationToken);
+    }
+    /// <inheritdoc cref="GetAccountsAsync(MirrorRestClient, CancellationToken, IMirrorQueryParameter[])"/>
+    public static IAsyncEnumerable<AccountData> GetAccountsAsync(this MirrorRestClient client, params IMirrorQueryParameter[] filters)
+    {
+        return client.GetAccountsAsync(CancellationToken.None, filters);
     }
 }

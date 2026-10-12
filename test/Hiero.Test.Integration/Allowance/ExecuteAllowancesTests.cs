@@ -144,8 +144,8 @@ public class ExecuteAllowancesTests
         await using var fxDestination = await TestAccount.CreateAsync();
         await using var client = await TestNetwork.CreateClientAsync();
 
-        var initialOwnerBalance = await client.GetAccountBalanceAsync(fxAllowances.Owner);
-        var initialDestination = await client.GetAccountBalanceAsync(fxDestination);
+        var initialOwnerBalance = await TestNetwork.GetCryptoBalanceAsync(fxAllowances.Owner);
+        var initialDestination = await TestNetwork.GetCryptoBalanceAsync(fxDestination);
         var xferAmount = initialOwnerBalance / 3 + 1;
 
         await using var agentClient = client.Clone(ctx =>
@@ -175,8 +175,8 @@ public class ExecuteAllowancesTests
         await using var fxDestination = await TestAccount.CreateAsync();
         await using var client = await TestNetwork.CreateClientAsync();
 
-        var initialOwnerBalance = await client.GetAccountBalanceAsync(fxAllowances.Owner);
-        var initialDestination = await client.GetAccountBalanceAsync(fxDestination);
+        var initialOwnerBalance = await TestNetwork.GetCryptoBalanceAsync(fxAllowances.Owner);
+        var initialDestination = await TestNetwork.GetCryptoBalanceAsync(fxDestination);
         var xferAmount = initialOwnerBalance / 3 + 1;
 
         await using var agentClient = client.Clone(ctx =>

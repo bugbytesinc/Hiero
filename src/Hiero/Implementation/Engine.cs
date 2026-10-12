@@ -84,13 +84,16 @@ internal static class Engine
     /// by networkParams, or an exception if the request produced a failed result and 
     /// the context is configured to throw on failed results.
     /// </returns>
-    /// <exception cref="PrecheckException">
-    /// If there was a problem submitting the request, including the consensus node
-    /// considering the request invalid.
-    /// </exception>
+    /// <exception cref="PrecheckException">If the gateway node refused the transaction. Only a code about the transaction itself proves it did not execute; any other code leaves the outcome unknown, so settle it by its transaction id on a mirror node rather than resubmitting it (see <see cref="PrecheckException"/>).</exception>
     /// <exception cref="TransactionException">
     /// If the consensus node returned a failure code and throw on failure is set to
     /// <code>true</code> in the client context configuration.
+    /// </exception>
+    /// <exception cref="ConsensusException">
+    /// If the outcome is unknown: the receipt was still pending when the
+    /// retries ran out, or the node had none to give.  With throw on failure
+    /// set to <code>false</code>, a receipt with an Unknown or
+    /// ReceiptNotFound status is returned instead.
     /// </exception>
     internal static async Task<T> ExecuteAsync<T>(ConsensusContextStack context, ByteString signedTransactionBytes, INetworkParams<T> networkParams, INetworkTransaction networkTransaction, TransactionID transactionId, CancellationToken cancellationToken) where T : TransactionReceipt
     {
@@ -247,11 +250,13 @@ internal static class Engine
     /// transaction ID that was specified in the context overriding the
     /// automatic generation of the ID.
     /// </returns>
-    /// <exception cref="InvalidOperationException">If the Payer is not configured in the context.</exception>
-    /// <exception cref="ArgumentException">
-    /// If neither the Payer or Explicit Transaction ID are specified, there is 
+    /// <exception cref="InvalidOperationException">
+    /// If neither the Payer or Explicit Transaction ID are specified, there is
     /// not enough information to generate a transaction ID and this exception
     /// will be thrown.
+    /// </exception>
+    /// <exception cref="ArgumentException">
+    /// If the context's explicit Transaction ID is marked as Scheduled.
     /// </exception>
     internal static TransactionID GetOrCreateTransactionID(ConsensusContextStack context)
     {
@@ -308,10 +313,13 @@ internal static class Engine
     /// The message response, typically a TransactionResponse or QueryResponse object.
     /// </returns>
     /// <exception cref="PrecheckException">
-    /// Certain conditions indicate immediate failure when submitting a message, the details
-    /// are populated through this exception object when thrown.  When thrown, the algorithm
-    /// generally believes that the transaction or query has NOT been successfully submitted
-    /// or accepted by the network, and should not have charged the payer account.
+    /// When the node refuses the request, or a transport failure ends the
+    /// final attempt.  Only a code about the transaction itself (an invalid
+    /// signature, say) proves it was not executed.  BUSY, Unknown, RpcError,
+    /// DuplicateTransaction and TransactionExpired can follow an earlier
+    /// attempt in the same call that the network accepted, and a paid
+    /// query's payment can be charged even when its answer is a refusal, so
+    /// those leave the outcome unknown (see <see cref="PrecheckException"/>).
     /// </exception>
     internal static Task<TResponse> SubmitMessageAsync<TRequest, TResponse>(ConsensusContextStack context, TRequest request, Func<GrpcChannel, Func<TRequest, Metadata?, DateTime?, CancellationToken, AsyncUnaryCall<TResponse>>> instantiateRequestMethod, CancellationToken cancellationToken) where TRequest : IMessage where TResponse : IPrecheckResult, IMessage
     {
@@ -366,10 +374,13 @@ internal static class Engine
     /// The message response, typically a TransactionResponse or QueryResponse object.
     /// </returns>
     /// <exception cref="PrecheckException">
-    /// Certain conditions indicate immediate failure when submitting a message, the details
-    /// are populated through this exception object when thrown.  When thrown, the algorithm
-    /// generally believes that the transaction or query has NOT been successfully submitted
-    /// or accepted by the network, and should not have charged the payer account.
+    /// When the node refuses the request, or a transport failure ends the
+    /// final attempt.  Only a code about the transaction itself (an invalid
+    /// signature, say) proves it was not executed.  BUSY, Unknown, RpcError,
+    /// DuplicateTransaction and TransactionExpired can follow an earlier
+    /// attempt in the same call that the network accepted, and a paid
+    /// query's payment can be charged even when its answer is a refusal, so
+    /// those leave the outcome unknown (see <see cref="PrecheckException"/>).
     /// </exception>
     internal static async Task<TResponse> SubmitMessageAsync<TRequest, TResponse>(ConsensusContextStack context, TRequest request, Func<GrpcChannel, Func<TRequest, Metadata?, DateTime?, CancellationToken, AsyncUnaryCall<TResponse>>> instantiateRequestMethod, Func<TResponse, bool> shouldRetryRequest, CancellationToken cancellationToken) where TRequest : IMessage where TResponse : IPrecheckResult, IMessage
     {
@@ -613,26 +624,31 @@ internal static class Engine
     /// Optional Cancellation token.
     /// </param>
     /// <returns>
-    /// A Protobuf Transaction Receipt, if found, otherwise throws an exception.
+    /// A Protobuf Transaction Receipt, if found, otherwise throws an exception;
+    /// unless ThrowIfNotSuccess is false, when a node with no receipt to give
+    /// yields a stand-in receipt carrying its code (BUSY becomes UNKNOWN).
     /// </returns>
     /// <exception cref="ConsensusException">
     /// When a receipt can not be found within the time frame of its possible
     /// existence, it may exist, or it may have been submitted but for some
     /// (rare) reason, the network never came to consensus regarding the transaction.
-    /// </exception>
-    /// <exception cref="TransactionException">
-    /// The consensus node queried for this transaction is unaware of the 
-    /// transaction's existence.
+    /// Also when the node queried has no receipt for the transaction
+    /// (RECEIPT_NOT_FOUND): it never saw it, or no longer holds its receipt.
     /// </exception>
     internal static async Task<Proto.TransactionReceipt> GetReceiptAsync(ConsensusContextStack context, TransactionID transactionId, CancellationToken cancellationToken)
     {
         INetworkQuery query = new TransactionGetReceiptQuery { TransactionID = transactionId };
         var response = await SubmitMessageAsync(context, query.CreateEnvelope(), query.InstantiateNetworkRequestMethod, shouldRetry, cancellationToken).ConfigureAwait(false);
+        var responseCode = response.TransactionGetReceipt.Header.NodeTransactionPrecheckCode;
         if (!context.ThrowIfNotSuccess)
         {
-            return response.TransactionGetReceipt.Receipt;
+            // A node with no receipt to give answers with the header alone
+            // (RECEIPT_NOT_FOUND for an id it does not know, or no longer
+            // holds). Stand in a receipt carrying that code so the caller
+            // still has a status to read; a node too busy to answer has
+            // given no verdict, which is Unknown.
+            return response.TransactionGetReceipt.Receipt ?? new Proto.TransactionReceipt { Status = responseCode == ResponseCodeEnum.Busy ? ResponseCodeEnum.Unknown : responseCode };
         }
-        var responseCode = response.TransactionGetReceipt.Header.NodeTransactionPrecheckCode;
         switch (responseCode)
         {
             case ResponseCodeEnum.Ok:
@@ -641,7 +657,7 @@ internal static class Engine
                 throw new ConsensusException("Network failed to respond to request for a transaction receipt, it is too busy. It is possible the network may still reach consensus for this transaction.", transactionId.AsTransactionId(), (ResponseCode)responseCode);
             case ResponseCodeEnum.Unknown:
             case ResponseCodeEnum.ReceiptNotFound:
-                throw new TransactionException($"Network failed to return a transaction receipt, Status Code Returned: {responseCode}", new TransactionReceipt(transactionId, new() { Status = responseCode }));
+                throw new ConsensusException($"Network failed to return a transaction receipt, Status Code Returned: {responseCode}", transactionId.AsTransactionId(), (ResponseCode)responseCode);
         }
         var status = response.TransactionGetReceipt.Receipt.Status;
         switch (status)

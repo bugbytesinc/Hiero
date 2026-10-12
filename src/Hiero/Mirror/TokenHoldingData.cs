@@ -27,7 +27,9 @@ public class TokenHoldingData
     [JsonConverter(typeof(BooleanMirrorConverter))]
     public bool AutoAssociated { get; set; }
     /// <summary>
-    /// The balance of account’s holdings of token in tinytokens.
+    /// The account's balance of the token: for a fungible token, in its
+    /// smallest unit (not scaled by its decimals); for an NFT class, the
+    /// number of NFTs held.
     /// </summary>
     [JsonPropertyName("balance")]
     [JsonConverter(typeof(LongMirrorConverter))]
@@ -37,6 +39,13 @@ public class TokenHoldingData
     /// </summary>
     [JsonPropertyName("created_timestamp")]
     public ConsensusTimeStamp Created { get; set; }
+    /// <summary>
+    /// The number of decimal places the token divides into, the scale
+    /// of <see cref="Balance"/>.
+    /// </summary>
+    [JsonPropertyName("decimals")]
+    [JsonConverter(typeof(IntMirrorConverter))]
+    public int Decimals { get; set; }
     /// <summary>
     /// Status of the token related to freezing (if applicable)
     /// </summary>
@@ -54,7 +63,7 @@ public class TokenHoldingData
 /// Extension methods for querying token holding data from the mirror node.
 /// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
-public static class Extensions
+public static class TokenHoldingDataExtensions
 {
 
     /// <summary>
@@ -69,6 +78,10 @@ public static class Extensions
     /// <param name="account">
     /// The account to retrieve the token holdings.
     /// </param>
+    /// <param name="cancellationToken">
+    /// Token that cancels the enumeration, including a page request in
+    /// flight. <c>WithCancellation</c> on the result works as well.
+    /// </param>
     /// <param name="filters">
     /// Additional query parameters. The endpoint supports
     /// <see cref="TokenFilter"/>, <see cref="PageLimit"/>, and
@@ -77,9 +90,14 @@ public static class Extensions
     /// <returns>
     /// An async enumerable of the account's token holdings.
     /// </returns>
-    public static IAsyncEnumerable<TokenHoldingData> GetAccountTokenHoldingsAsync(this MirrorRestClient client, EntityId account, params IMirrorQueryParameter[] filters)
+    public static IAsyncEnumerable<TokenHoldingData> GetAccountTokenHoldingsAsync(this MirrorRestClient client, EntityId account, CancellationToken cancellationToken, params IMirrorQueryParameter[] filters)
     {
         var path = GenerateInitialPath($"accounts/{account.ToMirrorString()}/tokens", new PageLimit(100), filters);
-        return client.GetPagedItemsAsync<TokenHoldingDataPage, TokenHoldingData>(path, MirrorJsonContext.Default.TokenHoldingDataPage);
+        return client.GetPagedItemsAsync<TokenHoldingDataPage, TokenHoldingData>(path, MirrorJsonContext.Default.TokenHoldingDataPage, cancellationToken);
+    }
+    /// <inheritdoc cref="GetAccountTokenHoldingsAsync(MirrorRestClient, EntityId, CancellationToken, IMirrorQueryParameter[])"/>
+    public static IAsyncEnumerable<TokenHoldingData> GetAccountTokenHoldingsAsync(this MirrorRestClient client, EntityId account, params IMirrorQueryParameter[] filters)
+    {
+        return client.GetAccountTokenHoldingsAsync(account, CancellationToken.None, filters);
     }
 }

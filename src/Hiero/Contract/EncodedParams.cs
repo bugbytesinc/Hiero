@@ -69,7 +69,7 @@ public sealed class EncodedParams
         }
     }
     /// <summary>
-    /// A Readonly copy of the data in raw ABI format.
+    /// A read-only view (not a copy) of the data in raw ABI format.
     /// </summary>
     public ReadOnlyMemory<byte> Data
     {
@@ -85,6 +85,11 @@ public sealed class EncodedParams
     /// <typeparam name="T">
     /// Type of the first argument, must be known to the caller.
     /// </typeparam>
+    /// <param name="bytesToSkip">
+    /// The number of bytes to skip at the start of the data before decoding,
+    /// for example 4 to skip the selector at the start of revert data.
+    /// Zero (the default) or less decodes from the start of the data.
+    /// </param>
     /// <returns>
     /// The value of the first argument decoded from the ABI results.
     /// </returns>
@@ -101,6 +106,11 @@ public sealed class EncodedParams
     /// <typeparam name="T2">
     /// Type of the second argument, must be known to the caller.
     /// </typeparam>
+    /// <param name="bytesToSkip">
+    /// The number of bytes to skip at the start of the data before decoding,
+    /// for example 4 to skip the selector at the start of revert data.
+    /// Zero (the default) or less decodes from the start of the data.
+    /// </param>
     /// <returns>
     /// A tuple of the first two arguments decoded from the contract function ABI results.
     /// </returns>
@@ -121,6 +131,11 @@ public sealed class EncodedParams
     /// <typeparam name="T3">
     /// Type of the third argument, must be known to the caller.
     /// </typeparam>
+    /// <param name="bytesToSkip">
+    /// The number of bytes to skip at the start of the data before decoding,
+    /// for example 4 to skip the selector at the start of revert data.
+    /// Zero (the default) or less decodes from the start of the data.
+    /// </param>
     /// <returns>
     /// A tuple of the first three arguments decoded from the contract function ABI results.
     /// </returns>
@@ -144,6 +159,11 @@ public sealed class EncodedParams
     /// <typeparam name="T4">
     /// Type of the fourth argument, must be known to the caller.
     /// </typeparam>
+    /// <param name="bytesToSkip">
+    /// The number of bytes to skip at the start of the data before decoding,
+    /// for example 4 to skip the selector at the start of revert data.
+    /// Zero (the default) or less decodes from the start of the data.
+    /// </param>
     /// <returns>
     /// A tuple of the first four arguments decoded from the contract function ABI results.
     /// </returns>
@@ -170,6 +190,11 @@ public sealed class EncodedParams
     /// <typeparam name="T5">
     /// Type of the fifth argument, must be known to the caller.
     /// </typeparam>
+    /// <param name="bytesToSkip">
+    /// The number of bytes to skip at the start of the data before decoding,
+    /// for example 4 to skip the selector at the start of revert data.
+    /// Zero (the default) or less decodes from the start of the data.
+    /// </param>
     /// <returns>
     /// A tuple of the first five arguments decoded from the contract function ABI results.
     /// </returns>

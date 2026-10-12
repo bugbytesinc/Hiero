@@ -289,12 +289,12 @@ public class CreateAccountTests
             await Assert.That(key).IsEqualTo(list[0]);
         }
 
-        var createdBalance = await client.GetAccountBalanceAsync(createdAddress);
+        var createdBalance = await TestNetwork.GetCryptoBalanceAsync(createdAddress);
         await Assert.That(createdBalance).IsEqualTo(initialBalance);
 
         await client.TransferAsync(createdAddress, TestNetwork.Payer, (long)initialBalance, ctx => ctx.Signatory = new Signatory(ctx.Signatory!, privateKey));
 
-        var finalBalance = await client.GetAccountBalanceAsync(createdAddress);
+        var finalBalance = await TestNetwork.GetCryptoBalanceAsync(createdAddress);
         await Assert.That(finalBalance).IsEqualTo(0UL);
 
         var receipt = await client.DeleteAccountAsync(new DeleteAccountParams
@@ -402,7 +402,7 @@ public class CreateAccountTests
     }
 
     [Test]
-    public async Task Can_Schedule_And_Sign_Delete_Account()
+    public async Task Can_Not_Schedule_And_Sign_Delete_Account()
     {
         await using var fxPayer = await TestAccount.CreateAsync(fx => fx.CreateParams.InitialBalance = 20_00_000_000);
         await using var fxAccount = await TestAccount.CreateAsync();

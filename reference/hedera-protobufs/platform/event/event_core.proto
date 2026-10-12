@@ -33,8 +33,7 @@ package com.hedera.hapi.platform.event;
  * limitations under the License.
  */
 
-//import "services/basic_types.proto";
-//import "platform/event/event_descriptor.proto";
+// import "services/basic_types.proto"; // unused upstream; disabled by scripts/vendor-blocknode-protos.sh
 import "services/timestamp.proto";
 
 option java_package = "com.hedera.hapi.platform.event.legacy";

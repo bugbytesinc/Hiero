@@ -582,7 +582,7 @@ public class AssociateTokenTests
     //}
 
     [Test]
-    public async Task Can_Schedule_And_Sign_Associate_Token()
+    public async Task Can_Not_Schedule_And_Sign_Associate_Token()
     {
         await using var fxToken = await TestToken.CreateAsync();
         await using var fxAccount = await TestAccount.CreateAsync();

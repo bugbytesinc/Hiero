@@ -12,8 +12,8 @@ namespace Hiero.Mirror;
 /// on the mirror node to produce a step-by-step record of every opcode
 /// that ran, along with the final stack / memory / storage state as
 /// controlled by the request's projection filters. Produced by
-/// <see cref="OpcodesDataExtensions.GetContractOpcodesByTransactionHashAsync"/>
-/// and <see cref="OpcodesDataExtensions.GetContractOpcodesByTransactionIdAsync"/>.
+/// <see cref="OpcodesDataExtensions.GetContractOpcodesByTransactionHashAsync(MirrorRestClient, EvmHash, CancellationToken, IMirrorProjection[])"/>
+/// and <see cref="OpcodesDataExtensions.GetContractOpcodesByTransactionIdAsync(MirrorRestClient, TransactionId, CancellationToken, IMirrorProjection[])"/>.
 /// </summary>
 public class OpcodesData
 {
@@ -54,12 +54,13 @@ public class OpcodesData
 /// A single opcode-execution entry in an <see cref="OpcodesData"/> trace.
 /// </summary>
 /// <remarks>
-/// The <see cref="Memory"/>, <see cref="Stack"/>, and <see cref="Storage"/>
-/// fields are populated only when their respective projection filters
+/// The <see cref="Memory"/> and <see cref="Storage"/> fields are
+/// populated only when their projection filters
 /// (<see cref="OpcodeMemoryProjectionFilter"/>,
-/// <see cref="OpcodeStackProjectionFilter"/>,
 /// <see cref="OpcodeStorageProjectionFilter"/>) were set to include
-/// them on the request. Otherwise they arrive null.
+/// them on the request; otherwise they arrive null. The
+/// <see cref="Stack"/> field is included by default and arrives null
+/// only when <see cref="OpcodeStackProjectionFilter"/> excludes it.
 /// </remarks>
 public class OpcodeData
 {
@@ -96,7 +97,7 @@ public class OpcodeData
     [JsonPropertyName("pc")]
     public int Pc { get; set; }
     /// <summary>
-    /// Revert reason bytes, when the opcode is a revert. Null otherwise.
+    /// Revert reason bytes, when the opcode is a revert. Empty otherwise.
     /// </summary>
     [JsonPropertyName("reason")]
     [JsonConverter(typeof(HexStringToBytesConverter))]
@@ -138,6 +139,9 @@ public static class OpcodesDataExtensions
     /// The EVM transaction hash (not to be confused with the raw HAPI
     /// transaction hash).
     /// </param>
+    /// <param name="cancellationToken">
+    /// Token that cancels the request.
+    /// </param>
     /// <param name="filters">
     /// Optional projection toggles recognized by this endpoint —
     /// <see cref="OpcodeStackProjectionFilter"/>,
@@ -148,10 +152,15 @@ public static class OpcodesDataExtensions
     /// <returns>
     /// The opcode trace, or null if the transaction was not found.
     /// </returns>
-    public static Task<OpcodesData?> GetContractOpcodesByTransactionHashAsync(this MirrorRestClient client, EvmHash evmTransactionHash, params IMirrorProjection[] filters)
+    public static Task<OpcodesData?> GetContractOpcodesByTransactionHashAsync(this MirrorRestClient client, EvmHash evmTransactionHash, CancellationToken cancellationToken, params IMirrorProjection[] filters)
     {
         var path = GenerateInitialPath($"contracts/results/{evmTransactionHash}/opcodes", filters);
-        return client.GetSingleItemAsync(path, MirrorJsonContext.Default.OpcodesData);
+        return client.GetSingleItemAsync(path, MirrorJsonContext.Default.OpcodesData, cancellationToken);
+    }
+    /// <inheritdoc cref="GetContractOpcodesByTransactionHashAsync(MirrorRestClient, EvmHash, CancellationToken, IMirrorProjection[])"/>
+    public static Task<OpcodesData?> GetContractOpcodesByTransactionHashAsync(this MirrorRestClient client, EvmHash evmTransactionHash, params IMirrorProjection[] filters)
+    {
+        return client.GetContractOpcodesByTransactionHashAsync(evmTransactionHash, CancellationToken.None, filters);
     }
     /// <summary>
     /// Retrieves the opcode-level execution trace of a historical
@@ -166,6 +175,9 @@ public static class OpcodesDataExtensions
     /// <param name="transactionId">
     /// The HAPI transaction id, not the EVM transaction hash.
     /// </param>
+    /// <param name="cancellationToken">
+    /// Token that cancels the request.
+    /// </param>
     /// <param name="filters">
     /// Optional projection toggles recognized by this endpoint —
     /// <see cref="OpcodeStackProjectionFilter"/>,
@@ -176,10 +188,19 @@ public static class OpcodesDataExtensions
     /// <returns>
     /// The opcode trace, or null if the transaction was not found.
     /// </returns>
+    /// <exception cref="ArgumentException">
+    /// If the transaction id is scheduled or carries a child nonce: this
+    /// mirror node route cannot select either.
+    /// </exception>
+    public static Task<OpcodesData?> GetContractOpcodesByTransactionIdAsync(this MirrorRestClient client, TransactionId transactionId, CancellationToken cancellationToken, params IMirrorProjection[] filters)
+    {
+        var (txId, txFilters) = MirrorFormatForContractResult(transactionId, nonceSupported: false, nameof(transactionId));
+        var path = GenerateInitialPath($"contracts/results/{txId}/opcodes", txFilters, filters);
+        return client.GetSingleItemAsync(path, MirrorJsonContext.Default.OpcodesData, cancellationToken);
+    }
+    /// <inheritdoc cref="GetContractOpcodesByTransactionIdAsync(MirrorRestClient, TransactionId, CancellationToken, IMirrorProjection[])"/>
     public static Task<OpcodesData?> GetContractOpcodesByTransactionIdAsync(this MirrorRestClient client, TransactionId transactionId, params IMirrorProjection[] filters)
     {
-        var (txId, txFilters) = MirrorFormat(transactionId);
-        var path = GenerateInitialPath($"contracts/results/{txId}/opcodes", txFilters, filters);
-        return client.GetSingleItemAsync(path, MirrorJsonContext.Default.OpcodesData);
+        return client.GetContractOpcodesByTransactionIdAsync(transactionId, CancellationToken.None, filters);
     }
 }

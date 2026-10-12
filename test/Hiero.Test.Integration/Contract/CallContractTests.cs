@@ -419,7 +419,7 @@ public class CallContractTests
         var createOwnerReceipt = await rootClient.TransferAsync(TestNetwork.Payer, new Endorsement(key1.publicKey), 30_00_000_000);
         await Assert.That(createOwnerReceipt.Status).IsEqualTo(ResponseCode.Success);
 
-        var ownerAddress = ((CreateAccountReceipt)(await rootClient.GetAllReceiptsAsync(createOwnerReceipt.TransactionId))[1]).Address;
+        var ownerAddress = (await rootClient.GetAllReceiptsAsync(createOwnerReceipt.TransactionId)).Children.OfType<CreateAccountReceipt>().Single().Address;
         await Assert.That(ownerAddress).IsNotEqualTo(EntityId.None);
 
         var updateReceipt = await rootClient.UpdateAccountAsync(new UpdateAccountParams
@@ -454,18 +454,67 @@ public class CallContractTests
         var mirror = await TestNetwork.GetMirrorRestClientAsync();
         var chainId = await TestNetwork.GetChainIdAsync();
 
-        var newMessage = Generator.Code(50);
+        // Consensus node v0.77 (hiero-consensus-node #25621) requires the key
+        // signing an EVM transaction to equal the sender account's current
+        // key, which must be a single ECDSA key. Adding keys turns the account's key into a 3-of-3 list, so not even key1 -
+        // its EVM address's key and one of the three - may sign for it any more.
         var evmInput = new EvmTransactionInput
+        {
+            ToEvmAddress = contract.CastToEvmAddress(),
+            MethodName = "set_message",
+            MethodParameters = [Generator.Code(50)],
+            GasLimit = 50_000,
+            ChainId = chainId,
+        };
+        var transactionId = client.CreateNewTransactionId();
+        var ex = await Assert.That(async () =>
+        {
+            await client.ExecuteEvmTransactionAsync(new EvmTransactionParams
+            {
+                Transaction = evmInput.RlpEncode(key1.privateKey),
+                AdditionalGasAllowance = 10_00_000_000
+            }, ctx => ctx.TransactionId = transactionId);
+        }).ThrowsException();
+        await Assert.That(ex).IsTypeOf<TransactionException>();
+        var tex = (TransactionException)ex!;
+        await Assert.That(tex.Status).IsEqualTo(ResponseCode.InvalidSignature);
+        await Assert.That(tex.Receipt.Status).IsEqualTo(ResponseCode.InvalidSignature);
+        await Assert.That(tex.TransactionId).IsEqualTo(transactionId);
+        await Assert.That(tex.Message).EndsWith("failed with status: InvalidSignature");
+
+        // Rotating back to the original single ECDSA key restores it: the
+        // account's EVM address never changed, so key1 once again both
+        // names the account and matches its current key.
+        var restoreReceipt = await rootClient.UpdateAccountAsync(new UpdateAccountParams
+        {
+            Account = ownerAddress,
+            Endorsement = new Endorsement(key1.publicKey),
+            Signatory = multiSignatory,
+        });
+        await Assert.That(restoreReceipt.Status).IsEqualTo(ResponseCode.Success);
+        await using var restoredClient = rootClient.Clone(ctx =>
+        {
+            ctx.Payer = ownerAddress;
+            ctx.Signatory = new Signatory(key1.privateKey);
+        });
+
+        // The rejected transaction never executed, so it consumed no nonce.
+        var ownerInfo = await rootClient.GetAccountInfoAsync(ownerAddress);
+        await Assert.That(ownerInfo.EvmNonce).IsEqualTo(0L);
+
+        var newMessage = Generator.Code(50);
+        var restoredInput = new EvmTransactionInput
         {
             ToEvmAddress = contract.CastToEvmAddress(),
             MethodName = "set_message",
             MethodParameters = [newMessage],
             GasLimit = 50_000,
             ChainId = chainId,
+            EvmNonce = ownerInfo.EvmNonce,
         };
-        var setReceipt = await client.ExecuteEvmTransactionAsync(new EvmTransactionParams
+        var setReceipt = await restoredClient.ExecuteEvmTransactionAsync(new EvmTransactionParams
         {
-            Transaction = evmInput.RlpEncode(key1.privateKey),
+            Transaction = restoredInput.RlpEncode(key1.privateKey),
             AdditionalGasAllowance = 10_00_000_000
         });
         await Assert.That(setReceipt.Status).IsEqualTo(ResponseCode.Success);
@@ -478,41 +527,32 @@ public class CallContractTests
         getCallParams.Gas = await mirror.EstimateGasAsync(TestNetwork.Payer.CastToEvmAddress(), getCallParams) + 1000;
         var getReceipt = await rootClient.CallContractAsync(getCallParams);
         await Assert.That(getReceipt.Status).IsEqualTo(ResponseCode.Success);
-        var getRecord = (CallContractRecord)await client.GetTransactionRecordAsync(getReceipt.TransactionId);
+        var getRecord = (CallContractRecord)await restoredClient.GetTransactionRecordAsync(getReceipt.TransactionId);
         await Assert.That(getRecord).IsNotNull();
         await Assert.That(getRecord.Result).IsNotNull();
         await Assert.That(getRecord.Result.Result.As<string>()).IsEqualTo(newMessage);
     }
     [Test]
-    public async Task RLP_Encoding_Identifies_Caller_Async()
+    public async Task RLP_Encoding_Identifies_Caller_With_Single_Key_Async()
     {
+        // The happy path: the account keeps the single ECDSA key whose EVM
+        // address it was created under, so the Ethereum signature both
+        // identifies the caller and matches the account's current key.
         var key0 = Generator.Secp256k1KeyPair();
-        var key1 = Generator.Secp256k1KeyPair();
-        var key2 = Generator.KeyPair();
-        var key3 = Generator.Ed25519KeyPair();
-        var multiEndorsement = new Endorsement(3, [key1.publicKey, key2.publicKey, key3.publicKey]);
-        var multiSignatory = new Signatory([key1.privateKey, key2.privateKey, key3.privateKey]);
 
         await using var rootClient = await TestNetwork.CreateClientAsync();
 
-        // Create the account via xfer to ensure we have key1 as the EVM Hash Address
+        // Create the account via xfer to ensure we have key0 as the EVM Hash Address
         var createOwnerReceipt = await rootClient.TransferAsync(TestNetwork.Payer, new Endorsement(key0.publicKey), 30_00_000_000);
         await Assert.That(createOwnerReceipt.Status).IsEqualTo(ResponseCode.Success);
 
-        var ownerAddress = ((CreateAccountReceipt)(await rootClient.GetAllReceiptsAsync(createOwnerReceipt.TransactionId))[1]).Address;
+        var ownerAddress = (await rootClient.GetAllReceiptsAsync(createOwnerReceipt.TransactionId)).Children.OfType<CreateAccountReceipt>().Single().Address;
         await Assert.That(ownerAddress).IsNotEqualTo(EntityId.None);
 
-        var updateReceipt = await rootClient.UpdateAccountAsync(new UpdateAccountParams
-        {
-            Account = ownerAddress,
-            Endorsement = multiEndorsement,
-            Signatory = new Signatory(multiSignatory, key0.privateKey),
-        });
-        await Assert.That(updateReceipt.Status).IsEqualTo(ResponseCode.Success);
         await using var client = rootClient.Clone(ctx =>
         {
             ctx.Payer = ownerAddress;
-            ctx.Signatory = multiSignatory;
+            ctx.Signatory = new Signatory(key0.privateKey);
         });
         var fileReceipt = await rootClient.CreateFileAsync(new CreateFileParams
         {
@@ -549,6 +589,348 @@ public class CallContractTests
             AdditionalGasAllowance = 10_00_000_000
         });
         await Assert.That(setReceipt.Status).IsEqualTo(ResponseCode.Success);
+
+        var getCallParams = new CallContractParams
+        {
+            Contract = contract,
+            MethodName = "get_message"
+        };
+        getCallParams.Gas = await mirror.EstimateGasAsync(TestNetwork.Payer.CastToEvmAddress(), getCallParams) + 1000;
+        var getReceipt = await rootClient.CallContractAsync(getCallParams);
+        await Assert.That(getReceipt.Status).IsEqualTo(ResponseCode.Success);
+        var getRecord = (CallContractRecord)await client.GetTransactionRecordAsync(getReceipt.TransactionId);
+        await Assert.That(getRecord).IsNotNull();
+        await Assert.That(getRecord.Result).IsNotNull();
+        await Assert.That(getRecord.Result.Result.As<string>()).IsEqualTo(newMessage);
+    }
+    [Test]
+    public async Task RLP_Encoding_With_Rotated_Single_Key_Fails_Async()
+    {
+        // Consensus node v0.77 (hiero-consensus-node #25621) requires the key
+        // signing an Ethereum transaction to equal the sender account's
+        // current key. Rotating the account to a different single ECDSA key
+        // leaves its EVM address derived from the original key, so the
+        // original key still names the account but no longer authorizes it.
+        var key0 = Generator.Secp256k1KeyPair();
+        var key1 = Generator.Secp256k1KeyPair();
+
+        await using var rootClient = await TestNetwork.CreateClientAsync();
+
+        // Create the account via xfer to ensure we have key0 as the EVM Hash Address
+        var createOwnerReceipt = await rootClient.TransferAsync(TestNetwork.Payer, new Endorsement(key0.publicKey), 30_00_000_000);
+        await Assert.That(createOwnerReceipt.Status).IsEqualTo(ResponseCode.Success);
+
+        var ownerAddress = (await rootClient.GetAllReceiptsAsync(createOwnerReceipt.TransactionId)).Children.OfType<CreateAccountReceipt>().Single().Address;
+        await Assert.That(ownerAddress).IsNotEqualTo(EntityId.None);
+
+        var updateReceipt = await rootClient.UpdateAccountAsync(new UpdateAccountParams
+        {
+            Account = ownerAddress,
+            Endorsement = new Endorsement(key1.publicKey),
+            Signatory = new Signatory(key0.privateKey, key1.privateKey),
+        });
+        await Assert.That(updateReceipt.Status).IsEqualTo(ResponseCode.Success);
+        await using var client = rootClient.Clone(ctx =>
+        {
+            ctx.Payer = ownerAddress;
+            ctx.Signatory = new Signatory(key1.privateKey);
+        });
+        var fileReceipt = await rootClient.CreateFileAsync(new CreateFileParams
+        {
+            Expiration = DateTime.UtcNow.AddSeconds(7890000),
+            Endorsements = [TestNetwork.Endorsement],
+            Contents = Encoding.UTF8.GetBytes(StatefulContract.STATEFUL_CONTRACT_BYTECODE)
+        });
+        var originalMessage = "Hello from .NET. " + DateTime.UtcNow.ToLongDateString();
+        var createReceipt = await client.CreateContractAsync(new CreateContractParams
+        {
+            File = fileReceipt.File,
+            Gas = await TestNetwork.EstimateGasFromCentsAsync(4),
+            RenewPeriod = TimeSpan.FromSeconds(7890000),
+            ConstructorArgs = [originalMessage],
+            Memo = Generator.Code(50)
+        });
+        await Assert.That(createReceipt.Status).IsEqualTo(ResponseCode.Success);
+        var contract = createReceipt.Contract;
+        var chainId = await TestNetwork.GetChainIdAsync();
+
+        var evmInput = new EvmTransactionInput
+        {
+            ToEvmAddress = contract.CastToEvmAddress(),
+            MethodName = "set_message",
+            MethodParameters = [Generator.Code(50)],
+            GasLimit = 50_000,
+            ChainId = chainId,
+        };
+        var transactionId = client.CreateNewTransactionId();
+        var ex = await Assert.That(async () =>
+        {
+            await client.ExecuteEvmTransactionAsync(new EvmTransactionParams
+            {
+                Transaction = evmInput.RlpEncode(key0.privateKey),
+                AdditionalGasAllowance = 10_00_000_000
+            }, ctx => ctx.TransactionId = transactionId);
+        }).ThrowsException();
+        await Assert.That(ex).IsTypeOf<TransactionException>();
+        var tex = (TransactionException)ex!;
+        await Assert.That(tex.Status).IsEqualTo(ResponseCode.InvalidSignature);
+        await Assert.That(tex.Receipt.Status).IsEqualTo(ResponseCode.InvalidSignature);
+        await Assert.That(tex.TransactionId).IsEqualTo(transactionId);
+        await Assert.That(tex.Message).EndsWith("failed with status: InvalidSignature");
+
+        // Rotating back to the original single ECDSA key restores it: the
+        // account's EVM address never changed, so key0 once again both names
+        // the account and matches its current key. The current key (key1) and the restored key (key0) both sign the update.
+        var restoreReceipt = await rootClient.UpdateAccountAsync(new UpdateAccountParams
+        {
+            Account = ownerAddress,
+            Endorsement = new Endorsement(key0.publicKey),
+            Signatory = new Signatory(new Signatory(key1.privateKey), key0.privateKey),
+        });
+        await Assert.That(restoreReceipt.Status).IsEqualTo(ResponseCode.Success);
+        await using var restoredClient = rootClient.Clone(ctx =>
+        {
+            ctx.Payer = ownerAddress;
+            ctx.Signatory = new Signatory(key0.privateKey);
+        });
+        // The rejected transaction never executed, so it consumed no nonce.
+        var ownerInfo = await restoredClient.GetAccountInfoAsync(ownerAddress);
+        await Assert.That(ownerInfo.EvmNonce).IsEqualTo(0L);
+
+        var newMessage = Generator.Code(50);
+        var restoredInput = new EvmTransactionInput
+        {
+            ToEvmAddress = contract.CastToEvmAddress(),
+            MethodName = "set_message",
+            MethodParameters = [newMessage],
+            GasLimit = 50_000,
+            ChainId = chainId,
+            EvmNonce = ownerInfo.EvmNonce,
+        };
+        var setReceipt = await restoredClient.ExecuteEvmTransactionAsync(new EvmTransactionParams
+        {
+            Transaction = restoredInput.RlpEncode(key0.privateKey),
+            AdditionalGasAllowance = 10_00_000_000
+        });
+        await Assert.That(setReceipt.Status).IsEqualTo(ResponseCode.Success);
+
+        var mirror = await TestNetwork.GetMirrorRestClientAsync();
+        var getCallParams = new CallContractParams
+        {
+            Contract = contract,
+            MethodName = "get_message"
+        };
+        getCallParams.Gas = await mirror.EstimateGasAsync(TestNetwork.Payer.CastToEvmAddress(), getCallParams) + 1000;
+        var getReceipt = await rootClient.CallContractAsync(getCallParams);
+        await Assert.That(getReceipt.Status).IsEqualTo(ResponseCode.Success);
+        var getRecord = (CallContractRecord)await restoredClient.GetTransactionRecordAsync(getReceipt.TransactionId);
+        await Assert.That(getRecord).IsNotNull();
+        await Assert.That(getRecord.Result).IsNotNull();
+        await Assert.That(getRecord.Result.Result.As<string>()).IsEqualTo(newMessage);
+    }
+    [Test]
+    public async Task RLP_Encoding_Identifies_Caller_Async()
+    {
+        var key0 = Generator.Secp256k1KeyPair();
+        var key1 = Generator.Secp256k1KeyPair();
+        var key2 = Generator.KeyPair();
+        var key3 = Generator.Ed25519KeyPair();
+        var multiEndorsement = new Endorsement(3, [key1.publicKey, key2.publicKey, key3.publicKey]);
+        var multiSignatory = new Signatory([key1.privateKey, key2.privateKey, key3.privateKey]);
+
+        await using var rootClient = await TestNetwork.CreateClientAsync();
+
+        // Create the account via xfer to ensure we have key1 as the EVM Hash Address
+        var createOwnerReceipt = await rootClient.TransferAsync(TestNetwork.Payer, new Endorsement(key0.publicKey), 30_00_000_000);
+        await Assert.That(createOwnerReceipt.Status).IsEqualTo(ResponseCode.Success);
+
+        var ownerAddress = (await rootClient.GetAllReceiptsAsync(createOwnerReceipt.TransactionId)).Children.OfType<CreateAccountReceipt>().Single().Address;
+        await Assert.That(ownerAddress).IsNotEqualTo(EntityId.None);
+
+        var updateReceipt = await rootClient.UpdateAccountAsync(new UpdateAccountParams
+        {
+            Account = ownerAddress,
+            Endorsement = multiEndorsement,
+            Signatory = new Signatory(multiSignatory, key0.privateKey),
+        });
+        await Assert.That(updateReceipt.Status).IsEqualTo(ResponseCode.Success);
+        await using var client = rootClient.Clone(ctx =>
+        {
+            ctx.Payer = ownerAddress;
+            ctx.Signatory = multiSignatory;
+        });
+        var fileReceipt = await rootClient.CreateFileAsync(new CreateFileParams
+        {
+            Expiration = DateTime.UtcNow.AddSeconds(7890000),
+            Endorsements = [TestNetwork.Endorsement],
+            Contents = Encoding.UTF8.GetBytes(StatefulContract.STATEFUL_CONTRACT_BYTECODE)
+        });
+        var originalMessage = "Hello from .NET. " + DateTime.UtcNow.ToLongDateString();
+        var createReceipt = await client.CreateContractAsync(new CreateContractParams
+        {
+            File = fileReceipt.File,
+            Gas = await TestNetwork.EstimateGasFromCentsAsync(4),
+            RenewPeriod = TimeSpan.FromSeconds(7890000),
+            ConstructorArgs = [originalMessage],
+            Memo = Generator.Code(50)
+        });
+        await Assert.That(createReceipt.Status).IsEqualTo(ResponseCode.Success);
+        var contract = createReceipt.Contract;
+        var chainId = await TestNetwork.GetChainIdAsync();
+
+        // Consensus node v0.77 (hiero-consensus-node #25621) requires the key
+        // signing an Ethereum transaction to equal the sender account's
+        // current key, which must be a single ECDSA key. After rotating to a
+        // threshold key, key0 still names the account (its EVM address) but
+        // can no longer act for it.
+        var evmInput = new EvmTransactionInput
+        {
+            ToEvmAddress = contract.CastToEvmAddress(),
+            MethodName = "set_message",
+            MethodParameters = [Generator.Code(50)],
+            GasLimit = 50_000,
+            ChainId = chainId,
+        };
+        var transactionId = client.CreateNewTransactionId();
+        var ex = await Assert.That(async () =>
+        {
+            await client.ExecuteEvmTransactionAsync(new EvmTransactionParams
+            {
+                Transaction = evmInput.RlpEncode(key0.privateKey),
+                AdditionalGasAllowance = 10_00_000_000
+            }, ctx => ctx.TransactionId = transactionId);
+        }).ThrowsException();
+        await Assert.That(ex).IsTypeOf<TransactionException>();
+        var tex = (TransactionException)ex!;
+        await Assert.That(tex.Status).IsEqualTo(ResponseCode.InvalidSignature);
+        await Assert.That(tex.Receipt.Status).IsEqualTo(ResponseCode.InvalidSignature);
+        await Assert.That(tex.TransactionId).IsEqualTo(transactionId);
+        await Assert.That(tex.Message).EndsWith("failed with status: InvalidSignature");
+
+        // Rotating back to the original single ECDSA key restores it: the
+        // account's EVM address never changed, so key0 once again both names
+        // the account and matches its current key. The current 3-of-3 key and the restored key (key0) both sign the update.
+        var restoreReceipt = await rootClient.UpdateAccountAsync(new UpdateAccountParams
+        {
+            Account = ownerAddress,
+            Endorsement = new Endorsement(key0.publicKey),
+            Signatory = new Signatory(multiSignatory, key0.privateKey),
+        });
+        await Assert.That(restoreReceipt.Status).IsEqualTo(ResponseCode.Success);
+        await using var restoredClient = rootClient.Clone(ctx =>
+        {
+            ctx.Payer = ownerAddress;
+            ctx.Signatory = new Signatory(key0.privateKey);
+        });
+        // The rejected transaction never executed, so it consumed no nonce.
+        var ownerInfo = await restoredClient.GetAccountInfoAsync(ownerAddress);
+        await Assert.That(ownerInfo.EvmNonce).IsEqualTo(0L);
+
+        var newMessage = Generator.Code(50);
+        var restoredInput = new EvmTransactionInput
+        {
+            ToEvmAddress = contract.CastToEvmAddress(),
+            MethodName = "set_message",
+            MethodParameters = [newMessage],
+            GasLimit = 50_000,
+            ChainId = chainId,
+            EvmNonce = ownerInfo.EvmNonce,
+        };
+        var setReceipt = await restoredClient.ExecuteEvmTransactionAsync(new EvmTransactionParams
+        {
+            Transaction = restoredInput.RlpEncode(key0.privateKey),
+            AdditionalGasAllowance = 10_00_000_000
+        });
+        await Assert.That(setReceipt.Status).IsEqualTo(ResponseCode.Success);
+
+        var mirror = await TestNetwork.GetMirrorRestClientAsync();
+        var getCallParams = new CallContractParams
+        {
+            Contract = contract,
+            MethodName = "get_message"
+        };
+        getCallParams.Gas = await mirror.EstimateGasAsync(TestNetwork.Payer.CastToEvmAddress(), getCallParams) + 1000;
+        var getReceipt = await rootClient.CallContractAsync(getCallParams);
+        await Assert.That(getReceipt.Status).IsEqualTo(ResponseCode.Success);
+        var getRecord = (CallContractRecord)await restoredClient.GetTransactionRecordAsync(getReceipt.TransactionId);
+        await Assert.That(getRecord).IsNotNull();
+        await Assert.That(getRecord.Result).IsNotNull();
+        await Assert.That(getRecord.Result.Result.As<string>()).IsEqualTo(newMessage);
+    }
+    [Test]
+    public async Task Can_Call_Contract_Via_Hapi_After_Multi_Key_Rotation_Async()
+    {
+        // The HAPI counterpart of RLP_Encoding_Identifies_Caller_Async: the
+        // same account (created from key0's alias, then rotated to a 3-of-3
+        // key) calls the same contract through a ContractCall transaction
+        // instead of an EVM transaction. The v0.77 single-ECDSA-key rule
+        // applies only to EVM transactions, so this path keeps working: the
+        // account pays and the 3-of-3 key signs.
+        var key0 = Generator.Secp256k1KeyPair();
+        var key1 = Generator.Secp256k1KeyPair();
+        var key2 = Generator.KeyPair();
+        var key3 = Generator.Ed25519KeyPair();
+        var multiEndorsement = new Endorsement(3, [key1.publicKey, key2.publicKey, key3.publicKey]);
+        var multiSignatory = new Signatory([key1.privateKey, key2.privateKey, key3.privateKey]);
+
+        await using var rootClient = await TestNetwork.CreateClientAsync();
+
+        // Create the account via xfer to ensure we have key0 as the EVM Hash Address
+        var createOwnerReceipt = await rootClient.TransferAsync(TestNetwork.Payer, new Endorsement(key0.publicKey), 30_00_000_000);
+        await Assert.That(createOwnerReceipt.Status).IsEqualTo(ResponseCode.Success);
+
+        var ownerAddress = (await rootClient.GetAllReceiptsAsync(createOwnerReceipt.TransactionId)).Children.OfType<CreateAccountReceipt>().Single().Address;
+        await Assert.That(ownerAddress).IsNotEqualTo(EntityId.None);
+
+        var updateReceipt = await rootClient.UpdateAccountAsync(new UpdateAccountParams
+        {
+            Account = ownerAddress,
+            Endorsement = multiEndorsement,
+            Signatory = new Signatory(multiSignatory, key0.privateKey),
+        });
+        await Assert.That(updateReceipt.Status).IsEqualTo(ResponseCode.Success);
+        await using var client = rootClient.Clone(ctx =>
+        {
+            ctx.Payer = ownerAddress;
+            ctx.Signatory = multiSignatory;
+        });
+
+        // The state in which the EVM path is rejected: still key0's EVM
+        // address, but now governed by the 3-of-3 key.
+        var ownerInfo = await client.GetAccountInfoAsync(ownerAddress);
+        await Assert.That(ownerInfo.EvmAddress).IsEqualTo(new EvmAddress(new Endorsement(key0.publicKey)));
+        await Assert.That(ownerInfo.Endorsement).IsEqualTo(multiEndorsement);
+
+        var fileReceipt = await rootClient.CreateFileAsync(new CreateFileParams
+        {
+            Expiration = DateTime.UtcNow.AddSeconds(7890000),
+            Endorsements = [TestNetwork.Endorsement],
+            Contents = Encoding.UTF8.GetBytes(StatefulContract.STATEFUL_CONTRACT_BYTECODE)
+        });
+        var originalMessage = "Hello from .NET. " + DateTime.UtcNow.ToLongDateString();
+        var createReceipt = await client.CreateContractAsync(new CreateContractParams
+        {
+            File = fileReceipt.File,
+            Gas = await TestNetwork.EstimateGasFromCentsAsync(4),
+            RenewPeriod = TimeSpan.FromSeconds(7890000),
+            ConstructorArgs = [originalMessage],
+            Memo = Generator.Code(50)
+        });
+        await Assert.That(createReceipt.Status).IsEqualTo(ResponseCode.Success);
+        var contract = createReceipt.Contract;
+        var mirror = await TestNetwork.GetMirrorRestClientAsync();
+
+        var newMessage = Generator.Code(50);
+        var setCallParams = new CallContractParams
+        {
+            Contract = contract,
+            MethodName = "set_message",
+            MethodArgs = [newMessage]
+        };
+        setCallParams.Gas = await mirror.EstimateGasAsync(TestNetwork.Payer.CastToEvmAddress(), setCallParams) + 17000;
+        var setReceipt = await client.CallContractAsync(setCallParams);
+        await Assert.That(setReceipt.Status).IsEqualTo(ResponseCode.Success);
+        await Assert.That(setReceipt.TransactionId.Payer).IsEqualTo(ownerAddress);
 
         var getCallParams = new CallContractParams
         {
@@ -579,7 +961,7 @@ public class CallContractTests
         var createOwnerReceipt = await rootClient.TransferAsync(TestNetwork.Payer, new Endorsement(key0.publicKey), 30_00_000_000);
         await Assert.That(createOwnerReceipt.Status).IsEqualTo(ResponseCode.Success);
 
-        var ownerAddress = ((CreateAccountReceipt)(await rootClient.GetAllReceiptsAsync(createOwnerReceipt.TransactionId))[1]).Address;
+        var ownerAddress = (await rootClient.GetAllReceiptsAsync(createOwnerReceipt.TransactionId)).Children.OfType<CreateAccountReceipt>().Single().Address;
         await Assert.That(ownerAddress).IsNotEqualTo(EntityId.None);
 
         var updateReceipt = await rootClient.UpdateAccountAsync(new UpdateAccountParams
@@ -614,18 +996,63 @@ public class CallContractTests
         var mirror = await TestNetwork.GetMirrorRestClientAsync();
         var chainId = await TestNetwork.GetChainIdAsync();
 
-        var newMessage = Generator.Code(50);
+        // Consensus node v0.77 (hiero-consensus-node #25621) requires the key
+        // signing an EVM transaction to equal the sender account's current
+        // key, which must be a single ECDSA key. After rotating to a 3-of-3 key, key0 still names the
+        // account (its EVM address) but can no longer act for it - even though
+        // the HAPI payer here is a different, fully signed account.
         var evmInput = new EvmTransactionInput
+        {
+            ToEvmAddress = contract.CastToEvmAddress(),
+            MethodName = "set_message",
+            MethodParameters = [Generator.Code(50)],
+            GasLimit = 50_000,
+            ChainId = chainId,
+        };
+        var transactionId = rootClient.CreateNewTransactionId();
+        var ex = await Assert.That(async () =>
+        {
+            await rootClient.ExecuteEvmTransactionAsync(new EvmTransactionParams
+            {
+                Transaction = evmInput.RlpEncode(key0.privateKey),
+                AdditionalGasAllowance = 10_00_000_000
+            }, ctx => ctx.TransactionId = transactionId);
+        }).ThrowsException();
+        await Assert.That(ex).IsTypeOf<TransactionException>();
+        var tex = (TransactionException)ex!;
+        await Assert.That(tex.Status).IsEqualTo(ResponseCode.InvalidSignature);
+        await Assert.That(tex.Receipt.Status).IsEqualTo(ResponseCode.InvalidSignature);
+        await Assert.That(tex.TransactionId).IsEqualTo(transactionId);
+        await Assert.That(tex.Message).EndsWith("failed with status: InvalidSignature");
+
+        // Rotating back to the original single ECDSA key restores it: the
+        // account's EVM address never changed, so key0 once again both
+        // names the account and matches its current key.
+        var restoreReceipt = await rootClient.UpdateAccountAsync(new UpdateAccountParams
+        {
+            Account = ownerAddress,
+            Endorsement = new Endorsement(key0.publicKey),
+            Signatory = new Signatory(multiSignatory, key0.privateKey),
+        });
+        await Assert.That(restoreReceipt.Status).IsEqualTo(ResponseCode.Success);
+
+        // The rejected transaction never executed, so it consumed no nonce.
+        var ownerInfo = await rootClient.GetAccountInfoAsync(ownerAddress);
+        await Assert.That(ownerInfo.EvmNonce).IsEqualTo(0L);
+
+        var newMessage = Generator.Code(50);
+        var restoredInput = new EvmTransactionInput
         {
             ToEvmAddress = contract.CastToEvmAddress(),
             MethodName = "set_message",
             MethodParameters = [newMessage],
             GasLimit = 50_000,
             ChainId = chainId,
+            EvmNonce = ownerInfo.EvmNonce,
         };
         var setReceipt = await rootClient.ExecuteEvmTransactionAsync(new EvmTransactionParams
         {
-            Transaction = evmInput.RlpEncode(key0.privateKey),
+            Transaction = restoredInput.RlpEncode(key0.privateKey),
             AdditionalGasAllowance = 10_00_000_000
         });
         await Assert.That(setReceipt.Status).IsEqualTo(ResponseCode.Success);
@@ -638,7 +1065,7 @@ public class CallContractTests
         getCallParams.Gas = await mirror.EstimateGasAsync(TestNetwork.Payer.CastToEvmAddress(), getCallParams) + 1000;
         var getReceipt = await rootClient.CallContractAsync(getCallParams);
         await Assert.That(getReceipt.Status).IsEqualTo(ResponseCode.Success);
-        var getRecord = (CallContractRecord)await client.GetTransactionRecordAsync(getReceipt.TransactionId);
+        var getRecord = (CallContractRecord)await rootClient.GetTransactionRecordAsync(getReceipt.TransactionId);
         await Assert.That(getRecord).IsNotNull();
         await Assert.That(getRecord.Result).IsNotNull();
         await Assert.That(getRecord.Result.Result.As<string>()).IsEqualTo(newMessage);

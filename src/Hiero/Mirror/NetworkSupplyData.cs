@@ -61,16 +61,19 @@ public static class NetworkSupplyDataExtensions
     /// <c>timestamp=lte:{consensus}</c>. Leave null for the latest
     /// values.
     /// </param>
+    /// <param name="cancellationToken">
+    /// Optional token that cancels the request.
+    /// </param>
     /// <returns>
     /// The network supply data, or null if not found.
     /// </returns>
-    public static Task<NetworkSupplyData?> GetNetworkSupplyAsync(this MirrorRestClient client, ConsensusTimeStamp? consensus = null)
+    public static Task<NetworkSupplyData?> GetNetworkSupplyAsync(this MirrorRestClient client, ConsensusTimeStamp? consensus = null, CancellationToken cancellationToken = default)
     {
         if (consensus == null)
         {
-            return client.GetSingleItemAsync("network/supply", MirrorJsonContext.Default.NetworkSupplyData);
+            return client.GetSingleItemAsync("network/supply", MirrorJsonContext.Default.NetworkSupplyData, cancellationToken);
         }
         var path = GenerateInitialPath("network/supply", TimestampFilter.OnOrBefore(consensus.Value));
-        return client.GetSingleItemAsync(path, MirrorJsonContext.Default.NetworkSupplyData);
+        return client.GetSingleItemAsync(path, MirrorJsonContext.Default.NetworkSupplyData, cancellationToken);
     }
 }

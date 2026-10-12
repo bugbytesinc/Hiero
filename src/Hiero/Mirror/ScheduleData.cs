@@ -17,9 +17,10 @@ namespace Hiero.Mirror;
 /// consensus-side (gRPC) type returned by
 /// <c>ConsensusClient.GetScheduleInfoAsync</c>. Field names
 /// align where the concepts match; mirror-only fields include
-/// <see cref="Created"/>, <see cref="Signatures"/>, and the
-/// nullable <see cref="Deleted"/> / <see cref="Executed"/>
-/// timestamps.
+/// <see cref="Created"/> and <see cref="Signatures"/>. Both types
+/// report a nullable <see cref="Executed"/> timestamp, but
+/// <see cref="Deleted"/> here is a flag, where
+/// <see cref="ScheduleInfo"/> reports a deletion timestamp.
 /// </remarks>
 public class ScheduleData
 {
@@ -119,6 +120,10 @@ public static class ScheduleDataExtensions
     /// <param name="client">
     /// Mirror Rest Client to use for the request.
     /// </param>
+    /// <param name="cancellationToken">
+    /// Token that cancels the enumeration, including a page request in
+    /// flight. <c>WithCancellation</c> on the result works as well.
+    /// </param>
     /// <param name="filters">
     /// Additional query filters. The endpoint supports
     /// <see cref="AccountFilter"/>, <see cref="ScheduleFilter"/>,
@@ -127,10 +132,15 @@ public static class ScheduleDataExtensions
     /// <returns>
     /// An async enumerable of schedule records.
     /// </returns>
-    public static IAsyncEnumerable<ScheduleData> GetSchedulesAsync(this MirrorRestClient client, params IMirrorQueryParameter[] filters)
+    public static IAsyncEnumerable<ScheduleData> GetSchedulesAsync(this MirrorRestClient client, CancellationToken cancellationToken, params IMirrorQueryParameter[] filters)
     {
         var path = GenerateInitialPath("schedules", new PageLimit(100), filters);
-        return client.GetPagedItemsAsync<ScheduleDataPage, ScheduleData>(path, MirrorJsonContext.Default.ScheduleDataPage);
+        return client.GetPagedItemsAsync<ScheduleDataPage, ScheduleData>(path, MirrorJsonContext.Default.ScheduleDataPage, cancellationToken);
+    }
+    /// <inheritdoc cref="GetSchedulesAsync(MirrorRestClient, CancellationToken, IMirrorQueryParameter[])"/>
+    public static IAsyncEnumerable<ScheduleData> GetSchedulesAsync(this MirrorRestClient client, params IMirrorQueryParameter[] filters)
+    {
+        return client.GetSchedulesAsync(CancellationToken.None, filters);
     }
     /// <summary>
     /// Retrieves a single schedule entity by id from
@@ -142,11 +152,14 @@ public static class ScheduleDataExtensions
     /// <param name="schedule">
     /// The schedule entity id to look up.
     /// </param>
+    /// <param name="cancellationToken">
+    /// Optional token that cancels the request.
+    /// </param>
     /// <returns>
     /// The schedule record, or null if not found.
     /// </returns>
-    public static Task<ScheduleData?> GetScheduleAsync(this MirrorRestClient client, EntityId schedule)
+    public static Task<ScheduleData?> GetScheduleAsync(this MirrorRestClient client, EntityId schedule, CancellationToken cancellationToken = default)
     {
-        return client.GetSingleItemAsync($"schedules/{schedule.ToMirrorString()}", MirrorJsonContext.Default.ScheduleData);
+        return client.GetSingleItemAsync($"schedules/{schedule.ToMirrorString()}", MirrorJsonContext.Default.ScheduleData, cancellationToken);
     }
 }

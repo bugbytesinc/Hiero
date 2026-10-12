@@ -9,9 +9,8 @@ public class ContractAccountTests
     public async Task Can_Get_Account_Balance()
     {
         await using var fxContract = await GreetingContract.CreateAsync();
-        await using var client = await TestNetwork.CreateClientAsync();
 
-        var balance = await client.GetAccountBalanceAsync(fxContract.ContractReceipt!.Contract);
+        var balance = await TestNetwork.GetCryptoBalanceAsync(fxContract.ContractReceipt!.Contract);
         await Assert.That(balance).IsEqualTo(0ul);
     }
 
@@ -22,7 +21,7 @@ public class ContractAccountTests
         await using var client = await TestNetwork.CreateClientAsync();
 
         await client.TransferAsync(TestNetwork.Payer, fxContract, 500);
-        var balance = await client.GetAccountBalanceAsync(fxContract.ContractReceipt!.Contract);
+        var balance = await TestNetwork.GetCryptoBalanceAsync(fxContract.ContractReceipt!.Contract);
         await Assert.That(balance).IsEqualTo(500ul);
     }
 
@@ -33,12 +32,12 @@ public class ContractAccountTests
         await using var client = await TestNetwork.CreateClientAsync();
 
         await client.TransferAsync(TestNetwork.Payer, fxContract, 500);
-        var balance = await client.GetAccountBalanceAsync(fxContract.ContractReceipt!.Contract);
+        var balance = await TestNetwork.GetCryptoBalanceAsync(fxContract.ContractReceipt!.Contract);
         await Assert.That(balance).IsEqualTo(500ul);
 
         var receipt = await client.TransferAsync(fxContract, TestNetwork.Payer, 500, ctx => ctx.Signatory = new Signatory(ctx.Signatory!, fxContract.PrivateKey));
         await Assert.That(receipt.Status).IsEqualTo(ResponseCode.Success);
-        balance = await client.GetAccountBalanceAsync(fxContract.ContractReceipt!.Contract);
+        balance = await TestNetwork.GetCryptoBalanceAsync(fxContract.ContractReceipt!.Contract);
         await Assert.That(balance).IsEqualTo(0ul);
     }
 

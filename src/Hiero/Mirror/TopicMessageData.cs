@@ -68,7 +68,7 @@ public static class TopicMessageDataExtensions
     /// Retrieves a single topic message by topic id and in-stream
     /// sequence number via
     /// <c>/api/v1/topics/{topicId}/messages/{sequenceNumber}</c>.
-    /// Use the <see cref="GetTopicMessageAsync(MirrorRestClient, ConsensusTimeStamp)"/>
+    /// Use the <see cref="GetTopicMessageAsync(MirrorRestClient, ConsensusTimeStamp, CancellationToken)"/>
     /// overload when the consensus timestamp is known but the topic id
     /// is not.
     /// </summary>
@@ -81,12 +81,15 @@ public static class TopicMessageDataExtensions
     /// <param name="sequenceNumber">
     /// The sequence number of the message within the topic stream to retrieve.
     /// </param>
+    /// <param name="cancellationToken">
+    /// Optional token that cancels the request.
+    /// </param>
     /// <returns>
     /// The topic message information or null if not found.
     /// </returns>
-    public static Task<TopicMessageData?> GetTopicMessageAsync(this MirrorRestClient client, EntityId topic, ulong sequenceNumber)
+    public static Task<TopicMessageData?> GetTopicMessageAsync(this MirrorRestClient client, EntityId topic, ulong sequenceNumber, CancellationToken cancellationToken = default)
     {
-        return client.GetSingleItemAsync($"topics/{topic.ToMirrorString()}/messages/{sequenceNumber}", MirrorJsonContext.Default.TopicMessageData);
+        return client.GetSingleItemAsync($"topics/{topic.ToMirrorString()}/messages/{sequenceNumber}", MirrorJsonContext.Default.TopicMessageData, cancellationToken);
     }
     /// <summary>
     /// Retrieves a topic message by its consensus timestamp, without
@@ -100,12 +103,15 @@ public static class TopicMessageDataExtensions
     /// <param name="consensus">
     /// The consensus timestamp identifying the message.
     /// </param>
+    /// <param name="cancellationToken">
+    /// Optional token that cancels the request.
+    /// </param>
     /// <returns>
     /// The topic message information or null if not found.
     /// </returns>
-    public static Task<TopicMessageData?> GetTopicMessageAsync(this MirrorRestClient client, ConsensusTimeStamp consensus)
+    public static Task<TopicMessageData?> GetTopicMessageAsync(this MirrorRestClient client, ConsensusTimeStamp consensus, CancellationToken cancellationToken = default)
     {
-        return client.GetSingleItemAsync($"topics/messages/{consensus}", MirrorJsonContext.Default.TopicMessageData);
+        return client.GetSingleItemAsync($"topics/messages/{consensus}", MirrorJsonContext.Default.TopicMessageData, cancellationToken);
     }
     /// <summary>
     /// Retrieves a list of topic messages.  Messages may be filtered by a starting
@@ -117,6 +123,10 @@ public static class TopicMessageDataExtensions
     /// <param name="topic">
     /// The topic id of the message stream.
     /// </param>
+    /// <param name="cancellationToken">
+    /// Token that cancels the enumeration, including a page request in
+    /// flight. <c>WithCancellation</c> on the result works as well.
+    /// </param>
     /// <param name="filters">
     /// Additional query filters if desired.
     /// </param>
@@ -124,9 +134,14 @@ public static class TopicMessageDataExtensions
     /// An enumerable of topic messages meeting the given criteria, may be empty if
     /// none are found.
     /// </returns>
-    public static IAsyncEnumerable<TopicMessageData> GetTopicMessagesAsync(this MirrorRestClient client, EntityId topic, params IMirrorQueryParameter[] filters)
+    public static IAsyncEnumerable<TopicMessageData> GetTopicMessagesAsync(this MirrorRestClient client, EntityId topic, CancellationToken cancellationToken, params IMirrorQueryParameter[] filters)
     {
         var path = GenerateInitialPath($"topics/{topic.ToMirrorString()}/messages", new PageLimit(100), filters);
-        return client.GetPagedItemsAsync<TopicMessageDataPage, TopicMessageData>(path, MirrorJsonContext.Default.TopicMessageDataPage);
+        return client.GetPagedItemsAsync<TopicMessageDataPage, TopicMessageData>(path, MirrorJsonContext.Default.TopicMessageDataPage, cancellationToken);
+    }
+    /// <inheritdoc cref="GetTopicMessagesAsync(MirrorRestClient, EntityId, CancellationToken, IMirrorQueryParameter[])"/>
+    public static IAsyncEnumerable<TopicMessageData> GetTopicMessagesAsync(this MirrorRestClient client, EntityId topic, params IMirrorQueryParameter[] filters)
+    {
+        return client.GetTopicMessagesAsync(topic, CancellationToken.None, filters);
     }
 }

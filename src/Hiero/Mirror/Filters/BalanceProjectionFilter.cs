@@ -15,12 +15,6 @@ namespace Hiero.Mirror.Filters;
 /// included, token balances within it are capped at 50 entries
 /// per account per HIP-367.
 /// </para>
-/// <para>
-/// This is the first concrete <see cref="IMirrorProjection"/>
-/// implementation in the SDK; the marker interface was
-/// introduced in Phase 2 for exactly this category of wire
-/// parameter.
-/// </para>
 /// </remarks>
 public sealed class BalanceProjectionFilter : IMirrorProjection
 {

@@ -44,7 +44,10 @@ public sealed class AirdropParams : TransactionParams<TransactionReceipt>, INetw
     /// </remarks>
     public Signatory? Signatory { get; set; }
     /// <summary>
-    /// Optional cancellation token to interrupt the submission process.
+    /// Optional cancellation token.  Cancelling stops the client waiting;
+    /// it cannot recall a transaction already sent.  Cancelled after the
+    /// send, the outcome is unknown: settle it by its transaction id on a
+    /// mirror node rather than resubmitting it.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
     INetworkTransaction INetworkParams<TransactionReceipt>.CreateNetworkTransaction()
@@ -61,11 +64,11 @@ public sealed class AirdropParams : TransactionParams<TransactionReceipt>, INetw
                 var xfer = TokenTransfers[i];
                 if (xfer.Token.IsNullOrNone())
                 {
-                    throw new ArgumentException("Token", "The list of token transfers cannot contain a null or empty Token value.");
+                    throw new ArgumentException("The list of token transfers cannot contain a null or empty Token value.", "Token");
                 }
                 if (xfer.Account.IsNullOrNone())
                 {
-                    throw new ArgumentException(nameof(xfer.Account), "The list of token transfers cannot contain a null or empty account value.");
+                    throw new ArgumentException("The list of token transfers cannot contain a null or empty account value.", nameof(xfer.Account));
                 }
                 if (xfer.Amount == 0)
                 {
@@ -106,15 +109,15 @@ public sealed class AirdropParams : TransactionParams<TransactionReceipt>, INetw
                 var xfer = NftTransfers[i];
                 if (xfer.Nft.IsNullOrNone())
                 {
-                    throw new ArgumentException("Nft", "The list of NFT transfers cannot contain a null or empty NFT address.");
+                    throw new ArgumentException("The list of NFT transfers cannot contain a null or empty NFT address.", "Nft");
                 }
                 if (xfer.Sender.IsNullOrNone())
                 {
-                    throw new ArgumentException(nameof(xfer.Sender), "The list of NFT transfers cannot contain a null or empty sender account value.");
+                    throw new ArgumentException("The list of NFT transfers cannot contain a null or empty sender account value.", nameof(xfer.Sender));
                 }
                 if (xfer.Receiver.IsNullOrNone())
                 {
-                    throw new ArgumentException(nameof(xfer.Receiver), "The list of NFT transfers cannot contain a null or empty receiver account value.");
+                    throw new ArgumentException("The list of NFT transfers cannot contain a null or empty receiver account value.", nameof(xfer.Receiver));
                 }
                 if (!nftXferList.TryAdd(xfer.Nft, new Proto.NftTransfer
                 {
@@ -124,7 +127,7 @@ public sealed class AirdropParams : TransactionParams<TransactionReceipt>, INetw
                     IsApproval = xfer.Delegated
                 }))
                 {
-                    throw new ArgumentException(nameof(xfer.Nft), "The list of NFT transfers cannot contain the same NFT in multiple transfers at once.");
+                    throw new ArgumentException("The list of NFT transfers cannot contain the same NFT in multiple transfers at once.", nameof(xfer.Nft));
                 }
             }
             var netNftTransfers = nftXferList.Count > 0
@@ -146,7 +149,7 @@ public sealed class AirdropParams : TransactionParams<TransactionReceipt>, INetw
         }
         if (result.TokenTransfers.Count == 0)
         {
-            throw new ArgumentException(nameof(AirdropParams), "Both token and NFT airdrop lists are null or empty. At least one must include transfers.");
+            throw new ArgumentException("Both token and NFT airdrop lists are null or empty. At least one must include transfers.", nameof(AirdropParams));
         }
         return result;
     }
@@ -193,10 +196,10 @@ public static class AirdropExtensions
     /// <returns>
     /// A transaction receipt indicating a successful operation.
     /// </returns>
-    /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
+    /// <exception cref="ArgumentException">If required arguments are missing or invalid.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
-    /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
+    /// <exception cref="PrecheckException">If the gateway node refused the transaction. Only a code about the transaction itself proves it did not execute; any other code leaves the outcome unknown, so settle it by its transaction id on a mirror node rather than resubmitting it (see <see cref="PrecheckException"/>).</exception>
+    /// <exception cref="ConsensusException">If the outcome could not be confirmed: the transaction may have executed, so settle it by its transaction id on a mirror node rather than resubmitting it.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
     /// <example>
     /// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="AirdropToken" language="csharp"/>
@@ -245,10 +248,10 @@ public static class AirdropExtensions
     /// <returns>
     /// A transaction receipt indicating a successful operation.
     /// </returns>
-    /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
+    /// <exception cref="ArgumentException">If required arguments are missing or invalid.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
-    /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
+    /// <exception cref="PrecheckException">If the gateway node refused the transaction. Only a code about the transaction itself proves it did not execute; any other code leaves the outcome unknown, so settle it by its transaction id on a mirror node rather than resubmitting it (see <see cref="PrecheckException"/>).</exception>
+    /// <exception cref="ConsensusException">If the outcome could not be confirmed: the transaction may have executed, so settle it by its transaction id on a mirror node rather than resubmitting it.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
     /// <example>
     /// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="AirdropNft" language="csharp"/>
@@ -278,10 +281,10 @@ public static class AirdropExtensions
     /// <returns>
     /// A transaction receipt indicating a successful operation.
     /// </returns>
-    /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
+    /// <exception cref="ArgumentException">If required arguments are missing or invalid.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
-    /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
+    /// <exception cref="PrecheckException">If the gateway node refused the transaction. Only a code about the transaction itself proves it did not execute; any other code leaves the outcome unknown, so settle it by its transaction id on a mirror node rather than resubmitting it (see <see cref="PrecheckException"/>).</exception>
+    /// <exception cref="ConsensusException">If the outcome could not be confirmed: the transaction may have executed, so settle it by its transaction id on a mirror node rather than resubmitting it.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
     /// <example>
     /// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="AirdropMulti" language="csharp"/>

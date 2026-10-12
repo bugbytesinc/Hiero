@@ -19,6 +19,15 @@ public static class SubmitLargeMessageExtension
     /// representing the transactions required to
     /// upload the entire message.
     /// </summary>
+    /// <remarks>
+    /// The upload is not all-or-nothing.  Each segment is its own
+    /// transaction, so when one fails or ends with an unknown outcome
+    /// (the exception's <c>TransactionId</c> names that segment), every
+    /// segment before it has already been recorded on the topic, and its
+    /// receipt is lost with the exception.  Settle the failing segment on
+    /// a mirror node before deciding to send the message again, and expect
+    /// readers of the topic to see the partial upload either way.
+    /// </remarks>
     /// <param name="client">
     /// A Hiero ConsensusClient instance.
     /// </param>
@@ -31,7 +40,8 @@ public static class SubmitLargeMessageExtension
     /// </param>
     /// <param name="segmentSize">
     /// The maximum size of each segment.  Must
-    /// be under the current allowed size for 
+    /// be greater than zero and under the
+    /// current allowed size for
     /// transactions currently supported by the 
     /// network.  The method will break the 
     /// message into as many segments as necessary
@@ -45,6 +55,9 @@ public static class SubmitLargeMessageExtension
     /// Optional callback method providing an opportunity to modify 
     /// the execution configuration for just this method call. 
     /// It is executed prior to submitting the request to the network.
+    /// A <see cref="IConsensusContext.TransactionId"/> set here is used
+    /// for the first segment only, whose id identifies the whole message;
+    /// every later segment gets an id of its own.
     /// </param>
     /// <returns>
     /// An array of Submit Message Receipts indicating success, one for each
@@ -52,10 +65,10 @@ public static class SubmitLargeMessageExtension
     /// the correlation transaction ID for the series of message segments
     /// as a whole.
     /// </returns>
-    /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
+    /// <exception cref="ArgumentException">If required arguments are missing or invalid.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
-    /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
+    /// <exception cref="PrecheckException">If the gateway node refused the transaction. Only a code about the transaction itself proves it did not execute; any other code leaves the outcome unknown, so settle it by its transaction id on a mirror node rather than resubmitting it (see <see cref="PrecheckException"/>).</exception>
+    /// <exception cref="ConsensusException">If the outcome could not be confirmed: the transaction may have executed, so settle it by its transaction id on a mirror node rather than resubmitting it.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
 
     public static async Task<SubmitMessageReceipt[]> SubmitLargeMessageAsync(this ConsensusClient client, EntityId topic, ReadOnlyMemory<byte> message, int segmentSize, Signatory? signatory = null, Action<IConsensusContext>? configure = null)
@@ -82,7 +95,7 @@ public static class SubmitLargeMessageExtension
                 SegmentIndex = i + 1,
                 TotalSegmentCount = segmentCount,
                 Signatory = signatory
-            }).ConfigureAwait(false);
+            }, NewTransactionId).ConfigureAwait(false);
         }
         if (segmentCount > 1)
         {
@@ -94,8 +107,16 @@ public static class SubmitLargeMessageExtension
                 SegmentIndex = segmentCount,
                 TotalSegmentCount = segmentCount,
                 Signatory = signatory
-            }).ConfigureAwait(false);
+            }, NewTransactionId).ConfigureAwait(false);
         }
         return receipts;
+
+        // A transaction id the caller configured belongs to the first
+        // segment, whose id identifies the whole message; reusing it would
+        // make every later segment a duplicate.
+        static void NewTransactionId(IConsensusContext ctx)
+        {
+            ctx.TransactionId = null;
+        }
     }
 }

@@ -21,7 +21,8 @@ public class ContractLogData
     [JsonConverter(typeof(HexStringToBytesConverter))]
     public ReadOnlyMemory<byte> Bloom { get; set; }
     /// <summary>
-    /// ID of the contract that was called.
+    /// ID of the contract that emitted this log, the same
+    /// contract as <see cref="ContractAddress"/>.
     /// </summary>
     [JsonPropertyName("contract_id")]
     public EntityId Contract { get; set; } = default!;
@@ -32,7 +33,8 @@ public class ContractLogData
     [JsonConverter(typeof(HexStringToBytesConverter))]
     public ReadOnlyMemory<byte> Data { get; set; }
     /// <summary>
-    /// The log index within the block for this log record
+    /// The index of this log within the chain of logs for its
+    /// contract execution (not a block-wide log index).
     /// </summary>
     [JsonPropertyName("index")]
     [JsonConverter(typeof(LongMirrorConverter))]

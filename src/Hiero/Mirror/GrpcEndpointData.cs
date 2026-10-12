@@ -9,6 +9,12 @@ namespace Hiero.Mirror;
 public class GrpcEndpointData
 {
     /// <summary>
+    /// The DNS domain name of the endpoint, when the address book
+    /// publishes one; empty or null otherwise.
+    /// </summary>
+    [JsonPropertyName("domain_name")]
+    public string? DomainName { get; set; }
+    /// <summary>
     /// IPV4 address of the endpoint.
     /// </summary>
     [JsonPropertyName("ip_address_v4")]

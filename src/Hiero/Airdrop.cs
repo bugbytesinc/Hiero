@@ -13,7 +13,8 @@ public sealed record Airdrop
 {
     /// <summary>
     /// The account that initiated and will fund this pending airdrop
-    /// (the payer of the airdrop transfer transaction).
+    /// (the account whose tokens are airdropped, which may differ from
+    /// the fee payer of the airdrop transaction).
     /// </summary>
     public EntityId Sender { get; init; }
     /// <summary>

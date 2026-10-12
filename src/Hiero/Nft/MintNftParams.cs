@@ -18,7 +18,7 @@ namespace Hiero;
 public sealed class MintNftParams : TransactionParams<NftMintReceipt>, INetworkParams<NftMintReceipt>
 {
     /// <summary>
-    /// The Token ID of the NFT class to create.
+    /// The existing token (NFT class) under which to mint the new serials.
     /// </summary>
     public EntityId Token { get; set; } = default!;
     /// <summary>
@@ -39,8 +39,10 @@ public sealed class MintNftParams : TransactionParams<NftMintReceipt>, INetworkP
     /// </remarks>
     public Signatory? Signatory { get; set; }
     /// <summary>
-    /// Optional Cancellation token that interrupts the NFT
-    /// minting process.
+    /// Optional cancellation token.  Cancelling stops the client waiting;
+    /// it cannot recall a transaction already sent.  Cancelled after the
+    /// send, the outcome is unknown: settle it by its transaction id on a
+    /// mirror node rather than resubmitting it.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
     /// <summary>
@@ -104,11 +106,11 @@ public static class MintNftExtensions
     /// <returns>
     /// A mint transaction receipt indicating a successful operation.
     /// </returns>
-    /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
+    /// <exception cref="ArgumentException">If required arguments are missing or invalid.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission, for example, if the token is already deleted.</exception>
-    /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
-    /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    /// <exception cref="PrecheckException">If the gateway node refused the transaction. Only a code about the transaction itself proves it did not execute; any other code leaves the outcome unknown, so settle it by its transaction id on a mirror node rather than resubmitting it (see <see cref="PrecheckException"/>).</exception>
+    /// <exception cref="ConsensusException">If the outcome could not be confirmed: the transaction may have executed, so settle it by its transaction id on a mirror node rather than resubmitting it.</exception>
+    /// <exception cref="TransactionException">If the network rejected the mint request as invalid or had missing data.</exception>
     /// <example>
     /// <code source="../../../samples/DocSnippets/NftSnippets.cs" region="MintNftSingle" language="csharp"/>
     /// </example>
@@ -135,11 +137,11 @@ public static class MintNftExtensions
     /// <returns>
     /// A mint transaction receipt indicating a successful operation.
     /// </returns>
-    /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
+    /// <exception cref="ArgumentException">If required arguments are missing or invalid.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission, for example, if the token is already deleted.</exception>
-    /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
-    /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
+    /// <exception cref="PrecheckException">If the gateway node refused the transaction. Only a code about the transaction itself proves it did not execute; any other code leaves the outcome unknown, so settle it by its transaction id on a mirror node rather than resubmitting it (see <see cref="PrecheckException"/>).</exception>
+    /// <exception cref="ConsensusException">If the outcome could not be confirmed: the transaction may have executed, so settle it by its transaction id on a mirror node rather than resubmitting it.</exception>
+    /// <exception cref="TransactionException">If the network rejected the mint request as invalid or had missing data.</exception>
     /// <example>
     /// <code source="../../../samples/CreateNft/Program.cs" region="MintNftBatch" language="csharp"/>
     /// </example>

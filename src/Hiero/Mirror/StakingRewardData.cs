@@ -58,6 +58,10 @@ public static class StakingRewardDataExtensions
     /// <param name="account">
     /// The account whose staking-reward history is requested.
     /// </param>
+    /// <param name="cancellationToken">
+    /// Token that cancels the enumeration, including a page request in
+    /// flight. <c>WithCancellation</c> on the result works as well.
+    /// </param>
     /// <param name="filters">
     /// Additional query parameters. The endpoint supports
     /// <see cref="TimestampFilter"/>, <see cref="PageLimit"/>, and
@@ -66,9 +70,14 @@ public static class StakingRewardDataExtensions
     /// <returns>
     /// An async enumerable of staking-reward records.
     /// </returns>
-    public static IAsyncEnumerable<StakingRewardData> GetAccountStakingRewardsAsync(this MirrorRestClient client, EntityId account, params IMirrorQueryParameter[] filters)
+    public static IAsyncEnumerable<StakingRewardData> GetAccountStakingRewardsAsync(this MirrorRestClient client, EntityId account, CancellationToken cancellationToken, params IMirrorQueryParameter[] filters)
     {
         var path = GenerateInitialPath($"accounts/{account.ToMirrorString()}/rewards", new PageLimit(100), filters);
-        return client.GetPagedItemsAsync<StakingRewardDataPage, StakingRewardData>(path, MirrorJsonContext.Default.StakingRewardDataPage);
+        return client.GetPagedItemsAsync<StakingRewardDataPage, StakingRewardData>(path, MirrorJsonContext.Default.StakingRewardDataPage, cancellationToken);
+    }
+    /// <inheritdoc cref="GetAccountStakingRewardsAsync(MirrorRestClient, EntityId, CancellationToken, IMirrorQueryParameter[])"/>
+    public static IAsyncEnumerable<StakingRewardData> GetAccountStakingRewardsAsync(this MirrorRestClient client, EntityId account, params IMirrorQueryParameter[] filters)
+    {
+        return client.GetAccountStakingRewardsAsync(account, CancellationToken.None, filters);
     }
 }

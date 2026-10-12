@@ -376,6 +376,24 @@ public class ComplexConverterTests
     // ========================================================================
 
     [Test]
+    public async Task TransactionIdStructuredConverter_Treats_Null_Nonce_And_Scheduled_As_Absent()
+    {
+        var json = """{"Value":{"account_id":"0.0.5","nonce":null,"scheduled":null,"transaction_valid_start":"1234567890.123456789"}}""";
+        var result = JsonSerializer.Deserialize<TxIdStructuredWrapper>(json);
+        await Assert.That(result!.Value.ChildNonce).IsEqualTo(0);
+        await Assert.That(result.Value.Scheduled).IsFalse();
+    }
+
+    [Test]
+    [Arguments("null")]
+    [Arguments("\"not a timestamp\"")]
+    public async Task TransactionIdStructuredConverter_Rejects_A_Missing_Valid_Start_As_Json(string validStart)
+    {
+        var json = "{\"Value\":{\"account_id\":\"0.0.5\",\"transaction_valid_start\":" + validStart + "}}";
+        await Assert.ThrowsAsync<JsonException>(async () => await Task.Run(() => JsonSerializer.Deserialize<TxIdStructuredWrapper>(json)));
+    }
+
+    [Test]
     public async Task TransactionIdStructuredConverter_Deserializes_Structured_Json()
     {
         var json = """{"Value":{"account_id":"0.0.5","nonce":0,"scheduled":false,"transaction_valid_start":"1234567890.123456789"}}""";

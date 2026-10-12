@@ -18,25 +18,25 @@ public class QueryFeeTests
             ctx.FeeLimit = 1_000_000;
         });
 
-        var balanceBeforeQuery = (long)await payerClient.GetAccountBalanceAsync(account);
+        var balanceBeforeQuery = (long)await TestNetwork.GetCryptoBalanceAsync(account);
 
         var txGetAccountInfo = client.CreateNewTransactionId();
         var accountInfo = await client.GetAccountInfoAsync(TestNetwork.Payer, default, ctx => ctx.TransactionId = txGetAccountInfo);
 
         await payerClient.GetReceiptAsync(txGetAccountInfo);
-        var balanceAfterQuery = (long)await payerClient.GetAccountBalanceAsync(account);
+        var balanceAfterQuery = (long)await TestNetwork.GetCryptoBalanceAsync(account);
 
         var txQueryRecord = client.CreateNewTransactionId();
         var queryRecord = await client.GetTransactionRecordAsync(txGetAccountInfo, default, ctx => ctx.TransactionId = txQueryRecord);
 
         await payerClient.GetReceiptAsync(txQueryRecord);
-        var balanceAfterQueryRecord = (long)await payerClient.GetAccountBalanceAsync(account);
+        var balanceAfterQueryRecord = (long)await TestNetwork.GetCryptoBalanceAsync(account);
 
         var txQueryRecordRecord = client.CreateNewTransactionId();
         var queryRecordRecord = await client.GetTransactionRecordAsync(txQueryRecord, default, ctx => ctx.TransactionId = txQueryRecordRecord);
 
         await payerClient.GetReceiptAsync(txQueryRecordRecord);
-        var balanceAfterQueryRecordRecord = (long)await payerClient.GetAccountBalanceAsync(account);
+        var balanceAfterQueryRecordRecord = (long)await TestNetwork.GetCryptoBalanceAsync(account);
 
         TestContext.Current?.OutputWriter.WriteLine($"Initial Balance:              {balanceBeforeQuery:n0}");
         TestContext.Current?.OutputWriter.WriteLine($"After Get Account Info Query: {balanceAfterQuery:n0}");

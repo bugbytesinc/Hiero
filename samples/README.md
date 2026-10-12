@@ -22,12 +22,14 @@ Runnable .NET console applications demonstrating common Hiero SDK workflows.
 | [ScheduleTransaction](ScheduleTransaction/) | Schedule a crypto transfer for later | Yes |
 | [MirrorQueries](MirrorQueries/) | Query historical data from the Mirror Node | No |
 | [TopicSubscription](TopicSubscription/) | Subscribe to an HCS topic stream | No |
+| [BlockSubscription](BlockSubscription/) | Stream blocks (or items) from a Block Node (experimental) | No |
+| [BlockRepeater](BlockRepeater/) | Verify and republish a block stream between Block Nodes (experimental) | No |
 
 ## Running a Sample
 
 ```sh
 cd samples/QueryBalance
-dotnet run -- <endpointUrl> <nodeAccountNum> <queryAccountNum>
+dotnet run -- <mirrorRestUrl> <queryAccountNum>
 ```
 
 Each sample's `Program.cs` documents the required command-line arguments.

@@ -19,9 +19,9 @@ public class TransferTests
         client.Configure(ctx => fee = ctx.FeeLimit);
         var sender = TestNetwork.Payer;
         var receiver = await TestNetwork.GetConsensusNodeEndpointAsync();
-        var balanceBefore = await client.GetAccountBalanceAsync(sender);
+        var balanceBefore = await TestNetwork.GetCryptoBalanceAsync(sender);
         var receipt = await client.TransferAsync(sender, receiver, transferAmount);
-        var balanceAfter = await client.GetAccountBalanceAsync(sender);
+        var balanceAfter = await TestNetwork.GetCryptoBalanceAsync(sender);
         var maxFee = (ulong)(3 * fee);
         await Assert.That(balanceAfter >= balanceBefore - (ulong)transferAmount - maxFee && balanceAfter <= balanceBefore - (ulong)transferAmount).IsTrue();
     }
@@ -32,11 +32,11 @@ public class TransferTests
         await using var fx = await TestAccount.CreateAsync();
         var transferAmount = (long)Generator.Integer(10, 100);
         await using var client = await TestNetwork.CreateClientAsync();
-        var newBalance = await client.GetAccountBalanceAsync(fx.CreateReceipt!.Address);
+        var newBalance = await TestNetwork.GetCryptoBalanceAsync(fx.CreateReceipt!.Address);
         await Assert.That(newBalance).IsEqualTo(fx.CreateParams.InitialBalance);
 
         var receipt = await client.TransferAsync(TestNetwork.Payer, fx.CreateReceipt!.Address, transferAmount);
-        var newBalanceAfterTransfer = await client.GetAccountBalanceAsync(fx.CreateReceipt!.Address);
+        var newBalanceAfterTransfer = await TestNetwork.GetCryptoBalanceAsync(fx.CreateReceipt!.Address);
         await Assert.That(newBalanceAfterTransfer).IsEqualTo(fx.CreateParams.InitialBalance + (ulong)transferAmount);
     }
 
@@ -46,7 +46,7 @@ public class TransferTests
         await using var fx = await TestAccount.CreateAsync();
         var transferAmount = (long)Generator.Integer(10, 100);
         await using var client = await TestNetwork.CreateClientAsync();
-        var newBalance = await client.GetAccountBalanceAsync(fx.CreateReceipt!.Address);
+        var newBalance = await TestNetwork.GetCryptoBalanceAsync(fx.CreateReceipt!.Address);
         await Assert.That(newBalance).IsEqualTo(fx.CreateParams.InitialBalance);
 
         var transfers = new TransferParams
@@ -54,7 +54,7 @@ public class TransferTests
             CryptoTransfers = new[] { new CryptoTransfer(TestNetwork.Payer, -transferAmount), new CryptoTransfer(fx.CreateReceipt!.Address, transferAmount) }
         };
         var receipt = await client.TransferAsync(transfers);
-        var newBalanceAfterTransfer = await client.GetAccountBalanceAsync(fx.CreateReceipt!.Address);
+        var newBalanceAfterTransfer = await TestNetwork.GetCryptoBalanceAsync(fx.CreateReceipt!.Address);
         await Assert.That(newBalanceAfterTransfer).IsEqualTo(fx.CreateParams.InitialBalance + (ulong)transferAmount);
     }
 
@@ -64,7 +64,7 @@ public class TransferTests
         await using var fx = await TestAccount.CreateAsync();
         var transferAmount = (long)Generator.Integer(10, 100);
         await using var client = await TestNetwork.CreateClientAsync();
-        var newBalance = await client.GetAccountBalanceAsync(fx.CreateReceipt!.Address);
+        var newBalance = await TestNetwork.GetCryptoBalanceAsync(fx.CreateReceipt!.Address);
         await Assert.That(newBalance).IsEqualTo(fx.CreateParams.InitialBalance);
 
         var receipt = await client.TransferAsync(TestNetwork.Payer, fx.CreateReceipt!.Address, transferAmount);
@@ -78,7 +78,7 @@ public class TransferTests
         await Assert.That(record.Royalties).IsEmpty();
         await Assert.That(record.Associations).IsEmpty();
 
-        var newBalanceAfterTransfer = await client.GetAccountBalanceAsync(fx.CreateReceipt!.Address);
+        var newBalanceAfterTransfer = await TestNetwork.GetCryptoBalanceAsync(fx.CreateReceipt!.Address);
         await Assert.That(newBalanceAfterTransfer).IsEqualTo(fx.CreateParams.InitialBalance + (ulong)transferAmount);
     }
 
@@ -93,7 +93,7 @@ public class TransferTests
         await Assert.That(info.Endorsement).IsEqualTo(new Endorsement(fx.PublicKey));
 
         var receipt = await client.TransferAsync(fx.CreateReceipt!.Address, TestNetwork.Payer, (long)transferAmount, ctx => ctx.Signatory = new Signatory(ctx.Signatory!, fx.PrivateKey));
-        var newBalanceAfterTransfer = await client.GetAccountBalanceAsync(fx.CreateReceipt!.Address);
+        var newBalanceAfterTransfer = await TestNetwork.GetCryptoBalanceAsync(fx.CreateReceipt!.Address);
         await Assert.That(newBalanceAfterTransfer).IsEqualTo(fx.CreateParams.InitialBalance - (ulong)transferAmount);
     }
 
@@ -112,7 +112,7 @@ public class TransferTests
             Signatory = fx.PrivateKey
         };
         var receipt = await client.TransferAsync(transfers);
-        var newBalanceAfterTransfer = await client.GetAccountBalanceAsync(fx.CreateReceipt!.Address);
+        var newBalanceAfterTransfer = await TestNetwork.GetCryptoBalanceAsync(fx.CreateReceipt!.Address);
         await Assert.That(newBalanceAfterTransfer).IsEqualTo(fx.CreateParams.InitialBalance - (ulong)transferAmount);
     }
 
@@ -126,7 +126,7 @@ public class TransferTests
         await Assert.That(info.Endorsement).IsEqualTo(new Endorsement(fx.PublicKey));
 
         var receipt = await client.TransferAsync(fx.CreateReceipt!.Address, TestNetwork.Payer, (long)fx.CreateParams.InitialBalance, ctx => ctx.Signatory = new Signatory(ctx.Signatory!, fx.PrivateKey));
-        var newBalanceAfterTransfer = await client.GetAccountBalanceAsync(fx.CreateReceipt!.Address);
+        var newBalanceAfterTransfer = await TestNetwork.GetCryptoBalanceAsync(fx.CreateReceipt!.Address);
         await Assert.That(newBalanceAfterTransfer).IsEqualTo(0UL);
     }
 
@@ -191,8 +191,8 @@ public class TransferTests
         var sendReceipt = await client.TransferAsync(transfers);
         await Assert.That(sendReceipt.Status).IsEqualTo(ResponseCode.Success);
 
-        await Assert.That(await client.GetAccountBalanceAsync(account1)).IsEqualTo((ulong)transferAmount + fx1.CreateParams.InitialBalance);
-        await Assert.That(await client.GetAccountBalanceAsync(account2)).IsEqualTo((ulong)transferAmount + fx2.CreateParams.InitialBalance);
+        await Assert.That(await TestNetwork.GetCryptoBalanceAsync(account1)).IsEqualTo((ulong)transferAmount + fx1.CreateParams.InitialBalance);
+        await Assert.That(await TestNetwork.GetCryptoBalanceAsync(account2)).IsEqualTo((ulong)transferAmount + fx2.CreateParams.InitialBalance);
         transfers = new TransferParams
         {
             CryptoTransfers = new[]
@@ -206,8 +206,8 @@ public class TransferTests
         var returnReceipt = await client.TransferAsync(transfers, ctx => ctx.FeeLimit = 1_000_000);
         await Assert.That(returnReceipt.Status).IsEqualTo(ResponseCode.Success);
 
-        await Assert.That(await client.GetAccountBalanceAsync(account1)).IsEqualTo(fx1.CreateParams.InitialBalance);
-        await Assert.That(await client.GetAccountBalanceAsync(account2)).IsEqualTo(fx2.CreateParams.InitialBalance);
+        await Assert.That(await TestNetwork.GetCryptoBalanceAsync(account1)).IsEqualTo(fx1.CreateParams.InitialBalance);
+        await Assert.That(await TestNetwork.GetCryptoBalanceAsync(account2)).IsEqualTo(fx2.CreateParams.InitialBalance);
     }
 
     [Test]
@@ -271,8 +271,8 @@ public class TransferTests
         await Assert.That(aor!.ParamName).IsEqualTo("CryptoTransfers");
         await Assert.That(aor.Message).StartsWith($"The amount to transfer crypto to/from 0.0.{account1.AccountNum} must be a value, negative for transfers out, and positive for transfers in. A value of zero is not allowed.");
 
-        await Assert.That(await client.GetAccountBalanceAsync(account1)).IsEqualTo(fx1.CreateParams.InitialBalance);
-        await Assert.That(await client.GetAccountBalanceAsync(account2)).IsEqualTo(fx2.CreateParams.InitialBalance);
+        await Assert.That(await TestNetwork.GetCryptoBalanceAsync(account1)).IsEqualTo(fx1.CreateParams.InitialBalance);
+        await Assert.That(await TestNetwork.GetCryptoBalanceAsync(account2)).IsEqualTo(fx2.CreateParams.InitialBalance);
     }
 
     [Test]
@@ -421,7 +421,7 @@ public class TransferTests
         });
         await Assert.That(receipt.Status).IsEqualTo(ResponseCode.Success);
 
-        var balance = await client.GetAccountBalanceAsync(fx.CreateReceipt!.Address);
+        var balance = await TestNetwork.GetCryptoBalanceAsync(fx.CreateReceipt!.Address);
         await Assert.That(balance).IsEqualTo(fx.CreateParams.InitialBalance - (ulong)transferAmount);
     }
 
@@ -546,13 +546,13 @@ public class TransferTests
     {
         await using var fxAlias = await TestAliasAccount.CreateAsync();
         await using var client = await TestNetwork.CreateClientAsync();
-        var startingBalance = await client.GetAccountBalanceAsync(fxAlias.Alias);
+        var startingBalance = await TestNetwork.GetCryptoBalanceAsync(fxAlias.Alias);
 
         var transferAmount = (long)Generator.Integer(10, 100);
 
         var receipt = await client.TransferAsync(TestNetwork.Payer, fxAlias.Alias, transferAmount);
 
-        var endingBalance = await client.GetAccountBalanceAsync(fxAlias.Alias);
+        var endingBalance = await TestNetwork.GetCryptoBalanceAsync(fxAlias.Alias);
         await Assert.That(endingBalance).IsEqualTo(startingBalance + (ulong)transferAmount);
     }
 
@@ -563,15 +563,15 @@ public class TransferTests
         await using var fxAlias = await TestAliasAccount.CreateAsync();
         await using var client = await TestNetwork.CreateClientAsync();
 
-        var aliasStartingBalance = await client.GetAccountBalanceAsync(fxAlias.Alias);
+        var aliasStartingBalance = await TestNetwork.GetCryptoBalanceAsync(fxAlias.Alias);
         var transferAmount = (aliasStartingBalance) / 2 + 1;
 
-        var accountStartingBalance = await client.GetAccountBalanceAsync(fxAccount);
+        var accountStartingBalance = await TestNetwork.GetCryptoBalanceAsync(fxAccount);
         var receipt = await client.TransferAsync(fxAlias.Alias, fxAccount.CreateReceipt!.Address, (long)transferAmount, ctx => ctx.Signatory = new Signatory(ctx.Signatory!, fxAlias.PrivateKey));
-        var accountEndingBalance = await client.GetAccountBalanceAsync(fxAccount);
+        var accountEndingBalance = await TestNetwork.GetCryptoBalanceAsync(fxAccount);
         await Assert.That(accountEndingBalance).IsEqualTo(accountStartingBalance + (ulong)transferAmount);
 
-        var aliasEndingBalance = await client.GetAccountBalanceAsync(fxAlias.Alias);
+        var aliasEndingBalance = await TestNetwork.GetCryptoBalanceAsync(fxAlias.Alias);
         await Assert.That(aliasEndingBalance).IsEqualTo(aliasStartingBalance - (ulong)transferAmount);
     }
 
@@ -582,10 +582,10 @@ public class TransferTests
         await using var fxAlias = await TestAliasAccount.CreateAsync(fx => fx.InitialTransfer = 5_00_000_000);
         await using var client = await TestNetwork.CreateClientAsync();
 
-        var aliasStartingBalance = await client.GetAccountBalanceAsync(fxAlias.Alias);
+        var aliasStartingBalance = await TestNetwork.GetCryptoBalanceAsync(fxAlias.Alias);
         var transferAmount = (aliasStartingBalance) / 2 + 1;
 
-        var accountStartingBalance = await client.GetAccountBalanceAsync(fxAccount);
+        var accountStartingBalance = await TestNetwork.GetCryptoBalanceAsync(fxAccount);
 
         var ex = await Assert.That(async () =>
         {
@@ -600,8 +600,8 @@ public class TransferTests
         await Assert.That(pex!.Message).StartsWith("Transaction Failed Pre-Check: PayerAccountNotFound");
         await Assert.That(pex.Status).IsEqualTo(ResponseCode.PayerAccountNotFound);
 
-        var accountEndingBalance = await client.GetAccountBalanceAsync(fxAccount);
-        var aliasEndingBalance = await client.GetAccountBalanceAsync(fxAlias.Alias);
+        var accountEndingBalance = await TestNetwork.GetCryptoBalanceAsync(fxAccount);
+        var aliasEndingBalance = await TestNetwork.GetCryptoBalanceAsync(fxAlias.Alias);
         await Assert.That(accountEndingBalance).IsEqualTo((ulong)accountStartingBalance);
         await Assert.That(aliasEndingBalance).IsEqualTo((ulong)aliasStartingBalance);
 
@@ -611,8 +611,8 @@ public class TransferTests
             ctx.Signatory = fxAlias.PrivateKey;
         });
 
-        accountEndingBalance = await client.GetAccountBalanceAsync(fxAccount);
-        aliasEndingBalance = await client.GetAccountBalanceAsync(fxAlias.Alias);
+        accountEndingBalance = await TestNetwork.GetCryptoBalanceAsync(fxAccount);
+        aliasEndingBalance = await TestNetwork.GetCryptoBalanceAsync(fxAlias.Alias);
         await Assert.That(accountEndingBalance).IsEqualTo(accountStartingBalance + (ulong)transferAmount);
         // Don't forget fees.
         await Assert.That(aliasEndingBalance < aliasStartingBalance - (ulong)transferAmount).IsTrue();
@@ -623,7 +623,7 @@ public class TransferTests
     {
         await using var fx = await TestAccount.CreateAsync();
         await using var client = await TestNetwork.CreateClientAsync();
-        var originalBalance = await client.GetAccountBalanceAsync(fx.CreateReceipt!.Address);
+        var originalBalance = await TestNetwork.GetCryptoBalanceAsync(fx.CreateReceipt!.Address);
         await Assert.That(originalBalance).IsEqualTo(fx.CreateParams.InitialBalance);
         var transferAmount = (long)Generator.Integer(10, 100);
         var transferParams = new TransferParams
@@ -640,7 +640,7 @@ public class TransferTests
         }).ThrowsException();
         var oce = ex as OperationCanceledException;
         await Assert.That(oce).IsNotNull();
-        var currentBalance = await client.GetAccountBalanceAsync(fx.CreateReceipt!.Address);
+        var currentBalance = await TestNetwork.GetCryptoBalanceAsync(fx.CreateReceipt!.Address);
         await Assert.That(currentBalance).IsEqualTo(originalBalance);
     }
 
@@ -649,7 +649,7 @@ public class TransferTests
     {
         await using var fx = await TestAccount.CreateAsync();
         await using var client = await TestNetwork.CreateClientAsync();
-        var originalBalance = await client.GetAccountBalanceAsync(fx.CreateReceipt!.Address);
+        var originalBalance = await TestNetwork.GetCryptoBalanceAsync(fx.CreateReceipt!.Address);
         await Assert.That(originalBalance).IsEqualTo(fx.CreateParams.InitialBalance);
         var transferAmount = (long)Generator.Integer(10, 100);
         var cancellationSource = new CancellationTokenSource();
@@ -670,7 +670,7 @@ public class TransferTests
         }).ThrowsException();
         var oce = ex as OperationCanceledException;
         await Assert.That(oce).IsNotNull();
-        var currentBalance = await client.GetAccountBalanceAsync(fx.CreateReceipt!.Address);
+        var currentBalance = await TestNetwork.GetCryptoBalanceAsync(fx.CreateReceipt!.Address);
         await Assert.That(currentBalance).IsEqualTo(originalBalance);
     }
 
@@ -679,7 +679,7 @@ public class TransferTests
     {
         await using var fx = await TestAccount.CreateAsync();
         await using var client = await TestNetwork.CreateClientAsync();
-        var originalBalance = await client.GetAccountBalanceAsync(fx.CreateReceipt!.Address);
+        var originalBalance = await TestNetwork.GetCryptoBalanceAsync(fx.CreateReceipt!.Address);
         await Assert.That(originalBalance).IsEqualTo(fx.CreateParams.InitialBalance);
         var transferAmount = (long)Generator.Integer(10, 100);
         var cancellationSource = new CancellationTokenSource();
@@ -702,10 +702,9 @@ public class TransferTests
         await Assert.That(oce).IsNotNull();
         // Yes, there is a race condition, the balance may not be processed
         // yet by the node (consensus reached) so we want to wait long enough
-        // to ensure the transaction has reached consensus, waiting for the
-        // mirror node to catch up is a proxy for this.
-        await TestNetwork.GetMirrorRestClientAsync();
-        var currentBalance = await client.GetAccountBalanceAsync(fx.CreateReceipt!.Address);
+        // to ensure the transaction has reached consensus; the balance read
+        // waits for the mirror node to catch up, which is a proxy for this.
+        var currentBalance = await TestNetwork.GetCryptoBalanceAsync(fx.CreateReceipt!.Address);
         await Assert.That(currentBalance).IsEqualTo(originalBalance + (ulong)transferAmount);
     }
 
@@ -714,7 +713,7 @@ public class TransferTests
     {
         await using var fx = await TestAccount.CreateAsync();
         await using var client = await TestNetwork.CreateClientAsync();
-        var originalBalance = await client.GetAccountBalanceAsync(fx.CreateReceipt!.Address);
+        var originalBalance = await TestNetwork.GetCryptoBalanceAsync(fx.CreateReceipt!.Address);
         await Assert.That(originalBalance).IsEqualTo(fx.CreateParams.InitialBalance);
         var transferAmount = (long)Generator.Integer(10, 100);
         var cancellationSource = new CancellationTokenSource();
@@ -732,7 +731,7 @@ public class TransferTests
             ctx.OnResponseReceived = (_, _) => cancellationSource.CancelAfter(TimeSpan.FromSeconds(3));
         });
         await Assert.That(receipt.Status).IsEqualTo(ResponseCode.Success);
-        var currentBalance = await client.GetAccountBalanceAsync(fx.CreateReceipt!.Address);
+        var currentBalance = await TestNetwork.GetCryptoBalanceAsync(fx.CreateReceipt!.Address);
         await Assert.That(currentBalance).IsEqualTo(originalBalance + (ulong)transferAmount);
     }
 
@@ -747,7 +746,7 @@ public class TransferTests
         await using var client = await TestNetwork.CreateClientAsync();
         var receipt = await client.TransferAsync(TestNetwork.Payer, senderEvmAddress, senderInitialBalance);
         var receipts = await client.GetAllReceiptsAsync(receipt.TransactionId);
-        var senderHapiAddress = ((CreateAccountReceipt)receipts[1]).Address;
+        var senderHapiAddress = receipts.Children.OfType<CreateAccountReceipt>().Single().Address;
         var mirror = await TestNetwork.GetMirrorRestClientAsync();
         var chainId = await TestNetwork.GetChainIdAsync();
         var balance = (await mirror.GetAccountAsync(senderEvmAddress))!.Balances.Balance;
@@ -762,7 +761,7 @@ public class TransferTests
             ctx.Signatory = privateKey;
             ctx.SignaturePrefixTrimLimit = int.MaxValue;
         });
-        var receiverNewBalance = await client.GetAccountBalanceAsync(fxReceiver);
+        var receiverNewBalance = await TestNetwork.GetCryptoBalanceAsync(fxReceiver);
         await Assert.That(receiverNewBalance).IsEqualTo(fxReceiver.CreateParams.InitialBalance + (ulong)transferAmount);
 
         var transaction = new EvmTransactionInput
@@ -780,7 +779,7 @@ public class TransferTests
             Transaction = transaction,
             AdditionalGasAllowance = 10_00_000_000
         }, ctx => ctx.FeeLimit = 20_00_000_000);
-        receiverNewBalance = await client.GetAccountBalanceAsync(fxReceiver);
+        receiverNewBalance = await TestNetwork.GetCryptoBalanceAsync(fxReceiver);
         await Assert.That(receiverNewBalance).IsEqualTo(fxReceiver.CreateParams.InitialBalance + (ulong)transferAmount * 2);
     }
 
@@ -795,7 +794,7 @@ public class TransferTests
         await using var client = await TestNetwork.CreateClientAsync();
         var receipt = await client.TransferAsync(TestNetwork.Payer, senderEvmAddress, senderInitialBalance);
         var receipts = await client.GetAllReceiptsAsync(receipt.TransactionId);
-        var senderHapiAddress = ((CreateAccountReceipt)receipts[1]).Address;
+        var senderHapiAddress = receipts.Children.OfType<CreateAccountReceipt>().Single().Address;
         var mirror = await TestNetwork.GetMirrorRestClientAsync();
         var chainId = await TestNetwork.GetChainIdAsync();
         var balance = (await mirror.GetAccountAsync(senderEvmAddress))!.Balances.Balance;
@@ -818,7 +817,7 @@ public class TransferTests
             Transaction = transaction,
             AdditionalGasAllowance = 10_00_000_000
         }, ctx => ctx.FeeLimit = 20_00_000_000);
-        var receiverNewBalance = await client.GetAccountBalanceAsync(fxReceiver);
+        var receiverNewBalance = await TestNetwork.GetCryptoBalanceAsync(fxReceiver);
         await Assert.That(receiverNewBalance).IsEqualTo(fxReceiver.CreateParams.InitialBalance + (ulong)transferAmount);
     }
 }

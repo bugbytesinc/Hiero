@@ -13,8 +13,19 @@ namespace Hiero.Implementation;
 /// </summary>
 internal static class Abi
 {
-    internal static ReadOnlyMemory<byte> EncodeFunctionWithArguments(string methodName, object[] methodArgs)
+    internal static ReadOnlyMemory<byte> EncodeFunctionWithArguments(string? methodName, object[]? methodArgs)
     {
+        if (string.IsNullOrEmpty(methodName))
+        {
+            if (methodArgs is null || methodArgs.Length == 0)
+            {
+                // No function: empty call data, which runs the contract's
+                // receive function, or its fallback, as a plain transfer of
+                // value does.  A selector for "()" would match no function.
+                return ReadOnlyMemory<byte>.Empty;
+            }
+            throw new ArgumentException("Method arguments were given without a method name. Leave both empty to call the contract's receive or fallback function.", "MethodName");
+        }
         var selector = GetFunctionSelector(methodName, methodArgs);
         var arguments = EncodeArguments(methodArgs);
         var result = new byte[selector.Length + arguments.Length];
@@ -22,7 +33,7 @@ internal static class Abi
         arguments.CopyTo(result.AsMemory(selector.Length));
         return result;
     }
-    internal static ReadOnlyMemory<byte> EncodeArguments(object[] args)
+    internal static ReadOnlyMemory<byte> EncodeArguments(object[]? args)
     {
         if (args is null || args.Length == 0)
         {
@@ -95,9 +106,29 @@ internal static class Abi
     private static (bool isDynamic, ReadOnlyMemory<byte> bytes) EncodePart(object value)
     {
         var mapping = GetMapping(value);
-        return (mapping.IsDynamic, mapping.Encode(value));
+        return (IsDynamic(value, mapping), mapping.Encode(value));
     }
-    private static ReadOnlyMemory<byte> GetFunctionSelector(string methodName, object[] methodArgs)
+    /// <summary>
+    /// Whether the value is encoded out of line, behind an offset. A tuple
+    /// is dynamic only when one of its members is; a static tuple such as
+    /// <c>(address,uint256)</c> is encoded in place, like any static type.
+    /// </summary>
+    private static bool IsDynamic(object value, TypeMapping mapping)
+    {
+        if (value is AbiTuple tuple)
+        {
+            foreach (var member in tuple.Values)
+            {
+                if (IsDynamic(member, GetMapping(member)))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+        return mapping.IsDynamic;
+    }
+    private static ReadOnlyMemory<byte> GetFunctionSelector(string methodName, object[]? methodArgs)
     {
         var buffer = new StringBuilder(100);
         buffer.Append(methodName);
@@ -309,7 +340,9 @@ internal static class Abi
     }
     private static object DecodeAddressPart(ReadOnlyMemory<byte> arg)
     {
-        // See EncodeAddressPart for packing notes
+        // See WriteAddressPart for packing notes.  Unlike the encoder, this
+        // always decodes the long-zero (shard.realm.num) layout; an EVM
+        // address is not recognized and comes back as a shard.realm.num id.
         var shard = BinaryPrimitives.ReadInt32BigEndian(arg.Slice(12, 4).Span);
         var realm = BinaryPrimitives.ReadInt64BigEndian(arg.Slice(16, 8).Span);
         var num = BinaryPrimitives.ReadInt64BigEndian(arg.Slice(24, 8).Span);

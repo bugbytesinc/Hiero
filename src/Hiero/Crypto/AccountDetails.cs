@@ -75,9 +75,10 @@ public sealed record AccountDetails
     /// </summary>
     public long NftCount { get; private init; }
     /// <summary>
-    /// The maximum number of tokens or NFTs that this account may
-    /// be implicitly associated with (by means of being made a treasury
-    /// or other related actions).
+    /// The maximum number of tokens (fungible or NFT) that this account may
+    /// be automatically associated with, which happens when it receives a
+    /// token it is not yet associated with.  A value of -1 means no limit;
+    /// 0 means every token must be associated explicitly.
     /// </summary>
     public int AutoAssociationLimit { get; private init; }
     /// <summary>
@@ -198,9 +199,9 @@ public static class AccountDetailExtensions
     /// <returns>
     /// A detailed description of the account.
     /// </returns>
-    /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
+    /// <exception cref="ArgumentException">If required arguments are missing or invalid.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
+    /// <exception cref="PrecheckException">If the gateway node refused the query.</exception>
     public static async Task<AccountDetails> GetAccountDetailsAsync(this ConsensusClient client, EntityId account, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
     {
         return new AccountDetails(await Engine.QueryAsync(client, new GetAccountDetailsQuery { AccountId = new AccountID(account) }, cancellationToken, configure).ConfigureAwait(false));

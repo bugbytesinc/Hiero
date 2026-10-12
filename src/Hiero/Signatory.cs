@@ -29,11 +29,11 @@ public sealed class Signatory : ISignatory, IEquatable<Signatory>
     private enum Type
     {
         /// <summary>
-        /// Ed25519 Private Key (Stored as a <see cref="Org.BouncyCastle.Crypto.Parameters.Ed25519PrivateKeyParameters"/>).
+        /// Ed25519 Private Key (Stored as an <see cref="Ed25519KeyData"/>).
         /// </summary>
         Ed25519 = 1,
         /// <summary>
-        /// ECDSASecp256K1 Private Key (Stored as a <see cref="Org.BouncyCastle.Crypto.Parameters.ECPrivateKeyParameters"/>).
+        /// ECDSASecp256K1 Private Key (Stored as an <see cref="EcdsaSecp256K1KeyData"/>).
         /// </summary>
         ECDSASecp256K1 = 2,
         /// <summary>
@@ -61,13 +61,15 @@ public sealed class Signatory : ISignatory, IEquatable<Signatory>
     /// </summary>
     private readonly object _data;
     /// <summary>
-    /// Create a signatory with a private Ed25519 key.  When transactions
-    /// are signed, this signatory will automatically sign the transaction
-    /// with this private key.
+    /// Create a signatory with a private Ed25519 or ECDSA Secp256k1 key.
+    /// When transactions are signed, this signatory will automatically
+    /// sign the transaction with this private key.
     /// </summary>
     /// <param name="privateKey">
-    /// Bytes representing an Ed25519 private key signing transactions.  
-    /// It is expected to be 48 bytes in length, prefixed with 
+    /// Bytes representing a DER-encoded Ed25519 or ECDSA Secp256k1
+    /// private key (or the 50-byte Hedera ECDSA Secp256k1 encoding)
+    /// signing transactions; the key type is detected from the encoding.
+    /// A DER-encoded Ed25519 key is 48 bytes in length, prefixed with
     /// <code>0x302e020100300506032b6570</code>.
     /// </param>
     public Signatory(ReadOnlyMemory<byte> privateKey)
@@ -160,14 +162,14 @@ public sealed class Signatory : ISignatory, IEquatable<Signatory>
     /// asks this Signatory to sign a transaction.
     /// </param>
     /// <remarks>
-    /// Note:  For a single transaction this method MAY BE CALLED TWICE
-    /// in the event the library is being asked to retrieve a record as
-    /// a part of the request.  This is because retrieving a record of 
-    /// a transaction requires a separate payment.  So, if this Signatory
-    /// is directly attached to the root <see cref="IConsensusContext"/> it will
-    /// be used to sign the request to retrieve the record (since this 
-    /// will typically represent the <see cref="IConsensusContext.Payer"/>'s 
-    /// signature for the transaction).
+    /// Note:  If this Signatory is attached to the <see cref="IConsensusContext"/>,
+    /// it is also asked to sign the separate payment for any paid query made
+    /// with that context, such as a record lookup through
+    /// <see cref="TransactionRecordExtensions.GetTransactionRecordAsync"/>
+    /// (since it will typically represent the
+    /// <see cref="IConsensusContext.Payer"/>'s signature).  So, work relating
+    /// to one transaction can invoke this callback more than once when the
+    /// caller also retrieves its record.
     /// </remarks>
     public Signatory(Func<IInvoice, Task> signingCallback)
     {
@@ -179,12 +181,14 @@ public sealed class Signatory : ISignatory, IEquatable<Signatory>
         _data = signingCallback;
     }
     /// <summary>
-    /// Convenience implicit cast for creating a <code>Signatory</code> 
-    /// directly from an Ed25519 private key.
+    /// Convenience implicit cast for creating a <code>Signatory</code>
+    /// directly from an Ed25519 or ECDSA Secp256k1 private key.
     /// </summary>
     /// <param name="privateKey">
-    /// Bytes representing an Ed25519 private key signing transactions.  
-    /// It is expected to be 48 bytes in length, prefixed with 
+    /// Bytes representing a DER-encoded Ed25519 or ECDSA Secp256k1
+    /// private key (or the 50-byte Hedera ECDSA Secp256k1 encoding)
+    /// signing transactions; the key type is detected from the encoding.
+    /// A DER-encoded Ed25519 key is 48 bytes in length, prefixed with
     /// <code>0x302e020100300506032b6570</code>.
     /// </param>
     public static implicit operator Signatory(ReadOnlyMemory<byte> privateKey)

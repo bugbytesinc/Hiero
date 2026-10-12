@@ -20,6 +20,9 @@ public sealed partial class Key
             case KeyType.Contract:
                 ContractID = new ContractID((EntityId)endorsement._data);
                 break;
+            case KeyType.DelegatableContract:
+                DelegatableContractId = new ContractID((EntityId)endorsement._data);
+                break;
             case KeyType.List:
                 var list = (Endorsement[])endorsement._data;
                 if (list.Length == 0)
@@ -50,6 +53,7 @@ public sealed partial class Key
             KeyOneofCase.Ed25519 => new Endorsement(KeyType.Ed25519, Ed25519.Memory),
             KeyOneofCase.ECDSASecp256K1 => new Endorsement(KeyType.ECDSASecp256K1, ECDSASecp256K1.Memory),
             KeyOneofCase.ContractID => new Endorsement(ContractID.AsAddress()),
+            KeyOneofCase.DelegatableContractId => new Endorsement(KeyType.DelegatableContract, DelegatableContractId.AsAddress()),
             KeyOneofCase.ThresholdKey => ThresholdKey.Keys.Keys.Count == 0 ? Endorsement.None : new Endorsement(ThresholdKey.Threshold, ThresholdKey.Keys.ToEndorsements()),
             KeyOneofCase.KeyList => KeyList.Keys.Count == 0 ? Endorsement.None : new Endorsement(KeyList.ToEndorsements()),
             _ => throw new InvalidOperationException($"Unsupported Key Type {KeyCase}.  Do we have a network/library version mismatch?"),

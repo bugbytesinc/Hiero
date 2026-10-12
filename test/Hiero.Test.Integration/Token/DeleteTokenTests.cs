@@ -510,7 +510,7 @@ public class DeleteTokenTests
     }
 
     [Test]
-    public async Task Can_Schedule_And_Sign_Delete_Token()
+    public async Task Can_Not_Schedule_And_Sign_Delete_Token()
     {
         await using var fxToken = await TestToken.CreateAsync();
         await using var client = await TestNetwork.CreateClientAsync();

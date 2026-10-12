@@ -48,7 +48,7 @@ public class GetPseudoRandomNumberTests
     }
 
     [Test]
-    public async Task Can_Schedule_And_Sign_Pseudo_Random_Number()
+    public async Task Can_Not_Schedule_And_Sign_Pseudo_Random_Number()
     {
         await using var fxPayer = await TestAccount.CreateAsync(fx => fx.CreateParams.InitialBalance = 20_00_000_000);
         await using var client = await TestNetwork.CreateClientAsync();

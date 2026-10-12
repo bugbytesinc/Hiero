@@ -6,7 +6,7 @@ namespace Hiero.Test.Integration.Token;
 public class AirdropTokenTests
 {
     [Test]
-    public async Task Can_Schedule_And_Sign_Airdrop_Token()
+    public async Task Can_Not_Schedule_Airdrop_Token()
     {
         await using var fxSender = await TestAccount.CreateAsync();
         await using var fxReceiver = await TestAccount.CreateAsync(fx => fx.CreateParams.AutoAssociationLimit = 0);
@@ -20,7 +20,8 @@ public class AirdropTokenTests
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
 
-        // Schedule an airdrop WITHOUT the sender signing.
+        // An airdrop can't be scheduled: TokenAirdrop is not in the
+        // network's scheduling whitelist.
         var ex = await Assert.That(async () =>
         {
             await client.ScheduleAsync(new ScheduleParams
@@ -34,6 +35,13 @@ public class AirdropTokenTests
                     ],
                 },
                 Memo = Generator.Memo(20),
+            }, ctx =>
+            {
+                // Testnet answers BUSY rather than naming the whitelist.
+                // Keep the retry window short so that BUSY surfaces, rather
+                // than the default ~3 minute window outliving the transaction's
+                // validity and ending in TRANSACTION_EXPIRED.
+                ctx.RetryCount = 5;
             });
         }).ThrowsException();
         // SOLO VS TESTNET

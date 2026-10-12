@@ -10,6 +10,46 @@
 > All state-changing operations follow the pattern:
 > create a `*Params` object, configure a `ConsensusClient`, call the async method, receive a typed `*Receipt`.
 
+## RULES FOR SUBMITTING TRANSACTIONS (read before writing any code that moves value)
+
+Hedera finalises a transaction seconds after a node accepts it, sometimes longer. A client that stops
+waiting before the transaction's validity ends cannot tell "failed" from "still deciding"; treating the
+second as the first sends value twice or refunds a payment that happened.
+
+1. Use the whole window. The defaults (Hiero 3.0+) do: TransactionDuration = 180 s (the network's maximum),
+   RetryCount = 43, RetryDelay = 200 ms. Retries are linear (the n-th waits n x RetryDelay), so the client
+   follows a receipt for RetryDelay x RetryCount x (RetryCount + 1) / 2 = 189 s. Never shorten this below
+   TransactionDuration; to answer a caller sooner, wait a bounded time and answer "pending" instead.
+2. Choose the TransactionId before submitting and store it: var txId = client.CreateNewTransactionId();
+   then pass ctx => ctx.TransactionId = txId on that one call. It is your idempotency key, your mirror
+   lookup and your expiry clock.
+3. Only a receipt with Status == ResponseCode.Success is a known success.
+4. TransactionException = reached consensus with a failure status: a real failure, nothing moved.
+   (From a record lookup such as GetTransactionRecordAsync it means the LOOKUP failed: its Status is the
+   lookup's code, not the transaction's.)
+   (A node with no verdict to give raises ConsensusException instead. On Hiero 2.x it raised a
+   TransactionException with Status Unknown or ReceiptNotFound instead: treat those as UNKNOWN there.)
+5. PrecheckException = the node refused it, but READ THE CODE.
+   Definite (nothing executed): InvalidSignature, InsufficientPayerBalance, InvalidAccountId,
+   TokenNotAssociatedToAccount and other codes about the transaction itself.
+   Prove nothing (outcome UNKNOWN): Unknown (e.g. refused connection), RpcError, Busy,
+   PlatformTransactionNotCreated, PlatformNotActive, DuplicateTransaction, TransactionExpired.
+   For payments, the safest choice is to treat every PrecheckException as UNKNOWN.
+6. ConsensusException, or any other exception once the transaction may have been sent (transport failure,
+   cancellation) = UNKNOWN. ConsensusException is NOT safe to retry.
+7. NEVER resubmit and NEVER report "failed" on an UNKNOWN outcome: a resubmission is a new transaction with
+   a new id, so the value can move twice. Report "pending" and settle it with MirrorRestClient:
+   GetTransactionGroupAsync(txId), keeping records with Nonce == 0 && !IsScheduled && TransactionId == txId.
+   Any Status == Success among them wins (a resend can leave a DuplicateTransaction record beside the real
+   one); any other status except DuplicateTransaction is the failure. No such record means "did not
+   execute" ONLY once GetLatestConsensusTimestampAsync() (the MIRROR's clock, never yours), read BEFORE
+   the lookup, is past valid start + TransactionDuration + ~60 s; before that it is still pending. Send
+   again, with a new id, only after the mirror says the first did not execute.
+8. To see what the client sends and receives, set ctx.OnSendingRequest / ctx.OnResponseReceived.
+
+Full rules and copyable code (classifying every ending, ResolveOutcomeAsync):
+[Error handling](https://hashgraph.bugbytes.com/tutorials/errorhandling.html).
+
 ## Getting Started
 
 - [Installation and Hello World](https://hashgraph.bugbytes.com/tutorials/index.html): Install via `dotnet add package Hiero`, connect to testnet, query an account balance.
@@ -22,7 +62,7 @@
 - [Client architecture](https://hashgraph.bugbytes.com/tutorials/index.html): The three client types and when to use each.
 - [Key management](https://hashgraph.bugbytes.com/tutorials/security/keymanagement.html): Loading keys safely, async Signatory for HSM/vault, mnemonic derivation.
 - [Dependency injection](https://hashgraph.bugbytes.com/tutorials/di.html): Registering clients with IServiceCollection.
-- [Error handling](https://hashgraph.bugbytes.com/tutorials/errorhandling.html): Exception hierarchy, transient vs permanent codes, retry patterns.
+- [Error handling](https://hashgraph.bugbytes.com/tutorials/errorhandling.html): Did a transaction execute? What each exception proves, settling unknown outcomes on a mirror node, diagnosing.
 - [EntityId](https://hashgraph.bugbytes.com/api/Hiero.EntityId.html): Hedera shard.realm.num addressing, key aliases, EVM addresses.
 - [Endorsement and Signatory](https://hashgraph.bugbytes.com/api/Hiero.Endorsement.html): Public key / N-of-M key lists and private key signing.
 

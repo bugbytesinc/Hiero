@@ -78,6 +78,10 @@ public static class ExtendedContractLogDataExtensions
     /// <param name="contract">
     /// The entityId of the contract.
     /// </param>
+    /// <param name="cancellationToken">
+    /// Token that cancels the enumeration, including a page request in
+    /// flight. <c>WithCancellation</c> on the result works as well.
+    /// </param>
     /// <param name="filters">
     /// Additional query parameters. The endpoint supports
     /// <see cref="TimestampFilter"/>, <see cref="EvmTopicFilter"/>,
@@ -92,20 +96,29 @@ public static class ExtendedContractLogDataExtensions
     /// <see cref="EvmTopicFilter"/>); passing the index or topic
     /// filter alone will yield a server-side 400.
     /// </remarks>
-    public static IAsyncEnumerable<ExtendedContractLogData> GetContractLogEventsAsync(this MirrorRestClient client, EntityId contract, params IMirrorQueryParameter[] filters)
+    public static IAsyncEnumerable<ExtendedContractLogData> GetContractLogEventsAsync(this MirrorRestClient client, EntityId contract, CancellationToken cancellationToken, params IMirrorQueryParameter[] filters)
     {
         var path = GenerateInitialPath($"contracts/{contract.ToMirrorString()}/results/logs", new PageLimit(100), filters);
-        return client.GetPagedItemsAsync<ExtendedContractLogDataPage, ExtendedContractLogData>(path, MirrorJsonContext.Default.ExtendedContractLogDataPage);
+        return client.GetPagedItemsAsync<ExtendedContractLogDataPage, ExtendedContractLogData>(path, MirrorJsonContext.Default.ExtendedContractLogDataPage, cancellationToken);
+    }
+    /// <inheritdoc cref="GetContractLogEventsAsync(MirrorRestClient, EntityId, CancellationToken, IMirrorQueryParameter[])"/>
+    public static IAsyncEnumerable<ExtendedContractLogData> GetContractLogEventsAsync(this MirrorRestClient client, EntityId contract, params IMirrorQueryParameter[] filters)
+    {
+        return client.GetContractLogEventsAsync(contract, CancellationToken.None, filters);
     }
     /// <summary>
     /// Enumerates log events across every contract on the network.
     /// Same filter palette as
-    /// <see cref="GetContractLogEventsAsync"/>, without the
+    /// <see cref="GetContractLogEventsAsync(MirrorRestClient, EntityId, CancellationToken, IMirrorQueryParameter[])"/>, without the
     /// per-contract scoping.
     /// </summary>
     /// <param name="client">
     /// Mirror Rest Client to use for the request.
     /// </param>
+    /// <param name="cancellationToken">
+    /// Token that cancels the enumeration, including a page request in
+    /// flight. <c>WithCancellation</c> on the result works as well.
+    /// </param>
     /// <param name="filters">
     /// Additional query parameters. The endpoint supports
     /// <see cref="TimestampFilter"/>, <see cref="EvmTopicFilter"/>,
@@ -120,9 +133,14 @@ public static class ExtendedContractLogDataExtensions
     /// <see cref="EvmTopicFilter"/>); passing the index or topic
     /// filter alone will yield a server-side 400.
     /// </remarks>
-    public static IAsyncEnumerable<ExtendedContractLogData> GetAllContractLogEventsAsync(this MirrorRestClient client, params IMirrorQueryParameter[] filters)
+    public static IAsyncEnumerable<ExtendedContractLogData> GetAllContractLogEventsAsync(this MirrorRestClient client, CancellationToken cancellationToken, params IMirrorQueryParameter[] filters)
     {
         var path = GenerateInitialPath("contracts/results/logs", new PageLimit(100), filters);
-        return client.GetPagedItemsAsync<ExtendedContractLogDataPage, ExtendedContractLogData>(path, MirrorJsonContext.Default.ExtendedContractLogDataPage);
+        return client.GetPagedItemsAsync<ExtendedContractLogDataPage, ExtendedContractLogData>(path, MirrorJsonContext.Default.ExtendedContractLogDataPage, cancellationToken);
+    }
+    /// <inheritdoc cref="GetAllContractLogEventsAsync(MirrorRestClient, CancellationToken, IMirrorQueryParameter[])"/>
+    public static IAsyncEnumerable<ExtendedContractLogData> GetAllContractLogEventsAsync(this MirrorRestClient client, params IMirrorQueryParameter[] filters)
+    {
+        return client.GetAllContractLogEventsAsync(CancellationToken.None, filters);
     }
 }

@@ -16,7 +16,6 @@ public sealed partial class Response : IPrecheckResult
                 ResponseOneofCase.ContractGetBytecodeResponse => (response_ as ContractGetBytecodeResponse)?.Header,
                 ResponseOneofCase.ContractGetInfo => (response_ as ContractGetInfoResponse)?.Header,
                 ResponseOneofCase.ContractGetRecordsResponse => (response_ as ContractGetRecordsResponse)?.Header,
-                ResponseOneofCase.CryptogetAccountBalance => (response_ as CryptoGetAccountBalanceResponse)?.Header,
                 ResponseOneofCase.CryptoGetAccountRecords => (response_ as CryptoGetAccountRecordsResponse)?.Header,
                 ResponseOneofCase.CryptoGetInfo => (response_ as CryptoGetInfoResponse)?.Header,
                 ResponseOneofCase.FileGetContents => (response_ as FileGetContentsResponse)?.Header,

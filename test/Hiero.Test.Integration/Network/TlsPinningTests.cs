@@ -29,15 +29,16 @@ public class TlsPinningTests
     }
 
     [Test]
-    public async Task Can_Query_Balance_Over_Pinned_Tls_Channel()
+    public async Task Can_Query_Over_Pinned_Tls_Channel()
     {
         // Discovery itself pings each TLS endpoint through the default (pinning)
         // channel factory, so a responsive endpoint already proves the handshake
-        // succeeds. Do a real paid-node-free balance query to confirm end-to-end.
+        // succeeds. Do a real paid query to confirm end-to-end.
         var endpoint = (await DiscoverTlsEndpointsAsync())[0];
         await using var client = TestNetwork.CreateClient(endpoint);
-        var balance = await client.GetAccountBalanceAsync(TestNetwork.Payer);
-        await Assert.That(balance > 0).IsTrue();
+        var info = await client.GetAccountInfoAsync(TestNetwork.Payer);
+        await Assert.That(info.Address).IsEqualTo(TestNetwork.Payer);
+        await Assert.That(info.Balance > 0).IsTrue();
     }
 
     [Test]
@@ -52,11 +53,11 @@ public class TlsPinningTests
         // The TLS handshake fails validation, surfacing as a communication error.
         await Assert.That(async () =>
         {
-            await client.GetAccountBalanceAsync(TestNetwork.Payer);
+            await client.PingAsync();
         }).ThrowsException();
     }
 
-    private static async Task<ConsensusNodeEndpoint[]> DiscoverTlsEndpointsAsync()
+    internal static async Task<ConsensusNodeEndpoint[]> DiscoverTlsEndpointsAsync()
     {
         var mirror = await TestNetwork.GetMirrorRestClientAsync();
         var endpoints = (await mirror.GetActiveConsensusNodesAsync(ProbeTimeoutMs, ConsensusNodeTransport.Tls)).Keys.ToArray();

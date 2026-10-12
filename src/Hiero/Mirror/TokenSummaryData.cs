@@ -86,6 +86,10 @@ public static class TokenSummaryDataExtensions
     /// <param name="client">
     /// Mirror Rest Client to use for the request.
     /// </param>
+    /// <param name="cancellationToken">
+    /// Token that cancels the enumeration, including a page request in
+    /// flight. <c>WithCancellation</c> on the result works as well.
+    /// </param>
     /// <param name="filters">
     /// Additional query filters. The endpoint supports
     /// <see cref="AccountFilter"/>, <see cref="TokenFilter"/>,
@@ -97,9 +101,14 @@ public static class TokenSummaryDataExtensions
     /// <returns>
     /// An async enumerable of token-summary records.
     /// </returns>
-    public static IAsyncEnumerable<TokenSummaryData> GetTokensAsync(this MirrorRestClient client, params IMirrorQueryParameter[] filters)
+    public static IAsyncEnumerable<TokenSummaryData> GetTokensAsync(this MirrorRestClient client, CancellationToken cancellationToken, params IMirrorQueryParameter[] filters)
     {
         var path = GenerateInitialPath("tokens", new PageLimit(100), filters);
-        return client.GetPagedItemsAsync<TokenSummaryDataPage, TokenSummaryData>(path, MirrorJsonContext.Default.TokenSummaryDataPage);
+        return client.GetPagedItemsAsync<TokenSummaryDataPage, TokenSummaryData>(path, MirrorJsonContext.Default.TokenSummaryDataPage, cancellationToken);
+    }
+    /// <inheritdoc cref="GetTokensAsync(MirrorRestClient, CancellationToken, IMirrorQueryParameter[])"/>
+    public static IAsyncEnumerable<TokenSummaryData> GetTokensAsync(this MirrorRestClient client, params IMirrorQueryParameter[] filters)
+    {
+        return client.GetTokensAsync(CancellationToken.None, filters);
     }
 }

@@ -13,6 +13,11 @@ public sealed partial class ServiceEndpoint
         {
             throw new ArgumentException("The URI must be absolute.", nameof(uri));
         }
+        if (uri.Port < 0)
+        {
+            // A scheme with no default port, such as tcp://host, reports -1.
+            throw new ArgumentException("The URI must include a port.", nameof(uri));
+        }
         Port = uri.Port;
         // better than Host for internationalized names
         var host = uri.IdnHost;

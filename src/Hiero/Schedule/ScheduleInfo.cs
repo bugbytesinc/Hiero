@@ -41,7 +41,7 @@ public sealed record ScheduleInfo
     /// immediate execution, or wait until the configured consensus 
     /// timestamp if delayed execution flag was set.
     /// </summary>
-    public Endorsement[] Endorsements { get; private init; }
+    public IReadOnlyList<Endorsement> Endorsements { get; private init; }
     /// <summary>
     /// The endorsement key that can cancel this schedule transaction.
     /// It may be null, in which case it can not be canceled and will
@@ -80,14 +80,14 @@ public sealed record ScheduleInfo
     /// Identification of the Ledger (Network) this 
     /// schedule transaction information was retrieved from.
     /// </summary>
-    public ulong Ledger { get; private init; }
+    public BigInteger Ledger { get; private init; }
     /// <summary>
     /// If set to <code>true</code>, the network will delay the
     /// attempt to execute the schedule transaction until the
     /// expiration time, even if it receives sufficient signatures
     /// satisfying the signing requirements prior to the deadline.
     /// </summary>
-    public bool DelayExecution { get; init; }
+    public bool DelayExecution { get; private init; }
     /// <summary>
     /// Internal Constructor from Raw Results
     /// </summary>
@@ -105,7 +105,7 @@ public sealed record ScheduleInfo
         Executed = info.ExecutionTime?.ToConsensusTimeStamp();
         Deleted = info.DeletionTime?.ToConsensusTimeStamp();
         ScheduledTransactionBodyBytes = info.ScheduledTransactionBody.ToByteArray();
-        Ledger = (ulong)new BigInteger(info.LedgerId.Span, true, true);
+        Ledger = new BigInteger(info.LedgerId.Span, true, true);
         DelayExecution = info.WaitForExpiry;
     }
 }
@@ -134,9 +134,9 @@ public static class ScheduleInfoExtensions
     /// A detailed description of the schedule transaction,
     /// including the serialized schedule transaction body itself.
     /// </returns>
-    /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
+    /// <exception cref="ArgumentException">If required arguments are missing or invalid.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
+    /// <exception cref="PrecheckException">If the gateway node refused the query.</exception>
     public static async Task<ScheduleInfo> GetScheduleInfoAsync(this ConsensusClient client, EntityId schedule, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
     {
         return new ScheduleInfo(await Engine.QueryAsync(client, new ScheduleGetInfoQuery { ScheduleID = new ScheduleID(schedule) }, cancellationToken, configure).ConfigureAwait(false));

@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
     <ProjectReference Include="..\..\src\Hiero\Hiero.csproj" />
-    <PackageReference Include="TUnit.Core" Version="*" />
+    <PackageReference Include="TUnit.Core" Version="1.61.38" />
   </ItemGroup>
 </Project>

@@ -30,7 +30,7 @@ public class CreateAccountByMonikerTests
         await Assert.That(xferReceipt1).IsNotNull();
         await Assert.That(xferReceipt1.Status).IsEqualTo(ResponseCode.Success);
 
-        var balance = await client.GetAccountBalanceAsync(receipt.Address);
+        var balance = await TestNetwork.GetCryptoBalanceAsync(receipt.Address);
         await Assert.That(balance).IsEqualTo(initialPayment - 1);
 
         var ex = await Assert.That(async () =>
@@ -42,7 +42,7 @@ public class CreateAccountByMonikerTests
         await Assert.That(tex!.Status).IsEqualTo(ResponseCode.InvalidAccountId);
         await Assert.That(tex.Message).StartsWith("Transfer failed with status: InvalidAccountId");
 
-        balance = await client.GetAccountBalanceAsync(receipt.Address);
+        balance = await TestNetwork.GetCryptoBalanceAsync(receipt.Address);
         await Assert.That(balance).IsEqualTo(initialPayment - 1);
 
         ex = await Assert.That(async () =>
@@ -54,7 +54,7 @@ public class CreateAccountByMonikerTests
         await Assert.That(tex!.Status).IsEqualTo(ResponseCode.InvalidAccountId);
         await Assert.That(tex.Message).StartsWith("Transfer failed with status: InvalidAccountId");
 
-        balance = await client.GetAccountBalanceAsync(receipt.Address);
+        balance = await TestNetwork.GetCryptoBalanceAsync(receipt.Address);
         await Assert.That(balance).IsEqualTo(initialPayment - 1);
 
         var infoFromAccount = await client.GetAccountInfoAsync(receipt.Address);
@@ -118,7 +118,7 @@ public class CreateAccountByMonikerTests
         await Assert.That(receipt.Status).IsEqualTo(ResponseCode.Success);
 
         var receipts = await client.GetAllReceiptsAsync(receipt.TransactionId);
-        var accountId = ((CreateAccountReceipt)receipts[1]).Address;
+        var accountId = receipts.Children.OfType<CreateAccountReceipt>().Single().Address;
 
         // Note: have to hydrate via being the payer, don't forget the full prefix
         // required for the system to figure out the public key part, eesh.
@@ -131,21 +131,21 @@ public class CreateAccountByMonikerTests
         await Assert.That(xferReceipt1).IsNotNull();
         await Assert.That(xferReceipt1.Status).IsEqualTo(ResponseCode.Success);
 
-        var remainderBalance = await client.GetAccountBalanceAsync(accountId);
+        var remainderBalance = await TestNetwork.GetCryptoBalanceAsync(accountId);
         await Assert.That(initialPayment > remainderBalance).IsTrue();
 
         var xferReceipt2 = await client.TransferAsync(alias, TestNetwork.Payer, 1, ctx => ctx.Signatory = new Signatory(ctx.Signatory!, privateKey));
         await Assert.That(xferReceipt2).IsNotNull();
         await Assert.That(xferReceipt1.Status).IsEqualTo(ResponseCode.Success);
 
-        var balance = await client.GetAccountBalanceAsync(accountId);
+        var balance = await TestNetwork.GetCryptoBalanceAsync(accountId);
         await Assert.That(balance).IsEqualTo(remainderBalance - 1);
 
         var xferReceipt3 = await client.TransferAsync(moniker, TestNetwork.Payer, 1, ctx => ctx.Signatory = new Signatory(ctx.Signatory!, privateKey));
         await Assert.That(xferReceipt3).IsNotNull();
         await Assert.That(xferReceipt1.Status).IsEqualTo(ResponseCode.Success);
 
-        balance = await client.GetAccountBalanceAsync(accountId);
+        balance = await TestNetwork.GetCryptoBalanceAsync(accountId);
         await Assert.That(balance).IsEqualTo(remainderBalance - 2);
 
         var infoFromAccount = await client.GetAccountInfoAsync(accountId);
@@ -230,7 +230,7 @@ public class CreateAccountByMonikerTests
         await Assert.That(receipt.Status).IsEqualTo(ResponseCode.Success);
 
         var receipts = await client.GetAllReceiptsAsync(receipt.TransactionId);
-        var accountId = ((CreateAccountReceipt)receipts[1]).Address;
+        var accountId = receipts.Children.OfType<CreateAccountReceipt>().Single().Address;
 
         // Note: have to hydrate via being the payer, don't forget the full prefix
         // required for the system to figure out the public key part, eesh.
@@ -242,21 +242,21 @@ public class CreateAccountByMonikerTests
         await Assert.That(xferReceipt1).IsNotNull();
         await Assert.That(xferReceipt1.Status).IsEqualTo(ResponseCode.Success);
 
-        var balance = await client.GetAccountBalanceAsync(accountId);
+        var balance = await TestNetwork.GetCryptoBalanceAsync(accountId);
         await Assert.That(balance).IsEqualTo(initialPayment - 1);
 
         var xferReceipt2 = await client.TransferAsync(alias, TestNetwork.Payer, 1, ctx => ctx.Signatory = new Signatory(ctx.Signatory!, privateKey));
         await Assert.That(xferReceipt2).IsNotNull();
         await Assert.That(xferReceipt1.Status).IsEqualTo(ResponseCode.Success);
 
-        balance = await client.GetAccountBalanceAsync(accountId);
+        balance = await TestNetwork.GetCryptoBalanceAsync(accountId);
         await Assert.That(balance).IsEqualTo(initialPayment - 2);
 
         var xferReceipt3 = await client.TransferAsync(moniker, TestNetwork.Payer, 1, ctx => ctx.Signatory = new Signatory(ctx.Signatory!, privateKey));
         await Assert.That(xferReceipt3).IsNotNull();
         await Assert.That(xferReceipt1.Status).IsEqualTo(ResponseCode.Success);
 
-        balance = await client.GetAccountBalanceAsync(accountId);
+        balance = await TestNetwork.GetCryptoBalanceAsync(accountId);
         await Assert.That(balance).IsEqualTo(initialPayment - 3);
 
         var infoFromAccount = await client.GetAccountInfoAsync(accountId);
@@ -341,27 +341,27 @@ public class CreateAccountByMonikerTests
         await Assert.That(receipt.Status).IsEqualTo(ResponseCode.Success);
 
         var receipts = await client.GetAllReceiptsAsync(receipt.TransactionId);
-        var accountId = ((CreateAccountReceipt)receipts[1]).Address;
+        var accountId = receipts.Children.OfType<CreateAccountReceipt>().Single().Address;
 
         var xferReceipt1 = await client.TransferAsync(accountId, TestNetwork.Payer, 1, ctx => ctx.Signatory = new Signatory(ctx.Signatory!, privateKey));
         await Assert.That(xferReceipt1).IsNotNull();
         await Assert.That(xferReceipt1.Status).IsEqualTo(ResponseCode.Success);
 
-        var balance = await client.GetAccountBalanceAsync(accountId);
+        var balance = await TestNetwork.GetCryptoBalanceAsync(accountId);
         await Assert.That(balance).IsEqualTo(initialPayment - 1);
 
         var xferReceipt2 = await client.TransferAsync(alias, TestNetwork.Payer, 1, ctx => ctx.Signatory = new Signatory(ctx.Signatory!, privateKey));
         await Assert.That(xferReceipt2).IsNotNull();
         await Assert.That(xferReceipt1.Status).IsEqualTo(ResponseCode.Success);
 
-        balance = await client.GetAccountBalanceAsync(accountId);
+        balance = await TestNetwork.GetCryptoBalanceAsync(accountId);
         await Assert.That(balance).IsEqualTo(initialPayment - 2);
 
         var xferReceipt3 = await client.TransferAsync(moniker, TestNetwork.Payer, 1, ctx => ctx.Signatory = new Signatory(ctx.Signatory!, privateKey));
         await Assert.That(xferReceipt3).IsNotNull();
         await Assert.That(xferReceipt1.Status).IsEqualTo(ResponseCode.Success);
 
-        balance = await client.GetAccountBalanceAsync(accountId);
+        balance = await TestNetwork.GetCryptoBalanceAsync(accountId);
         await Assert.That(balance).IsEqualTo(initialPayment - 3);
 
         var infoFromAccount = await client.GetAccountInfoAsync(accountId);

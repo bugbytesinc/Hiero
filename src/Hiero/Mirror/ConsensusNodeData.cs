@@ -19,10 +19,35 @@ public class ConsensusNodeData
     [JsonPropertyName("node_account_id")]
     public EntityId Account { get; set; } = default!;
     /// <summary>
+    /// The administrative key authorized to update or delete the
+    /// node's address-book entry.
+    /// </summary>
+    [JsonPropertyName("admin_key")]
+    public Endorsement? Administrator { get; set; }
+    /// <summary>
+    /// The ids of the HIP-1137 registered nodes (block nodes, mirror
+    /// nodes and the like) this consensus node is associated with.
+    /// </summary>
+    [JsonPropertyName("associated_registered_nodes")]
+    public long[] AssociatedRegisteredNodes { get; set; } = [];
+    /// <summary>
+    /// Whether the node declines staking rewards.
+    /// </summary>
+    [JsonPropertyName("decline_reward")]
+    [JsonConverter(typeof(BooleanMirrorConverter))]
+    public bool DeclineReward { get; set; }
+    /// <summary>
     /// A list of gRPC endpoints this gossip node can be reached through.
     /// </summary>
     [JsonPropertyName("service_endpoints")]
     public GrpcEndpointData[] Endpoints { get; set; } = default!;
+    /// <summary>
+    /// The node's gRPC-Web proxy endpoint (HIP-1046), for clients such
+    /// as browsers that cannot speak native gRPC; null when the node
+    /// publishes none.
+    /// </summary>
+    [JsonPropertyName("grpc_proxy_endpoint")]
+    public GrpcEndpointData? GrpcProxyEndpoint { get; set; }
     /// <summary>
     /// Memo associated with the address book
     /// </summary>
@@ -100,6 +125,11 @@ public class ConsensusNodeData
     [JsonConverter(typeof(LongMirrorConverter))]
     public long StakeRewarded { get; set; }
     /// <summary>
+    /// The staking period the stake figures were taken from.
+    /// </summary>
+    [JsonPropertyName("staking_period")]
+    public TimestampRangeData? StakingPeriod { get; set; }
+    /// <summary>
     /// The range of time this data record
     /// is valid for.
     /// </summary>
@@ -122,6 +152,10 @@ public static class ConsensusNodeDataExtensions
     /// <param name="client">
     /// Mirror Rest Client to use for the request.
     /// </param>
+    /// <param name="cancellationToken">
+    /// Token that cancels the enumeration, including a page request in
+    /// flight. <c>WithCancellation</c> on the result works as well.
+    /// </param>
     /// <param name="filters">
     /// Additional query parameters. The endpoint supports
     /// <see cref="FileFilter"/>, <see cref="NodeFilter"/>,
@@ -130,16 +164,26 @@ public static class ConsensusNodeDataExtensions
     /// <returns>
     /// An async enumerable of consensus-node records.
     /// </returns>
-    public static IAsyncEnumerable<ConsensusNodeData> GetConsensusNodesAsync(this MirrorRestClient client, params IMirrorQueryParameter[] filters)
+    public static IAsyncEnumerable<ConsensusNodeData> GetConsensusNodesAsync(this MirrorRestClient client, CancellationToken cancellationToken, params IMirrorQueryParameter[] filters)
     {
         var path = GenerateInitialPath("network/nodes", filters);
-        return client.GetPagedItemsAsync<ConsensusNodeDataPage, ConsensusNodeData>(path, MirrorJsonContext.Default.ConsensusNodeDataPage);
+        return client.GetPagedItemsAsync<ConsensusNodeDataPage, ConsensusNodeData>(path, MirrorJsonContext.Default.ConsensusNodeDataPage, cancellationToken);
+    }
+    /// <inheritdoc cref="GetConsensusNodesAsync(MirrorRestClient, CancellationToken, IMirrorQueryParameter[])"/>
+    public static IAsyncEnumerable<ConsensusNodeData> GetConsensusNodesAsync(this MirrorRestClient client, params IMirrorQueryParameter[] filters)
+    {
+        return client.GetConsensusNodesAsync(CancellationToken.None, filters);
     }
     /// <summary>
-    /// Client-side wrapper over <see cref="GetConsensusNodesAsync"/>
-    /// that pings each gRPC endpoint returned from
-    /// <c>/api/v1/network/nodes</c> and returns only the nodes that
+    /// Client-side wrapper over <see cref="GetConsensusNodesAsync(MirrorRestClient, CancellationToken, IMirrorQueryParameter[])"/>
+    /// that pings the gRPC endpoints returned from
+    /// <c>/api/v1/network/nodes</c> and returns only the endpoints that
     /// respond within <paramref name="maxTimeoutInMilliseconds"/>.
+    /// Only endpoints that carry an IPv4 address and use port 50211
+    /// (plaintext) or 50212 (TLS) are probed; endpoints published with
+    /// only a domain name or on another port (as some local networks
+    /// do) are skipped. Results are keyed per endpoint, so a node can
+    /// appear more than once.
     /// Useful for building a dynamic gateway list for
     /// <c>ConsensusClient</c> transaction submission.
     /// </summary>
@@ -161,16 +205,20 @@ public static class ConsensusNodeDataExtensions
     /// TLS results.  <see cref="ConsensusNodeTransport.All"/> probes and returns
     /// both.
     /// </param>
+    /// <param name="cancellationToken">
+    /// Optional token that cancels the node listing and every ping. A
+    /// cancelled call throws rather than returning the nodes probed so far.
+    /// </param>
     /// <returns>
     /// A dictionary of gateways and the corresponding response
     /// time (in milliseconds).
     /// </returns>
-    public static async Task<IReadOnlyDictionary<ConsensusNodeEndpoint, long>> GetActiveConsensusNodesAsync(this MirrorRestClient client, int maxTimeoutInMilliseconds, ConsensusNodeTransport transport = ConsensusNodeTransport.Plaintext)
+    public static async Task<IReadOnlyDictionary<ConsensusNodeEndpoint, long>> GetActiveConsensusNodesAsync(this MirrorRestClient client, int maxTimeoutInMilliseconds, ConsensusNodeTransport transport = ConsensusNodeTransport.Plaintext, CancellationToken cancellationToken = default)
     {
         var wantPlaintext = transport is ConsensusNodeTransport.Plaintext or ConsensusNodeTransport.All;
         var wantTls = transport is ConsensusNodeTransport.Tls or ConsensusNodeTransport.All;
         var list = new List<Task<(ConsensusNodeEndpoint gateway, long response)>>();
-        await foreach (var node in client.GetConsensusNodesAsync().ConfigureAwait(false))
+        await foreach (var node in client.GetConsensusNodesAsync(cancellationToken).ConfigureAwait(false))
         {
             // The certificate hash is published per node, not per endpoint; parse
             // it once and attach it to any TLS endpoint built for this node.
@@ -186,18 +234,21 @@ public static class ConsensusNodeDataExtensions
                 if (wantPlaintext && endpoint.Port == 50211)
                 {
                     var gateway = new ConsensusNodeEndpoint(node.Account, new Uri($"http://{address}:{endpoint.Port}"));
-                    list.Add(ProbeGatewayAsync(gateway, maxTimeoutInMilliseconds));
+                    list.Add(ProbeGatewayAsync(gateway, maxTimeoutInMilliseconds, cancellationToken));
                 }
                 // A TLS endpoint can't be validated without a hash to pin against,
                 // so exclude nodes whose address-book entry lacks a usable one.
                 if (wantTls && endpoint.Port == 50212 && hasCertHash)
                 {
                     var gateway = new ConsensusNodeEndpoint(node.Account, new Uri($"https://{address}:{endpoint.Port}"), certHash);
-                    list.Add(ProbeGatewayAsync(gateway, maxTimeoutInMilliseconds));
+                    list.Add(ProbeGatewayAsync(gateway, maxTimeoutInMilliseconds, cancellationToken));
                 }
             }
         }
         var responses = await Task.WhenAll(list).ConfigureAwait(false);
+        // A cancelled ping reads as an unresponsive node; don't hand back a
+        // list that silently left out nodes the caller never let us reach.
+        cancellationToken.ThrowIfCancellationRequested();
         var result = new Dictionary<ConsensusNodeEndpoint, long>(responses.Length);
         foreach (var (gateway, response) in responses)
         {
@@ -208,23 +259,22 @@ public static class ConsensusNodeDataExtensions
         }
         return result;
 
-        static async Task<(ConsensusNodeEndpoint gateway, long response)> ProbeGatewayAsync(ConsensusNodeEndpoint gateway, int maxTimeoutInMilliseconds)
+        static async Task<(ConsensusNodeEndpoint gateway, long response)> ProbeGatewayAsync(ConsensusNodeEndpoint gateway, int maxTimeoutInMilliseconds, CancellationToken cancellationToken)
         {
             await using var grpcClient = new ConsensusClient(cfg => cfg.Endpoint = gateway);
-            var response = -1L;
-            var pingTask = grpcClient.PingAsync();
-            if (await Task.WhenAny(pingTask, Task.Delay(maxTimeoutInMilliseconds)).ConfigureAwait(false) == pingTask)
+            // The ping itself is cancelled at the timeout: a ping merely
+            // abandoned would keep retrying an unresponsive node in the
+            // background for the client's whole retry window.
+            using var pingCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            pingCancellation.CancelAfter(maxTimeoutInMilliseconds);
+            try
             {
-                try
-                {
-                    response = await pingTask.ConfigureAwait(false);
-                }
-                catch
-                {
-                    // fall through with -1
-                }
+                return (gateway, await grpcClient.PingAsync(pingCancellation.Token).ConfigureAwait(false));
             }
-            return (gateway, response);
+            catch
+            {
+                return (gateway, -1L);
+            }
         }
     }
     /// <summary>

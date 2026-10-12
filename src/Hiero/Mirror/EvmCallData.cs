@@ -56,7 +56,7 @@ public class EvmCallData
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public EvmAddress? To { get; set; }
     /// <summary>
-    /// The amount of hbar to simulate sending to
+    /// The amount of hbar, in tinybars, to simulate sending to
     /// the contract or remote address.
     /// </summary>
     [JsonPropertyName("value")]
@@ -70,12 +70,17 @@ public class EvmCallData
     {
     }
     /// <summary>
-    /// Helper Constructor for contract calls, sets up
-    /// the data property based upon the contract address,
-    /// method name and parameters.
+    /// Helper Constructor for contract calls, sets the
+    /// <see cref="To"/> property to the contract address and
+    /// builds the <see cref="Data"/> property from the method
+    /// name and parameters.
     /// </summary>
     /// <param name="contract">Contract address to call.</param>
-    /// <param name="method">Contract method to invoke.</param>
+    /// <param name="method">
+    /// Contract method to invoke.  Empty (or <code>null</code>), with no
+    /// arguments, sends no call data, which runs the contract's
+    /// <c>receive</c> or <c>fallback</c> function.
+    /// </param>
     /// <param name="args">Optional additional method arguments</param>
     public EvmCallData(EvmAddress contract, string method, params object[] args)
     {

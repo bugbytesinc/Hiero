@@ -51,8 +51,9 @@ public sealed record NftTransfer
     /// The address of the crypto account receiving the NFT.
     /// </param>
     /// <param name="delegated">
-    /// Indicates the parties involved in the transaction
-    /// are acting as delegates through a granted allowance.
+    /// Indicates the transfer is authorized through an
+    /// allowance the sender granted, so the sending account
+    /// may not have signed this transaction.
     /// </param>
     /// <param name="senderAllowanceHook">
     /// Optional allowance hook call for the sender.

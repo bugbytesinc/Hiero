@@ -15,8 +15,20 @@ namespace Hiero;
 /// from mnemonic word phrases.
 /// </summary>
 /// <remarks>
+/// <para>
 /// Warning: this class has not been hardened against external attacks,
 /// it keeps the root seed in memory.
+/// </para>
+/// <para>
+/// The words and passphrase are encoded as UTF-8 without the NFKD
+/// normalization BIP-39 specifies.  ASCII input, which includes the English
+/// word list, is unaffected.  A passphrase containing other characters can
+/// derive different keys than other BIP-39 wallets do; to match them,
+/// normalize it first with
+/// <c>passphrase.Normalize(System.Text.NormalizationForm.FormKD)</c>.  The
+/// SDK leaves it unnormalized so that keys already derived from such a
+/// passphrase do not change.
+/// </para>
 /// </remarks>
 public sealed class Mnemonic
 {
@@ -53,9 +65,10 @@ public sealed class Mnemonic
     /// </param>
     /// <param name="passphrase">
     /// Optional password (empty string or null is allowed 
-    /// for no password).
+    /// for no password).  It is used as given, without the NFKD
+    /// normalization BIP-39 specifies; see the remarks.
     /// </param>
-    public Mnemonic(string[] words, string passphrase)
+    public Mnemonic(string[] words, string? passphrase)
     {
         var mnemonicBytes = Encoding.UTF8.GetBytes(string.Join(' ', words));
         var saltBytes = Encoding.UTF8.GetBytes("mnemonic" + (passphrase ?? ""));

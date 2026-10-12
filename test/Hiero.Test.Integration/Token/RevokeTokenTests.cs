@@ -327,7 +327,7 @@ public class RevokeTokenTests
     }
 
     [Test]
-    public async Task Can_Schedule_And_Sign_Revoke_Token_Kyc()
+    public async Task Can_Not_Schedule_And_Sign_Revoke_Token_Kyc()
     {
         await using var fxAccount = await TestAccount.CreateAsync();
         await using var fxToken = await TestToken.CreateAsync(null, fxAccount);

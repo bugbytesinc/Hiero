@@ -1,16 +1,29 @@
 ﻿// SPDX-License-Identifier: Apache-2.0
 namespace Hiero;
 /// <summary>
-/// Represents an error with a transaction that passed the gateway node
-/// pre-check and was processed by the network but did not succeed.
+/// Thrown when a transaction reached consensus and failed: the network
+/// processed it and charged its fee, and nothing else changed.  Record
+/// lookups also throw it when the node cannot return the record; then the
+/// receipt is a stand-in carrying the lookup's status, not a verdict on
+/// the transaction (see the remarks).
 /// </summary>
 /// <remarks>
 /// <para>
 /// Unlike <see cref="PrecheckException"/>, a <c>TransactionException</c>
 /// means the transaction <em>did</em> reach consensus and fees were charged,
-/// but the resulting status indicates failure. The full receipt — including
-/// the exchange rate at the time of execution — is available via
-/// <see cref="Receipt"/>.
+/// but the resulting status indicates failure: nothing else changed. The
+/// full receipt — including the exchange rate at the time of execution — is
+/// available via <see cref="Receipt"/>.
+/// </para>
+/// <para>
+/// When the node has no receipt to give, the outcome is unknown and a
+/// <see cref="ConsensusException"/> is thrown instead, so a
+/// <c>TransactionException</c> from a transaction method is always a
+/// verdict. The record lookups
+/// (<see cref="TransactionRecordExtensions.GetTransactionRecordAsync"/>
+/// and its kin) also throw it when the node cannot return the record; then
+/// <see cref="Receipt"/> is a stand-in carrying the query's status, not a
+/// verdict on the transaction.
 /// </para>
 /// <para><strong>Common permanent failures:</strong>
 /// <see cref="ResponseCode.InsufficientAccountBalance"/>,
@@ -21,12 +34,20 @@ namespace Hiero;
 /// <para><strong>Suppression:</strong> set
 /// <c>IConsensusContext.ThrowIfNotSuccess = false</c> to prevent this
 /// exception from being thrown. When suppressed, the caller is responsible
-/// for inspecting <c>receipt.Status</c> on every returned receipt.</para>
+/// for inspecting <c>receipt.Status</c> on every returned receipt: only
+/// <see cref="ResponseCode.Success"/> is known to have executed, and
+/// <see cref="ResponseCode.Unknown"/> or
+/// <see cref="ResponseCode.ReceiptNotFound"/> means the outcome is
+/// unknown: no verdict was returned. A <c>ReceiptNotFound</c> receipt is a
+/// stand-in carrying the node's answer, since the node had none to
+/// give.</para>
 /// </remarks>
 public sealed class TransactionException : Exception
 {
     /// <summary>
-    /// The <see cref="ResponseCode"/> returned by the network.
+    /// The status of <see cref="Receipt"/>: the consensus verdict when
+    /// thrown by a transaction method, or the query's status when
+    /// thrown by a record lookup with a stand-in receipt.
     /// </summary>
     public ResponseCode Status { get { return Receipt.Status; } }
     /// <summary>
@@ -36,13 +57,13 @@ public sealed class TransactionException : Exception
     public TransactionId TransactionId { get { return Receipt.TransactionId; } }
     /// <summary>
     /// The underlying receipt returned from the network that 
-    /// caused the exception (or a simulated version if not enough 
-    /// information has been returned from the network, such as
-    /// a "receipt not found" error.)
+    /// caused the exception (or, from a record lookup the node could
+    /// not answer, a stand-in carrying the query's status.)
     /// </summary>
     public TransactionReceipt Receipt { get; private set; }
     /// <summary>
-    /// Internal constructor for cases where a NetworkResult exists.
+    /// Internal constructor taking the receipt (the network's verdict,
+    /// or a record-lookup stand-in).
     /// </summary>
     internal TransactionException(string message, TransactionReceipt receipt) : base(message)
     {

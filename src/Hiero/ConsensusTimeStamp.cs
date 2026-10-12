@@ -28,6 +28,12 @@ public readonly record struct ConsensusTimeStamp : IComparable<ConsensusTimeStam
     /// <summary>
     /// Default Constructor, represents the minimum allowed time.
     /// </summary>
+    /// <remarks>
+    /// Only an explicit <c>new ConsensusTimeStamp()</c> produces
+    /// <see cref="MinValue"/>.  <c>default(ConsensusTimeStamp)</c> and
+    /// zero-initialized fields are the Unix epoch (<see cref="Seconds"/>
+    /// is zero), not <see cref="MinValue"/>.
+    /// </remarks>
     public ConsensusTimeStamp() : this(decimal.MinValue) { }
     /// <summary>
     /// Constructor taking the number of seconds since the unix epoch.
@@ -58,11 +64,19 @@ public readonly record struct ConsensusTimeStamp : IComparable<ConsensusTimeStam
     /// </summary>
     /// <param name="dateTime">
     /// The DateTime representing the moment in time this
-    /// consensus timestamp will represent.
+    /// consensus timestamp will represent.  A value of kind
+    /// <see cref="DateTimeKind.Local"/> is converted to UTC first; one of
+    /// kind <see cref="DateTimeKind.Unspecified"/> is taken to be UTC.
     /// </param>
     public ConsensusTimeStamp(DateTime dateTime)
     {
-        Seconds = (decimal)(dateTime - DateTime.UnixEpoch).TotalSeconds;
+        if (dateTime.Kind == DateTimeKind.Local)
+        {
+            dateTime = dateTime.ToUniversalTime();
+        }
+        // Whole ticks rather than TotalSeconds, whose double loses the
+        // last digits of a tick-precise time.
+        Seconds = decimal.Divide((dateTime - DateTime.UnixEpoch).Ticks, TimeSpan.TicksPerSecond);
     }
     /// <summary>
     /// Produces a string representing the consensus time
@@ -118,7 +132,7 @@ public readonly record struct ConsensusTimeStamp : IComparable<ConsensusTimeStam
     {
         get
         {
-            return new ConsensusTimeStamp((decimal)(DateTime.UtcNow - DateTime.UnixEpoch).TotalSeconds);
+            return new ConsensusTimeStamp(DateTime.UtcNow);
         }
     }
     /// <summary>
@@ -201,7 +215,9 @@ public readonly record struct ConsensusTimeStamp : IComparable<ConsensusTimeStam
     /// object into a ConsensusTimeStamp
     /// </summary>
     /// <param name="dateTime">
-    /// The DateTime object representing the time.
+    /// The DateTime object representing the time.  A value of kind
+    /// <see cref="DateTimeKind.Local"/> is converted to UTC first; one of
+    /// kind <see cref="DateTimeKind.Unspecified"/> is taken to be UTC.
     /// </param>
     public static implicit operator ConsensusTimeStamp(DateTime dateTime)
     {

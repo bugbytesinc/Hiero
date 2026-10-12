@@ -26,10 +26,13 @@ public sealed record ConsensusNodeInfo
     /// </summary>
     public EntityId Address { get; internal init; } = default!;
     /// <summary>
-    /// Hash of the nodes TLS certificate. This field is a string of 
-    /// hexadecimal characters which, translated to binary, are the SHA-384 hash of 
-    /// the UTF-8 NFKD encoding of the node's TLS cert in PEM format. Its value can be 
-    /// used to verify the node's certificate it presents during TLS negotiations.
+    /// Hash of the node's TLS certificate, as the address book stores it. These
+    /// bytes are the UTF-8 encoding of a string of hexadecimal characters, not the
+    /// binary digest; hex-decoded, they are the 48-byte SHA-384 hash of the UTF-8
+    /// NFKD encoding of the node's TLS cert in PEM format. Hex-decode this value
+    /// before passing it to <see cref="ConsensusNodeEndpoint"/> or comparing it
+    /// with a computed hash; it can then be used to verify the certificate the
+    /// node presents during TLS negotiations.
     /// </summary>
     public ReadOnlyMemory<byte> CertificateHash { get; internal init; }
     /// <summary>

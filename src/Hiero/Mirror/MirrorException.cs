@@ -18,11 +18,18 @@ namespace Hiero.Mirror;
 /// <see cref="HttpStatusCode.ServiceUnavailable"/> (503),
 /// <see cref="HttpStatusCode.GatewayTimeout"/> (504). Mirror nodes
 /// enforce rate limits; back off and retry.</para>
-/// <para><strong>Permanent codes (do not retry):</strong>
-/// <see cref="HttpStatusCode.NotFound"/> (404) — the entity does not
-/// exist (or has not yet propagated to the mirror); verify the EntityId.
-/// <see cref="HttpStatusCode.BadRequest"/> (400) — the query was
-/// malformed; check filter parameters.</para>
+/// <para><strong>Not found:</strong> a lookup of a single entity or
+/// transaction returns <c>null</c> (or an empty result) for an HTTP 404
+/// rather than throwing. Either way, "not found" is not proof that
+/// something does not exist: the mirror node trails consensus by seconds or
+/// more, so a transaction submitted moments ago may simply not have arrived
+/// yet. Never treat it as proof that a transaction failed; see
+/// <see cref="ConsensusException"/> for how to settle an unknown outcome.</para>
+/// <para><strong>Bad request (400):</strong> usually a malformed query; check
+/// the filter parameters. A simulated EVM call
+/// (<see cref="EvmCallResultExtensions.CallEvmAsync(MirrorRestClient, EvmCallData, CancellationToken)"/>)
+/// also reports a contract revert this way, with the revert data in
+/// <see cref="Details"/>; retrying returns the same answer.</para>
 /// </remarks>
 public class MirrorException : Exception
 {

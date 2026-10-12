@@ -49,6 +49,9 @@ public static class TokenBalanceDataExtensions
     /// <param name="token">
     /// The token whose balance is requested.
     /// </param>
+    /// <param name="cancellationToken">
+    /// Token that cancels the request.
+    /// </param>
     /// <param name="filters">
     /// Additional query parameters. The underlying endpoint supports
     /// <see cref="PageLimit"/> and <see cref="OrderBy"/>, though a
@@ -58,10 +61,10 @@ public static class TokenBalanceDataExtensions
     /// The amount of token held by the target account, or null if the
     /// token has not been associated.
     /// </returns>
-    public static async Task<long?> GetAccountTokenBalanceAsync(this MirrorRestClient client, EntityId account, EntityId token, params IMirrorQueryParameter[] filters)
+    public static async Task<long?> GetAccountTokenBalanceAsync(this MirrorRestClient client, EntityId account, EntityId token, CancellationToken cancellationToken, params IMirrorQueryParameter[] filters)
     {
         var path = GenerateInitialPath($"accounts/{account.ToMirrorString()}/tokens", TokenFilter.Is(token), filters);
-        var payload = await client.GetSingleItemAsync(path, MirrorJsonContext.Default.TokenHoldingDataPage).ConfigureAwait(false);
+        var payload = await client.GetSingleItemAsync(path, MirrorJsonContext.Default.TokenHoldingDataPage, cancellationToken).ConfigureAwait(false);
         var holdings = payload?.TokenHoldings;
         if (holdings is not null)
         {
@@ -76,5 +79,10 @@ public static class TokenBalanceDataExtensions
             }
         }
         return null;
+    }
+    /// <inheritdoc cref="GetAccountTokenBalanceAsync(MirrorRestClient, EntityId, EntityId, CancellationToken, IMirrorQueryParameter[])"/>
+    public static Task<long?> GetAccountTokenBalanceAsync(this MirrorRestClient client, EntityId account, EntityId token, params IMirrorQueryParameter[] filters)
+    {
+        return client.GetAccountTokenBalanceAsync(account, token, CancellationToken.None, filters);
     }
 }

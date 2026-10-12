@@ -19,28 +19,25 @@ The library references a minimum of dependencies.  It relies on .NET's native [g
 
 ## What does 'Hello World' for this Library Look like?
 
-The most simple thing one can ask of the Hedera network is the balance of an account.  Here is an example console program:
+The most simple thing one can ask of the Hedera network is the balance of an account.  Balances are read from a mirror node, which is free and needs no account of your own.  Here is an example console program:
 
 ```csharp
 class Program
 {
     static async Task Main(string[] args)
     {
-        // Usage: dotnet run -- https://2.testnet.hedera.com:50211 0.0.5 0.0.98
-        var endpointUrl = args[0];
-        if (!EntityId.TryParseShardRealmNum(args[1], out var nodeAccount))
-            throw new ArgumentException($"Invalid node account: {args[1]}");
-        if (!EntityId.TryParseShardRealmNum(args[2], out var queryAccount))
-            throw new ArgumentException($"Invalid query account: {args[2]}");
+        // Usage: dotnet run -- https://testnet.mirrornode.hedera.com 0.0.98
+        var mirrorUrl = args[0];
+        if (!EntityId.TryParseShardRealmNum(args[1], out var queryAccount))
+            throw new ArgumentException($"Invalid query account: {args[1]}");
 
         try
         {
-            await using var client = new ConsensusClient(ctx =>
-            {
-                ctx.Endpoint = new ConsensusNodeEndpoint(nodeAccount, new Uri(endpointUrl));
-            });
-            var balance = await client.GetAccountBalanceAsync(queryAccount);
-            Console.WriteLine($"Account Balance for {queryAccount} is {balance:#,#} tinybars.");
+            var mirror = new MirrorRestClient(new HttpClient { BaseAddress = new Uri(mirrorUrl) });
+            var balance = await mirror.GetAccountBalanceAsync(queryAccount);
+            Console.WriteLine(balance is null
+                ? $"Account {queryAccount} was not found."
+                : $"Account Balance for {queryAccount} is {balance:#,#} tinybars.");
         }
         catch (Exception ex)
         {
@@ -51,7 +48,7 @@ class Program
 }
 ```
 
-Hiero provides access to the Hedera network via the [`ConsensusClient`](xref:Hiero.ConsensusClient) object.  The [`ConsensusClient`](xref:Hiero.ConsensusClient) object orchestrates the request construction and communication with the Hedera network.  During creation, it requires a small amount of configuration.  At a minimum to retrieve an account balance, the client must be configured with an [`Endpoint`](xref:Hiero.IConsensusContext.Endpoint).  The [`ConsensusNodeEndpoint`](xref:Hiero.ConsensusNodeEndpoint) object represents the internet network address and account for the node processing requests.  The [`EntityId`](xref:Hiero.EntityId) identifies accounts, tokens, topics, and other entities using the standard `shard.realm.num` format (e.g. `0.0.98`). Use [`EntityId.TryParseShardRealmNum`](xref:Hiero.EntityId.TryParseShardRealmNum*) to parse them from strings — this accepts the same format the Hedera portal gives you.
+Hiero reads network state through the [`MirrorRestClient`](xref:Hiero.MirrorRestClient), which wraps an `HttpClient` pointed at a mirror node, and submits transactions and paid queries through the [`ConsensusClient`](xref:Hiero.ConsensusClient), which orchestrates request construction and communication with the Hedera consensus nodes.  A `ConsensusClient` requires a small amount of configuration: at a minimum an [`Endpoint`](xref:Hiero.IConsensusContext.Endpoint), a [`ConsensusNodeEndpoint`](xref:Hiero.ConsensusNodeEndpoint) representing the internet network address and account of the node processing requests, plus a payer and signatory for anything that costs a fee.  The [`EntityId`](xref:Hiero.EntityId) identifies accounts, tokens, topics, and other entities using the standard `shard.realm.num` format (e.g. `0.0.98`). Use [`EntityId.TryParseShardRealmNum`](xref:Hiero.EntityId.TryParseShardRealmNum*) to parse them from strings — this accepts the same format the Hedera portal gives you.
 
 ## How do I learn more?
 

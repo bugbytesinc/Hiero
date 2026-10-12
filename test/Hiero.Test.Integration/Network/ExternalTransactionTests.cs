@@ -16,8 +16,8 @@ public class ExternalTransactionTests
         var gateway = await TestNetwork.GetConsensusNodeEndpointAsync();
         await using var client = TestNetwork.CreateClient(gateway);
 
-        var senderInitialBalance = await client.GetAccountBalanceAsync(fxSender);
-        var receiverInitialBalance = await client.GetAccountBalanceAsync(fxReceiver);
+        var senderInitialBalance = await TestNetwork.GetCryptoBalanceAsync(fxSender);
+        var receiverInitialBalance = await TestNetwork.GetCryptoBalanceAsync(fxReceiver);
 
         var xferAmount = (long)(fxSender.CreateParams.InitialBalance / 2);
 
@@ -57,8 +57,8 @@ public class ExternalTransactionTests
         await Assert.That(receipt.Status).IsEqualTo(ResponseCode.Success);
         await Assert.That(receipt.TransactionId).IsEqualTo(txid);
 
-        var senderFinalBalance = await client.GetAccountBalanceAsync(fxSender);
-        var receiverFinalBalance = await client.GetAccountBalanceAsync(fxReceiver);
+        var senderFinalBalance = await TestNetwork.GetCryptoBalanceAsync(fxSender);
+        var receiverFinalBalance = await TestNetwork.GetCryptoBalanceAsync(fxReceiver);
 
         await Assert.That(senderFinalBalance < (ulong)((long)senderInitialBalance - xferAmount)).IsTrue();
         await Assert.That(receiverFinalBalance).IsEqualTo(receiverInitialBalance + (ulong)xferAmount);
@@ -72,8 +72,8 @@ public class ExternalTransactionTests
         var gateway = await TestNetwork.GetConsensusNodeEndpointAsync();
         await using var client = TestNetwork.CreateClient(gateway);
 
-        var senderInitialBalance = await client.GetAccountBalanceAsync(fxSender);
-        var receiverInitialBalance = await client.GetAccountBalanceAsync(fxReceiver);
+        var senderInitialBalance = await TestNetwork.GetCryptoBalanceAsync(fxSender);
+        var receiverInitialBalance = await TestNetwork.GetCryptoBalanceAsync(fxReceiver);
 
         var xferAmount = (long)(fxSender.CreateParams.InitialBalance / 2);
 
@@ -113,8 +113,8 @@ public class ExternalTransactionTests
         await Assert.That(receipt.Status).IsEqualTo(ResponseCode.Success);
         await Assert.That(receipt.TransactionId).IsEqualTo(txid);
 
-        var senderFinalBalance = await client.GetAccountBalanceAsync(fxSender);
-        var receiverFinalBalance = await client.GetAccountBalanceAsync(fxReceiver);
+        var senderFinalBalance = await TestNetwork.GetCryptoBalanceAsync(fxSender);
+        var receiverFinalBalance = await TestNetwork.GetCryptoBalanceAsync(fxReceiver);
 
         await Assert.That(senderFinalBalance < (ulong)((long)senderInitialBalance - xferAmount)).IsTrue();
         await Assert.That(receiverFinalBalance).IsEqualTo(receiverInitialBalance + (ulong)xferAmount);
@@ -128,8 +128,8 @@ public class ExternalTransactionTests
         var gateway = await TestNetwork.GetConsensusNodeEndpointAsync();
         await using var client = TestNetwork.CreateClient(gateway);
 
-        var senderInitialBalance = await client.GetAccountBalanceAsync(fxSender);
-        var receiverInitialBalance = await client.GetAccountBalanceAsync(fxReceiver);
+        var senderInitialBalance = await TestNetwork.GetCryptoBalanceAsync(fxSender);
+        var receiverInitialBalance = await TestNetwork.GetCryptoBalanceAsync(fxReceiver);
 
         var xferAmount = (long)(fxSender.CreateParams.InitialBalance / 2);
 
@@ -163,8 +163,8 @@ public class ExternalTransactionTests
         await Assert.That(receipt.Status).IsEqualTo(ResponseCode.Success);
         await Assert.That(receipt.TransactionId).IsEqualTo(txid);
 
-        var senderFinalBalance = await client.GetAccountBalanceAsync(fxSender);
-        var receiverFinalBalance = await client.GetAccountBalanceAsync(fxReceiver);
+        var senderFinalBalance = await TestNetwork.GetCryptoBalanceAsync(fxSender);
+        var receiverFinalBalance = await TestNetwork.GetCryptoBalanceAsync(fxReceiver);
 
         await Assert.That(senderFinalBalance).IsEqualTo(senderInitialBalance - (ulong)xferAmount);
         await Assert.That(receiverFinalBalance).IsEqualTo(receiverInitialBalance + (ulong)xferAmount);
@@ -468,8 +468,8 @@ public class ExternalTransactionTests
         await using var client = await TestNetwork.CreateClientAsync();
         await using var noSignClient = client.Clone(ctx => { ctx.Payer = null; ctx.Signatory = null; });
 
-        var senderInitialBalance = await client.GetAccountBalanceAsync(fxSender);
-        var receiverInitialBalance = await client.GetAccountBalanceAsync(fxReceiver);
+        var senderInitialBalance = await TestNetwork.GetCryptoBalanceAsync(fxSender);
+        var receiverInitialBalance = await TestNetwork.GetCryptoBalanceAsync(fxReceiver);
 
         var xferAmount = (long)(fxSender.CreateParams.InitialBalance / 2);
 
@@ -492,8 +492,8 @@ public class ExternalTransactionTests
         });
         await Assert.That(receipt.Status).IsEqualTo(ResponseCode.Success);
 
-        var senderFinalBalance = await client.GetAccountBalanceAsync(fxSender);
-        var receiverFinalBalance = await client.GetAccountBalanceAsync(fxReceiver);
+        var senderFinalBalance = await TestNetwork.GetCryptoBalanceAsync(fxSender);
+        var receiverFinalBalance = await TestNetwork.GetCryptoBalanceAsync(fxReceiver);
 
         await Assert.That(senderFinalBalance < (ulong)((long)senderInitialBalance - xferAmount)).IsTrue();
         await Assert.That(receiverFinalBalance).IsEqualTo(receiverInitialBalance + (ulong)xferAmount);
@@ -506,7 +506,7 @@ public class ExternalTransactionTests
         await using var fxReceiver = await TestAccount.CreateAsync(fx => fx.CreateParams.InitialBalance = (ulong)Generator.Integer(2_00_000_000, 5_00_000_000));
         var transferAmount = (long)fxSource.CreateParams.InitialBalance / 2;
         await using var client = await TestNetwork.CreateClientAsync();
-        var originalBalance = await client.GetAccountBalanceAsync(fxReceiver.CreateReceipt!.Address);
+        var originalBalance = await TestNetwork.GetCryptoBalanceAsync(fxReceiver.CreateReceipt!.Address);
         await Assert.That(originalBalance).IsEqualTo(fxReceiver.CreateParams.InitialBalance);
 
         var allowanceParams = new BatchedTransactionMetadata
@@ -541,7 +541,7 @@ public class ExternalTransactionTests
         };
 
         var receipt = await client.ExecuteAsync(batchParams);
-        var newBalanceAfterTransfer = await client.GetAccountBalanceAsync(fxReceiver.CreateReceipt!.Address);
+        var newBalanceAfterTransfer = await TestNetwork.GetCryptoBalanceAsync(fxReceiver.CreateReceipt!.Address);
         await Assert.That(newBalanceAfterTransfer).IsEqualTo(originalBalance + (ulong)transferAmount);
     }
 
@@ -552,7 +552,7 @@ public class ExternalTransactionTests
         await using var fxReceiver = await TestAccount.CreateAsync(fx => fx.CreateParams.InitialBalance = (ulong)Generator.Integer(2_00_000_000, 5_00_000_000));
         var transferAmount = (long)fxSource.CreateParams.InitialBalance / 2;
         await using var client = await TestNetwork.CreateClientAsync();
-        var originalBalance = await client.GetAccountBalanceAsync(fxReceiver.CreateReceipt!.Address);
+        var originalBalance = await TestNetwork.GetCryptoBalanceAsync(fxReceiver.CreateReceipt!.Address);
         await Assert.That(originalBalance).IsEqualTo(fxReceiver.CreateParams.InitialBalance);
 
         var allowanceParams = new ExternalTransactionParams
@@ -584,7 +584,7 @@ public class ExternalTransactionTests
         };
 
         var receipt = await client.ExecuteAsync(batchParams);
-        var newBalanceAfterTransfer = await client.GetAccountBalanceAsync(fxReceiver.CreateReceipt!.Address);
+        var newBalanceAfterTransfer = await TestNetwork.GetCryptoBalanceAsync(fxReceiver.CreateReceipt!.Address);
         await Assert.That(newBalanceAfterTransfer).IsEqualTo(originalBalance + (ulong)transferAmount);
     }
 

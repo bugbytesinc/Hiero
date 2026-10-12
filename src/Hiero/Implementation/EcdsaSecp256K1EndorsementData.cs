@@ -46,6 +46,12 @@ internal sealed class EcdsaSecp256K1EndorsementData
         var signer = new ECDsaSigner(new HMacDsaKCalculator(new Sha256Digest()));
         signer.Init(false, PublicKey);
         var signatureSpan = signature.Span;
+        if (signatureSpan.Length != 64)
+        {
+            // Only the 64-byte r || s form is a signature here; anything
+            // shorter or longer is not, rather than a reason to throw.
+            return false;
+        }
         var r = new BigInteger(1, signatureSpan[..32]);
         var s = new BigInteger(1, signatureSpan[32..]);
         return signer.VerifySignature(hash, r, s);

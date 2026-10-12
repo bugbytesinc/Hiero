@@ -16,7 +16,7 @@ public class CreateFileTests
     }
 
     [Test]
-    public async Task Can_Schedule_And_Sign_Create_File()
+    public async Task Can_Not_Schedule_And_Sign_Create_File()
     {
         await using var fxPayer = await TestAccount.CreateAsync(fx => fx.CreateParams.InitialBalance = 20_00_000_000);
         await using var client = await TestNetwork.CreateClientAsync();

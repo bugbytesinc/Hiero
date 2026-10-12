@@ -16,8 +16,8 @@ public class SubmitExternalTests
         var gateway = await TestNetwork.GetConsensusNodeEndpointAsync();
         await using var client = TestNetwork.CreateClient(gateway);
 
-        var senderInitialBalance = await client.GetAccountBalanceAsync(fxSender);
-        var receiverInitialBalance = await client.GetAccountBalanceAsync(fxReceiver);
+        var senderInitialBalance = await TestNetwork.GetCryptoBalanceAsync(fxSender);
+        var receiverInitialBalance = await TestNetwork.GetCryptoBalanceAsync(fxReceiver);
 
         var xferAmount = (long)(fxSender.CreateParams.InitialBalance / 2);
 
@@ -60,8 +60,8 @@ public class SubmitExternalTests
         await Assert.That(receipt.Status).IsEqualTo(ResponseCode.Success);
         await Assert.That(receipt.TransactionId).IsEqualTo(txid);
 
-        var senderFinalBalance = await client.GetAccountBalanceAsync(fxSender);
-        var receiverFinalBalance = await client.GetAccountBalanceAsync(fxReceiver);
+        var senderFinalBalance = await TestNetwork.GetCryptoBalanceAsync(fxSender);
+        var receiverFinalBalance = await TestNetwork.GetCryptoBalanceAsync(fxReceiver);
 
         await Assert.That(senderFinalBalance < (ulong)((long)senderInitialBalance - xferAmount)).IsTrue();
         await Assert.That(receiverFinalBalance).IsEqualTo(receiverInitialBalance + (ulong)xferAmount);
@@ -75,8 +75,8 @@ public class SubmitExternalTests
         var gateway = await TestNetwork.GetConsensusNodeEndpointAsync();
         await using var client = TestNetwork.CreateClient(gateway);
 
-        var senderInitialBalance = await client.GetAccountBalanceAsync(fxSender);
-        var receiverInitialBalance = await client.GetAccountBalanceAsync(fxReceiver);
+        var senderInitialBalance = await TestNetwork.GetCryptoBalanceAsync(fxSender);
+        var receiverInitialBalance = await TestNetwork.GetCryptoBalanceAsync(fxReceiver);
 
         var xferAmount = (long)(fxSender.CreateParams.InitialBalance / 2);
 
@@ -119,8 +119,8 @@ public class SubmitExternalTests
         await Assert.That(receipt.Status).IsEqualTo(ResponseCode.Success);
         await Assert.That(receipt.TransactionId).IsEqualTo(txid);
 
-        var senderFinalBalance = await client.GetAccountBalanceAsync(fxSender);
-        var receiverFinalBalance = await client.GetAccountBalanceAsync(fxReceiver);
+        var senderFinalBalance = await TestNetwork.GetCryptoBalanceAsync(fxSender);
+        var receiverFinalBalance = await TestNetwork.GetCryptoBalanceAsync(fxReceiver);
 
         await Assert.That(senderFinalBalance < (ulong)((long)senderInitialBalance - xferAmount)).IsTrue();
         await Assert.That(receiverFinalBalance).IsEqualTo(receiverInitialBalance + (ulong)xferAmount);
@@ -134,8 +134,8 @@ public class SubmitExternalTests
         var gateway = await TestNetwork.GetConsensusNodeEndpointAsync();
         await using var client = TestNetwork.CreateClient(gateway);
 
-        var senderInitialBalance = await client.GetAccountBalanceAsync(fxSender);
-        var receiverInitialBalance = await client.GetAccountBalanceAsync(fxReceiver);
+        var senderInitialBalance = await TestNetwork.GetCryptoBalanceAsync(fxSender);
+        var receiverInitialBalance = await TestNetwork.GetCryptoBalanceAsync(fxReceiver);
 
         var xferAmount = (long)(fxSender.CreateParams.InitialBalance / 2);
 
@@ -172,8 +172,8 @@ public class SubmitExternalTests
         await Assert.That(receipt.Status).IsEqualTo(ResponseCode.Success);
         await Assert.That(receipt.TransactionId).IsEqualTo(txid);
 
-        var senderFinalBalance = await client.GetAccountBalanceAsync(fxSender);
-        var receiverFinalBalance = await client.GetAccountBalanceAsync(fxReceiver);
+        var senderFinalBalance = await TestNetwork.GetCryptoBalanceAsync(fxSender);
+        var receiverFinalBalance = await TestNetwork.GetCryptoBalanceAsync(fxReceiver);
 
         await Assert.That(senderFinalBalance).IsEqualTo(senderInitialBalance - (ulong)xferAmount);
         await Assert.That(receiverFinalBalance).IsEqualTo(receiverInitialBalance + (ulong)xferAmount);
@@ -404,8 +404,8 @@ public class SubmitExternalTests
         var gateway = await TestNetwork.GetConsensusNodeEndpointAsync();
         await using var client = TestNetwork.CreateClient(gateway);
 
-        var senderInitialBalance = await client.GetAccountBalanceAsync(fxSender);
-        var receiverInitialBalance = await client.GetAccountBalanceAsync(fxReceiver);
+        var senderInitialBalance = await TestNetwork.GetCryptoBalanceAsync(fxSender);
+        var receiverInitialBalance = await TestNetwork.GetCryptoBalanceAsync(fxReceiver);
 
         var xferAmount = (long)(fxSender.CreateParams.InitialBalance / 3);
 
@@ -453,14 +453,14 @@ public class SubmitExternalTests
         {
             await client.GetReceiptAsync(txid);
         }).ThrowsException();
-        var tex = ex as TransactionException;
-        await Assert.That(tex).IsNotNull();
-        await Assert.That(tex!.Status).IsEqualTo(ResponseCode.ReceiptNotFound);
-        await Assert.That(tex.TransactionId).IsEqualTo(txid);
-        await Assert.That(tex.Message).StartsWith("Network failed to return a transaction receipt, Status Code Returned: ReceiptNotFound");
+        var cex = ex as ConsensusException;
+        await Assert.That(cex).IsNotNull();
+        await Assert.That(cex!.Status).IsEqualTo(ResponseCode.ReceiptNotFound);
+        await Assert.That(cex.TransactionId).IsEqualTo(txid);
+        await Assert.That(cex.Message).StartsWith("Network failed to return a transaction receipt, Status Code Returned: ReceiptNotFound");
 
-        var senderFinalBalance = await client.GetAccountBalanceAsync(fxSender);
-        var receiverFinalBalance = await client.GetAccountBalanceAsync(fxReceiver);
+        var senderFinalBalance = await TestNetwork.GetCryptoBalanceAsync(fxSender);
+        var receiverFinalBalance = await TestNetwork.GetCryptoBalanceAsync(fxReceiver);
 
         await Assert.That(senderFinalBalance).IsEqualTo(senderInitialBalance);
         await Assert.That(receiverFinalBalance).IsEqualTo(receiverInitialBalance);

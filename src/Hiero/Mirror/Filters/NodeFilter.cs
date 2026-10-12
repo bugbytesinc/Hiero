@@ -8,9 +8,11 @@ namespace Hiero.Mirror.Filters;
 /// </summary>
 /// <remarks>
 /// <para>
-/// The <c>node.id</c> value is the node's 0-based index (see
+/// The <c>node.id</c> value is the node's assigned node id (see
 /// <see cref="ConsensusNodeData.NodeId"/>), <b>not</b> the
-/// <c>node_account_id</c> (e.g., <c>0.0.3</c>).
+/// <c>node_account_id</c> (e.g., <c>0.0.3</c>). Node ids are
+/// identifiers, not list positions, and can have gaps once nodes
+/// are removed from the address book.
 /// </para>
 /// <para>
 /// Unlike the other comparison-operator filters in this namespace,

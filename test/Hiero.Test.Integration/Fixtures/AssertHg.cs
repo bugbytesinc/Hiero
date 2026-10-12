@@ -123,8 +123,7 @@ public static class AssertHg
 
     public static async Task CryptoContractBalanceAsync(PayableContract fxContract, ulong expectedBalance)
     {
-        await using var client = await TestNetwork.CreateClientAsync();
-        var balance = await client.GetContractBalanceAsync(fxContract.ContractReceipt!.Contract);
+        var balance = await TestNetwork.GetCryptoBalanceAsync(fxContract.ContractReceipt!.Contract);
         await Assert.That(balance).IsEqualTo(expectedBalance);
     }
 

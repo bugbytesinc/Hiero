@@ -302,8 +302,8 @@ public class TransferTokenTests
         await Assert.That(receipt.NextExchangeRate).IsNotNull();
         await Assert.That(receipt.TransactionId.Payer).IsEqualTo(TestNetwork.Payer);
 
-        await Assert.That(await client.GetAccountBalanceAsync(fxAccount1)).IsEqualTo(fxAccount1.CreateParams.InitialBalance + (ulong)cryptoAmount);
-        await Assert.That(await client.GetAccountBalanceAsync(fxAccount2)).IsEqualTo(fxAccount2.CreateParams.InitialBalance + (ulong)cryptoAmount);
+        await Assert.That(await TestNetwork.GetCryptoBalanceAsync(fxAccount1)).IsEqualTo(fxAccount1.CreateParams.InitialBalance + (ulong)cryptoAmount);
+        await Assert.That(await TestNetwork.GetCryptoBalanceAsync(fxAccount2)).IsEqualTo(fxAccount2.CreateParams.InitialBalance + (ulong)cryptoAmount);
         await Assert.That(await fxAccount1.GetTokenBalanceAsync(fxToken)).IsEqualTo((long)tokenAmount);
         await Assert.That(await fxAccount2.GetTokenBalanceAsync(fxToken)).IsEqualTo((long)tokenAmount);
         await Assert.That(await fxToken.TreasuryAccount.GetTokenBalanceAsync(fxToken)).IsEqualTo((long)expectedTreasury);
@@ -370,8 +370,8 @@ public class TransferTokenTests
         await Assert.That(xferFrom.Token).IsEqualTo(fxToken.CreateReceipt!.Token);
         await Assert.That(xferTo2.Amount).IsEqualTo((long)tokenAmount);
 
-        await Assert.That(await client.GetAccountBalanceAsync(fxAccount1)).IsEqualTo(fxAccount1.CreateParams.InitialBalance + (ulong)cryptoAmount);
-        await Assert.That(await client.GetAccountBalanceAsync(fxAccount2)).IsEqualTo(fxAccount2.CreateParams.InitialBalance + (ulong)cryptoAmount);
+        await Assert.That(await TestNetwork.GetCryptoBalanceAsync(fxAccount1)).IsEqualTo(fxAccount1.CreateParams.InitialBalance + (ulong)cryptoAmount);
+        await Assert.That(await TestNetwork.GetCryptoBalanceAsync(fxAccount2)).IsEqualTo(fxAccount2.CreateParams.InitialBalance + (ulong)cryptoAmount);
         await Assert.That(await fxAccount1.GetTokenBalanceAsync(fxToken)).IsEqualTo((long)tokenAmount);
         await Assert.That(await fxAccount2.GetTokenBalanceAsync(fxToken)).IsEqualTo((long)tokenAmount);
         await Assert.That(await fxToken.TreasuryAccount.GetTokenBalanceAsync(fxToken)).IsEqualTo((long)expectedTreasury);
@@ -1434,7 +1434,7 @@ public class TransferTokenTests
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
         var receipts = await client.GetAllReceiptsAsync(receipt.TransactionId);
-        var senderHapiAddress = ((CreateAccountReceipt)receipts[1]).Address;
+        var senderHapiAddress = receipts.Children.OfType<CreateAccountReceipt>().Single().Address;
         var mirror = await TestNetwork.GetMirrorRestClientAsync();
         var chainId = await TestNetwork.GetChainIdAsync();
         var balanceData = (await mirror.GetAccountAsync(senderEvmAddress))!.Balances.Tokens.FirstOrDefault(t => t.Token == fxToken.CreateReceipt!.Token);

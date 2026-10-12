@@ -18,15 +18,15 @@ public class CustomFeeData
     /// Associated Fixed Fees
     /// </summary>
     [JsonPropertyName("fixed_fees")]
-    public FixedFeeData[] FixedFees { get; set; } = default!;
+    public FixedFeeData[] FixedFees { get; set; } = [];
     /// <summary>
     /// Associated Fractional Fees
     /// </summary>
     [JsonPropertyName("fractional_fees")]
-    public FractionalFeeData[] FractionalFees { get; set; } = default!;
+    public FractionalFeeData[] FractionalFees { get; set; } = [];
     /// <summary>
     /// Associated Royalty Fees
     /// </summary>
     [JsonPropertyName("royalty_fees")]
-    public RoyaltyFeeData[] RoyaltyFees { get; set; } = default!;
+    public RoyaltyFeeData[] RoyaltyFees { get; set; } = [];
 }

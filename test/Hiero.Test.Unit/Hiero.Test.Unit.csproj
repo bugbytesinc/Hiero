@@ -1,10 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
+    <!-- HIERO001: the experimental BlockNodeClient surface under test -->
+    <NoWarn>$(NoWarn);HIERO001</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="TUnit" Version="*" />
+    <PackageReference Include="TUnit" Version="1.61.38" />
     <ProjectReference Include="..\..\src\Hiero\Hiero.csproj" />
     <ProjectReference Include="..\Hiero.Test.Helpers\Hiero.Test.Helpers.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="BlockNode\Fixtures\*" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

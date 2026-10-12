@@ -31,6 +31,40 @@ await using var stream = new MirrorGrpcClient(ctx =>
 });
 ```
 
+### Sharing a client (thread safety & lifetime)
+
+Clients are **safe for concurrent use and meant to be shared** — a
+long-lived singleton is the expected shape, not a per-request instance. Each
+operation builds its own child context, so concurrent calls share no mutable
+state, and gRPC channels are pooled in a thread-safe cache. Creating a client
+per request throws that pooling away and costs you a new connection each time.
+
+```csharp
+// ASP.NET Core — one client for the process
+builder.Services.AddSingleton(_ => new ConsensusClient(ctx =>
+{
+    ctx.Endpoint  = new ConsensusNodeEndpoint(new EntityId(0, 0, 3), nodeUri);
+    ctx.Payer     = payer;
+    ctx.Signatory = new Signatory(payerPrivateKey);
+}));
+```
+
+The one thing not to do concurrently is **reconfigure** a client that is
+already working. `Configure` mutates the instance's own context in place, and
+in-flight calls read their inherited settings through it, so a call can see a
+half-applied change. Vary settings one of these two ways instead:
+
+```csharp
+// Per call — scoped to this operation only, safe at any time
+await client.TransferAsync(from, to, amount, ctx => ctx.FeeLimit = 500_000_000);
+
+// Per variant — an independent client sharing the same channel pool
+await using var payerB = client.Clone(ctx => ctx.Payer = otherAccount);
+```
+
+`MirrorRestClient` has none of these caveats: it is immutable once
+constructed, holding only the `HttpClient` you supplied.
+
 ### TLS connections
 
 Consensus nodes expose a plaintext port (`50211`) and a TLS port (`50212`). TLS
@@ -75,10 +109,11 @@ certificates keep working unchanged.
 | `Payer` | `EntityId?` | Account paying fees |
 | `Signatory` | `Signatory?` | Key(s) for signing |
 | `FeeLimit` | `long` | Max fee in tinybars |
-| `TransactionDuration` | `TimeSpan` | Tx validity window |
+| `TransactionDuration` | `TimeSpan` | Tx validity window; default 180 s, the network's maximum |
 | `Memo` | `string?` | Transaction memo |
-| `RetryCount` | `int` | Auto-retry on BUSY |
-| `RetryDelay` | `TimeSpan` | Delay between retries |
+| `RetryCount` | `int` | Retries on BUSY, transport failures and receipt polling; default 43 |
+| `RetryDelay` | `TimeSpan` | Linear retry step (the n-th retry waits n × it); default 200 ms, 189 s in all. Keep the total ≥ `TransactionDuration` |
+| `TransactionId` | `TransactionId?` | An id chosen up front with `CreateNewTransactionId()`; set per call |
 
 ---
 
@@ -86,9 +121,18 @@ certificates keep working unchanged.
 
 ### Query Balance
 ```csharp
-ulong balance = await client.GetAccountBalanceAsync(account);
-AccountBalances balances = await client.GetAccountBalancesAsync(account); // includes token balances
+// Mirror node: free, trails consensus by a few seconds; works for contracts too.
+long? balance = await mirror.GetAccountBalanceAsync(account);             // null if unknown
+long? tokens  = await mirror.GetAccountTokenBalanceAsync(account, token);  // one token
+await foreach (var holding in mirror.GetAccountTokenHoldingsAsync(account)) { }
+
+// Consensus node: paid query, current as of consensus.
+ulong current = (await client.GetAccountInfoAsync(account)).Balance;
 ```
+The free consensus-node balance query (`GetAccountBalanceAsync` /
+`GetAccountBalancesAsync` / `GetContractBalance(s)Async` on `ConsensusClient`)
+was removed in 3.0.0: the public networks retired it in July 2026 and now
+answer it with `BUSY`.
 
 ### Query Account Info
 ```csharp
@@ -640,10 +684,83 @@ TransactionReceipt receipt = await client.GetReceiptAsync(txId);
 // Get detailed record (includes transfers, fees, consensus timestamp)
 TransactionRecord record = await client.GetTransactionRecordAsync(txId);
 
-// Get all child receipts/records
-IReadOnlyList<TransactionReceipt> all = await client.GetAllReceiptsAsync(txId);
+// Get every receipt sharing a transaction ID, grouped by role
+TransactionReceipts all = await client.GetAllReceiptsAsync(txId);
 TransactionRecord[] records = await client.GetAccountRecordsAsync(account);
 ```
+
+### Finding a child receipt (e.g. an account created by transferring to an alias)
+
+`GetAllReceiptsAsync` groups the receipts by the role the network reports
+them in: `Parent` (the submitted transaction's own receipt), `Children`
+(work the network performed on its behalf), and `Duplicates` (other
+submissions of the same transaction ID). The children and duplicates may be
+empty. A node with no receipt for the id raises `ConsensusException`, or,
+with `ThrowIfNotSuccess = false`, returns a stand-in `Parent` whose status is
+`ReceiptNotFound`; either way that proves nothing, since nodes keep receipts
+for only about three minutes.
+
+Work done on a transaction's behalf reports through the children:
+
+```csharp
+// Transferring to an alias makes the network create the account for you;
+// its address arrives in a *child* receipt, not the transfer's own.
+var transferReceipt = await client.TransferAsync(payer, alias, 1_00_000_000);
+var receipts = await client.GetAllReceiptsAsync(transferReceipt.TransactionId);
+EntityId address = receipts.Children.OfType<CreateAccountReceipt>().Single().Address;
+```
+
+`GetAllTransactionRecordsAsync` returns `TransactionRecords` with the same
+`Parent` / `Children` / `Duplicates` shape.
+
+### Known rough edge: receipt type resolution is best-effort
+
+Five methods return a **base** `TransactionReceipt` / `TransactionRecord` and
+infer the most specific type from the network's response:
+
+`GetReceiptAsync` · `GetAllReceiptsAsync` · `GetTransactionRecordAsync` ·
+`GetAllTransactionRecordsAsync` · `GetAccountRecordsAsync`
+
+The receipt is a union — the network sets one identifier and the SDK infers the
+type from which one is populated. That is sound for the six kinds keyed off
+*message* fields, because protobuf tracks their presence faithfully:
+`CreateAccountReceipt`, `FileReceipt`, `CreateTopicReceipt`,
+`CreateContractReceipt`, `CreateTokenReceipt` and `ScheduleReceipt` always
+resolve correctly.
+
+Four kinds are keyed off *scalar* fields, which have no presence bit — and
+proto3 omits zero from the wire entirely, so "the value is zero" and "the field
+was never set" are byte-for-byte identical:
+
+| Type | Resolves to the base type when | Reachable |
+|------|-------------------------------|-----------|
+| `TokenReceipt` / `TokenRecord` | a supply is burned or wiped to exactly `0` | **any network** |
+| `NftMintReceipt` / `NftMintRecord` | no serial numbers *and* zero circulation | rare |
+| `ConsensusNodeReceipt` / `ConsensusNodeRecord` | the created node's id is `0` | new networks only |
+| `RegisteredNodeReceipt` / `RegisteredNodeRecord` | the registered node's id is `0` | unlikely |
+
+**No data is lost.** The fallback happens *only* when the value is zero, so a
+receipt arriving as the base type tells you the value is zero. The cost is a
+failed cast, not a missing answer.
+
+**So test, don't cast**, on results from those five methods:
+
+```csharp
+var receipt = await client.GetReceiptAsync(txId);
+
+// Correct in every case — the base type is the zero case.
+ulong circulation = receipt is TokenReceipt token ? token.Circulation : 0;
+
+// Throws InvalidCastException after a burn-to-zero.
+ulong risky = ((TokenReceipt)receipt).Circulation;
+```
+
+The same applies to `OfType<T>()` over the grouped results: it quietly yields
+nothing rather than throwing, so a following `.Single()` fails instead.
+
+This does **not** affect receipts returned directly by the operation that
+produced them — `BurnTokenAsync`, `MintNftAsync`, `CreateRegisteredNodeAsync`
+and so on construct their receipt type explicitly and are always correct.
 
 ### TransactionReceipt Properties
 | Property | Type |
@@ -676,7 +793,10 @@ var mirror = new MirrorRestClient(new HttpClient
 ```
 
 All list queries accept a `params IMirrorQueryParameter[]` tail; examples below
-show representative filters only.
+show representative filters only. Every method takes a `CancellationToken`:
+last, or, when the method takes filters, just before them
+(`mirror.GetTransactionsAsync(ct, AccountFilter.Is(account))`). Paged results
+also honor `WithCancellation(ct)`.
 
 ### Accounts
 ```csharp
@@ -731,6 +851,40 @@ IAsyncEnumerable<TransactionDetailData> allFailed = mirror.GetTransactionsAsync(
     TimestampFilter.After(since));
 ConsensusTimeStamp latest = await mirror.GetLatestConsensusTimestampAsync();
 ```
+
+#### `GetTransactionGroupAsync` is not ordered parent-first
+
+The mirror returns the group in its own order, and **child records commonly
+come first** — so `group[0]` is not reliably the transaction you asked about.
+Select by content, never by position:
+
+```csharp
+var group     = await mirror.GetTransactionGroupAsync(txId);
+var submitted = group.Where(t => t.Nonce == 0 && !t.IsScheduled && t.TransactionId == txId).ToArray(); // the transaction you sent
+var children  = group.Where(t => t.Nonce > 0);     // work the network did for it
+```
+
+`submitted` is an array on purpose: it is empty while the mirror has not caught
+up, and holds more than one record when the transaction was submitted to more
+than one node. A `Success` among them means it executed.
+
+The group holds every record filed under the transaction id. `Nonce > 0` marks
+a child record the network generated on the transaction's behalf. A schedule
+that executed adds the executed transaction, with `Nonce == 0` and
+`IsScheduled` set. An atomic batch adds its inner transactions, each with
+`Nonce == 0` but its own `TransactionId` and a `BatchEndorsement`. Where a
+transaction was submitted to more than one node, the extra submissions also
+pass the filter above; they are told apart by `Status` and `GossipNode`. Do
+**not** use `ParentConsensus` to identify children: it is null for a child
+recorded ahead of its parent, such as an account auto-created for an alias.
+
+**Why this isn't grouped for you, when `GetAllReceiptsAsync` is.** The
+consensus node sends parent, child and duplicate receipts as three separate
+fields, so grouping there *restores* structure the wire supplied. The mirror
+sends one flat array, so grouping here would *invent* structure by applying an
+interpretive rule. `MirrorRestClient` stays a faithful projection of the REST
+API and leaves that policy to you — which also avoids allocating buckets a
+polling caller may not want.
 
 ### HCS
 ```csharp
@@ -843,24 +997,44 @@ var signatory = new Signatory(async invoice =>
 });
 ```
 
-### Error handling
+### Error handling: did it go through?
+
+For a transaction, ask "did it execute?" before "what went wrong?". Only a
+`Success` receipt is a known success; a `TransactionException` is a consensus
+failure; a `PrecheckException` is definite only for codes about the
+transaction itself;
+everything else, `ConsensusException` included, means the outcome is
+**unknown**. Never resubmit an unknown outcome (a resubmission is a new
+transaction, so the value can move twice) and never report it as failed:
+settle it on a mirror node. The full rules and the mirror resolver
+(`ResolveOutcomeAsync`) are in `docfx/tutorials/errorhandling.md` and
+compile in `samples/DocSnippets/OutcomeSnippets.cs`.
+
 ```csharp
+// Choose the transaction id first and store it with the payment: it is
+// the idempotency key, the mirror lookup and the expiry clock.
+var txId = client.CreateNewTransactionId();
 try
 {
-    await client.TransferAsync(from, to, amount);
+    var receipt = await client.TransferAsync(sender, receiver, amount, ctx => ctx.TransactionId = txId);
+    // Executed. Only a receipt with Status == Success is a known success.
 }
-catch (PrecheckException ex)
+catch (TransactionException)
 {
-    // Transaction rejected before consensus (e.g., insufficient fee)
-    Console.WriteLine($"Precheck failed: {ex.Status}");
+    // Reached consensus and failed: nothing moved. Its Status says why.
 }
-catch (TransactionException ex)
+catch (PrecheckException ex) when (ex.Status is ResponseCode.InvalidSignature
+    or ResponseCode.InsufficientPayerBalance
+    or ResponseCode.InvalidAccountId
+    or ResponseCode.TokenNotAssociatedToAccount)
 {
-    // Transaction reached consensus but failed
-    Console.WriteLine($"Transaction failed: {ex.Status}");
+    // Refused for something wrong with the transaction itself: nothing ran.
 }
-catch (ConsensusException ex)
+catch (Exception ex) when (ex is not ArgumentException)
 {
-    // Network communication error
+    // Every other ending -- ConsensusException, any other precheck code,
+    // a transport failure, cancellation -- means the outcome is UNKNOWN:
+    // it may have executed. Never resend it and never report it as
+    // failed. Report "pending" and settle txId with ResolveOutcomeAsync.
 }
 ```

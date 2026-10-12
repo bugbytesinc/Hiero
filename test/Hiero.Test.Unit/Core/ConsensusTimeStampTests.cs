@@ -1,4 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
+using Hiero.Converters;
+using Hiero.Mirror.Filters;
+using System.Globalization;
+using System.Text.Json;
+
 namespace Hiero.Test.Unit.Core;
 
 public class ConsensusTimeStampTests
@@ -173,5 +178,54 @@ public class ConsensusTimeStampTests
         await Assert.That(ts2 < ts1).IsFalse();
         await Assert.That(ts2 > ts1).IsTrue();
         await Assert.That(ts1 > ts2).IsFalse();
+    }
+
+    [Test]
+    [Arguments("de-DE")]
+    [Arguments("fr-FR")]
+    [Arguments("en-US")]
+    public async Task Formatting_Uses_A_Dot_Whatever_The_Culture(string culture)
+    {
+        var timestamp = new ConsensusTimeStamp(1_700_000_000, 123_456_789);
+        string text, filter, json;
+        ConsensusTimeStamp roundTrip;
+        var original = CultureInfo.CurrentCulture;
+        try
+        {
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(culture);
+            text = timestamp.ToString();
+            filter = TimestampFilter.After(timestamp).Value;
+            var options = new JsonSerializerOptions { Converters = { new ConsensusTimeStampConverter() } };
+            json = JsonSerializer.Serialize(timestamp, options);
+            roundTrip = JsonSerializer.Deserialize<ConsensusTimeStamp>(json, options);
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = original;
+        }
+        await Assert.That(text).IsEqualTo("1700000000.123456789");
+        await Assert.That(filter).IsEqualTo("gt:1700000000.123456789");
+        await Assert.That(json).IsEqualTo("\"1700000000.123456789\"");
+        await Assert.That(roundTrip).IsEqualTo(timestamp);
+    }
+
+    [Test]
+    public async Task A_Local_DateTime_Means_The_Same_Instant_As_Its_Utc_Equivalent()
+    {
+        var utc = new DateTime(2026, 10, 10, 12, 0, 0, DateTimeKind.Utc).AddTicks(1_234_567);
+        var local = utc.ToLocalTime();
+        await Assert.That(new ConsensusTimeStamp(local)).IsEqualTo(new ConsensusTimeStamp(utc));
+        ConsensusTimeStamp implicitly = local;
+        await Assert.That(implicitly).IsEqualTo(new ConsensusTimeStamp(utc));
+        // Unspecified is taken to be UTC.
+        await Assert.That(new ConsensusTimeStamp(DateTime.SpecifyKind(utc, DateTimeKind.Unspecified))).IsEqualTo(new ConsensusTimeStamp(utc));
+    }
+
+    [Test]
+    public async Task A_DateTime_Keeps_Its_Full_Tick_Precision()
+    {
+        var utc = new DateTime(2026, 10, 10, 12, 0, 0, DateTimeKind.Utc).AddTicks(1_234_567);
+        var timestamp = new ConsensusTimeStamp(utc);
+        await Assert.That(timestamp).IsEqualTo(new ConsensusTimeStamp(new DateTimeOffset(2026, 10, 10, 12, 0, 0, TimeSpan.Zero).ToUnixTimeSeconds(), 123_456_700));
     }
 }

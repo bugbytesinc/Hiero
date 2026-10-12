@@ -24,7 +24,8 @@ public sealed class TransactionHashFilter : IMirrorFilter
     public string Name => "transaction.hash";
     /// <summary>
     /// The value of the query parameter sent to the mirror node — a
-    /// <c>0x</c>-prefixed lowercase hex string, 64 or 96 characters.
+    /// <c>0x</c>-prefixed lowercase hex string with 64 or 96 hex digits
+    /// (66 or 98 characters including the prefix).
     /// </summary>
     public string Value { get; }
 

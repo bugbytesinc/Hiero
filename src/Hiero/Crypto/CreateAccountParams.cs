@@ -8,7 +8,7 @@ using System.Runtime.CompilerServices;
 
 namespace Hiero;
 /// <summary>
-/// Address creation parameters.
+/// Account creation parameters.
 /// </summary>
 /// <example>
 /// Create a new account funded with 1 HBAR from the client's Payer and
@@ -37,9 +37,10 @@ public sealed class CreateAccountParams : TransactionParams<CreateAccountReceipt
     /// </summary>
     public bool RequireReceiveSignature { get; set; } = false;
     /// <summary>
-    /// The maximum number of tokens or NFTs that this account may
-    /// be implicitly associated with (by means of being made a treasury
-    /// or other related actions).
+    /// The maximum number of tokens (fungible or NFT) that this account may
+    /// be automatically associated with, which happens when it receives a
+    /// token it is not yet associated with.  Use -1 for no limit; 0 means
+    /// every token must be associated explicitly.
     /// </summary>
     /// <remarks>
     /// Defaults to zero.
@@ -61,8 +62,8 @@ public sealed class CreateAccountParams : TransactionParams<CreateAccountReceipt
     /// the gossip node with the given ID.
     /// </summary>
     /// <remarks>
-    /// Can not be greater than zero if the
-    /// <code>ProxyAccount</code> property is set.
+    /// Must be <code>null</code> if the <code>ProxyAccount</code>
+    /// property is set; any value, including node 0, conflicts with it.
     /// </remarks>
     public long? StakedNode { get; set; } = null;
     /// <summary>
@@ -102,7 +103,10 @@ public sealed class CreateAccountParams : TransactionParams<CreateAccountReceipt
     /// </remarks>
     public Signatory? Signatory { get; set; }
     /// <summary>
-    /// Optional Cancellation token that can interrupt the creation process.
+    /// Optional cancellation token.  Cancelling stops the client waiting;
+    /// it cannot recall a transaction already sent.  Cancelled after the
+    /// send, the outcome is unknown: settle it by its transaction id on a
+    /// mirror node rather than resubmitting it.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
     INetworkTransaction INetworkParams<CreateAccountReceipt>.CreateNetworkTransaction()
@@ -188,10 +192,10 @@ public static class CreateAccountExtensions
     /// <returns>
     /// A transaction receipt with a description of the newly created account.
     /// </returns>
-    /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
+    /// <exception cref="ArgumentException">If required arguments are missing or invalid.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
-    /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
+    /// <exception cref="PrecheckException">If the gateway node refused the transaction. Only a code about the transaction itself proves it did not execute; any other code leaves the outcome unknown, so settle it by its transaction id on a mirror node rather than resubmitting it (see <see cref="PrecheckException"/>).</exception>
+    /// <exception cref="ConsensusException">If the outcome could not be confirmed: the transaction may have executed, so settle it by its transaction id on a mirror node rather than resubmitting it.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
     /// <example>
     /// <code source="../../../samples/DocSnippets/CryptoSnippets.cs" region="CreateAccount" language="csharp"/>

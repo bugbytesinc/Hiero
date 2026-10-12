@@ -225,6 +225,30 @@ public class ContextStackTests
     }
 
     [Test]
+    public async Task Default_Retry_Window_Covers_The_Network_Maximum_Validity()
+    {
+        // A client that stops polling before a transaction's validity ends
+        // reports "unknown" about transactions the network is still
+        // deciding. The defaults must keep following a receipt for the
+        // network's maximum validity, 180 seconds.
+        TimeSpan duration = TimeSpan.Zero;
+        TimeSpan delay = TimeSpan.Zero;
+        int retries = 0;
+
+        await using var client = new ConsensusClient(context =>
+        {
+            duration = context.TransactionDuration;
+            delay = context.RetryDelay;
+            retries = context.RetryCount;
+        });
+        // The n-th retry waits n × RetryDelay.
+        var window = delay * (retries * (retries + 1) / 2);
+
+        await Assert.That(duration).IsEqualTo(TimeSpan.FromSeconds(180));
+        await Assert.That(window >= duration).IsTrue();
+    }
+
+    [Test]
     public async Task Can_Set_And_Reset_Memo_Property()
     {
         var newValue = Generator.String(10, 50);

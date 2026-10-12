@@ -9,10 +9,13 @@ namespace Hiero;
 /// The rate is expressed as parts of a numerator 
 /// and denominator expressing the ratio of hbars
 /// to cents. For example to get the value of 
-/// $cent/hbar one would compute that as 
-/// <code>USDCentEquivalent/HBarEquivalent</code>.
+/// $cent/hbar one would compute that as
+/// <code>(decimal)USDCentEquivalent / HBarEquivalent</code>.
 /// to get hbar/$cent one would compute that as
-/// <code>HbarEquivalent/USDCentEquivalent</code>
+/// <code>(decimal)HBarEquivalent / USDCentEquivalent</code>
+/// Both properties are <c>int</c>, so convert to <c>decimal</c>
+/// before dividing; integer division discards the fraction
+/// (and typically yields zero for hbar/$cent).
 /// This representation allows for fractions that might
 /// otherwise be lost by floating point representations.
 /// </remarks>

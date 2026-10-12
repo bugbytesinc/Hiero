@@ -7,7 +7,7 @@ namespace Hiero;
 public interface IRoyalty
 {
     /// <summary>
-    /// The account receiving the commission fee.
+    /// The account receiving the fee or royalty.
     /// </summary>
     public EntityId Receiver { get; }
     /// <summary>

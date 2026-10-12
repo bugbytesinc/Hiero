@@ -52,12 +52,13 @@ public sealed class Endorsement : IEquatable<Endorsement>, ISpanFormattable, IUt
     public KeyType Type { get; private set; }
     /// <summary>
     /// The endorsement address value held by this endorsement if it is
-    /// a Contract type.  If it is a list or other key type the value 
-    /// returned will be <code>None</code>.
+    /// a <see cref="KeyType.Contract"/> or
+    /// <see cref="KeyType.DelegatableContract"/> type.  If it is a list or
+    /// other key type the value returned will be <code>None</code>.
     /// </summary>
     public EntityId Contract => Type switch
     {
-        KeyType.Contract => (EntityId)_data,
+        KeyType.Contract or KeyType.DelegatableContract => (EntityId)_data,
         _ => EntityId.None,
     };
     /// <summary>
@@ -120,7 +121,7 @@ public sealed class Endorsement : IEquatable<Endorsement>, ISpanFormattable, IUt
     /// public keys or additional sub-lists of individual keys.
     /// </param>
     /// <exception cref="ArgumentNullException">if endorsements is null</exception>
-    public Endorsement(params Endorsement[] endorsements) : this((uint)endorsements.Length, endorsements) { }
+    public Endorsement(params Endorsement[] endorsements) : this((uint)(endorsements ?? throw new ArgumentNullException(nameof(endorsements), "The list of endorsements may not be null.")).Length, endorsements) { }
     /// <summary>
     /// Create a N of M required list of endorsements.  Only
     /// <code>requiredCount</code> number of listed endorsements must
@@ -135,8 +136,8 @@ public sealed class Endorsement : IEquatable<Endorsement>, ISpanFormattable, IUt
     /// public keys or additional sub-lists of individual keys.
     /// </param>
     /// <exception cref="ArgumentNullException">if endorsements is null</exception>
-    /// <exception cref="ArgumentOutOfRangeException">if the required amount is negative
-    /// or greater than the number of endorsements</exception>
+    /// <exception cref="ArgumentOutOfRangeException">if the list of endorsements is empty
+    /// or the required count is greater than the number of endorsements</exception>
     public Endorsement(uint requiredCount, params Endorsement[] endorsements)
     {
         if (endorsements is null)
@@ -184,7 +185,7 @@ public sealed class Endorsement : IEquatable<Endorsement>, ISpanFormattable, IUt
         {
             KeyType.Ed25519 => new Ed25519EndorsementData(KeyParser.ParsePublicEd25519Key(publicKey)),
             KeyType.ECDSASecp256K1 => new EcdsaSecp256K1EndorsementData(KeyParser.ParsePublicEcdsaSecp256k1Key(publicKey)),
-            KeyType.Contract => throw new ArgumentOutOfRangeException(nameof(type), "Only endorsements representing single Ed25519 or ECDSASecp256K1 keys are supported with this constructor, please use the contract address constructor instead."),
+            KeyType.Contract or KeyType.DelegatableContract => throw new ArgumentOutOfRangeException(nameof(type), "Only endorsements representing single Ed25519 or ECDSASecp256K1 keys are supported with this constructor, please use the contract address constructor instead."),
             _ => throw new ArgumentOutOfRangeException(nameof(type), "Only endorsements representing single Ed25519 or ECDSASecp256K1 keys are supported with this constructor, please use the list constructor instead."),
         };
     }
@@ -198,9 +199,35 @@ public sealed class Endorsement : IEquatable<Endorsement>, ISpanFormattable, IUt
         _data = contract;
     }
     /// <summary>
+    /// Creates an endorsement representing a contract instance, either a
+    /// plain <see cref="KeyType.Contract"/> key or a
+    /// <see cref="KeyType.DelegatableContract"/> key, which the contract's
+    /// code also satisfies when it runs through a <c>DELEGATECALL</c>.
+    /// </summary>
+    /// <param name="type">
+    /// <see cref="KeyType.Contract"/> or <see cref="KeyType.DelegatableContract"/>.
+    /// </param>
+    /// <param name="contract">The address of the contract instance.</param>
+    /// <exception cref="ArgumentNullException">If the contract is null.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">If the type is not a contract key type.</exception>
+    public Endorsement(KeyType type, EntityId contract)
+    {
+        ArgumentNullException.ThrowIfNull(contract);
+        if (type is not (KeyType.Contract or KeyType.DelegatableContract))
+        {
+            throw new ArgumentOutOfRangeException(nameof(type), "Only contract and delegatable contract key types are supported with this constructor.");
+        }
+        Type = type;
+        _data = contract;
+    }
+    /// <summary>
     /// The bytes of the public key held by this endorsement if it is
     /// an Ed25519 or ECDSA Secp256K1 key type.  If it is a list or
-    /// contract type, it can be extracted as HAPI protobuf.
+    /// contract type, it can be extracted as HAPI protobuf with the
+    /// <see cref="KeyFormat.Default"/>, <see cref="KeyFormat.Protobuf"/>,
+    /// <see cref="KeyFormat.Hedera"/> or <see cref="KeyFormat.Mirror"/>
+    /// formats; <see cref="KeyFormat.Raw"/> and <see cref="KeyFormat.Der"/>
+    /// return empty bytes for those types.
     /// </summary>
     public ReadOnlyMemory<byte> ToBytes(KeyFormat keyFormat = KeyFormat.Default)
     {
@@ -280,8 +307,9 @@ public sealed class Endorsement : IEquatable<Endorsement>, ISpanFormattable, IUt
     /// <exception cref="InvalidOperationException">
     /// If this is not an Ed25519 or ECDSASecp256K1, only these types of keys
     /// can be validated.  To determine the satisfaction of a complex key 
-    /// requirement, please use the <code>SigMap.Satisfies</code> extension
-    /// method instead.
+    /// requirement, please use the <code>SignatureMap.Satisfies</code>
+    /// extension method (<see cref="SignatureMapExtensions.Satisfies"/>)
+    /// instead.
     /// </exception>
     public bool Verify(ReadOnlyMemory<byte> data, ReadOnlyMemory<byte> signature)
     {
@@ -289,8 +317,8 @@ public sealed class Endorsement : IEquatable<Endorsement>, ISpanFormattable, IUt
         {
             KeyType.Ed25519 => ((Ed25519EndorsementData)_data).Verify(data, signature),
             KeyType.ECDSASecp256K1 => ((EcdsaSecp256K1EndorsementData)_data).Verify(data, signature),
-            KeyType.Contract => throw new InvalidOperationException("Only endorsements representing single Ed25519 or ECDSASecp256K1 keys support validation of signatures, unable to validate Contract key type."),
-            _ => throw new InvalidOperationException("Only endorsements representing single Ed25519 or ECDSASecp256K1 keys support validation of signatures, use SigPair.Satisfies for complex public key types.")
+            KeyType.Contract or KeyType.DelegatableContract => throw new InvalidOperationException("Only endorsements representing single Ed25519 or ECDSASecp256K1 keys support validation of signatures, unable to validate Contract key type."),
+            _ => throw new InvalidOperationException("Only endorsements representing single Ed25519 or ECDSASecp256K1 keys support validation of signatures, use SignatureMap.Satisfies for complex public key types.")
         };
     }
     /// <summary>
@@ -320,6 +348,7 @@ public sealed class Endorsement : IEquatable<Endorsement>, ISpanFormattable, IUt
             case KeyType.ECDSASecp256K1:
                 return ((EcdsaSecp256K1EndorsementData)_data).RawPublicKey.SequenceEqual(((EcdsaSecp256K1EndorsementData)other._data).RawPublicKey);
             case KeyType.Contract:
+            case KeyType.DelegatableContract:
                 return Equals(_data, other._data);
             case KeyType.List:
                 if (RequiredCount == other.RequiredCount)
@@ -454,6 +483,7 @@ public sealed class Endorsement : IEquatable<Endorsement>, ISpanFormattable, IUt
                 hash.AddBytes(((EcdsaSecp256K1EndorsementData)_data).RawPublicKey);
                 break;
             case KeyType.Contract:
+            case KeyType.DelegatableContract:
                 hash.Add(_data);
                 break;
             case KeyType.List:

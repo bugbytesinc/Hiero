@@ -408,7 +408,7 @@ public class MirrorDataTests
             await Assert.That(data.GossipNode).IsNotNull();
             await Assert.That(data.Nonce).IsEqualTo(0);
             await Assert.That(data.ParentConsensus).IsNull();
-            await Assert.That(data.Status).IsEqualTo("SUCCESS");
+            await Assert.That(data.Status).IsEqualTo(ResponseCode.Success);
             await Assert.That(data.IsScheduled).IsFalse();
             await Assert.That(data.StakingRewards).IsNotNull();
             await Assert.That(data.Hash.ToArray()).IsEquivalentTo(record.Hash.ToArray(), TUnit.Assertions.Enums.CollectionOrdering.Matching);
@@ -444,7 +444,8 @@ public class MirrorDataTests
     public async Task Can_Get_Crypto_Allowance_Data()
     {
         await using var fxOwner = await TestAccount.CreateAsync(fx => fx.CreateParams.InitialBalance = 10_00_000_000);
-        await using var fxAgent = await TestAccount.CreateAsync();
+        // The agent pays for spending the allowance below.
+        await using var fxAgent = await TestAccount.CreateAsync(fx => fx.CreateParams.InitialBalance = 1_00_000_000);
         await using var client = await TestNetwork.CreateClientAsync();
 
         var amount = (long)fxOwner.CreateParams.InitialBalance;
@@ -463,9 +464,38 @@ public class MirrorDataTests
         await Assert.That(list.Count).IsEqualTo(1);
 
         var info = list.First();
+        await Assert.That(info.AmountGranted).IsEqualTo(amount);
         await Assert.That(info.Amount).IsEqualTo(amount);
         await Assert.That(info.Owner).IsEqualTo(fxOwner.CreateReceipt!.Address);
         await Assert.That(info.Spender).IsEqualTo(fxAgent.CreateReceipt!.Address);
+        await Assert.That(info.Timestamp).IsNotNull();
+
+        // Spending part of the allowance reduces what remains
+        // but leaves the original grant as it was.
+        var spent = amount / 4;
+        await using var agentClient = client.Clone(ctx =>
+        {
+            ctx.Payer = fxAgent;
+            ctx.Signatory = fxAgent.PrivateKey;
+        });
+        await agentClient.TransferAsync(new TransferParams
+        {
+            CryptoTransfers = new[]
+            {
+                new CryptoTransfer(fxOwner, -spent, true),
+                new CryptoTransfer(fxAgent, spent, false)
+            }
+        });
+        list.Clear();
+        await foreach (var record in (await TestNetwork.GetMirrorRestClientAsync()).GetAccountCryptoAllowancesAsync(fxOwner))
+        {
+            list.Add(record);
+        }
+        await Assert.That(list.Count).IsEqualTo(1);
+
+        info = list.First();
+        await Assert.That(info.AmountGranted).IsEqualTo(amount);
+        await Assert.That(info.Amount).IsEqualTo(amount - spent);
     }
 
     [Test]

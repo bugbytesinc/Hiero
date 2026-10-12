@@ -4,9 +4,10 @@ using Proto;
 namespace Hiero;
 
 /// <summary>
-/// Identifies an account which has been associated 
-/// with a given Token or NFT class and therefore
-/// holds a balance of that token or NFT.
+/// Identifies an account which has been associated
+/// with a given Token or NFT class as a result of the
+/// enclosing transaction, and so can hold a balance of
+/// that token or NFT.
 /// </summary>
 public sealed record Association
 {

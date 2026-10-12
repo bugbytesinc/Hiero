@@ -45,7 +45,10 @@ internal abstract class ContextStack<TContext, TChannelKey> : IAsyncDisposable w
     public abstract void Reset(string name);
     public GrpcChannel GetChannel()
     {
-        var key = GetChannelKey();
+        return GetChannel(GetChannelKey());
+    }
+    protected GrpcChannel GetChannel(TChannelKey key)
+    {
         if (_channels.TryGetValue(key, out GrpcChannel? channel))
         {
             return channel;
@@ -62,37 +65,52 @@ internal abstract class ContextStack<TContext, TChannelKey> : IAsyncDisposable w
         // This all comes down to maintaining a map of uris to open grpc
         // channels.  Opening a chanel is an expensive operation.  The
         // map is shared through the whole entire tree of child contexts.
-        return removeRef();
+        removeRef();
+        return ValueTask.CompletedTask;
+    }
+    /// <summary>
+    /// Runs a configuration callback against a newly created child
+    /// context, releasing the child's references to its ancestors if
+    /// the callback throws, since no caller will ever dispose it.
+    /// </summary>
+    internal static TContext Configure<TInterface>(TContext context, Action<TInterface>? configure) where TInterface : class
+    {
+        try
+        {
+            configure?.Invoke((context as TInterface)!);
+            return context;
+        }
+        catch
+        {
+            context.removeRef();
+            throw;
+        }
     }
     protected void addRef()
     {
         _parent?.addRef();
         Interlocked.Increment(ref _refCount);
     }
-    private async ValueTask removeRef()
+    private void removeRef()
     {
         var count = Interlocked.Decrement(ref _refCount);
         if (_parent == null)
         {
             if (count == 0)
             {
-                var channels = _channels.Values;
-                if (channels.Count > 0)
+                // GrpcChannel.ShutdownAsync does nothing (it is inherited
+                // from ChannelBase unchanged); only Dispose releases the
+                // channel and the HTTP handler it was given.
+                foreach (var channel in _channels.Values)
                 {
-                    var tasks = new Task[channels.Count];
-                    var index = 0;
-                    foreach (var channel in channels)
-                    {
-                        tasks[index++] = channel.ShutdownAsync();
-                    }
-                    await Task.WhenAll(tasks).ConfigureAwait(false);
+                    channel.Dispose();
                 }
                 _channels.Clear();
             }
         }
         else
         {
-            await _parent.removeRef().ConfigureAwait(false);
+            _parent.removeRef();
         }
     }
 }

@@ -123,11 +123,14 @@ public static class NetworkStakeDataExtensions
     /// <param name="client">
     /// Mirror Rest Client to use for the request.
     /// </param>
+    /// <param name="cancellationToken">
+    /// Optional token that cancels the request.
+    /// </param>
     /// <returns>
     /// The network stake data, or null if not found.
     /// </returns>
-    public static Task<NetworkStakeData?> GetNetworkStakeAsync(this MirrorRestClient client)
+    public static Task<NetworkStakeData?> GetNetworkStakeAsync(this MirrorRestClient client, CancellationToken cancellationToken = default)
     {
-        return client.GetSingleItemAsync("network/stake", MirrorJsonContext.Default.NetworkStakeData);
+        return client.GetSingleItemAsync("network/stake", MirrorJsonContext.Default.NetworkStakeData, cancellationToken);
     }
 }

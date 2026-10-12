@@ -7,26 +7,48 @@ namespace Hiero;
 /// </summary>
 /// <remarks>
 /// <para>
-/// A precheck failure means the transaction never reached consensus — no fees
-/// were charged and no state was changed. Inspect <see cref="Status"/> to
-/// determine why the gateway rejected it.
+/// The gateway node answered the last attempt with a refusal. Whether that
+/// proves the transaction did not execute depends on <see cref="Status"/>.
 /// </para>
-/// <para><strong>Transient codes (safe to retry with back-off):</strong>
+/// <para><strong>Codes about the transaction itself are definite:</strong>
+/// for example <see cref="ResponseCode.InvalidSignature"/>,
+/// <see cref="ResponseCode.InsufficientPayerBalance"/>,
+/// <see cref="ResponseCode.InvalidAccountId"/>,
+/// <see cref="ResponseCode.TokenNotAssociatedToAccount"/> and
+/// <see cref="ResponseCode.InvalidTransactionBody"/>. Nothing executed and
+/// no fee was charged; fix the request before sending it again.</para>
+/// <para><strong>Codes about the node, the network or the connection prove
+/// nothing:</strong> <see cref="ResponseCode.Unknown"/> (no answer could be
+/// had, for example a refused connection), <see cref="ResponseCode.RpcError"/>,
 /// <see cref="ResponseCode.Busy"/>,
-/// <see cref="ResponseCode.PlatformTransactionNotCreated"/>. The SDK
-/// auto-retries these based on <c>IConsensusContext.RetryCount</c> and
-/// <c>RetryDelay</c>; if you see a <c>PrecheckException</c> with one of
-/// these codes it means the retry budget was exhausted.</para>
-/// <para><strong>Permanent codes (do not retry):</strong>
-/// <see cref="ResponseCode.InvalidSignature"/>,
-/// <see cref="ResponseCode.InsufficientAccountBalance"/>,
-/// <see cref="ResponseCode.InvalidTransactionBody"/> — fix the request
-/// configuration before resubmitting.</para>
+/// <see cref="ResponseCode.PlatformTransactionNotCreated"/>,
+/// <see cref="ResponseCode.PlatformNotActive"/>,
+/// <see cref="ResponseCode.DuplicateTransaction"/> (a transaction with this
+/// id was already accepted) and <see cref="ResponseCode.TransactionExpired"/>.
+/// The SDK may have sent the same transaction earlier in the call, and an
+/// answer can be lost after the network accepted it. Treat the outcome as
+/// unknown: do not resubmit, and settle it on a mirror node by
+/// <see cref="TransactionId"/> (see <see cref="ConsensusException"/>). Code
+/// that moves value is safest treating every <c>PrecheckException</c> this
+/// way.</para>
+/// <para>The SDK itself retries <see cref="ResponseCode.Busy"/> and
+/// <see cref="ResponseCode.InvalidTransactionStart"/> within
+/// <see cref="IConsensusContext.RetryCount"/>, so seeing either here means
+/// those retries ran out.</para>
 /// <para>If <see cref="Status"/> is
 /// <see cref="ResponseCode.InsufficientTxFee"/>, the
 /// <see cref="RequiredFee"/> property contains the minimum fee (in tinybars)
 /// the gateway expects — increase <c>IConsensusContext.FeeLimit</c> to at
-/// least this amount and retry.</para>
+/// least this amount and retry <em>with the same
+/// <see cref="IConsensusContext.TransactionId"/></em>, so the network's
+/// duplicate check stops a second execution should an earlier attempt in
+/// the call have gone through.</para>
+/// <para><strong>Queries:</strong> a paid query's payment can be charged
+/// even when the answer carries a refusal code. Depending on the network
+/// version, the node may submit the payment before checking or answering
+/// the query, so "no fee was charged" holds for a query only when the
+/// payment itself was refused, as with
+/// <see cref="ResponseCode.InsufficientTxFee"/>.</para>
 /// </remarks>
 public sealed class PrecheckException : Exception
 {

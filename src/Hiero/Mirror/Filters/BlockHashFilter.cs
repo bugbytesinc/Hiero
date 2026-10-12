@@ -9,9 +9,9 @@ namespace Hiero.Mirror.Filters;
 /// to a single block by its hash.
 /// </summary>
 /// <remarks>
-/// The wire format accepts **either** a 32-byte Ethereum block hash
-/// (64 hex chars) **or** a 48-byte Hedera SHA-384 block hash (96 hex
-/// chars). Use <see cref="Is(EvmHash)"/> when you already have an
+/// The wire format accepts **either** a 32-byte EVM-form block hash
+/// (64 hex chars; the first 32 bytes of the 48-byte hash) **or** a
+/// 48-byte Hedera SHA-384 block hash (96 hex chars). Use <see cref="Is(EvmHash)"/> when you already have an
 /// <see cref="EvmHash"/>; use <see cref="Is(ReadOnlyMemory{byte})"/>
 /// for raw bytes (EVM 32-byte or Hedera 48-byte). Construct via the
 /// static factories; the ctor is private.
@@ -24,7 +24,8 @@ public sealed class BlockHashFilter : IMirrorFilter
     public string Name => "block.hash";
     /// <summary>
     /// The value of the query parameter sent to the mirror node — a
-    /// <c>0x</c>-prefixed lowercase hex string, 64 or 96 characters.
+    /// <c>0x</c>-prefixed lowercase hex string with 64 or 96 hex digits
+    /// (66 or 98 characters including the prefix).
     /// </summary>
     public string Value { get; }
 
@@ -34,7 +35,10 @@ public sealed class BlockHashFilter : IMirrorFilter
     /// Records whose <c>block.hash</c> equals the given 32-byte EVM
     /// block hash.
     /// </summary>
-    /// <param name="evmHash">The EVM block hash (32 bytes, keccak-256).</param>
+    /// <param name="evmHash">
+    /// The 32-byte EVM-form block hash (the first 32 bytes of the
+    /// 48-byte SHA-384 record-file hash).
+    /// </param>
     public static BlockHashFilter Is(EvmHash evmHash) =>
         new(evmHash.ToString());
 

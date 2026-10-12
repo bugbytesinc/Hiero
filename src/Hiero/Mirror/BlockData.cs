@@ -95,12 +95,15 @@ public static class BlockDataExtensions
     /// <param name="blockNumber">
     /// Block Number
     /// </param>
+    /// <param name="cancellationToken">
+    /// Optional token that cancels the request.
+    /// </param>
     /// <returns>
     /// Information for the block, or null if not found.
     /// </returns>
-    public static Task<BlockData?> GetBlockAsync(this MirrorRestClient client, long blockNumber)
+    public static Task<BlockData?> GetBlockAsync(this MirrorRestClient client, long blockNumber, CancellationToken cancellationToken = default)
     {
-        return client.GetSingleItemAsync($"blocks/{blockNumber}", MirrorJsonContext.Default.BlockData);
+        return client.GetSingleItemAsync($"blocks/{blockNumber}", MirrorJsonContext.Default.BlockData, cancellationToken);
     }
     /// <summary>
     /// Retrieves a single block by hash from
@@ -114,19 +117,22 @@ public static class BlockDataExtensions
     /// record-file hash returned by the mirror, or a 32-byte EVM
     /// block hash for callers that have one.
     /// </param>
+    /// <param name="cancellationToken">
+    /// Optional token that cancels the request.
+    /// </param>
     /// <returns>
     /// Information for the block, or null if not found.
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">
     /// Thrown when <paramref name="blockhash"/> is neither 32 nor 48 bytes long.
     /// </exception>
-    public static Task<BlockData?> GetBlockAsync(this MirrorRestClient client, ReadOnlyMemory<byte> blockhash)
+    public static Task<BlockData?> GetBlockAsync(this MirrorRestClient client, ReadOnlyMemory<byte> blockhash, CancellationToken cancellationToken = default)
     {
         if (blockhash.Length != 32 && blockhash.Length != 48)
         {
             throw new ArgumentOutOfRangeException(nameof(blockhash), "Block hash must be 32 bytes (EVM) or 48 bytes (Hedera SHA-384).");
         }
-        return client.GetSingleItemAsync($"blocks/{MirrorHexFormatter.FormatPrefixed(blockhash.Span)}", MirrorJsonContext.Default.BlockData);
+        return client.GetSingleItemAsync($"blocks/{MirrorHexFormatter.FormatPrefixed(blockhash.Span)}", MirrorJsonContext.Default.BlockData, cancellationToken);
     }
     /// <summary>
     /// Retrieves the most recent block observed by the mirror node via
@@ -136,28 +142,38 @@ public static class BlockDataExtensions
     /// <param name="client">
     /// Mirror Rest Client to use for the request.
     /// </param>
+    /// <param name="cancellationToken">
+    /// Optional token that cancels the request.
+    /// </param>
     /// <returns>
-    /// Block information for the latest known block, or null if there 
-    /// was an error.
+    /// Block information for the latest known block, or null if the
+    /// mirror node returns no blocks. Request errors are thrown as
+    /// <see cref="MirrorException"/>, not reported as null.
     /// </returns>
-    public static async Task<BlockData?> GetLatestBlockAsync(this MirrorRestClient client)
+    public static async Task<BlockData?> GetLatestBlockAsync(this MirrorRestClient client, CancellationToken cancellationToken = default)
     {
-        var list = await client.GetSingleItemAsync("blocks?limit=1&order=desc", MirrorJsonContext.Default.BlockDataPage).ConfigureAwait(false);
+        var list = await client.GetSingleItemAsync("blocks?limit=1&order=desc", MirrorJsonContext.Default.BlockDataPage, cancellationToken).ConfigureAwait(false);
         var blocks = list?.Blocks;
         return blocks is { Length: > 0 } ? blocks[0] : null;
     }
     /// <summary>
-    /// Retrieves the latest known block before the given consensus timestamp.
+    /// Retrieves the latest known block at or before the given consensus timestamp.
     /// </summary>
     /// <param name="client">
     /// Mirror Rest Client to use for the request.
     /// </param>
+    /// <param name="cancellationToken">
+    /// Optional token that cancels the request.
+    /// </param>
     /// <param name="consensus">The consensus timestamp</param>
-    /// <returns>Block info for the latest block before the given timestamp</returns>
-    public static async Task<BlockData?> GetLatestBlockBeforeConsensusAsync(this MirrorRestClient client, ConsensusTimeStamp consensus)
+    /// <returns>
+    /// Block info for the latest block at or before the given timestamp,
+    /// or null if there is no such block.
+    /// </returns>
+    public static async Task<BlockData?> GetLatestBlockBeforeConsensusAsync(this MirrorRestClient client, ConsensusTimeStamp consensus, CancellationToken cancellationToken = default)
     {
         var path = GenerateInitialPath("blocks", new PageLimit(1), OrderBy.Descending, TimestampFilter.OnOrBefore(consensus));
-        var list = await client.GetSingleItemAsync(path, MirrorJsonContext.Default.BlockDataPage).ConfigureAwait(false);
+        var list = await client.GetSingleItemAsync(path, MirrorJsonContext.Default.BlockDataPage, cancellationToken).ConfigureAwait(false);
         var blocks = list?.Blocks;
         return blocks is { Length: > 0 } ? blocks[0] : null;
     }
@@ -170,6 +186,10 @@ public static class BlockDataExtensions
     /// <param name="client">
     /// Mirror Rest Client to use for the request.
     /// </param>
+    /// <param name="cancellationToken">
+    /// Token that cancels the enumeration, including a page request in
+    /// flight. <c>WithCancellation</c> on the result works as well.
+    /// </param>
     /// <param name="filters">
     /// Additional query filters. The endpoint supports
     /// <see cref="BlockNumberFilter"/>,
@@ -179,9 +199,14 @@ public static class BlockDataExtensions
     /// <returns>
     /// An async enumerable of block records.
     /// </returns>
-    public static IAsyncEnumerable<BlockData> GetBlocksAsync(this MirrorRestClient client, params IMirrorQueryParameter[] filters)
+    public static IAsyncEnumerable<BlockData> GetBlocksAsync(this MirrorRestClient client, CancellationToken cancellationToken, params IMirrorQueryParameter[] filters)
     {
         var path = GenerateInitialPath("blocks", new PageLimit(100), filters);
-        return client.GetPagedItemsAsync<BlockDataPage, BlockData>(path, MirrorJsonContext.Default.BlockDataPage);
+        return client.GetPagedItemsAsync<BlockDataPage, BlockData>(path, MirrorJsonContext.Default.BlockDataPage, cancellationToken);
+    }
+    /// <inheritdoc cref="GetBlocksAsync(MirrorRestClient, CancellationToken, IMirrorQueryParameter[])"/>
+    public static IAsyncEnumerable<BlockData> GetBlocksAsync(this MirrorRestClient client, params IMirrorQueryParameter[] filters)
+    {
+        return client.GetBlocksAsync(CancellationToken.None, filters);
     }
 }

@@ -6,7 +6,7 @@ namespace Hiero.Test.Integration.Token;
 public class RelinquishTokenTests
 {
     [Test]
-    public async Task Can_Schedule_And_Sign_Relinquish_Tokens()
+    public async Task Can_Not_Schedule_And_Sign_Relinquish_Tokens()
     {
         await using var fxAccount = await TestAccount.CreateAsync();
         await using var fxToken = await TestToken.CreateAsync(fx => fx.CreateParams.GrantKycEndorsement = null, fxAccount);
@@ -19,7 +19,8 @@ public class RelinquishTokenTests
             ctx.Signatory = new Signatory(ctx.Signatory!, fxToken.TreasuryAccount.PrivateKey);
         });
 
-        // Schedule a relinquish WITHOUT the owner signing.
+        // A relinquish can't be scheduled: TokenReject is not in the network's
+        // scheduling whitelist.
         var tex = await Assert.That(async () =>
         {
             await client.ScheduleAsync(new ScheduleParams

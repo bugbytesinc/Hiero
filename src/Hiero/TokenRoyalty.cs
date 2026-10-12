@@ -20,8 +20,9 @@ public sealed record TokenRoyalty : IRoyalty
     /// </summary>
     public EntityId Receiver { get; private init; }
     /// <summary>
-    /// The minimum assessed value, in terms of the 
+    /// The minimum assessed value, in terms of the
     /// smallest denomination of the associated token.
+    /// Zero means no minimum.
     /// </summary>
     public long Minimum { get; private init; }
     /// <summary>
@@ -30,7 +31,7 @@ public sealed record TokenRoyalty : IRoyalty
     /// </summary>
     /// <remarks>
     /// This is not expressed as a floating point number
-    /// in order to avoid rounding fees inherent in 
+    /// in order to avoid rounding errors inherent in
     /// computing platforms.
     /// </remarks>
     public long Numerator { get; private init; }
@@ -40,13 +41,15 @@ public sealed record TokenRoyalty : IRoyalty
     /// </summary>
     /// <remarks>
     /// This is not expressed as a floating point number
-    /// in order to avoid rounding fees inherent in 
+    /// in order to avoid rounding errors inherent in
     /// computing platforms.
     /// </remarks>
     public long Denominator { get; private init; }
     /// <summary>
     /// The maximum allowed fee value, in terms of
     /// the smallest denomination of the associated token.
+    /// Zero means no maximum; a non-zero maximum at or below
+    /// <see cref="Minimum"/> fixes the fee at this value.
     /// </summary>
     public long Maximum { get; private init; }
     /// <summary>
@@ -74,12 +77,15 @@ public sealed record TokenRoyalty : IRoyalty
     /// transferred units to assess.
     /// </param>
     /// <param name="minimum">
-    /// The minimum assessed value, in terms of the 
+    /// The minimum assessed value, in terms of the
     /// smallest denomination of the associated token.
+    /// Zero means no minimum.
     /// </param>
     /// <param name="maximum">
     /// The maximum allowed fee value, in terms of
     /// the smallest denomination of the associated token.
+    /// Zero means no maximum; a non-zero maximum at or below
+    /// <paramref name="minimum"/> fixes the fee at this value.
     /// </param>
     /// <param name="assessAsSurcharge">
     /// Determines how the royalty assessment is applied, 

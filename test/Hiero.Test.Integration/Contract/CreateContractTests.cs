@@ -290,7 +290,7 @@ public class CreateContractTests
     }
 
     [Test]
-    public async Task Can_Not_Schedule_Create()
+    public async Task Can_Schedule_Create()
     {
         await using var fxPayer = await TestAccount.CreateAsync(fx => fx.CreateParams.InitialBalance = 20_00_000_000);
         var fxTemplate = await GreetingContract.CreateAsync();

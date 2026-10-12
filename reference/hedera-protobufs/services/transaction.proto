@@ -28,10 +28,8 @@ import "services/contract_call.proto";
 import "services/contract_create.proto";
 import "services/contract_update.proto";
 
-//import "services/crypto_add_live_hash.proto";
 import "services/crypto_create.proto";
 import "services/crypto_delete.proto";
-import "services/crypto_delete_live_hash.proto";
 import "services/crypto_transfer.proto";
 import "services/crypto_update.proto";
 import "services/crypto_approve_allowance.proto";
@@ -52,7 +50,6 @@ import "services/consensus_update_topic.proto";
 import "services/consensus_delete_topic.proto";
 import "services/consensus_submit_message.proto";
 
-//import "services/unchecked_submit.proto";
 
 import "services/token_create.proto";
 import "services/token_freeze_account.proto";
@@ -98,8 +95,14 @@ import "services/auxiliary/history/history_proof_signature.proto";
 import "services/auxiliary/history/history_proof_key_publication.proto";
 import "services/auxiliary/history/history_proof_vote.proto";
 
+import "services/auxiliary/tss/ledger_id_publication.proto";
+import "services/auxiliary/blockrecords/migration_root_hash_vote.proto";
+
 import "services/hook_store.proto";
-//import "services/hook_dispatch.proto";
+
+import "services/registered_node_create.proto";
+import "services/registered_node_update.proto";
+import "services/registered_node_delete.proto";
 
 /**
  * A wrapper around signed transaction bytes.<br/>
@@ -285,7 +288,7 @@ message TransactionBody {
          * An obsolete, and unsupported, operation to remove a "live hash" from
          * an account.
          */
-        CryptoDeleteLiveHashTransactionBody cryptoDeleteLiveHash = 13 [deprecated = true];
+        //CryptoDeleteLiveHashTransactionBody cryptoDeleteLiveHash = 13 [deprecated = true];
 
         /**
          * Transfer HBAR between accounts.
@@ -661,6 +664,40 @@ message TransactionBody {
          * An internal-only transaction body for dispatching a hook CRUD operation.
          */
         //com.hedera.hapi.node.hooks.HookDispatchTransactionBody hook_dispatch = 76;
+
+        /**
+         * An internal-only transaction body for publishing the ledger id.
+         */
+        com.hedera.hapi.node.tss.LedgerIdPublicationTransactionBody ledger_id_publication = 77;
+
+        /**
+         * Create a new registered node in the network address book.
+         * <p>
+         * This transaction SHALL create a new registered node record and add
+         * that record to the network state.
+         */
+        com.hedera.hapi.node.addressbook.RegisteredNodeCreateTransactionBody registeredNodeCreate = 78;
+
+        /**
+         * Update a registered node in the network address book.
+         * <p>
+         * This transaction SHALL update an existing registered node record in
+         * the network state.
+         */
+        com.hedera.hapi.node.addressbook.RegisteredNodeUpdateTransactionBody registeredNodeUpdate = 79;
+
+        /**
+         * Delete a registered node from the network address book.
+         * <p>
+         * This transaction SHALL mark an existing registered node record as
+         * deleted.
+         */
+        com.hedera.hapi.node.addressbook.RegisteredNodeDeleteTransactionBody registeredNodeDelete = 80;
+
+        /**
+         * A transaction body for voting on migration wrapped record root hash state.
+         */
+        com.hedera.hapi.services.auxiliary.blockrecords.MigrationRootHashVoteTransactionBody migration_root_hash_vote = 81;
     }
 
     /**
@@ -671,6 +708,13 @@ message TransactionBody {
      * If used with a transaction type that does not support custom fee limits, the transaction will fail.
      */
     repeated CustomFeeLimit max_custom_fees = 1001;
+
+    /**
+     * If set to true, this transaction uses high-volume throttles and pricing
+     * for entity creation. It only affects supported transaction types; otherwise,
+     * it is ignored.
+     */
+    bool high_volume = 1002;
 }
 
 /**

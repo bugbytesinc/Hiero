@@ -16,7 +16,9 @@ public class FixedFeeData
     [JsonConverter(typeof(BooleanMirrorConverter))]
     public bool CollectorsExempt { get; set; }
     /// <summary>
-    /// Amount of fixed fee to collect.
+    /// Amount of fixed fee to collect, in tinybars when the
+    /// fee is paid in hBar, otherwise in the smallest unit
+    /// of the <see cref="FeeToken"/>.
     /// </summary>
     [JsonPropertyName("amount")]
     [JsonConverter(typeof(LongMirrorConverter))]
@@ -28,7 +30,8 @@ public class FixedFeeData
     public EntityId Collector { get; set; } = default!;
     /// <summary>
     /// The token that the fee is denominated
-    /// in, or NONE for hBar.
+    /// in, or null for hBar (the mirror node
+    /// sends no token id).
     /// </summary>
     [JsonPropertyName("denominating_token_id")]
     public EntityId FeeToken { get; set; } = default!;

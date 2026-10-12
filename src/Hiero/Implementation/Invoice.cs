@@ -36,6 +36,7 @@ internal sealed class Invoice : IInvoice
         _memo = transactionBody.Memo;
         _txBytes = transactionBodyBytes;
         _prefixTrimLimit = prefixTrimLimit;
+        _cancellationToken = cancellationToken;
         _signatures = [];
     }
     void IInvoice.AddSignature(KeyType type, ReadOnlySpan<byte> publicPrefix, ReadOnlySpan<byte> signature)

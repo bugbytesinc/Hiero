@@ -13,7 +13,7 @@ public sealed class KeyDerivationPath
     public static readonly KeyDerivationPath HashPack = new KeyDerivationPath(KeyType.Ed25519, 44 | 0x80000000, 3030 | 0x80000000, 0 | 0x80000000, 0 | 0x80000000, 0 | 0x80000000);
     /// <summary>
     /// The Ed25519 Key Derivation matching the 12 word seed
-    /// phrase as implemented by HashPack.
+    /// phrase as implemented by Calaxy.
     /// </summary>
     public static readonly KeyDerivationPath Calaxy = new KeyDerivationPath(KeyType.Ed25519, 44 | 0x80000000, 3030 | 0x80000000, 0 | 0x80000000, 0 | 0x80000000, 0 | 0x80000000);
     /// <summary>

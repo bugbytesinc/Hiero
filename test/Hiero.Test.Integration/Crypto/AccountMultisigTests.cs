@@ -86,7 +86,7 @@ public class AccountMultisigTests
         var receipt = await client.TransferAsync(from, TestNetwork.Payer, (long)initialBalance, ctx => ctx.Signatory = new Signatory(ctx.Signatory!, privateKey1, privateKey2));
         var record = await client.GetTransactionRecordAsync(receipt.TransactionId);
 
-        var balance = await client.GetAccountBalanceAsync(createResult.Address);
+        var balance = await TestNetwork.GetCryptoBalanceAsync(createResult.Address);
         await Assert.That(balance).IsEqualTo(0UL);
     }
     [Test]
@@ -109,7 +109,7 @@ public class AccountMultisigTests
         var receipt = await client.TransferAsync(from, TestNetwork.Payer, (long)initialBalance, ctx => ctx.Signatory = new Signatory(ctx.Signatory!, privateKey1));
         var record = await client.GetTransactionRecordAsync(receipt.TransactionId);
 
-        var balance = await client.GetAccountBalanceAsync(createResult.Address);
+        var balance = await TestNetwork.GetCryptoBalanceAsync(createResult.Address);
         await Assert.That(balance).IsEqualTo(0UL);
     }
     [Test]
@@ -143,7 +143,7 @@ public class AccountMultisigTests
         from = createResult.Address;
         await client.TransferAsync(from, TestNetwork.Payer, (long)initialBalance, ctx => ctx.Signatory = new Signatory(ctx.Signatory!, privateKey1b, privateKey2a));
 
-        var balance = await client.GetAccountBalanceAsync(createResult.Address);
+        var balance = await TestNetwork.GetCryptoBalanceAsync(createResult.Address);
         await Assert.That(balance).IsEqualTo(0UL);
     }
     [Test]
@@ -176,7 +176,7 @@ public class AccountMultisigTests
         // Now try with proper set of signatures
         await client.TransferAsync(fx.CreateReceipt!.Address, TestNetwork.Payer, (long)fx.CreateParams.InitialBalance, ctx => ctx.Signatory = new Signatory(ctx.Signatory!, privateKey1a, privateKey2b));
 
-        var balance = await client.GetAccountBalanceAsync(fx.CreateReceipt!.Address);
+        var balance = await TestNetwork.GetCryptoBalanceAsync(fx.CreateReceipt!.Address);
         await Assert.That(balance).IsEqualTo(0UL);
     }
     [Test]
@@ -219,7 +219,7 @@ public class AccountMultisigTests
         // Now try with proper set of signatures
         var record = await client.TransferAsync(createResult.Address, TestNetwork.Payer, (long)initialBalance, ctx => ctx.Signatory = new Signatory(ctx.Signatory!, privateKey3));
 
-        var balance = await client.GetAccountBalanceAsync(createResult.Address);
+        var balance = await TestNetwork.GetCryptoBalanceAsync(createResult.Address);
         await Assert.That(balance).IsEqualTo(0UL);
     }
     [Test]
@@ -264,7 +264,7 @@ public class AccountMultisigTests
         // Now try with proper set of signatures
         var record = await client.TransferAsync(createResult.Address, TestNetwork.Payer, (long)initialBalance, ctx => ctx.Signatory = new Signatory(ctx.Signatory!, privateKey3c));
 
-        var balance = await client.GetAccountBalanceAsync(createResult.Address);
+        var balance = await TestNetwork.GetCryptoBalanceAsync(createResult.Address);
         await Assert.That(balance).IsEqualTo(0UL);
     }
 }

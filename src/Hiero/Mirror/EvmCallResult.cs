@@ -39,17 +39,25 @@ public static class EvmCallResultExtensions
     /// The arguments identifying the contract, method and
     /// arguments to send to the simulated EVM.
     /// </param>
+    /// <param name="cancellationToken">
+    /// Optional token that cancels the request.
+    /// </param>
     /// <returns>
     /// The encoded parameters returned from the simulated EVM call.
     /// </returns>
-    public static async Task<EncodedParams> CallEvmAsync(this MirrorRestClient client, EvmCallData callData)
+    /// <exception cref="MirrorException">
+    /// If the mirror node answers with an HTTP error. A contract revert
+    /// arrives this way, as HTTP 400 with the revert data in
+    /// <see cref="MirrorException.Details"/>.
+    /// </exception>
+    public static async Task<EncodedParams> CallEvmAsync(this MirrorRestClient client, EvmCallData callData, CancellationToken cancellationToken = default)
     {
-        using var response = await client.PostPayload("contracts/call", callData, MirrorJsonContext.Default.EvmCallData).ConfigureAwait(false);
+        using var response = await client.PostPayload("contracts/call", callData, MirrorJsonContext.Default.EvmCallData, cancellationToken).ConfigureAwait(false);
         if (response.IsSuccessStatusCode)
         {
-            var payload = await response.Content.ReadFromJsonAsync(MirrorJsonContext.Default.EvmCallResult).ConfigureAwait(false);
+            var payload = await response.Content.ReadFromJsonAsync(MirrorJsonContext.Default.EvmCallResult, cancellationToken).ConfigureAwait(false);
             return new EncodedParams(payload?.Result ?? ReadOnlyMemory<byte>.Empty);
         }
-        throw await CreateMirrorExceptionAsync(response).ConfigureAwait(false);
+        throw await CreateMirrorExceptionAsync(response, cancellationToken).ConfigureAwait(false);
     }
 }

@@ -267,7 +267,7 @@ public class CreateTopicTests
     }
 
     [Test]
-    public async Task Can_Schedule_And_Sign_Create_Topic()
+    public async Task Can_Not_Schedule_And_Sign_Create_Topic()
     {
         await using var client = await TestNetwork.CreateClientAsync();
         var tex = await Assert.That(async () =>

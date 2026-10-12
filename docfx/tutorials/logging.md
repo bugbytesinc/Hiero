@@ -44,7 +44,7 @@ await using var client = new ConsensusClient(ctx =>
 });
 
 // Every call now logs the raw protobuf traffic
-var balance = await client.GetAccountBalanceAsync(account);
+var info = await client.GetAccountInfoAsync(account);
 ```
 
 ### Integrate with `ILogger`

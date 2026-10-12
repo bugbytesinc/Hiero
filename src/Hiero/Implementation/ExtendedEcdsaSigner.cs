@@ -44,6 +44,15 @@ internal class ExtendedEcdsaSigner : ECDsaSigner
             }
         }
         BigInteger v = point.AffineYCoord.TestBitZero() ? BigInteger.One : BigInteger.Zero;
+        // EIP-2: Ethereum accepts only the lower-half s (s <= n/2), and Hiero
+        // consensus nodes enforce it from v0.77. (r, n - s) is the same
+        // signature's other valid form; it recovers through the opposite
+        // y-parity of R, so the recovery id flips with it.
+        if (s.CompareTo(n.ShiftRight(1)) > 0)
+        {
+            s = n.Subtract(s);
+            v = v.SignValue == 0 ? BigInteger.One : BigInteger.Zero;
+        }
         return [v, r, s];
     }
 }

@@ -41,7 +41,7 @@ public sealed class SlotFilter : IMirrorFilter
     /// <summary>
     /// Records for the given 32-byte storage slot.
     /// </summary>
-    /// <param name="slot">The slot position as a big integer.</param>
+    /// <param name="slot">The slot position as a big integer. A negative value, as a signed parse of a slot with its top bit set gives, stands for its 256-bit two's complement.</param>
     public static SlotFilter Is(BigInteger slot) =>
         new(MirrorHexFormatter.FormatPrefixedPadded32(slot));
 }

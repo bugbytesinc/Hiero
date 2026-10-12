@@ -28,7 +28,7 @@ public class DeleteScheduledTransactionTests
         await Assert.That(info.TransactionId).IsEqualTo(fx.ScheduleReceipt.ScheduledTransactionId);
         await Assert.That(info.Creator).IsEqualTo(TestNetwork.Payer);
         await Assert.That(info.Payer).IsEqualTo(fx.PayingAccount.CreateReceipt!.Address);
-        await Assert.That(info.Endorsements.Length).IsEqualTo(1);
+        await Assert.That(info.Endorsements.Count).IsEqualTo(1);
         await Assert.That(info.Endorsements[0]).IsEqualTo(new Endorsement(fx.PayingAccount.PublicKey));
         await Assert.That(info.Administrator).IsEqualTo(new Endorsement(fx.PublicKey));
         await Assert.That(info.Expiration > ConsensusTimeStamp.MinValue).IsTrue();
@@ -57,7 +57,7 @@ public class DeleteScheduledTransactionTests
         await Assert.That(info.TransactionId).IsEqualTo(fx.ScheduleReceipt.ScheduledTransactionId);
         await Assert.That(info.Creator).IsEqualTo(TestNetwork.Payer);
         await Assert.That(info.Payer).IsEqualTo(fx.PayingAccount.CreateReceipt!.Address);
-        await Assert.That(info.Endorsements.Length).IsEqualTo(1);
+        await Assert.That(info.Endorsements.Count).IsEqualTo(1);
         await Assert.That(info.Endorsements[0]).IsEqualTo(new Endorsement(fx.PayingAccount.PublicKey));
         await Assert.That(info.Administrator).IsEqualTo(new Endorsement(fx.PublicKey));
         await Assert.That(info.Expiration > ConsensusTimeStamp.MinValue).IsTrue();

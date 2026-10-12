@@ -34,7 +34,9 @@ public sealed record TokenInfo
     /// </summary>
     public EntityId Treasury { get; private init; }
     /// <summary>
-    /// The total balance of tokens in all accounts (the whole denomination).
+    /// The total supply of the token across all accounts, in its smallest
+    /// unit: divide by 10^<see cref="Decimals"/> for whole tokens.  For an
+    /// NFT class, the number of NFTs.
     /// </summary>
     public ulong Circulation { get; private init; }
     /// <summary>
@@ -64,7 +66,7 @@ public sealed record TokenInfo
     /// Administrator key for signing transactions that can pause or continue
     /// the exchange of all assets across all accounts on the network.
     /// </summary>
-    public Endorsement? PauseEndorsement { get; set; }
+    public Endorsement? PauseEndorsement { get; private init; }
     /// <summary>
     /// Administrator key for signing transactions that completely remove tokens
     /// from a crypto address.
@@ -84,7 +86,7 @@ public sealed record TokenInfo
     /// Administrator key for signing transactions updating the royalties
     /// (custom transfer fees) associated with this token.
     /// </summary>
-    public Endorsement? RoyaltiesEndorsement { get; set; }
+    public Endorsement? RoyaltiesEndorsement { get; private init; }
     /// <summary>
     /// The current default suspended/frozen status of the token.
     /// </summary>
@@ -214,9 +216,9 @@ public static class TokenInfoExtensions
     /// <returns>
     /// A detailed description of the token instance.
     /// </returns>
-    /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
+    /// <exception cref="ArgumentException">If required arguments are missing or invalid.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
+    /// <exception cref="PrecheckException">If the gateway node refused the query.</exception>
     public static async Task<TokenInfo> GetTokenInfoAsync(this ConsensusClient client, EntityId token, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
     {
         return new TokenInfo(await Engine.QueryAsync(client, new TokenGetInfoQuery { Token = new TokenID(token) }, cancellationToken, configure).ConfigureAwait(false));

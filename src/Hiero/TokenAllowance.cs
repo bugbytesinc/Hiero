@@ -26,8 +26,9 @@ public sealed record TokenAllowance
     /// </summary>
     public EntityId Spender { get; private init; }
     /// <summary>
-    /// The increase or decrease of the amount of
-    /// tokens that the spender may spend.
+    /// The amount of tokens, in the token's smallest unit, that the spender
+    /// may spend.  Setting an allowance replaces any earlier one for the
+    /// same token, owner and spender; zero revokes it.
     /// </summary>
     public long Amount { get; private init; }
     /// <summary>
@@ -48,8 +49,9 @@ public sealed record TokenAllowance
     /// allowance of tokens.
     /// </param>
     /// <param name="amount">
-    /// The increase or decrease of the amount of
-    /// tokens that the spender may spend.
+    /// The amount of tokens, in the token's smallest unit, that the spender
+    /// may spend.  Setting an allowance replaces any earlier one for the
+    /// same token, owner and spender; zero revokes it.
     /// </param>
     /// <exception cref="ArgumentException">
     /// If any of the addresses are null or None.
@@ -61,15 +63,15 @@ public sealed record TokenAllowance
     {
         if (token.IsNullOrNone())
         {
-            throw new ArgumentException(nameof(token), "The allowance token cannot be null or empty.");
+            throw new ArgumentException("The allowance token cannot be null or empty.", nameof(token));
         }
         if (owner.IsNullOrNone())
         {
-            throw new ArgumentException(nameof(owner), "The allowance owner account cannot be null or empty.");
+            throw new ArgumentException("The allowance owner account cannot be null or empty.", nameof(owner));
         }
         if (spender.IsNullOrNone())
         {
-            throw new ArgumentException(nameof(spender), "The allowance spender account cannot be null or empty.");
+            throw new ArgumentException("The allowance spender account cannot be null or empty.", nameof(spender));
         }
         if (amount < 0)
         {

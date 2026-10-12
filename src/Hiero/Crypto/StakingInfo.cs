@@ -38,9 +38,11 @@ public sealed record StakingInfo
     public EntityId Proxy { get; private init; }
     /// <summary>
     /// The ID of the Hedera node this account or contract
-    /// is directly staking to.  If set to 0, then this
-    /// account or contract is proxy staking to another
-    /// account or contract instead.
+    /// is directly staking to.  A value of 0 is ambiguous:
+    /// it is reported for staking to node 0 and also when
+    /// this account or contract is not staking to a node
+    /// (proxy staking, or not staking at all).  Check
+    /// <see cref="Proxy"/> to detect proxy staking.
     /// </summary>
     public long Node { get; private init; }
     /// <summary>

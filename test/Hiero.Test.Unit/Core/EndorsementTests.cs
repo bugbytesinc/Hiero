@@ -805,7 +805,7 @@ public class EndorsementTests
         {
             endorsement.Verify(message, signature);
         });
-        await Assert.That(ex.Message).StartsWith("Only endorsements representing single Ed25519 or ECDSASecp256K1 keys support validation of signatures, use SigPair.Satisfies for complex public key types.");
+        await Assert.That(ex.Message).StartsWith("Only endorsements representing single Ed25519 or ECDSASecp256K1 keys support validation of signatures, use SignatureMap.Satisfies for complex public key types.");
     }
 
     [Test]
@@ -1008,5 +1008,72 @@ public class EndorsementTests
         await Assert.That(left).IsNotEqualTo(right);
         await Assert.That(left == right).IsFalse();
         await Assert.That(left != right).IsTrue();
+    }
+
+    [Test]
+    public async Task A_Secp256K1_Signature_Of_The_Wrong_Length_Does_Not_Verify()
+    {
+        var (publicKey, privateKey) = Generator.Secp256k1KeyPair();
+        var endorsement = new Endorsement(publicKey);
+        var message = Generator.Ed25519KeyPair().publicKey;
+        var sigMap = new SignatureMap();
+        await sigMap.AddSignatureAsync(message, new Signatory(privateKey));
+        var signature = sigMap.SigPair[0].ECDSASecp256K1.ToByteArray();
+        // Too short to hold r || s: once an exception, now simply not valid.
+        await Assert.That(endorsement.Verify(message, signature[..31])).IsFalse();
+        // The valid r || s with a byte inserted between them still decodes to
+        // the same r and s, so it must be refused outright.
+        byte[] padded = [.. signature[..32], 0x00, .. signature[32..]];
+        await Assert.That(endorsement.Verify(message, padded)).IsFalse();
+        await Assert.That(endorsement.Verify(message, signature)).IsTrue();
+    }
+
+    [Test]
+    public async Task A_Delegatable_Contract_Key_Round_Trips_Through_Protobuf()
+    {
+        var contract = new EntityId(0, 0, 8317070);
+        var endorsement = new Endorsement(KeyType.DelegatableContract, contract);
+        var proto = new Proto.Key(endorsement);
+        await Assert.That(proto.KeyCase).IsEqualTo(Proto.Key.KeyOneofCase.DelegatableContractId);
+        // The bytes a mainnet mirror node reports for such a key.
+        await Assert.That(Convert.ToHexStringLower(endorsement.ToBytes(KeyFormat.Protobuf).Span)).IsEqualTo("4205188ed1fb03");
+        var decoded = proto.ToEndorsement();
+        await Assert.That(decoded.Type).IsEqualTo(KeyType.DelegatableContract);
+        await Assert.That(decoded.Contract).IsEqualTo(contract);
+        await Assert.That(decoded).IsEqualTo(endorsement);
+    }
+
+    [Test]
+    public async Task A_Delegatable_Contract_Key_Is_Not_Equal_To_A_Plain_Contract_Key()
+    {
+        var contract = new EntityId(0, 0, 1001);
+        var delegatable = new Endorsement(KeyType.DelegatableContract, contract);
+        await Assert.That(delegatable).IsNotEqualTo(new Endorsement(contract));
+        await Assert.That(new Endorsement(KeyType.Contract, contract)).IsEqualTo(new Endorsement(contract));
+    }
+
+    [Test]
+    public async Task A_Delegatable_Contract_Key_Survives_Inside_A_Key_List()
+    {
+        var (publicKey, _) = Generator.Ed25519KeyPair();
+        var list = new Endorsement(1, new Endorsement(publicKey), new Endorsement(KeyType.DelegatableContract, new EntityId(0, 0, 1001)));
+        var decoded = new Proto.Key(list).ToEndorsement();
+        await Assert.That(decoded).IsEqualTo(list);
+        await Assert.That(decoded.List[1].Type).IsEqualTo(KeyType.DelegatableContract);
+    }
+
+    [Test]
+    public async Task The_Contract_Constructor_Accepts_Only_Contract_Key_Types()
+    {
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(async () => await Task.Run(() => new Endorsement(KeyType.Ed25519, new EntityId(0, 0, 1001))));
+        await Assert.ThrowsAsync<ArgumentNullException>(async () => await Task.Run(() => new Endorsement(KeyType.DelegatableContract, (EntityId)null!)));
+        await Assert.ThrowsAsync<InvalidOperationException>(async () => await Task.Run(() => new Endorsement(KeyType.DelegatableContract, new EntityId(0, 0, 1001)).Verify(new byte[] { 1 }, new byte[64])));
+    }
+
+    [Test]
+    public async Task A_Null_List_Is_Rejected_With_ArgumentNullException()
+    {
+        var ex = await Assert.ThrowsAsync<ArgumentNullException>(async () => await Task.Run(() => new Endorsement((Endorsement[])null!)));
+        await Assert.That(ex!.ParamName).IsEqualTo("endorsements");
     }
 }

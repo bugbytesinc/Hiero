@@ -11,6 +11,47 @@ examples use C# with `using Hiero;` implied.
 
 ---
 
+## 0. RULES FOR SUBMITTING TRANSACTIONS (read before writing any code that moves value)
+
+Hedera finalises a transaction seconds after a node accepts it, sometimes longer. A client that stops
+waiting before the transaction's validity ends cannot tell "failed" from "still deciding"; treating the
+second as the first sends value twice or refunds a payment that happened.
+
+1. Use the whole window. The defaults (Hiero 3.0+) do: TransactionDuration = 180 s (the network's maximum),
+   RetryCount = 43, RetryDelay = 200 ms. Retries are linear (the n-th waits n x RetryDelay), so the client
+   follows a receipt for RetryDelay x RetryCount x (RetryCount + 1) / 2 = 189 s. Never shorten this below
+   TransactionDuration; to answer a caller sooner, wait a bounded time and answer "pending" instead.
+2. Choose the TransactionId before submitting and store it: var txId = client.CreateNewTransactionId();
+   then pass ctx => ctx.TransactionId = txId on that one call. It is your idempotency key, your mirror
+   lookup and your expiry clock.
+3. Only a receipt with Status == ResponseCode.Success is a known success.
+4. TransactionException = reached consensus with a failure status: a real failure, nothing moved.
+   (From a record lookup such as GetTransactionRecordAsync it means the LOOKUP failed: its Status is the
+   lookup's code, not the transaction's.)
+   (A node with no verdict to give raises ConsensusException instead. On Hiero 2.x it raised a
+   TransactionException with Status Unknown or ReceiptNotFound instead: treat those as UNKNOWN there.)
+5. PrecheckException = the node refused it, but READ THE CODE.
+   Definite (nothing executed): InvalidSignature, InsufficientPayerBalance, InvalidAccountId,
+   TokenNotAssociatedToAccount and other codes about the transaction itself.
+   Prove nothing (outcome UNKNOWN): Unknown (e.g. refused connection), RpcError, Busy,
+   PlatformTransactionNotCreated, PlatformNotActive, DuplicateTransaction, TransactionExpired.
+   For payments, the safest choice is to treat every PrecheckException as UNKNOWN.
+6. ConsensusException, or any other exception once the transaction may have been sent (transport failure,
+   cancellation) = UNKNOWN. ConsensusException is NOT safe to retry.
+7. NEVER resubmit and NEVER report "failed" on an UNKNOWN outcome: a resubmission is a new transaction with
+   a new id, so the value can move twice. Report "pending" and settle it with MirrorRestClient:
+   GetTransactionGroupAsync(txId), keeping records with Nonce == 0 && !IsScheduled && TransactionId == txId.
+   Any Status == Success among them wins (a resend can leave a DuplicateTransaction record beside the real
+   one); any other status except DuplicateTransaction is the failure. No such record means "did not
+   execute" ONLY once GetLatestConsensusTimestampAsync() (the MIRROR's clock, never yours), read BEFORE
+   the lookup, is past valid start + TransactionDuration + ~60 s; before that it is still pending. Send
+   again, with a new id, only after the mirror says the first did not execute.
+8. To see what the client sends and receives, set ctx.OnSendingRequest / ctx.OnResponseReceived.
+
+Copyable code for rules 4-7 is in section 20.
+
+---
+
 ## 1. Client Setup
 
 Hiero provides three client types for different network access patterns.
@@ -31,8 +72,10 @@ await using var client = new ConsensusClient(ctx =>
 });
 ```
 
-Free queries (like `GetAccountBalanceAsync`) only require `Endpoint`. Paid
-queries and transactions also require `Payer` and `Signatory`.
+Free queries (like `GetReceiptAsync`) only require `Endpoint`. Paid
+queries and transactions also require `Payer` and `Signatory`. Balances are
+read from the mirror node (`MirrorRestClient.GetAccountBalanceAsync`); consensus
+nodes no longer answer free balance queries.
 
 #### IConsensusContext Properties
 
@@ -41,14 +84,15 @@ queries and transactions also require `Payer` and `Signatory`.
 | `Endpoint` | `ConsensusNodeEndpoint?` | null | Target gossip node (required) |
 | `Payer` | `EntityId?` | null | Account paying transaction fees |
 | `Signatory` | `Signatory?` | null | Key(s) for transaction signing |
-| `FeeLimit` | `long` | varies | Maximum fee in tinybars |
-| `TransactionDuration` | `TimeSpan` | 120s | Transaction validity window |
+| `FeeLimit` | `long` | 3,000,000,000 (30 HBAR) | Maximum fee in tinybars |
+| `TransactionDuration` | `TimeSpan` | 180s | Transaction validity window: the network's maximum |
 | `Memo` | `string?` | null | Memo attached to transactions |
-| `RetryCount` | `int` | 5 | Auto-retry count on BUSY |
-| `RetryDelay` | `TimeSpan` | 200ms | Delay between retries |
-| `AdjustForLocalClockDrift` | `bool` | true | Compensate for clock skew |
-| `SignaturePrefixTrimLimit` | `int` | 6 | Trim prefix on key matching |
-| `ThrowIfNotSuccess` | `bool` | true | Set false to suppress TransactionException |
+| `RetryCount` | `int` | 43 | Retries on BUSY, on transport failures, and while polling for a receipt |
+| `RetryDelay` | `TimeSpan` | 200ms | Linear step: the n-th retry waits n x RetryDelay, 189s in all with the defaults. Keep the total >= `TransactionDuration` |
+| `TransactionId` | `TransactionId?` | null | A transaction id chosen up front (set per call; see section 20) |
+| `AdjustForLocalClockDrift` | `bool` | false | Compensate for clock skew |
+| `SignaturePrefixTrimLimit` | `int` | 0 | Shortest signature-map prefix to keep (0 = as short as possible) |
+| `ThrowIfNotSuccess` | `bool` | true | Set false to get the receipt whatever its status: read `Status` (`Unknown` or `ReceiptNotFound` = no verdict) |
 | `OnSendingRequest` | `Action<IMessage>?` | null | Callback invoked with the raw protobuf just before sending to the network |
 | `OnResponseReceived` | `Action<int, IMessage>?` | null | Callback invoked with (retryAttempt, response) after each network response |
 
@@ -107,6 +151,9 @@ await using var client = new ConsensusClient(ctx =>
         Console.WriteLine($"[RX #{retry}] {msg.Descriptor.Name}\n{formatter.Format(msg)}");
 });
 ```
+
+`OnSendingRequest` fires once per request, not once per retry: a receipt
+query polled ten times is one send and eleven numbered responses.
 
 Configuration can be overridden per-call:
 
@@ -286,7 +333,8 @@ CreateAccountParams properties:
 ### Transfer Crypto
 
 ```csharp
-// Simple transfer
+// Simple transfer. Before moving real value, see section 0 and section 20:
+// choose the transaction id up front and settle unknown outcomes on a mirror.
 var receipt = await client.TransferAsync(fromAccount, toAccount, amount);
 
 // Multi-party transfer
@@ -320,10 +368,14 @@ await client.TransferNftAsync(new Nft(token, serial), from, to);
 ### Query Balance
 
 ```csharp
-ulong balance = await client.GetAccountBalanceAsync(account);
-AccountBalances all = await client.GetAccountBalancesAsync(account);
-// all.Crypto, all.Tokens (dictionary of token balances)
+// Mirror node (free; trails consensus by a few seconds; accounts and contracts)
+long? balance = await mirror.GetAccountBalanceAsync(account);            // null if unknown
+long? tokenBalance = await mirror.GetAccountTokenBalanceAsync(account, token);
+// Consensus node (paid; current as of consensus)
+ulong current = (await client.GetAccountInfoAsync(account)).Balance;
 ```
+The consensus-node balance query (`ConsensusClient.GetAccountBalanceAsync` and
+friends) was removed in 3.0.0; public networks answer it with `BUSY`.
 
 ### Query Account Info
 
@@ -978,6 +1030,7 @@ var endorsement = new Endorsement(publicKey);
 | `ECDSASecp256K1` | ECDSA secp256k1 key (EVM-compatible) |
 | `Contract` | Smart contract reference |
 | `List` | Composite key list |
+| `DelegatableContract` | Smart contract reference also satisfied through `DELEGATECALL`, as behind a proxy |
 
 ---
 
@@ -1213,6 +1266,12 @@ var mirror = new MirrorRestClient(new HttpClient
 All list queries accept a `params IMirrorQueryParameter[]` tail for pagination
 and filtering; see **Query Filters** below for the full catalog.
 
+Every method takes a `CancellationToken`: last, or, when the method takes
+filters, as a required argument just before them
+(`mirror.GetTransactionsAsync(ct, AccountFilter.Is(account))`). Paged results
+also honor `WithCancellation(ct)`. A cancelled call throws
+`OperationCanceledException`.
+
 ### Accounts
 
 ```csharp
@@ -1430,51 +1489,107 @@ TransactionReceipt receipt = await client.GetReceiptAsync(txId);
 TransactionRecord record = await client.GetTransactionRecordAsync(txId);
 ```
 
+Nodes keep receipts for about three minutes after consensus. Past that, or for an id the node never
+saw, `GetReceiptAsync` throws `ConsensusException` with `Status == ReceiptNotFound` (with
+`ThrowIfNotSuccess = false` it returns a receipt with that status); ask a mirror node instead.
+
 ---
 
 ## 20. Error Handling
 
+For a transaction the first question is "did it execute?" (rules in section 0).
+
+| Exception | What it proves |
+|---|---|
+| `PrecheckException` | The node refused it. Definite only for codes about the transaction itself (`InvalidSignature`, `InsufficientPayerBalance`, ...); otherwise UNKNOWN. Fields: `Status`, `TransactionId`, `RequiredFee` (set when `Status == InsufficientTxFee`) |
+| `TransactionException` | Reached consensus and failed; nothing moved. Fields: `Status`, `TransactionId`, `Receipt` |
+| `ConsensusException` | Nothing: the outcome is UNKNOWN and the transaction may have executed. NOT safe to retry. Fields: `Status`, `TransactionId` |
+| `ContractException` | A smart contract call or query failed (EVM revert, out of gas) |
+| `MirrorGrpcException` | A mirror gRPC stream ended unexpectedly; `ex.Code` (`MirrorGrpcExceptionCode`) |
+| `MirrorException` | The mirror REST API returned an HTTP error |
+
+### Classifying the ending of a transaction
+
 ```csharp
+// Choose the transaction id first and store it with the payment: it is
+// the idempotency key, the mirror lookup and the expiry clock.
+var txId = client.CreateNewTransactionId();
 try
 {
-    await client.TransferAsync(from, to, amount);
+    var receipt = await client.TransferAsync(sender, receiver, amount, ctx => ctx.TransactionId = txId);
+    // Executed. Only a receipt with Status == Success is a known success.
 }
-catch (PrecheckException ex)
+catch (TransactionException)
 {
-    // Rejected before consensus (bad fee, invalid account, etc.)
-    // Fields: ex.Status (ResponseCode), ex.TransactionId, ex.RequiredFee
-    // (RequiredFee is populated when Status == InsufficientTxFee)
-    Console.WriteLine($"Precheck: {ex.Status} (tx {ex.TransactionId})");
+    // Reached consensus and failed: nothing moved. Its Status says why.
 }
-catch (TransactionException ex)
+catch (PrecheckException ex) when (ex.Status is ResponseCode.InvalidSignature
+    or ResponseCode.InsufficientPayerBalance
+    or ResponseCode.InvalidAccountId
+    or ResponseCode.TokenNotAssociatedToAccount)
 {
-    // Reached consensus but failed (insufficient balance, etc.)
-    // Fields: ex.Status, ex.TransactionId, ex.Receipt (full receipt)
-    Console.WriteLine($"Failed: {ex.Status} (tx {ex.TransactionId})");
+    // Refused for something wrong with the transaction itself: nothing ran.
 }
-catch (ConsensusException ex)
+catch (Exception ex) when (ex is not ArgumentException)
 {
-    // Network/communication error
-}
-catch (ContractException ex)
-{
-    // Smart contract execution error
-}
-catch (MirrorGrpcException ex)
-{
-    // Mirror Node gRPC stream terminated unexpectedly
-    // ex.Code (MirrorGrpcExceptionCode)
+    // Every other ending -- ConsensusException, any other precheck code,
+    // a transport failure, cancellation -- means the outcome is UNKNOWN:
+    // it may have executed. Never resend it and never report it as
+    // failed. Report "pending" and settle txId with ResolveOutcomeAsync.
 }
 ```
 
-To suppress `TransactionException` and check status manually:
+### Settling an unknown outcome on a mirror node
 
 ```csharp
-var receipt = await client.TransferAsync(from, to, amount, ctx =>
-    ctx.ThrowIfNotSuccess = false);
-if (receipt.Status != ResponseCode.Success)
-    Console.WriteLine($"Non-success: {receipt.Status}");
+// Settles a transaction whose outcome is unknown, on a mirror node. Returns
+// Success if it executed; the failure code if it reached consensus and
+// failed; TransactionExpired if it never executed and now never can; or
+// null while it may still execute, so ask again later. validDuration is the
+// TransactionDuration it was sent with (180 seconds by default).
+public static async Task<ResponseCode?> ResolveOutcomeAsync(
+    MirrorRestClient mirror,
+    TransactionId txId,
+    TimeSpan validDuration,
+    CancellationToken cancellationToken = default)
+{
+    // Read the mirror's clock FIRST (never this machine's): the lookup
+    // that follows then sees at least everything the mirror held at
+    // that time, so absence below is judged against it.
+    var mirrorNow = await mirror.GetLatestConsensusTimestampAsync(cancellationToken);
+    // The records of the transaction itself: not its child records
+    // (Nonce > 0), not the execution of a schedule it created, and not the
+    // inner transactions of a batch.
+    var records = (await mirror.GetTransactionGroupAsync(txId, cancellationToken))
+        .Where(t => t.Nonce == 0 && !t.IsScheduled && t.TransactionId == txId)
+        .ToArray();
+    // A resend can leave a DUPLICATE_TRANSACTION record beside the one that
+    // executed, so a success anywhere wins.
+    if (records.Any(t => t.Status == ResponseCode.Success))
+    {
+        return ResponseCode.Success;
+    }
+    var failure = records.FirstOrDefault(t => t.Status != ResponseCode.DuplicateTransaction);
+    if (failure is not null)
+    {
+        return failure.Status;
+    }
+    // Nothing decisive recorded. The transaction can no longer execute
+    // once that clock is past its valid start plus its duration; the
+    // 60-second margin covers mirror replicas that lag one another.
+    var validStart = new ConsensusTimeStamp(txId.ValidStartSeconds, txId.ValidStartNanos);
+    if (mirrorNow - validStart > (decimal)(validDuration + TimeSpan.FromSeconds(60)).TotalSeconds)
+    {
+        return ResponseCode.TransactionExpired;
+    }
+    return null;
+}
 ```
+
+`GetTransactionGroupAsync` returns an empty array when the mirror has no record
+of the id; for a recent transaction that only means the mirror has not caught
+up. To answer a caller before the outcome is known, wait a bounded time, answer
+"pending" and let the submission finish; never shorten the retry window.
 
 ---
 
@@ -1505,6 +1620,17 @@ These compile but fail at runtime -- check for them before submitting code:
   ctx.Signatory = new Signatory(payerKey, new Signatory(senderKey));
   ```
   or via `TransferParams.Signatory`.
+
+- **Resubmitting a transaction whose outcome is unknown.** Calling the method
+  again after a `ConsensusException` (or a precheck code such as `Unknown`,
+  `RpcError` or `DuplicateTransaction`) sends a new transaction with a new id;
+  if the first one executed, the value moves twice. Settle the first on a mirror
+  node (section 20) and resend only once it is known not to have executed.
+
+- **Shortening the retry window.** Setting `RetryCount` / `RetryDelay` so that
+  `RetryDelay x RetryCount x (RetryCount + 1) / 2` is less than
+  `TransactionDuration` turns "still deciding" into an exception. Keep the
+  defaults; bound the caller's wait instead.
 
 - **Operating on immutable entities.** Tokens, topics, contracts, and files
   created without an `Administrator` key cannot be updated or deleted by anyone.

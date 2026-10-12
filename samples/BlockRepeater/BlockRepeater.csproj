@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- HIERO001: the experimental BlockNodeClient surface -->
+    <NoWarn>$(NoWarn);HIERO001</NoWarn>
+  </PropertyGroup>
+</Project>

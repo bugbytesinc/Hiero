@@ -34,6 +34,8 @@ public sealed class TransactionTypeFilter : IMirrorFilter
     public static readonly TransactionTypeFilter ContractDeleteInstance = new("CONTRACTDELETEINSTANCE");
     /// <summary>Filter for <c>CONTRACTUPDATEINSTANCE</c> transactions.</summary>
     public static readonly TransactionTypeFilter ContractUpdateInstance = new("CONTRACTUPDATEINSTANCE");
+    /// <summary>Filter for <c>CRSPUBLICATION</c> transactions.</summary>
+    public static readonly TransactionTypeFilter CrsPublication = new("CRSPUBLICATION");
     /// <summary>Filter for <c>CRYPTOADDLIVEHASH</c> transactions.</summary>
     public static readonly TransactionTypeFilter CryptoAddLiveHash = new("CRYPTOADDLIVEHASH");
     /// <summary>Filter for <c>CRYPTOAPPROVEALLOWANCE</c> transactions.</summary>
@@ -62,10 +64,24 @@ public sealed class TransactionTypeFilter : IMirrorFilter
     public static readonly TransactionTypeFilter FileUpdate = new("FILEUPDATE");
     /// <summary>Filter for <c>FREEZE</c> transactions.</summary>
     public static readonly TransactionTypeFilter Freeze = new("FREEZE");
+    /// <summary>Filter for <c>HINTSKEYPUBLICATION</c> transactions.</summary>
+    public static readonly TransactionTypeFilter HintsKeyPublication = new("HINTSKEYPUBLICATION");
+    /// <summary>Filter for <c>HINTSPARTIALSIGNATURE</c> transactions.</summary>
+    public static readonly TransactionTypeFilter HintsPartialSignature = new("HINTSPARTIALSIGNATURE");
+    /// <summary>Filter for <c>HINTSPREPROCESSINGVOTE</c> transactions.</summary>
+    public static readonly TransactionTypeFilter HintsPreprocessingVote = new("HINTSPREPROCESSINGVOTE");
+    /// <summary>Filter for <c>HISTORYPROOFKEYPUBLICATION</c> transactions.</summary>
+    public static readonly TransactionTypeFilter HistoryProofKeyPublication = new("HISTORYPROOFKEYPUBLICATION");
+    /// <summary>Filter for <c>HISTORYPROOFSIGNATURE</c> transactions.</summary>
+    public static readonly TransactionTypeFilter HistoryProofSignature = new("HISTORYPROOFSIGNATURE");
+    /// <summary>Filter for <c>HISTORYPROOFVOTE</c> transactions.</summary>
+    public static readonly TransactionTypeFilter HistoryProofVote = new("HISTORYPROOFVOTE");
     /// <summary>Filter for <c>HOOKSTORE</c> transactions.</summary>
     public static readonly TransactionTypeFilter HookStore = new("HOOKSTORE");
     /// <summary>Filter for <c>LEDGERIDPUBLICATION</c> transactions.</summary>
     public static readonly TransactionTypeFilter LedgerIdPublication = new("LEDGERIDPUBLICATION");
+    /// <summary>Filter for <c>MIGRATIONROOTHASHVOTE</c> transactions.</summary>
+    public static readonly TransactionTypeFilter MigrationRootHashVote = new("MIGRATIONROOTHASHVOTE");
     /// <summary>Filter for <c>NODECREATE</c> transactions.</summary>
     public static readonly TransactionTypeFilter NodeCreate = new("NODECREATE");
     /// <summary>Filter for <c>NODEDELETE</c> transactions.</summary>
@@ -86,6 +102,8 @@ public sealed class TransactionTypeFilter : IMirrorFilter
     public static readonly TransactionTypeFilter ScheduleDelete = new("SCHEDULEDELETE");
     /// <summary>Filter for <c>SCHEDULESIGN</c> transactions.</summary>
     public static readonly TransactionTypeFilter ScheduleSign = new("SCHEDULESIGN");
+    /// <summary>Filter for <c>STATESIGNATURETRANSACTION</c> transactions.</summary>
+    public static readonly TransactionTypeFilter StateSignatureTransaction = new("STATESIGNATURETRANSACTION");
     /// <summary>Filter for <c>SYSTEMDELETE</c> transactions.</summary>
     public static readonly TransactionTypeFilter SystemDelete = new("SYSTEMDELETE");
     /// <summary>Filter for <c>SYSTEMUNDELETE</c> transactions.</summary>

@@ -39,7 +39,7 @@ public class TestAccount : IHasCryptoBalance, IHasTokenBalance, IAsyncDisposable
         try
         {
             await using var client = await TestNetwork.CreateClientAsync();
-            var balance = await client.GetAccountBalanceAsync(CreateReceipt.Address);
+            var balance = await TestNetwork.GetCryptoBalanceAsync(CreateReceipt.Address);
             if (balance > 0_00_120_000)
             {
                 await client.TransferAsync(CreateReceipt.Address, TestNetwork.Payer, (long)balance, ctx => ctx.Signatory = new Signatory(ctx.Signatory!, PrivateKey));
@@ -53,8 +53,7 @@ public class TestAccount : IHasCryptoBalance, IHasTokenBalance, IAsyncDisposable
     }
     public async Task<ulong> GetCryptoBalanceAsync()
     {
-        await using var client = await TestNetwork.CreateClientAsync();
-        return await client.GetAccountBalanceAsync(CreateReceipt.Address);
+        return await TestNetwork.GetCryptoBalanceAsync(CreateReceipt.Address);
     }
     public async Task<long?> GetTokenBalanceAsync(EntityId token)
     {

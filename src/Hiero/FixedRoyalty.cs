@@ -31,16 +31,6 @@ public sealed record FixedRoyalty : IRoyalty
     /// </summary>
     public long Amount { get; private init; }
     /// <summary>
-    /// Internal Constructor representing the "None" version of a 
-    /// fixed royalty.
-    /// </summary>
-    private FixedRoyalty()
-    {
-        Receiver = EntityId.None;
-        Token = EntityId.None;
-        Amount = 0;
-    }
-    /// <summary>
     /// Public Constructor, a <code>FixedRoyalty</code> is immutable after creation.
     /// </summary>
     /// <param name="receiver">

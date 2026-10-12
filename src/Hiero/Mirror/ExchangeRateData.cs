@@ -53,21 +53,24 @@ public static class ExchangeRateDataExtensions
     /// Optional consensus timestamp to retrieve the exchange rate
     /// at or before the given time.  If not specified, returns the current rate.
     /// </param>
+    /// <param name="cancellationToken">
+    /// Optional token that cancels the request.
+    /// </param>
     /// <returns>
     /// Exchange rate information for the current and next
     /// rate utilized by the network for determining
     /// transaction and gas fees, or null if not found.
     /// </returns>
-    public static Task<ExchangeRateData?> GetExchangeRateAsync(this MirrorRestClient client, ConsensusTimeStamp? consensus = null)
+    public static Task<ExchangeRateData?> GetExchangeRateAsync(this MirrorRestClient client, ConsensusTimeStamp? consensus = null, CancellationToken cancellationToken = default)
     {
         if (consensus == null)
         {
-            return client.GetSingleItemAsync("network/exchangerate", MirrorJsonContext.Default.ExchangeRateData);
+            return client.GetSingleItemAsync("network/exchangerate", MirrorJsonContext.Default.ExchangeRateData, cancellationToken);
         }
         else
         {
             var path = GenerateInitialPath("network/exchangerate", TimestampFilter.OnOrBefore(consensus.Value));
-            return client.GetSingleItemAsync(path, MirrorJsonContext.Default.ExchangeRateData);
+            return client.GetSingleItemAsync(path, MirrorJsonContext.Default.ExchangeRateData, cancellationToken);
         }
     }
 }

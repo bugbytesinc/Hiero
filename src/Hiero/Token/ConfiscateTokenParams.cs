@@ -30,19 +30,21 @@ public sealed class ConfiscateTokenParams : TransactionParams<TokenReceipt>, INe
     public ulong Amount { get; set; }
     /// <summary>
     /// Additional private key, keys or signing callback method 
-    /// required to authorize the transfers.  Typically matches the
+    /// required to authorize the confiscation.  Typically matches the
     /// Endorsement assigned to the wipe key for the token if it is not already
     /// set as the payer for the transaction.
     /// </summary>
     /// <remarks>
     /// Keys/callbacks added here will be combined with those already
-    /// identified in the client object's context when signing this 
-    /// transaction to change the state of this account.
+    /// identified in the client object's context when signing this
+    /// transaction to confiscate the tokens.
     /// </remarks>
     public Signatory? Signatory { get; set; }
     /// <summary>
-    /// Optional cancellation token to interrupt the token
-    /// confiscation submission process.
+    /// Optional cancellation token.  Cancelling stops the client waiting;
+    /// it cannot recall a transaction already sent.  Cancelled after the
+    /// send, the outcome is unknown: settle it by its transaction id on a
+    /// mirror node rather than resubmitting it.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
     INetworkTransaction INetworkParams<TokenReceipt>.CreateNetworkTransaction()
@@ -71,8 +73,8 @@ public sealed class ConfiscateTokenParams : TransactionParams<TokenReceipt>, INe
 public static class ConfiscateTokenExtensions
 {
     /// <summary>
-    /// Removes the holdings of given token from the associated
-    /// account and removes them from circulation. Must be signed by
+    /// Removes the given amount of the token from the holder's
+    /// account and removes it from circulation. Must be signed by
     /// the confiscate/wipe admin key.
     /// </summary>
     /// <param name="client">
@@ -96,10 +98,10 @@ public static class ConfiscateTokenExtensions
     /// <returns>
     /// A transaction receipt indicating a successful operation.
     /// </returns>
-    /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
+    /// <exception cref="ArgumentException">If required arguments are missing or invalid.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission, for example, if the token is already deleted.</exception>
-    /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
+    /// <exception cref="PrecheckException">If the gateway node refused the transaction. Only a code about the transaction itself proves it did not execute; any other code leaves the outcome unknown, so settle it by its transaction id on a mirror node rather than resubmitting it (see <see cref="PrecheckException"/>).</exception>
+    /// <exception cref="ConsensusException">If the outcome could not be confirmed: the transaction may have executed, so settle it by its transaction id on a mirror node rather than resubmitting it.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
     /// <example>
     /// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="ConfiscateTokens" language="csharp"/>
@@ -110,8 +112,8 @@ public static class ConfiscateTokenExtensions
         return client.ExecuteAsync(new ConfiscateTokenParams { Token = token, Holder = holder, Amount = amount }, configure);
     }
     /// <summary>
-    /// Removes the holdings of given token from the associated
-    /// account and removes them from circulation. Must be signed by
+    /// Removes the given amount of the token from the holder's
+    /// account and removes it from circulation. Must be signed by
     /// the confiscate/wipe admin key.
     /// </summary>
     /// <param name="client">
@@ -128,10 +130,10 @@ public static class ConfiscateTokenExtensions
     /// <returns>
     /// A transaction receipt indicating a successful operation.
     /// </returns>
-    /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
+    /// <exception cref="ArgumentException">If required arguments are missing or invalid.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission, for example, if the token is already deleted.</exception>
-    /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
+    /// <exception cref="PrecheckException">If the gateway node refused the transaction. Only a code about the transaction itself proves it did not execute; any other code leaves the outcome unknown, so settle it by its transaction id on a mirror node rather than resubmitting it (see <see cref="PrecheckException"/>).</exception>
+    /// <exception cref="ConsensusException">If the outcome could not be confirmed: the transaction may have executed, so settle it by its transaction id on a mirror node rather than resubmitting it.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
     /// <example>
     /// <code source="../../../samples/DocSnippets/TokenSnippets.cs" region="ConfiscateTokens" language="csharp"/>

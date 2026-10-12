@@ -49,7 +49,7 @@ public sealed record NftAllowance
     /// <summary>
     /// Represents an allowance allocation permitting a
     /// spender account privileges of spending the specified
-    /// amount assets from the owning account.
+    /// NFT(s) from the owning account.
     /// </summary>
     /// <param name="token">
     /// The address of the NFT's token definition
@@ -75,7 +75,8 @@ public sealed record NftAllowance
     /// sub-allowance on the owner's behalf.
     /// </param>
     /// <exception cref="ArgumentException">
-    /// If any of the addresses are null or empty.
+    /// If the token, owner or spender address is null or empty, or if a
+    /// delegating spender is given without serial numbers.
     /// </exception>
     public NftAllowance(EntityId token, EntityId owner, EntityId spender, IReadOnlyList<long>? serialNumbers = null, EntityId? delegatingSpender = null)
     {
@@ -159,7 +160,9 @@ public sealed record NftAllowance
             Token = allowance.TokenId.AsAddress();
             Owner = owner;
             Spender = allowance.Spender.AsAddress();
-            SerialNumbers = [];
+            // A granted allowance is an approval for all of the owner's NFTs
+            // of the class, which SerialNumbers represents as null.
+            SerialNumbers = null;
             DelegatingSpender = EntityId.None;
         }
         else

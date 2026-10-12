@@ -10,11 +10,13 @@ namespace Hiero;
 /// Transaction Parameters for deleting a consensus node from the network address book.
 /// </summary>
 /// <example>
-/// Retire a node by NodeId. Effective at the next address-book rebalance:
+/// Retire a node by NodeId. The node is removed from the network at the next
+/// freeze with PREPARE_UPGRADE:
 /// <code source="../../../samples/DocSnippets/GovernanceSnippets.cs" region="DeleteConsensusNode" language="csharp"/>
 /// </example>
 /// <remarks>
-/// This is a privileged transaction requiring Hedera governing council authorization.
+/// This is a privileged transaction: it must be signed by the node's admin key or by
+/// the treasury (0.0.2), system admin (0.0.50) or address book admin (0.0.55) key.
 /// The node enters a "pending delete" state immediately, but is fully removed from the
 /// network at the next upgrade (freeze with PREPARE_UPGRADE). Node identifiers are
 /// never reused after deletion.
@@ -28,12 +30,15 @@ public sealed class DeleteConsensusNodeParams : TransactionParams<TransactionRec
     public ulong NodeId { get; set; }
     /// <summary>
     /// Additional private key, keys or signing callback method required to
-    /// authorize this transaction. Must include the node's admin key or one
-    /// of the governing council keys.
+    /// authorize this transaction. Must include the node's admin key or the
+    /// treasury (0.0.2), system admin (0.0.50) or address book admin (0.0.55) key.
     /// </summary>
     public Signatory? Signatory { get; set; }
     /// <summary>
-    /// Optional cancellation token to interrupt the submission process.
+    /// Optional cancellation token.  Cancelling stops the client waiting;
+    /// it cannot recall a transaction already sent.  Cancelled after the
+    /// send, the outcome is unknown: settle it by its transaction id on a
+    /// mirror node rather than resubmitting it.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
     INetworkTransaction INetworkParams<TransactionReceipt>.CreateNetworkTransaction()
@@ -59,7 +64,8 @@ public static class DeleteConsensusNodeExtensions
     /// Deletes a consensus node from the network address book.
     /// </summary>
     /// <remarks>
-    /// This is a privileged transaction requiring Hedera governing council authorization.
+    /// This is a privileged transaction: it must be signed by the node's admin key or by
+    /// the treasury (0.0.2), system admin (0.0.50) or address book admin (0.0.55) key.
     /// The node is fully removed from the network at the next upgrade.
     /// </remarks>
     /// <param name="client">
@@ -76,10 +82,10 @@ public static class DeleteConsensusNodeExtensions
     /// <returns>
     /// A transaction receipt indicating a successful operation.
     /// </returns>
-    /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
+    /// <exception cref="ArgumentException">If required arguments are missing or invalid.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
-    /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
+    /// <exception cref="PrecheckException">If the gateway node refused the transaction. Only a code about the transaction itself proves it did not execute; any other code leaves the outcome unknown, so settle it by its transaction id on a mirror node rather than resubmitting it (see <see cref="PrecheckException"/>).</exception>
+    /// <exception cref="ConsensusException">If the outcome could not be confirmed: the transaction may have executed, so settle it by its transaction id on a mirror node rather than resubmitting it.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
     /// <example>
     /// <code source="../../../samples/DocSnippets/GovernanceSnippets.cs" region="DeleteConsensusNode" language="csharp"/>
@@ -106,10 +112,10 @@ public static class DeleteConsensusNodeExtensions
     /// <returns>
     /// A transaction receipt indicating a successful operation.
     /// </returns>
-    /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
+    /// <exception cref="ArgumentException">If required arguments are missing or invalid.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
-    /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
+    /// <exception cref="PrecheckException">If the gateway node refused the transaction. Only a code about the transaction itself proves it did not execute; any other code leaves the outcome unknown, so settle it by its transaction id on a mirror node rather than resubmitting it (see <see cref="PrecheckException"/>).</exception>
+    /// <exception cref="ConsensusException">If the outcome could not be confirmed: the transaction may have executed, so settle it by its transaction id on a mirror node rather than resubmitting it.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
     /// <example>
     /// <code source="../../../samples/DocSnippets/GovernanceSnippets.cs" region="DeleteConsensusNode" language="csharp"/>

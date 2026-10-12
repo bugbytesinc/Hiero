@@ -16,9 +16,16 @@ public sealed record CreateAccountRecord : TransactionRecord
     /// </remarks>
     public EntityId Address { get; internal init; }
     /// <summary>
-    /// The new EVM address of the account created 
+    /// The new EVM address of the account created
     /// by this transaction.
     /// </summary>
+    /// <remarks>
+    /// The value will be <code>None</code> if the record carries no
+    /// 20-byte EVM address, which happens when the network assigned none
+    /// (for example, to an account with an Ed25519 key) or when the create
+    /// account method was scheduled as a pending transaction.  Use
+    /// <see cref="Address"/> in that case.
+    /// </remarks>
     public EvmAddress EvmAddress { get; internal init; }
     /// <summary>
     /// Internal Constructor of the record.

@@ -2,7 +2,8 @@
 namespace Hiero;
 
 /// <summary>
-/// Represents a change of Treasury for an NFT token.
+/// Represents a change of Treasury for an NFT token.  The change
+/// applies to the token as a whole and carries no serial number.
 /// </summary>
 public sealed record TreasuryTransfer
 {
@@ -11,11 +12,11 @@ public sealed record TreasuryTransfer
     /// </summary>
     public EntityId NftToken { get; private init; }
     /// <summary>
-    /// The account sending the NFT.
+    /// The token's treasury account before the change.
     /// </summary>
     public EntityId PreviousTreasury { get; private init; }
     /// <summary>
-    /// The account receiving the NFT.
+    /// The token's treasury account after the change.
     /// </summary>
     public EntityId NewTreasury { get; private init; }
     /// <summary>
@@ -25,10 +26,10 @@ public sealed record TreasuryTransfer
     /// The address of the token identifying the class of NFTs.
     /// </param>
     /// <param name="previousTreasury">
-    /// The previous treasury for the NFT.
+    /// The token's treasury account before the change.
     /// </param>
     /// <param name="newTreasury">
-    /// The new treasury for the NFT.
+    /// The token's treasury account after the change.
     /// </param>
     internal TreasuryTransfer(EntityId token, EntityId previousTreasury, EntityId newTreasury)
     {

@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 namespace Hiero.Mirror;
 
 /// <summary>
-/// Represents a fractional royalty fee.
+/// Represents a fractional custom fee.
 /// </summary>
 public class FractionalFeeData
 {
@@ -26,13 +26,15 @@ public class FractionalFeeData
     [JsonPropertyName("collector_account_id")]
     public EntityId Collector { get; set; } = default!;
     /// <summary>
-    /// The token that the fee is denominated
-    /// in, or NONE for hBar.
+    /// The token the fee is taken in (the
+    /// token being transferred).
     /// </summary>
     [JsonPropertyName("denominating_token_id")]
     public EntityId FeeToken { get; set; } = default!;
     /// <summary>
-    /// Maximum Charged Fee
+    /// Maximum Charged Fee; 0 means there is no
+    /// maximum (a null from the mirror node also
+    /// reads as 0).
     /// </summary>
     [JsonPropertyName("maximum")]
     [JsonConverter(typeof(LongMirrorConverter))]

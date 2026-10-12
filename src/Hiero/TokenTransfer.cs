@@ -2,7 +2,8 @@
 namespace Hiero;
 
 /// <summary>
-/// Represents a token transfer (Token, Address, Amount)
+/// Represents a token transfer (Token, Account, Amount, Delegated,
+/// AllowanceHook)
 /// </summary>
 public sealed record TokenTransfer
 {

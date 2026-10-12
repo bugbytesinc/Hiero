@@ -1,7 +1,6 @@
 ﻿// SPDX-License-Identifier: Apache-2.0
 using Hiero;
 using Hiero.Converters;
-using Hiero.Mirror;
 using Hiero.Mirror.Filters;
 using Hiero.Mirror.Implementation;
 using Hiero.Mirror.Paging;
@@ -10,41 +9,42 @@ using System.Numerics;
 using System.Text.Json.Serialization;
 using static Hiero.Mirror.Implementation.MirrorRestClientUtils;
 
-namespace Hiero.Mirror
+namespace Hiero.Mirror;
+
+/// <summary>
+/// Represents the data for a slot on a contract.
+/// </summary>
+public class ContractStateData
 {
     /// <summary>
-    /// Represents the data for a slot on a contract.
+    /// The contract's EVM Address
     /// </summary>
-    public class ContractStateData
-    {
-        /// <summary>
-        /// The contract's EVM Address
-        /// </summary>
-        [JsonPropertyName("address")]
-        public EvmAddress EvmAddress { get; set; } = default!;
-        /// <summary>
-        /// The contract's HAPI Address
-        /// </summary>
-        [JsonPropertyName("contract_id")]
-        public EntityId HapiAddress { get; set; } = default!;
-        /// <summary>
-        /// Timestamp when data was retrieved.
-        /// </summary>
-        [JsonPropertyName("timestamp")]
-        public ConsensusTimeStamp Timestamp { get; set; }
-        /// <summary>
-        /// Slot ID
-        /// </summary>
-        [JsonPropertyName("slot")]
-        [JsonConverter(typeof(BigIntegerConverter))]
-        public BigInteger Slot { get; set; }
-        /// <summary>
-        /// The slot data value
-        /// </summary>
-        [JsonPropertyName("value")]
-        [JsonConverter(typeof(HexStringToBytesConverter))]
-        public ReadOnlyMemory<byte> Value { get; set; }
-    }
+    [JsonPropertyName("address")]
+    public EvmAddress EvmAddress { get; set; } = default!;
+    /// <summary>
+    /// The contract's HAPI Address
+    /// </summary>
+    [JsonPropertyName("contract_id")]
+    public EntityId HapiAddress { get; set; } = default!;
+    /// <summary>
+    /// Consensus timestamp at which this slot value was last
+    /// written (as of the queried time), not the time the data
+    /// was retrieved.
+    /// </summary>
+    [JsonPropertyName("timestamp")]
+    public ConsensusTimeStamp Timestamp { get; set; }
+    /// <summary>
+    /// Slot ID
+    /// </summary>
+    [JsonPropertyName("slot")]
+    [JsonConverter(typeof(BigIntegerConverter))]
+    public BigInteger Slot { get; set; }
+    /// <summary>
+    /// The slot data value
+    /// </summary>
+    [JsonPropertyName("value")]
+    [JsonConverter(typeof(HexStringToBytesConverter))]
+    public ReadOnlyMemory<byte> Value { get; set; }
 }
 /// <summary>
 /// Extension methods for querying contract state data from the mirror node.
@@ -73,14 +73,17 @@ public static class ContractStateDataExtensions
     /// <see cref="TimestampFilter"/>, <see cref="PageLimit"/>, and
     /// <see cref="OrderBy"/>.
     /// </param>
+    /// <param name="cancellationToken">
+    /// Optional token that cancels the request.
+    /// </param>
     /// <returns>
     /// The slot record at the requested position, or null if the slot
     /// has not been written.
     /// </returns>
-    public static async Task<ContractStateData?> GetContractStateAsync(this MirrorRestClient client, EntityId contract, BigInteger position, IMirrorQueryParameter[] filters)
+    public static async Task<ContractStateData?> GetContractStateAsync(this MirrorRestClient client, EntityId contract, BigInteger position, IMirrorQueryParameter[] filters, CancellationToken cancellationToken = default)
     {
         var path = GenerateInitialPath($"contracts/{contract.ToMirrorString()}/state", SlotFilter.Is(position), filters);
-        var list = await client.GetSingleItemAsync(path, MirrorJsonContext.Default.ContractStateDataPage).ConfigureAwait(false);
+        var list = await client.GetSingleItemAsync(path, MirrorJsonContext.Default.ContractStateDataPage, cancellationToken).ConfigureAwait(false);
         var states = list?.States;
         return states is { Length: > 0 } ? states[0] : null;
     }

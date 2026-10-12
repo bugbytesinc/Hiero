@@ -109,7 +109,7 @@ public class AccountRekeyTests
         var originalMoniker = new EvmAddress(originalEndorsement);
         var receipt = await client.TransferAsync(TestNetwork.Payer, originalMoniker, 1_00_000_000);
         var receipts = await client.GetAllReceiptsAsync(receipt.TransactionId);
-        var address = ((CreateAccountReceipt)receipts[1]).Address;
+        var address = receipts.Children.OfType<CreateAccountReceipt>().Single().Address;
 
         // Note: Unmaterialized
         var info = await client.GetAccountInfoAsync(address);
@@ -174,7 +174,7 @@ public class AccountRekeyTests
         var originalAlias = new EntityId(0, 0, originalEndorsement);
         var receipt = await client.TransferAsync(TestNetwork.Payer, originalAlias, 1_00_000_000);
         var receipts = await client.GetAllReceiptsAsync(receipt.TransactionId);
-        var address = ((CreateAccountReceipt)receipts[1]).Address;
+        var address = receipts.Children.OfType<CreateAccountReceipt>().Single().Address;
 
         // Note: Unmaterialized
         var info = await client.GetAccountInfoAsync(address);
@@ -330,7 +330,7 @@ public class AccountRekeyTests
         var originalMoniker = new EvmAddress(originalEndorsement);
         var receipt = await client.TransferAsync(TestNetwork.Payer, originalMoniker, 1_00_000_000);
         var receipts = await client.GetAllReceiptsAsync(receipt.TransactionId);
-        var address = ((CreateAccountReceipt)receipts[1]).Address;
+        var address = receipts.Children.OfType<CreateAccountReceipt>().Single().Address;
 
         // Note: Unmaterialized
         var info = await client.GetAccountInfoAsync(address);
@@ -395,7 +395,7 @@ public class AccountRekeyTests
         var originalAlias = new EntityId(0, 0, originalEndorsement);
         var receipt = await client.TransferAsync(TestNetwork.Payer, originalAlias, 1_00_000_000);
         var receipts = await client.GetAllReceiptsAsync(receipt.TransactionId);
-        var address = ((CreateAccountReceipt)receipts[1]).Address;
+        var address = receipts.Children.OfType<CreateAccountReceipt>().Single().Address;
 
         // Note: Unmaterialized
         var info = await client.GetAccountInfoAsync(address);

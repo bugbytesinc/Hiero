@@ -306,7 +306,7 @@ public class PauseTokenTests
     //}
 
     [Test]
-    public async Task Can_Schedule_And_Sign_Pause_Token()
+    public async Task Can_Not_Schedule_And_Sign_Pause_Token()
     {
         await using var fxToken = await TestToken.CreateAsync(fx =>
         {

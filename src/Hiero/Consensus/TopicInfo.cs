@@ -57,8 +57,8 @@ public sealed record TopicInfo
     /// <summary>
     /// Address of the account supporting the auto renewal of 
     /// the topic at expiration time.  The topic lifetime will be
-    /// extended by the RenewPeriod at expiration time if this account
-    /// contains sufficient funds.
+    /// extended by the <see cref="AutoRenewPeriod"/> at expiration time
+    /// if this account contains sufficient funds.
     /// </summary>
     public EntityId? RenewAccount { get; private init; }
     /// <summary>
@@ -107,9 +107,9 @@ public static class TopicInfoExtensions
     /// <returns>
     /// A detailed description of the topic instance.
     /// </returns>
-    /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
+    /// <exception cref="ArgumentException">If required arguments are missing or invalid.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
+    /// <exception cref="PrecheckException">If the gateway node refused the query.</exception>
     public static async Task<TopicInfo> GetTopicInfoAsync(this ConsensusClient client, EntityId topic, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
     {
         return new TopicInfo(await Engine.QueryAsync(client, new ConsensusGetTopicInfoQuery { TopicID = new TopicID(topic) }, cancellationToken, configure).ConfigureAwait(false));

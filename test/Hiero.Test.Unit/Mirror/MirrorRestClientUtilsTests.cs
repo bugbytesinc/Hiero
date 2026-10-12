@@ -30,13 +30,51 @@ public class MirrorRestClientUtilsTests
     }
 
     [Test]
-    public async Task FormatMirror_Formats_KeyAlias_EntityId_As_MirrorHex()
+    public async Task FormatMirror_Formats_Ecdsa_KeyAlias_As_The_Mirrors_Base32_Alias()
     {
-        var (publicKey, _) = Generator.Ed25519KeyPair();
-        var alias = new Endorsement(publicKey);
+        // Golden vector from testnet: account 0.0.10920714, auto-created from
+        // this ECDSA key, which the mirror reports (and resolves) by the alias
+        // below — the base32 of the protobuf-serialized Key, 3a21 + key bytes.
+        var alias = new Endorsement(KeyType.ECDSASecp256K1, Convert.FromHexString("0269d9918b13afa8e105bef4962003d26a91c20f6a8c09f81a47d34b4c0cff5598"));
         var result = new EntityId(0, 0, alias).ToMirrorString();
 
-        await Assert.That(result).IsEqualTo(Convert.ToHexStringLower(alias.ToBytes(KeyFormat.Mirror).Span));
+        await Assert.That(result).IsEqualTo("HIQQE2OZSGFRHL5I4EC355EWEAB5E2URYIHWVDAJ7ANEPU2LJQGP6VMY");
+    }
+
+    [Test]
+    public async Task FormatMirror_Formats_Ed25519_KeyAlias_As_Base32_Of_The_Protobuf_Key()
+    {
+        // 1220 + the 32 key bytes is the protobuf Key; expected value computed
+        // independently (Python base64.b32encode, padding stripped).
+        var alias = new Endorsement(KeyType.Ed25519, Enumerable.Range(0, 32).Select(i => (byte)i).ToArray());
+        var result = new EntityId(0, 0, alias).ToMirrorString();
+
+        await Assert.That(result).IsEqualTo("CIQAAAICAMCAKBQHBAEQUCYMBUHA6EARCIJRIFIWC4MBSGQ3DQOR4HY");
+    }
+
+    [Test]
+    public async Task FormatMirror_Prefixes_KeyAlias_With_Shard_And_Realm_Only_When_Not_Zero()
+    {
+        var alias = new Endorsement(KeyType.Ed25519, Enumerable.Range(0, 32).Select(i => (byte)i).ToArray());
+        const string encoded = "CIQAAAICAMCAKBQHBAEQUCYMBUHA6EARCIJRIFIWC4MBSGQ3DQOR4HY";
+
+        await Assert.That(new EntityId(0, 0, alias).ToMirrorString()).IsEqualTo(encoded);
+        await Assert.That(new EntityId(1, 2, alias).ToMirrorString()).IsEqualTo($"1.2.{encoded}");
+        await Assert.That(new EntityId(0, 5, alias).ToMirrorString()).IsEqualTo($"0.5.{encoded}");
+    }
+
+    [Test]
+    [Arguments("", "")]
+    [Arguments("f", "MY")]
+    [Arguments("fo", "MZXQ")]
+    [Arguments("foo", "MZXW6")]
+    [Arguments("foob", "MZXW6YQ")]
+    [Arguments("fooba", "MZXW6YTB")]
+    [Arguments("foobar", "MZXW6YTBOI")]
+    public async Task Base32_Matches_Rfc4648_Test_Vectors_Without_Padding(string input, string expected)
+    {
+        // RFC 4648 section 10, padding removed as the mirror node expects.
+        await Assert.That(Hiero.Implementation.Formatting.Base32Format.Encode(System.Text.Encoding.ASCII.GetBytes(input))).IsEqualTo(expected);
     }
 
     [Test]

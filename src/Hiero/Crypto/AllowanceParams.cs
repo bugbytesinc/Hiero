@@ -14,8 +14,10 @@ namespace Hiero;
 /// re-submit via <see cref="AllowanceExtensions.AllocateAllowanceAsync"/> with
 /// the same owner/spender and <c>Amount = 0</c>. NFT allowances are the
 /// exception — they are revoked via
-/// <see cref="RevokeNftAllowanceExtensions.RevokeNftAllowanceAsync"/>, which
-/// submits a distinct <c>CryptoDeleteAllowance</c> HAPI transaction.
+/// <see cref="RevokeNftAllowanceExtensions.RevokeNftAllowanceAsync"/>: set
+/// <see cref="RevokeNftAllowanceParams.SerialNumbers"/> to remove the
+/// allowances on specific NFTs, or <see cref="RevokeNftAllowanceParams.Spender"/>
+/// to revoke an approval for all of a token's NFTs.
 /// </remarks>
 /// <example>
 /// Grant another account the right to spend up to a fixed amount of HBAR
@@ -53,8 +55,10 @@ public sealed class AllowanceParams : TransactionParams<TransactionReceipt>, INe
     /// </remarks>
     public Signatory? Signatory { get; set; }
     /// <summary>
-    /// Optional Cancellation token that can interrupt the allowance
-    /// update process.
+    /// Optional cancellation token.  Cancelling stops the client waiting;
+    /// it cannot recall a transaction already sent.  Cancelled after the
+    /// send, the outcome is unknown: settle it by its transaction id on a
+    /// mirror node rather than resubmitting it.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
     INetworkTransaction INetworkParams<TransactionReceipt>.CreateNetworkTransaction()
@@ -150,7 +154,7 @@ public sealed class AllowanceParams : TransactionParams<TransactionReceipt>, INe
         }
         if (result.CryptoAllowances.Count == 0 && result.TokenAllowances.Count == 0 && result.NftAllowances.Count == 0)
         {
-            throw new ArgumentException(nameof(AllowanceParams), "Both crypto, token and NFT allowance lists are null or empty.  At least one must include a net amount.");
+            throw new ArgumentException("Both crypto, token and NFT allowance lists are null or empty.  At least one must include a net amount.", nameof(AllowanceParams));
         }
         return result;
     }
@@ -179,7 +183,9 @@ public static class AllowanceExtensions
     /// HAPI has no dedicated <c>Revoke*</c> transaction for those.
     /// NFT allowances use
     /// <see cref="RevokeNftAllowanceExtensions.RevokeNftAllowanceAsync"/>
-    /// instead.
+    /// instead, for specific serial numbers or, with its
+    /// <see cref="RevokeNftAllowanceParams.Spender"/>, for an approval for
+    /// all of a token's NFTs.
     /// </remarks>
     /// <param name="client">
     /// The Consensus Node Client orchestrating the update.
@@ -195,10 +201,10 @@ public static class AllowanceExtensions
     /// <returns>
     /// A transaction receipt indicating success, or an exception is thrown.
     /// </returns>
-    /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
+    /// <exception cref="ArgumentException">If required arguments are missing or invalid.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
-    /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
+    /// <exception cref="PrecheckException">If the gateway node refused the transaction. Only a code about the transaction itself proves it did not execute; any other code leaves the outcome unknown, so settle it by its transaction id on a mirror node rather than resubmitting it (see <see cref="PrecheckException"/>).</exception>
+    /// <exception cref="ConsensusException">If the outcome could not be confirmed: the transaction may have executed, so settle it by its transaction id on a mirror node rather than resubmitting it.</exception>
     /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
     /// <example>
     /// <code source="../../../samples/DocSnippets/CryptoSnippets.cs" region="AllocateAllowance" language="csharp"/>

@@ -611,7 +611,7 @@ public class DissociateTokenTests
     }
 
     [Test]
-    public async Task Can_Schedule_And_Sign_Dissociate_Token()
+    public async Task Can_Not_Schedule_And_Sign_Dissociate_Token()
     {
         await using var fxToken = await TestToken.CreateAsync();
         await using var fxAccount = await TestAccount.CreateAsync();
@@ -625,7 +625,8 @@ public class DissociateTokenTests
             Signatory = fxAccount.PrivateKey,
         });
 
-        // Now schedule the dissociation without the account's key
+        // A dissociation can't be scheduled: TokenDissociateFromAccount is not
+        // in the network's scheduling whitelist.
         var tex = await Assert.That(async () =>
         {
             await client.ScheduleAsync(new ScheduleParams

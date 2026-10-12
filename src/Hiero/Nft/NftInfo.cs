@@ -113,9 +113,9 @@ public static class NftInfoExtensions
     /// <returns>
     /// A description of the nft instance, including metadata, created date and current owning account.
     /// </returns>
-    /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
+    /// <exception cref="ArgumentException">If required arguments are missing or invalid.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
+    /// <exception cref="PrecheckException">If the gateway node refused the query.</exception>
     public static async Task<NftInfo> GetNftInfoAsync(this ConsensusClient client, Nft nft, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
     {
         return new NftInfo(await Engine.QueryAsync(client, new TokenGetNftInfoQuery { NftID = new NftID(nft) }, cancellationToken, configure).ConfigureAwait(false));

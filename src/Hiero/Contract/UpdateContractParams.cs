@@ -72,13 +72,15 @@ public sealed class UpdateContractParams : TransactionParams<TransactionReceipt>
     public EntityId? RenewAccount { get; set; }
     /// <summary>
     /// The memo to be associated with the contract.  Maximum
-    /// of 100 bytes.
+    /// of 100 bytes.  An empty string clears the memo; leave
+    /// it <c>null</c> to keep the current one.
     /// </summary>
     public string? Memo { get; set; }
     /// <summary>
-    /// If set, updates the maximum number of token or NFTs that this contract may
-    /// be implicitly associated with (by means of being made a treasury
-    /// or other related actions).
+    /// If set, updates the maximum number of tokens (fungible or NFT) that
+    /// this contract may be automatically associated with, which happens when it
+    /// receives a token it is not yet associated with.  Use -1 for no limit;
+    /// 0 means every token must be associated explicitly.
     /// </summary>
     public int? AutoAssociationLimit { get; set; }
     /// <summary>
@@ -122,7 +124,10 @@ public sealed class UpdateContractParams : TransactionParams<TransactionReceipt>
     /// </remarks>
     public Signatory? Signatory { get; set; }
     /// <summary>
-    /// Optional Cancellation token that can interrupt the contract update.
+    /// Optional cancellation token.  Cancelling stops the client waiting;
+    /// it cannot recall a transaction already sent.  Cancelled after the
+    /// send, the outcome is unknown: settle it by its transaction id on a
+    /// mirror node rather than resubmitting it.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
     INetworkTransaction INetworkParams<TransactionReceipt>.CreateNetworkTransaction()
@@ -165,7 +170,7 @@ public sealed class UpdateContractParams : TransactionParams<TransactionReceipt>
         {
             result.AutoRenewAccountId = new AccountID(RenewAccount);
         }
-        if (!string.IsNullOrWhiteSpace(Memo))
+        if (Memo is not null)
         {
             result.MemoWrapper = Memo;
         }
@@ -174,7 +179,7 @@ public sealed class UpdateContractParams : TransactionParams<TransactionReceipt>
             var limit = AutoAssociationLimit.Value;
             if (limit < -1)
             {
-                throw new ArgumentOutOfRangeException(nameof(AutoAssociationLimit), "The maximum number of auto-associations must greater than or equal to -1");
+                throw new ArgumentOutOfRangeException(nameof(AutoAssociationLimit), "The maximum number of auto-associations must be greater than or equal to -1.");
             }
             result.MaxAutomaticTokenAssociations = limit;
         }
@@ -252,10 +257,10 @@ public static class UpdateContractExtensions
     /// <returns>
     /// A transaction receipt indicating success of the operation.
     /// </returns>
-    /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
+    /// <exception cref="ArgumentException">If required arguments are missing or invalid.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
-    /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
+    /// <exception cref="PrecheckException">If the gateway node refused the transaction. Only a code about the transaction itself proves it did not execute; any other code leaves the outcome unknown, so settle it by its transaction id on a mirror node rather than resubmitting it (see <see cref="PrecheckException"/>).</exception>
+    /// <exception cref="ConsensusException">If the outcome could not be confirmed: the transaction may have executed, so settle it by its transaction id on a mirror node rather than resubmitting it.</exception>
     /// <exception cref="TransactionException">If the network rejected the update request as invalid or had missing data.</exception>
     /// <example>
     /// <code source="../../../samples/DocSnippets/ContractSnippets.cs" region="UpdateContract" language="csharp"/>

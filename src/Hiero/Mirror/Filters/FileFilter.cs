@@ -15,10 +15,13 @@ namespace Hiero.Mirror.Filters;
 /// palette on this parameter. Only an <see cref="Is(EntityId)"/>
 /// factory is provided; there is no <c>After</c> / <c>Before</c> /
 /// <c>NotIs</c> counterpart. In practice the live network's
-/// address book contains just the two files
-/// (<c>0.0.101</c> for consensus nodes, <c>0.0.102</c> for the
-/// gossip-node listing), so a comparison palette would be
-/// superfluous even if the wire schema allowed it.
+/// address book contains just the two files, and both describe
+/// the same consensus nodes: <c>0.0.101</c> carries only each
+/// node's id, account, TLS certificate hash and service endpoints,
+/// while <c>0.0.102</c> carries every field, adding the node's RSA
+/// public key and description. They differ in which per-node fields
+/// are filled in, not in which nodes they list, so a comparison
+/// palette would be superfluous even if the wire schema allowed it.
 /// </remarks>
 public sealed class FileFilter : IMirrorFilter
 {

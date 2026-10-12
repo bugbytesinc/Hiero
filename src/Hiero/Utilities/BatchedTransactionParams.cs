@@ -32,28 +32,42 @@ public sealed class BatchedTransactionParams
     /// </summary>
     public Signatory? Signatory { get; set; }
     /// <summary>
-    /// Optional Cancellation token that interrupts the transaction submission process.
+    /// Optional cancellation token.  Cancelling stops the client waiting;
+    /// it cannot recall a transaction already sent.  Cancelled after the
+    /// send, the outcome is unknown: settle it by its transaction id on a
+    /// mirror node rather than resubmitting it.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
 }
-internal sealed class BatchedParamsOrchestrator : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>
+internal sealed class BatchedParamsOrchestrator : TransactionParams<TransactionReceipt>, INetworkParams<TransactionReceipt>, IDisposable
 {
     private readonly Signatory? _signatory;
     private readonly CancellationToken? _cancellationToken;
     private readonly INetworkTransaction _networkTransaction;
+    private readonly CancellationTokenSource? _linkedCancellation;
 
     public Signatory? Signatory => _signatory;
     public CancellationToken? CancellationToken => _cancellationToken;
     INetworkTransaction INetworkParams<TransactionReceipt>.CreateNetworkTransaction() => _networkTransaction;
 
-    private BatchedParamsOrchestrator(Signatory? signatory, CancellationToken? cancellationToken, INetworkTransaction networkTransaction)
+    private BatchedParamsOrchestrator(Signatory? signatory, CancellationToken? cancellationToken, INetworkTransaction networkTransaction, CancellationTokenSource? linkedCancellation)
     {
         _signatory = signatory;
         _cancellationToken = cancellationToken;
         _networkTransaction = networkTransaction;
+        _linkedCancellation = linkedCancellation;
     }
 
-    internal static async Task<TransactionParams<TransactionReceipt>> CreateAsync(BatchedTransactionParams batchParams, ConsensusClient client)
+    /// <summary>
+    /// Releases the token source linking the cancellation tokens of the
+    /// batch and its transactions, once the batch has been sent.
+    /// </summary>
+    public void Dispose()
+    {
+        _linkedCancellation?.Dispose();
+    }
+
+    internal static async Task<BatchedParamsOrchestrator> CreateAsync(BatchedTransactionParams batchParams, ConsensusClient client)
     {
         var count = batchParams.TransactionParams?.Count ?? 0;
         if (count == 0)
@@ -111,38 +125,34 @@ internal sealed class BatchedParamsOrchestrator : TransactionParams<TransactionR
         {
             addCancellationToken(batchParams.CancellationToken.Value);
         }
-        var cancellationToken = cancellationTokenCount switch
+        // Two or more tokens are linked through a source the orchestrator
+        // owns and disposes once the batch has been sent.
+        var linkedCancellation = cancellationTokenCount > 1 ? CancellationTokenSource.CreateLinkedTokenSource(cancellationTokens.AsSpan(0, cancellationTokenCount)) : null;
+        var cancellationToken = linkedCancellation?.Token ?? (cancellationTokenCount == 1 ? cancellationTokens![0] : default);
+        try
         {
-            0 => default,
-            1 => cancellationTokens![0],
-            2 => CancellationTokenSource.CreateLinkedTokenSource(cancellationTokens![0], cancellationTokens[1]).Token,
-            _ => createLinkedCancellationToken()
-        };
-        for (int i = 0; i < count; i++)
-        {
-            if (signTasks[i] is null)
+            for (int i = 0; i < count; i++)
             {
-                signTasks[i] = signBatchedTransactionAsync(transactionBodies[i], signatories[i]);
+                if (signTasks[i] is null)
+                {
+                    signTasks[i] = signBatchedTransactionAsync(transactionBodies[i], signatories[i]);
+                }
             }
+            var signedTransactions = await Task.WhenAll(signTasks).ConfigureAwait(false);
+            var atomicBatchTransactionBody = new AtomicBatchTransactionBody();
+            atomicBatchTransactionBody.Transactions.AddRange(signedTransactions);
+            return new BatchedParamsOrchestrator(batchParams.Signatory, cancellationToken, atomicBatchTransactionBody, linkedCancellation);
         }
-        var signedTransactions = await Task.WhenAll(signTasks).ConfigureAwait(false);
-        var atomicBatchTransactionBody = new AtomicBatchTransactionBody();
-        atomicBatchTransactionBody.Transactions.AddRange(signedTransactions);
-        return new BatchedParamsOrchestrator(batchParams.Signatory, cancellationToken, atomicBatchTransactionBody);
+        catch
+        {
+            linkedCancellation?.Dispose();
+            throw;
+        }
 
         void addCancellationToken(CancellationToken token)
         {
             cancellationTokens ??= new CancellationToken[count + 1];
             cancellationTokens[cancellationTokenCount++] = token;
-        }
-
-        CancellationToken createLinkedCancellationToken()
-        {
-            if (cancellationTokenCount != cancellationTokens!.Length)
-            {
-                Array.Resize(ref cancellationTokens, cancellationTokenCount);
-            }
-            return CancellationTokenSource.CreateLinkedTokenSource(cancellationTokens).Token;
         }
 
         Key getDefaultBatchKey()
@@ -303,16 +313,17 @@ public static class TransactionBatchParamsExtensions
     /// <returns>
     /// A receipt object.
     /// </returns>
-    /// <exception cref="PrecheckException">
-    /// If there was a problem submitting the request, including the consensus node
-    /// considering the request invalid.
-    /// </exception>
+    /// <exception cref="ArgumentException">If the batch is empty, holds a null or unbatchable transaction, or a batched transaction's required arguments are missing or invalid; nothing has been sent.</exception>
+    /// <exception cref="InvalidOperationException">If required context configuration is missing, such as the payer, a signatory, or a signatory from which the batch key can be derived; nothing has been sent.</exception>
+    /// <exception cref="NotSupportedException">If an externally created transaction in the batch is paired with an additional signatory; nothing has been sent.</exception>
+    /// <exception cref="PrecheckException">If the gateway node refused the transaction. Only a code about the transaction itself proves it did not execute; any other code leaves the outcome unknown, so settle it by its transaction id on a mirror node rather than resubmitting it (see <see cref="PrecheckException"/>).</exception>
     /// <exception cref="TransactionException">
     /// If the consensus node returned a failure code and throw on failure is set to
     /// <code>true</code> in the client context configuration.
     /// </exception>
     /// <exception cref="ConsensusException">
-    /// Under heavy load, the network may not process the transaction before it expires.
+    /// If the outcome could not be confirmed: the transaction may have executed, so settle it
+    /// by its transaction id on a mirror node rather than resubmitting it.
     /// </exception>
     /// <example>
     /// <code source="../../../samples/DocSnippets/UtilitiesSnippets.cs" region="BatchedExecute" language="csharp"/>
@@ -320,7 +331,7 @@ public static class TransactionBatchParamsExtensions
     public async static Task<TransactionReceipt> ExecuteAsync(this ConsensusClient client, BatchedTransactionParams batchParams, Action<IConsensusContext>? configure = null)
     {
         await using var configuredClient = client.Clone(configure);
-        var transactionParams = await BatchedParamsOrchestrator.CreateAsync(batchParams, configuredClient).ConfigureAwait(false);
+        using var transactionParams = await BatchedParamsOrchestrator.CreateAsync(batchParams, configuredClient).ConfigureAwait(false);
         return await configuredClient.ExecuteAsync(transactionParams, null).ConfigureAwait(false);
     }
     /// <summary>
@@ -350,6 +361,9 @@ public static class TransactionBatchParamsExtensions
     /// The precheck <see cref="ResponseCode"/> returned from the request
     /// after waiting for submission retries if applicable.
     /// </returns>
+    /// <exception cref="ArgumentException">If the batch is empty, holds a null or unbatchable transaction, or a batched transaction's required arguments are missing or invalid; nothing has been sent.</exception>
+    /// <exception cref="InvalidOperationException">If required context configuration is missing, such as the payer, a signatory, or a signatory from which the batch key can be derived; nothing has been sent.</exception>
+    /// <exception cref="NotSupportedException">If an externally created transaction in the batch is paired with an additional signatory; nothing has been sent.</exception>
     /// <example>
     /// Precheck-only submission — returns as soon as the gateway responds:
     /// <code source="../../../samples/DocSnippets/UtilitiesSnippets.cs" region="BatchedSubmit" language="csharp"/>
@@ -357,7 +371,7 @@ public static class TransactionBatchParamsExtensions
     public async static Task<ResponseCode> SubmitAsync(this ConsensusClient client, BatchedTransactionParams batchParams, Action<IConsensusContext>? configure = null)
     {
         await using var configuredClient = client.Clone(configure);
-        var transactionParams = await BatchedParamsOrchestrator.CreateAsync(batchParams, configuredClient).ConfigureAwait(false);
+        using var transactionParams = await BatchedParamsOrchestrator.CreateAsync(batchParams, configuredClient).ConfigureAwait(false);
         return await configuredClient.SubmitAsync(transactionParams, null).ConfigureAwait(false);
     }
 }

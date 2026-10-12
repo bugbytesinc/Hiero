@@ -11,7 +11,7 @@ namespace Hiero.Mirror;
 /// detail endpoints. The single-transaction lookups
 /// (<see cref="TransactionDetailDataExtensions"/>) return the
 /// richer <see cref="TransactionDetailData"/> subclass, which adds
-/// assessed custom fees and NFT transfers.
+/// assessed custom fees.
 /// </remarks>
 public class TransactionData
 {
@@ -21,6 +21,14 @@ public class TransactionData
     [JsonPropertyName("transaction_id")]
     [JsonConverter(typeof(TransactionIdMirrorConverter))]
     public TransactionId TransactionId { get; set; } = default!;
+    /// <summary>
+    /// The endorsement that must sign the enclosing atomic batch for
+    /// this transaction to execute. Null unless this is an inner
+    /// transaction of a batch; the outer batch transaction itself
+    /// carries none.
+    /// </summary>
+    [JsonPropertyName("batch_key")]
+    public Endorsement? BatchEndorsement { get; set; }
     /// <summary>
     /// Sum of network transaction fees.
     /// </summary>
@@ -39,12 +47,35 @@ public class TransactionData
     [JsonPropertyName("entity_id")]
     public EntityId? CreatedEntity { get; set; }
     /// <summary>
+    /// Whether the transaction was throttled and priced as a
+    /// high-volume entity creation (HIP-1313).
+    /// </summary>
+    [JsonPropertyName("high_volume")]
+    [JsonConverter(typeof(BooleanMirrorConverter))]
+    public bool HighVolume { get; set; }
+    /// <summary>
+    /// The high-volume pricing multiplier applied to the transaction
+    /// fee (HIP-1313), scaled by 1,000: 1,000 is 1×, 4,000 is 4×. Zero
+    /// when high-volume pricing did not apply; null for transactions
+    /// that predate HIP-1313.
+    /// </summary>
+    [JsonPropertyName("high_volume_pricing_multiplier")]
+    [JsonConverter(typeof(NullableLongMirrorConverter))]
+    public long? HighVolumePricingMultiplier { get; set; }
+    /// <summary>
     /// The maximum fee the payer account was willing
     /// to spend on this transaction.
     /// </summary>
     [JsonPropertyName("max_fee")]
     [JsonConverter(typeof(FeeLimitFromStringConverter))]
     public long FeeLimit { get; set; }
+    /// <summary>
+    /// The limits the payer placed on the custom fees this
+    /// transaction could be charged (HIP-991), one per fee
+    /// denomination. Empty when the payer set none.
+    /// </summary>
+    [JsonPropertyName("max_custom_fees")]
+    public CustomFeeLimitData[]? MaxCustomFees { get; set; }
     /// <summary>
     /// The memo that was attached to this transaction
     /// </summary>
@@ -56,6 +87,12 @@ public class TransactionData
     /// </summary>
     [JsonPropertyName("name")]
     public string? TransactionType { get; set; }
+    /// <summary>
+    /// The individual NFT (asset) transfers carried out by this
+    /// transaction. Null when the transaction moved no NFTs.
+    /// </summary>
+    [JsonPropertyName("nft_transfers")]
+    public AssetTransferData[]? AssetTransfers { get; set; }
     /// <summary>
     /// The Hedera Gossip Node that submitted this transaction
     /// </summary>
@@ -74,10 +111,15 @@ public class TransactionData
     [JsonPropertyName("parent_consensus_timestamp")]
     public ConsensusTimeStamp? ParentConsensus { get; set; }
     /// <summary>
-    /// The Status Code of this transaction
+    /// The Status Code of this transaction.
     /// </summary>
+    /// <remarks>
+    /// A status the network reports but this build of the SDK does not know
+    /// reads as <see cref="ResponseCode.Unrecognized"/> rather than failing
+    /// the surrounding query.
+    /// </remarks>
     [JsonPropertyName("result")]
-    public string Status { get; set; } = default!;
+    public ResponseCode Status { get; set; }
     /// <summary>
     /// Flag indicating that this was a scheduled transaction.
     /// </summary>

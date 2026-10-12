@@ -1,5 +1,6 @@
 ﻿// SPDX-License-Identifier: Apache-2.0
 using Hiero.Converters;
+using Hiero.Implementation.Formatting;
 using Hiero.Implementation.Parsing;
 using System.Buffers.Binary;
 using System.Diagnostics;
@@ -45,7 +46,8 @@ public sealed record EntityId : IEquatable<EntityId>, ISpanFormattable, IUtf8Spa
     /// </summary>
     public bool IsShardRealmNum => _evmAddress is null && _keyAlias is null;
     /// <summary>
-    /// Indicates if this Entity Id contains an EVM Address (EIP-1014) format.
+    /// Indicates if this Entity Id holds a 20-byte EVM Address
+    /// (long-zero, public-key-derived or CREATE2).
     /// </summary>
     public bool IsEvmAddress => _evmAddress is not null;
     /// <summary>
@@ -53,7 +55,8 @@ public sealed record EntityId : IEquatable<EntityId>, ISpanFormattable, IUtf8Spa
     /// </summary>
     public bool IsKeyAlias => _keyAlias is not null;
     /// <summary>
-    /// A special designation of an Entity Id that can't be created.
+    /// The reserved <c>0.0.0</c> Entity Id; any Entity Id constructed or
+    /// parsed as <c>0.0.0</c> is equal to it and is treated as None.
     /// It represents the absence of a valid Entity Id.  The network will
     /// interpret as "no account/file/topic/token/contract" when applied 
     /// to change parameters. (typically the value null is interpreted 
@@ -285,8 +288,8 @@ public sealed record EntityId : IEquatable<EntityId>, ISpanFormattable, IUtf8Spa
     /// <returns>
     /// An EVM Address compatible for use with smart contracts.
     /// </returns>
-    /// <exception cref="InvalidOperationException">
-    /// If this Entity Id represents a Key Alias form of 
+    /// <exception cref="ArgumentException">
+    /// If this Entity Id represents a Key Alias form of
     /// an Entity ID, this will throw an exception, if the
     /// underlying key is not a single ECDSA public key.
     /// </exception>
@@ -399,6 +402,14 @@ public sealed record EntityId : IEquatable<EntityId>, ISpanFormattable, IUtf8Spa
         }
         return hash.ToHashCode();
     }
+    /// <summary>
+    /// The form in which the Mirror Node REST API accepts this identifier in
+    /// a URL path: <c>shard.realm.num</c>; an EVM address as hex; or a key
+    /// alias as the RFC 4648 unpadded base32 encoding of the protobuf
+    /// serialized key — the encoding the mirror node itself reports in an
+    /// account's <c>alias</c> field — prefixed with <c>shard.realm.</c> when
+    /// either is non-zero.
+    /// </summary>
     internal string ToMirrorString()
     {
         if (_evmAddress is not null)
@@ -407,7 +418,8 @@ public sealed record EntityId : IEquatable<EntityId>, ISpanFormattable, IUtf8Spa
         }
         if (_keyAlias is not null)
         {
-            return Convert.ToHexStringLower(_keyAlias.ToBytes(KeyFormat.Mirror).Span);
+            var alias = Base32Format.Encode(_keyAlias.ToBytes(KeyFormat.Protobuf).Span);
+            return ShardNum == 0 && RealmNum == 0 ? alias : $"{ShardNum}.{RealmNum}.{alias}";
         }
         return $"{ShardNum}.{RealmNum}.{AccountNum}";
     }

@@ -37,10 +37,19 @@ internal static class Epoch
     }
     internal static (long seconds, int nanos) FromDate(DateTime dateTime)
     {
-        TimeSpan timespan = dateTime - DateTime.UnixEpoch;
-        long seconds = (long)timespan.TotalSeconds;
-        int nanos = (int)((timespan.Ticks - (seconds * TimeSpan.TicksPerSecond)) * NanosPerTick);
-        return (seconds, nanos);
+        if (dateTime.Kind == DateTimeKind.Local)
+        {
+            dateTime = dateTime.ToUniversalTime();
+        }
+        // Whole ticks, not TotalSeconds: the double rounds up to the next
+        // second in the last fraction of one, leaving negative nanos.
+        var seconds = Math.DivRem((dateTime - DateTime.UnixEpoch).Ticks, TimeSpan.TicksPerSecond, out var remainder);
+        if (remainder < 0)
+        {
+            seconds--;
+            remainder += TimeSpan.TicksPerSecond;
+        }
+        return (seconds, (int)(remainder * NanosPerTick));
     }
     internal static void AddToClockDrift(long additionalDrift)
     {

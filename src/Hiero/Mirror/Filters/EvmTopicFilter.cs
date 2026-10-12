@@ -40,7 +40,7 @@ public sealed class EvmTopicFilter : IMirrorFilter
     /// <paramref name="index"/> equals the given value.
     /// </summary>
     /// <param name="index">The topic slot, 0 through 3 inclusive.</param>
-    /// <param name="topic">The topic value (padded to 32 bytes on the wire).</param>
+    /// <param name="topic">The topic value (padded to 32 bytes on the wire). A negative value, as a signed parse of a topic with its top bit set gives, stands for its 256-bit two's complement.</param>
     /// <exception cref="ArgumentOutOfRangeException">
     /// Thrown when <paramref name="index"/> is outside the 0–3 range.
     /// </exception>

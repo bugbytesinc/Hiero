@@ -7,7 +7,9 @@ namespace Hiero.Converters;
 
 /// <summary>
 /// Converts a <see cref="ConsensusNodeEndpoint"/> to and from a JSON object
-/// with <c>address</c> (node id) and <c>url</c> properties.
+/// with <c>address</c> (node id) and <c>url</c> properties, plus an optional
+/// <c>certHash</c> property holding the TLS certificate hash as hex
+/// (written in lowercase, and only when the endpoint has one).
 /// </summary>
 public sealed class ConsensusNodeEndpointConverter : JsonConverter<ConsensusNodeEndpoint>
 {

@@ -159,7 +159,7 @@ public class DeleteTopicTests
     }
 
     [Test]
-    public async Task Can_Schedule_And_Sign_Delete_Topic()
+    public async Task Can_Not_Schedule_And_Sign_Delete_Topic()
     {
         await using var fxTopic = await TestTopic.CreateAsync();
         await using var client = await TestNetwork.CreateClientAsync();

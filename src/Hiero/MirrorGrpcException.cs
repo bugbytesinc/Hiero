@@ -18,8 +18,10 @@ namespace Hiero;
 /// <list type="bullet">
 ///   <item><see cref="MirrorGrpcExceptionCode.Unavailable"/> — the mirror
 ///   node is temporarily down. <strong>Transient</strong> — retry after a
-///   delay, resuming from the last received
-///   <c>TopicMessage.SequenceNumber</c>.</item>
+///   delay, resubscribing with <c>SubscribeTopicParams.Starting</c> set to
+///   the last received <c>TopicMessage.Consensus</c> plus one nanosecond,
+///   and using <c>TopicMessage.SequenceNumber</c> to drop any
+///   duplicates.</item>
 ///   <item><see cref="MirrorGrpcExceptionCode.CommunicationError"/> — a
 ///   network-level gRPC failure. <strong>Transient</strong> — retry.</item>
 ///   <item><see cref="MirrorGrpcExceptionCode.TopicNotFound"/> — the topic

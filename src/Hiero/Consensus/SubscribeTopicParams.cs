@@ -39,9 +39,12 @@ public sealed class SubscribeTopicParams
     /// .NET system threading channel writer receiving messages 
     /// streamed from the server.  Messages can be read from the 
     /// stream by calling code without blocking the incoming 
-    /// stream of messages from the mirror node.  Completing 
-    /// the stream will close the streaming connection to the 
-    /// mirror node and cause this method to return without error.
+    /// stream of messages from the mirror node.  Completing
+    /// the channel writer ends the subscription: the next time
+    /// it has a message to write,
+    /// <see cref="MirrorGrpcClient.SubscribeTopicAsync"/> closes the
+    /// streaming connection to the mirror node and returns without
+    /// error.
     /// </summary>
     public ChannelWriter<TopicMessage> MessageWriter { get; set; } = default!;
     /// <summary>
@@ -55,7 +58,8 @@ public sealed class SubscribeTopicParams
     /// <summary>
     /// Optional cancellation token, that when set, closes the mirror node
     /// connection and optionally the .net channel (if configured to do so),
-    /// and causes the SubscribeTopic method to return without error.
+    /// and causes <see cref="MirrorGrpcClient.SubscribeTopicAsync"/> to
+    /// return without error.
     /// Default is "none", the method can be completed by signaling the receiving
     /// .net channel as completed.
     /// </summary>

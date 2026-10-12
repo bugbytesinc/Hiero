@@ -84,4 +84,76 @@ public class ResponseCodeTests
         var code = JsonSerializer.Deserialize<ResponseCode>("\"INVALID_SIGNATURE\"");
         await Assert.That(code).IsEqualTo(ResponseCode.InvalidSignature);
     }
+
+    [Test]
+    public async Task Unknown_String_Deserializes_To_Unrecognized()
+    {
+        // The network adds response codes over time, so an SDK build will
+        // eventually meet one it does not map.  That must degrade, not throw.
+        var code = JsonSerializer.Deserialize<ResponseCode>("\"SOME_FUTURE_STATUS_CODE\"");
+        await Assert.That(code).IsEqualTo(ResponseCode.Unrecognized);
+    }
+
+    [Test]
+    public async Task Null_Deserializes_To_Unrecognized()
+    {
+        var code = JsonSerializer.Deserialize<ResponseCode>("null");
+        await Assert.That(code).IsEqualTo(ResponseCode.Unrecognized);
+    }
+
+    [Test]
+    public async Task Non_String_Token_Deserializes_To_Unrecognized()
+    {
+        var code = JsonSerializer.Deserialize<ResponseCode>("22");
+        await Assert.That(code).IsEqualTo(ResponseCode.Unrecognized);
+    }
+
+    [Test]
+    public async Task Unreadable_Status_Does_Not_Fail_Its_Enclosing_Object()
+    {
+        // The reason unreadable statuses degrade instead of throwing: these
+        // arrive inside larger Mirror Node payloads, and one bad value must not
+        // cost the caller the whole page.
+        var json = """{"Status":"SOME_FUTURE_STATUS_CODE","Nonce":7}""";
+        var row = JsonSerializer.Deserialize<StatusRow>(json);
+        await Assert.That(row!.Status).IsEqualTo(ResponseCode.Unrecognized);
+        await Assert.That(row.Nonce).IsEqualTo(7);
+    }
+
+    [Test]
+    public async Task Unrecognized_Serializes_To_Named_Marker()
+    {
+        // It must name itself rather than emitting an empty string or a bare
+        // number, so a persisted value stays readable.
+        var json = JsonSerializer.Serialize(ResponseCode.Unrecognized);
+        await Assert.That(json).IsEqualTo("\"UNRECOGNIZED\"");
+    }
+
+    [Test]
+    public async Task Undeclared_Enum_Value_Serializes_To_Unrecognized_Marker()
+    {
+        var json = JsonSerializer.Serialize((ResponseCode)(-4242));
+        await Assert.That(json).IsEqualTo("\"UNRECOGNIZED\"");
+        var code = JsonSerializer.Deserialize<ResponseCode>(json);
+        await Assert.That(code).IsEqualTo(ResponseCode.Unrecognized);
+    }
+
+    [Test]
+    public async Task Fallback_Value_Is_A_Named_Declared_Member()
+    {
+        // Guards the defect this replaced: the converter used to return a bare
+        // (ResponseCode)(-500), which matched no member, so it stringified as
+        // "-500" and no switch arm could catch it.  Assert on the value the
+        // converter actually produces, not on the enum literal.
+        var fallback = JsonSerializer.Deserialize<ResponseCode>("\"NOT_A_REAL_STATUS\"");
+        await Assert.That(Enum.IsDefined(typeof(ResponseCode), fallback)).IsTrue();
+        await Assert.That(fallback.ToString()).IsEqualTo(nameof(ResponseCode.Unrecognized));
+        await Assert.That(fallback).IsNotEqualTo(ResponseCode.RpcError);
+    }
+
+    private sealed class StatusRow
+    {
+        public ResponseCode Status { get; set; }
+        public int Nonce { get; set; }
+    }
 }

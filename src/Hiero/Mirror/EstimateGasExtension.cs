@@ -26,8 +26,15 @@ public static class EstimateGasExtension
     /// The create params that would be sent to the HAPI to create the contract.
     /// </param>
     /// <param name="maxIterations">
-    /// The number of iterations to attempt to estimate the gas.  Each subsequent try
-    /// generally produces a smaller value closer to the limit of what must be paid for the call.
+    /// The most mirror calls to make while refining the estimate.  Above one,
+    /// the result is always a gas limit the mirror node accepted, and more
+    /// calls bring it closer to the smallest such limit; with one, it is the
+    /// mirror's raw estimate, which can be too low for calls that earn a
+    /// storage refund.
+    /// </param>
+    /// <param name="cancellationToken">
+    /// Optional token that cancels the estimate, including a mirror request
+    /// in flight.
     /// </param>
     /// <returns>
     /// An estimate of the gas required to create the contract, including intrinsic gas.
@@ -36,7 +43,7 @@ public static class EstimateGasExtension
     /// If the create contract params are using the file form of bytecode, this is not supported
     /// by this method as bytes must be passed directly to the mirror node REST API.
     /// </exception>
-    public static Task<long> EstimateGasAsync(this MirrorRestClient mirror, EvmAddress from, CreateContractParams createParams, int maxIterations = 10)
+    public static Task<long> EstimateGasAsync(this MirrorRestClient mirror, EvmAddress from, CreateContractParams createParams, int maxIterations = 10, CancellationToken cancellationToken = default)
     {
         if (createParams.ByteCode.IsEmpty)
         {
@@ -50,7 +57,7 @@ public static class EstimateGasExtension
             Data = CreateConstructorData(createParams.ByteCode, createParams.ConstructorArgs),
             EstimateGas = true,
         };
-        return EstimateGasImplementationAsync(mirror, callData, maxIterations);
+        return EstimateGasImplementationAsync(mirror, callData, maxIterations, cancellationToken);
     }
     /// <summary>
     /// Estimates the gas required to call a contract method using the mirror node REST API.
@@ -65,13 +72,20 @@ public static class EstimateGasExtension
     /// The HAPI parameters that would be sent to the HAPI to call the contract method.
     /// </param>
     /// <param name="maxIterations">
-    /// The number of iterations to attempt to estimate the gas.  Each subsequent try
-    /// generally produces a smaller value closer to the limit of what must be paid for the call.
+    /// The most mirror calls to make while refining the estimate.  Above one,
+    /// the result is always a gas limit the mirror node accepted, and more
+    /// calls bring it closer to the smallest such limit; with one, it is the
+    /// mirror's raw estimate, which can be too low for calls that earn a
+    /// storage refund.
+    /// </param>
+    /// <param name="cancellationToken">
+    /// Optional token that cancels the estimate, including a mirror request
+    /// in flight.
     /// </param>
     /// <returns>
     /// The estimated gas required to call the contract method, including intrinsic gas.
     /// </returns>
-    public static Task<long> EstimateGasAsync(this MirrorRestClient mirror, EvmAddress from, CallContractParams callParams, int maxIterations = 10)
+    public static Task<long> EstimateGasAsync(this MirrorRestClient mirror, EvmAddress from, CallContractParams callParams, int maxIterations = 10, CancellationToken cancellationToken = default)
     {
         var callData = new EvmCallData
         {
@@ -82,7 +96,7 @@ public static class EstimateGasExtension
             Data = Abi.EncodeFunctionWithArguments(callParams.MethodName, callParams.MethodArgs),
             EstimateGas = true,
         };
-        return EstimateGasImplementationAsync(mirror, callData, maxIterations);
+        return EstimateGasImplementationAsync(mirror, callData, maxIterations, cancellationToken);
     }
     /// <summary>
     /// Estimates the gas required to query a contract method using the mirror node REST API.
@@ -97,13 +111,20 @@ public static class EstimateGasExtension
     /// The HAPI parameters that would be sent to the HAPI to query the contract method.
     /// </param>
     /// <param name="maxIterations">
-    /// The number of iterations to attempt to estimate the gas.  Each subsequent try
-    /// generally produces a smaller value closer to the limit of what must be paid for the call.
+    /// The most mirror calls to make while refining the estimate.  Above one,
+    /// the result is always a gas limit the mirror node accepted, and more
+    /// calls bring it closer to the smallest such limit; with one, it is the
+    /// mirror's raw estimate, which can be too low for calls that earn a
+    /// storage refund.
+    /// </param>
+    /// <param name="cancellationToken">
+    /// Optional token that cancels the estimate, including a mirror request
+    /// in flight.
     /// </param>
     /// <returns>
     /// The estimated gas required to call the contract method, including intrinsic gas.
     /// </returns>
-    public static Task<long> EstimateGasAsync(this MirrorRestClient mirror, EvmAddress from, QueryContractParams callParams, int maxIterations = 10)
+    public static Task<long> EstimateGasAsync(this MirrorRestClient mirror, EvmAddress from, QueryContractParams callParams, int maxIterations = 10, CancellationToken cancellationToken = default)
     {
         var callData = new EvmCallData
         {
@@ -113,10 +134,11 @@ public static class EstimateGasExtension
             Data = Abi.EncodeFunctionWithArguments(callParams.MethodName, callParams.MethodArgs),
             EstimateGas = true,
         };
-        return EstimateGasImplementationAsync(mirror, callData, maxIterations);
+        return EstimateGasImplementationAsync(mirror, callData, maxIterations, cancellationToken);
     }
     /// <summary>
-    /// Internal method that performs the actual gas estimation by calling the mirror node REST API.
+    /// Finds a gas limit the mirror node accepts for the call, by trial
+    /// against its simulation.
     /// </summary>
     /// <param name="mirror">
     /// Mirror node to query for the gas estimate.
@@ -125,43 +147,129 @@ public static class EstimateGasExtension
     /// The call data containing the details of the EVM call, including the contract address, method, and parameters.
     /// </param>
     /// <param name="maxIterations">
-    /// The number of iterations to attempt to estimate the gas.  Each subsequent try
-    /// generally produces a smaller value closer to the limit of what must be paid for the call.
+    /// The most mirror calls to make while refining the estimate.  Above one,
+    /// the result is always a gas limit the mirror node accepted, and more
+    /// calls bring it closer to the smallest such limit; with one, it is the
+    /// mirror's raw estimate, which can be too low for calls that earn a
+    /// storage refund.
+    /// </param>
+    /// <param name="cancellationToken">
+    /// Token that cancels the estimate, including a mirror request in flight.
     /// </param>
     /// <returns>
     /// The estimated gas required to complete the EVM call, including intrinsic gas.
     /// </returns>
-    private static async Task<long> EstimateGasImplementationAsync(MirrorRestClient mirror, EvmCallData callData, int maxIterations)
+    /// <remarks>
+    /// <para>
+    /// The mirror's estimate is a starting point, not necessarily a usable
+    /// limit: for a call that earns a storage refund (clearing slots, for
+    /// example shortening a stored string) it is the gas used net of the
+    /// refund, while execution needs the full amount up front because the
+    /// refund is paid back only at the end. So every candidate limit is
+    /// tried as the cap of a further estimate, and only one the mirror
+    /// accepts is ever returned.
+    /// </para>
+    /// <para>
+    /// If the first estimate is accepted as a cap, estimates made under
+    /// tighter caps are followed downward while they keep shrinking and keep
+    /// being accepted. If it is not, the limit lies above it: EIP-3529 caps a
+    /// refund at a fifth of the gas used, so five quarters of the estimate is
+    /// an upper bound (the original cap if even that is refused), and a
+    /// binary search narrows the gap. <paramref name="maxIterations"/> bounds
+    /// the number of mirror calls; whatever it allows above one, the result
+    /// is the lowest limit found to be accepted. With one, it is the mirror's
+    /// raw estimate.
+    /// </para>
+    /// </remarks>
+    private static async Task<long> EstimateGasImplementationAsync(MirrorRestClient mirror, EvmCallData callData, int maxIterations, CancellationToken cancellationToken)
     {
-        var evmGas = (long)new BigInteger((await mirror.CallEvmAsync(callData).ConfigureAwait(false)).Data.Span, true, true);
-        for (int i = 1; i < maxIterations && evmGas < callData.Gas; i++)
+        var initialCap = callData.Gas!.Value;
+        // A failure at the generous initial cap is a genuine failure of the call.
+        var estimate = await EstimateAsync(mirror, callData, cancellationToken).ConfigureAwait(false);
+        var calls = 1;
+        if (estimate >= initialCap || maxIterations <= 1)
         {
-            var previousEvmGas = evmGas;
-            try
+            // With a single call allowed there is nothing to validate against.
+            return estimate;
+        }
+        var accepted = initialCap;
+        var candidate = estimate;
+        long? rejected = null;
+        while (calls < maxIterations)
+        {
+            callData.Gas = candidate;
+            var next = await TryEstimateAsync(mirror, callData, cancellationToken).ConfigureAwait(false);
+            calls++;
+            if (next is null)
             {
-                callData.Gas = evmGas;
-                evmGas = (long)new BigInteger((await mirror.CallEvmAsync(callData).ConfigureAwait(false)).Data.Span, true, true);
-            }
-            catch (MirrorException mce) when (i > 3 && (mce.Message == "CONTRACT_REVERT_EXECUTED" || mce.Message == "INSUFFICIENT_GAS"))
-            {
-                evmGas = previousEvmGas;
+                rejected = candidate;
                 break;
             }
+            accepted = candidate;
+            if (next.Value >= candidate)
+            {
+                return accepted;
+            }
+            candidate = next.Value;
         }
-        return evmGas;
+        if (rejected is null)
+        {
+            return accepted;
+        }
+        if (accepted == initialCap && calls < maxIterations)
+        {
+            // Nothing below the initial cap has been accepted yet: try the
+            // refund bound before falling back to a search up to the cap.
+            var refundBound = Math.Min(initialCap, rejected.Value + rejected.Value / 4 + 1);
+            callData.Gas = refundBound;
+            calls++;
+            if (await TryEstimateAsync(mirror, callData, cancellationToken).ConfigureAwait(false) is not null)
+            {
+                accepted = refundBound;
+            }
+            else
+            {
+                rejected = refundBound;
+            }
+        }
+        var low = rejected.Value;
+        while (calls < maxIterations && accepted - low > 1)
+        {
+            var middle = low + (accepted - low) / 2;
+            callData.Gas = middle;
+            calls++;
+            if (await TryEstimateAsync(mirror, callData, cancellationToken).ConfigureAwait(false) is null)
+            {
+                low = middle;
+            }
+            else
+            {
+                accepted = middle;
+            }
+        }
+        return accepted;
+    }
+    private static async Task<long> EstimateAsync(MirrorRestClient mirror, EvmCallData callData, CancellationToken cancellationToken)
+    {
+        return (long)new BigInteger((await mirror.CallEvmAsync(callData, cancellationToken).ConfigureAwait(false)).Data.Span, true, true);
     }
     /// <summary>
-    /// Helper function that creates the constructor data for a contract creation call.
+    /// An estimate under the call's current cap, or null when the mirror
+    /// reports <c>INSUFFICIENT_GAS</c> or <c>CONTRACT_REVERT_EXECUTED</c> at
+    /// this cap; a revert is treated as a possible out-of-gas failure in a
+    /// subcall, whatever its actual cause.
     /// </summary>
-    /// <param name="byteCode">
-    /// The byte code of the contract to be created.
-    /// </param>
-    /// <param name="createArgs">
-    /// Additional create arguments to be included in the constructor call.
-    /// </param>
-    /// <returns>
-    /// The constructor data that would be sent to the EVM.
-    /// </returns>
+    private static async Task<long?> TryEstimateAsync(MirrorRestClient mirror, EvmCallData callData, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await EstimateAsync(mirror, callData, cancellationToken).ConfigureAwait(false);
+        }
+        catch (MirrorException mce) when (mce.Message == "INSUFFICIENT_GAS" || mce.Message == "CONTRACT_REVERT_EXECUTED")
+        {
+            return null;
+        }
+    }
     private static ReadOnlyMemory<byte> CreateConstructorData(ReadOnlyMemory<byte> byteCode, object[]? createArgs)
     {
         if (createArgs != null && createArgs.Length > 0)

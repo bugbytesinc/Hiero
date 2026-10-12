@@ -128,4 +128,44 @@ public class MirrorAccountDataTests
         await Assert.That(asSpender[0].Token).IsEqualTo(fxNft.CreateReceipt!.Token);
         await Assert.That(asSpender[0].ApprovedForAll).IsTrue();
     }
+
+    [Test]
+    public async Task Can_Get_Account_Balance()
+    {
+        // The consensus nodes no longer answer balance queries; the mirror
+        // node is the replacement. TestAccount funds the account at creation.
+        await using var fxAccount = await TestAccount.CreateAsync();
+        var mirror = await TestNetwork.GetMirrorRestClientAsync();
+
+        var balance = await mirror.GetAccountBalanceAsync(fxAccount);
+
+        await Assert.That(balance).IsEqualTo((long)fxAccount.CreateParams.InitialBalance);
+    }
+
+    [Test]
+    public async Task Can_Get_Contract_Balance()
+    {
+        // Contracts are accounts on the mirror node, so the same call serves
+        // both; cross-check against the consensus node's (paid) contract info.
+        await using var fxContract = await GreetingContract.CreateAsync();
+        await using var client = await TestNetwork.CreateClientAsync();
+        var info = await client.GetContractInfoAsync(fxContract);
+        var mirror = await TestNetwork.GetMirrorRestClientAsync();
+
+        var balance = await mirror.GetAccountBalanceAsync(fxContract);
+
+        await Assert.That(balance).IsEqualTo((long)info.Balance);
+    }
+
+    [Test]
+    public async Task Balance_Of_Unknown_Account_Is_Null()
+    {
+        var mirror = await TestNetwork.GetMirrorRestClientAsync();
+
+        // A well-formed id no account holds (the mirror rejects ids beyond
+        // its range as invalid, 400, rather than unknown, 404).
+        var balance = await mirror.GetAccountBalanceAsync(new EntityId(0, 0, 200_000_000_000));
+
+        await Assert.That(balance).IsNull();
+    }
 }

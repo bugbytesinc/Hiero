@@ -40,6 +40,42 @@ public class DeleteAllowancesTests
     }
 
     [Test]
+    public async Task Can_Revoke_An_Approve_For_All_Nft_Allowance()
+    {
+        await using var fxAllowances = await TestAllowance.CreateAsync();
+        await using var fxDestination = await TestAccount.CreateAsync();
+        await using var client = await TestNetwork.CreateClientAsync();
+
+        await client.AssociateTokenAsync(fxAllowances.TestNft, fxDestination, ctx =>
+        {
+            ctx.Signatory = new Signatory(ctx.Signatory!, fxDestination);
+        });
+
+        var receipt = await client.RevokeNftAllowanceAsync(new RevokeNftAllowanceParams
+        {
+            Token = fxAllowances.TestNft,
+            Owner = fxAllowances.Owner,
+            Spender = fxAllowances.Agent,
+            Signatory = fxAllowances.Owner.PrivateKey
+        });
+        await Assert.That(receipt.Status).IsEqualTo(ResponseCode.Success);
+
+        // The agent held the owner's approval for all of the class; it no
+        // longer can spend any of them.
+        await using var agentClient = client.Clone(ctx =>
+        {
+            ctx.Payer = fxAllowances.Agent;
+            ctx.Signatory = fxAllowances.Agent.PrivateKey;
+        });
+        var tex = await Assert.ThrowsAsync<TransactionException>(async () => await agentClient.TransferAsync(new TransferParams
+        {
+            NftTransfers = new[] { new NftTransfer(new Nft(fxAllowances.TestNft, 2), fxAllowances.Owner, fxDestination, true) }
+        }));
+        await Assert.That(tex!.Status).IsEqualTo(ResponseCode.SpenderDoesNotHaveAllowance);
+        await AssertHg.NftBalanceAsync(fxAllowances.TestNft, fxDestination, 0);
+    }
+
+    [Test]
     public async Task Can_Delete_A_Crypto_Allowance()
     {
         await using var fxAllowances = await TestAllowance.CreateAsync();
@@ -117,7 +153,7 @@ public class DeleteAllowancesTests
     }
 
     [Test]
-    public async Task Can_Schedule_And_Sign_Revoke_Nft_Allowance()
+    public async Task Can_Not_Schedule_And_Sign_Revoke_Nft_Allowance()
     {
         await using var fxPayer = await TestAccount.CreateAsync(fx => fx.CreateParams.InitialBalance = 20_00_000_000);
         await using var fxAllowances = await TestAllowance.CreateAsync();

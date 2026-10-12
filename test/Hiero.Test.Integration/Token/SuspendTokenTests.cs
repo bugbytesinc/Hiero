@@ -406,7 +406,7 @@ public class SuspendTokenTests
     //}
 
     [Test]
-    public async Task Can_Schedule_And_Sign_Suspend_Token()
+    public async Task Can_Not_Schedule_And_Sign_Suspend_Token()
     {
         await using var fxAccount = await TestAccount.CreateAsync();
         await using var fxToken = await TestToken.CreateAsync(fx =>

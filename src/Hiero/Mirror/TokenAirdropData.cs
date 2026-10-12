@@ -24,8 +24,9 @@ public class TokenAirdropData
 {
     /// <summary>
     /// The amount of the token-airdrop in the token's smallest
-    /// denomination. For NFT airdrops this reflects the count of
-    /// serials associated with this record.
+    /// denomination.  For an NFT airdrop the mirror node reports no
+    /// amount (null), which reads as 0: each NFT record carries a
+    /// single serial (see <see cref="SerialNumber"/>).
     /// </summary>
     [JsonPropertyName("amount")]
     [JsonConverter(typeof(LongMirrorConverter))]
@@ -79,6 +80,10 @@ public static class TokenAirdropDataExtensions
     /// The account whose outstanding (sent-but-unclaimed) airdrops
     /// are requested.
     /// </param>
+    /// <param name="cancellationToken">
+    /// Token that cancels the enumeration, including a page request in
+    /// flight. <c>WithCancellation</c> on the result works as well.
+    /// </param>
     /// <param name="filters">
     /// Additional query filters. The endpoint supports
     /// <see cref="ReceiverFilter"/>, <see cref="TokenFilter"/>,
@@ -88,10 +93,15 @@ public static class TokenAirdropDataExtensions
     /// <returns>
     /// An async enumerable of outstanding airdrop records.
     /// </returns>
-    public static IAsyncEnumerable<TokenAirdropData> GetAccountOutstandingAirdropsAsync(this MirrorRestClient client, EntityId account, params IMirrorQueryParameter[] filters)
+    public static IAsyncEnumerable<TokenAirdropData> GetAccountOutstandingAirdropsAsync(this MirrorRestClient client, EntityId account, CancellationToken cancellationToken, params IMirrorQueryParameter[] filters)
     {
         var path = GenerateInitialPath($"accounts/{account.ToMirrorString()}/airdrops/outstanding", new PageLimit(100), filters);
-        return client.GetPagedItemsAsync<TokenAirdropDataPage, TokenAirdropData>(path, MirrorJsonContext.Default.TokenAirdropDataPage);
+        return client.GetPagedItemsAsync<TokenAirdropDataPage, TokenAirdropData>(path, MirrorJsonContext.Default.TokenAirdropDataPage, cancellationToken);
+    }
+    /// <inheritdoc cref="GetAccountOutstandingAirdropsAsync(MirrorRestClient, EntityId, CancellationToken, IMirrorQueryParameter[])"/>
+    public static IAsyncEnumerable<TokenAirdropData> GetAccountOutstandingAirdropsAsync(this MirrorRestClient client, EntityId account, params IMirrorQueryParameter[] filters)
+    {
+        return client.GetAccountOutstandingAirdropsAsync(account, CancellationToken.None, filters);
     }
     /// <summary>
     /// Enumerates airdrops this account <b>has received</b> but
@@ -107,6 +117,10 @@ public static class TokenAirdropDataExtensions
     /// The account whose pending (received-but-unclaimed)
     /// airdrops are requested.
     /// </param>
+    /// <param name="cancellationToken">
+    /// Token that cancels the enumeration, including a page request in
+    /// flight. <c>WithCancellation</c> on the result works as well.
+    /// </param>
     /// <param name="filters">
     /// Additional query filters. The endpoint supports
     /// <see cref="SenderFilter"/>, <see cref="TokenFilter"/>,
@@ -116,9 +130,14 @@ public static class TokenAirdropDataExtensions
     /// <returns>
     /// An async enumerable of pending airdrop records.
     /// </returns>
-    public static IAsyncEnumerable<TokenAirdropData> GetAccountPendingAirdropsAsync(this MirrorRestClient client, EntityId account, params IMirrorQueryParameter[] filters)
+    public static IAsyncEnumerable<TokenAirdropData> GetAccountPendingAirdropsAsync(this MirrorRestClient client, EntityId account, CancellationToken cancellationToken, params IMirrorQueryParameter[] filters)
     {
         var path = GenerateInitialPath($"accounts/{account.ToMirrorString()}/airdrops/pending", new PageLimit(100), filters);
-        return client.GetPagedItemsAsync<TokenAirdropDataPage, TokenAirdropData>(path, MirrorJsonContext.Default.TokenAirdropDataPage);
+        return client.GetPagedItemsAsync<TokenAirdropDataPage, TokenAirdropData>(path, MirrorJsonContext.Default.TokenAirdropDataPage, cancellationToken);
+    }
+    /// <inheritdoc cref="GetAccountPendingAirdropsAsync(MirrorRestClient, EntityId, CancellationToken, IMirrorQueryParameter[])"/>
+    public static IAsyncEnumerable<TokenAirdropData> GetAccountPendingAirdropsAsync(this MirrorRestClient client, EntityId account, params IMirrorQueryParameter[] filters)
+    {
+        return client.GetAccountPendingAirdropsAsync(account, CancellationToken.None, filters);
     }
 }

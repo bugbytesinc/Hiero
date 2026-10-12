@@ -98,17 +98,57 @@ public class GetReceiptTests
         await using var client = await TestNetwork.CreateClientAsync();
         var receipt = await client.TransferAsync(TestNetwork.Payer, new EntityId(0, 0, 800), 1);
         var receipts = await client.GetAllReceiptsAsync(receipt.TransactionId);
-        await Assert.That(receipts.Count).IsEqualTo(1);
-        await Assert.That(receipts[0].Status).IsEqualTo(ResponseCode.Success);
+        await Assert.That(receipts.Parent!.Status).IsEqualTo(ResponseCode.Success);
+        await Assert.That(receipts.Children).IsEmpty();
+        await Assert.That(receipts.Duplicates).IsEmpty();
     }
 
     [Test]
-    public async Task Can_Get_List_Of_No_Receipts()
+    public async Task Unknown_Transaction_Id_Raises_Consensus_Exception_For_All_Receipts()
     {
         await using var client = await TestNetwork.CreateClientAsync();
         var txid = client.CreateNewTransactionId();
-        var receipts = await client.GetAllReceiptsAsync(txid);
-        await Assert.That(receipts.Count).IsEqualTo(0);
+        var cex = await Assert.ThrowsAsync<ConsensusException>(async () => await client.GetAllReceiptsAsync(txid));
+        await Assert.That(cex!.Status).IsEqualTo(ResponseCode.ReceiptNotFound);
+        await Assert.That(cex.TransactionId).IsEqualTo(txid);
+    }
+
+    [Test]
+    public async Task Unknown_Transaction_Id_Gives_A_Stand_In_Parent_When_Not_Throwing()
+    {
+        await using var client = await TestNetwork.CreateClientAsync();
+        var txid = client.CreateNewTransactionId();
+        var receipts = await client.GetAllReceiptsAsync(txid, default, ctx => ctx.ThrowIfNotSuccess = false);
+        await Assert.That(receipts.Parent).IsNotNull();
+        await Assert.That(receipts.Parent!.Status).IsEqualTo(ResponseCode.ReceiptNotFound);
+        await Assert.That(receipts.Parent.TransactionId).IsEqualTo(txid);
+        await Assert.That(receipts.Children).IsEmpty();
+        await Assert.That(receipts.Duplicates).IsEmpty();
+    }
+
+    [Test]
+    public async Task Unknown_Transaction_Id_Raises_Consensus_Exception()
+    {
+        await using var client = await TestNetwork.CreateClientAsync();
+        var txid = client.CreateNewTransactionId();
+        var ex = await Assert.That(async () =>
+        {
+            await client.GetReceiptAsync(txid);
+        }).ThrowsException();
+        var cex = ex as ConsensusException;
+        await Assert.That(cex).IsNotNull();
+        await Assert.That(cex!.Status).IsEqualTo(ResponseCode.ReceiptNotFound);
+        await Assert.That(cex.TransactionId).IsEqualTo(txid);
+    }
+
+    [Test]
+    public async Task Unknown_Transaction_Id_Returns_Receipt_Not_Found_Without_Throwing_Exception()
+    {
+        await using var client = await TestNetwork.CreateClientAsync();
+        var txid = client.CreateNewTransactionId();
+        var receipt = await client.GetReceiptAsync(txid, default, ctx => ctx.ThrowIfNotSuccess = false);
+        await Assert.That(receipt.Status).IsEqualTo(ResponseCode.ReceiptNotFound);
+        await Assert.That(receipt.TransactionId).IsEqualTo(txid);
     }
 
     [Test]
@@ -117,8 +157,8 @@ public class GetReceiptTests
         await using var fx = await TestToken.CreateAsync();
         await using var client = await TestNetwork.CreateClientAsync();
         var receipts = await client.GetAllReceiptsAsync(fx.CreateReceipt!.TransactionId);
-        await Assert.That(receipts.Count).IsEqualTo(1);
-        var createReceipt = receipts[0] as CreateTokenReceipt;
+        await Assert.That(receipts.Children).IsEmpty();
+        var createReceipt = receipts.Parent as CreateTokenReceipt;
         await Assert.That(createReceipt).IsNotNull();
         await Assert.That(createReceipt!.TransactionId).IsEqualTo(fx.CreateReceipt.TransactionId);
         await Assert.That(createReceipt.Status).IsEqualTo(fx.CreateReceipt.Status);

@@ -261,7 +261,7 @@ public class CreateRoyaltiesTests
     }
 
     [Test]
-    public async Task Can_Schedule_And_Sign_Update_Royalties()
+    public async Task Can_Not_Schedule_And_Sign_Update_Royalties()
     {
         await using var fxAccount = await TestAccount.CreateAsync();
         await using var fxToken = await TestToken.CreateAsync(null, fxAccount);

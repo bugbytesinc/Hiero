@@ -7,6 +7,19 @@ namespace Hiero;
 /// the newly minted NFTs, typically returned from methods
 /// that can affect a change on the total NFT circulation supply.
 /// </summary>
+/// <remarks>
+/// <b>Best-effort when inferred</b>, exactly as for
+/// <see cref="NftMintReceipt"/>: a response with no serial numbers and a zero supply cannot be recognised as a mint. Records obtained from
+/// <see cref="TransactionRecordExtensions.GetTransactionRecordAsync"/>,
+/// <see cref="TransactionRecordExtensions.GetAllTransactionRecordsAsync"/> or
+/// <see cref="TransactionRecordExtensions.GetAccountRecordsAsync"/> therefore
+/// arrive as a plain <see cref="TransactionRecord"/> in that case. No value is
+/// lost — the substitution happens only when the value is zero. Test rather
+/// than cast:
+/// <code>
+/// var serials = record is NftMintRecord mint ? mint.SerialNumbers : [];
+/// </code>
+/// </remarks>
 public sealed record NftMintRecord : TransactionRecord
 {
     /// <summary>

@@ -85,6 +85,9 @@ public static class NftDataExtensions
     /// The identifier of the NFT to retrieve, which includes the token address
     /// and the serial number of the NFT.
     /// </param>
+    /// <param name="cancellationToken">
+    /// Token that cancels the request.
+    /// </param>
     /// <param name="filters">
     /// Reserved for forward compatibility. The endpoint currently
     /// accepts no query parameters per the OpenAPI spec; any filters
@@ -94,22 +97,31 @@ public static class NftDataExtensions
     /// The NFT record, or null if the token/serial pair is unknown to
     /// the mirror node.
     /// </returns>
-    public static Task<NftData?> GetNftAsync(this MirrorRestClient client, Nft nft, params IMirrorQueryParameter[] filters)
+    public static Task<NftData?> GetNftAsync(this MirrorRestClient client, Nft nft, CancellationToken cancellationToken, params IMirrorQueryParameter[] filters)
     {
         var path = GenerateInitialPath($"tokens/{nft.Token.ToMirrorString()}/nfts/{nft.SerialNumber}", filters);
-        return client.GetSingleItemAsync(path, MirrorJsonContext.Default.NftData);
+        return client.GetSingleItemAsync(path, MirrorJsonContext.Default.NftData, cancellationToken);
+    }
+    /// <inheritdoc cref="GetNftAsync(MirrorRestClient, Nft, CancellationToken, IMirrorQueryParameter[])"/>
+    public static Task<NftData?> GetNftAsync(this MirrorRestClient client, Nft nft, params IMirrorQueryParameter[] filters)
+    {
+        return client.GetNftAsync(nft, CancellationToken.None, filters);
     }
     /// <summary>
     /// Enumerates the NFTs held by the given account. The records
-    /// are returned newest-first by default (governed by
-    /// <c>token.id</c> then <c>serialnumber</c>); pass
-    /// <see cref="OrderBy.Ascending"/> to reverse.
+    /// are returned in descending order by default, by
+    /// <c>token.id</c> then <c>serialnumber</c> (not chronological);
+    /// pass <see cref="OrderBy.Ascending"/> to reverse.
     /// </summary>
     /// <param name="client">
     /// Mirror Rest Client to use for the request.
     /// </param>
     /// <param name="account">
     /// The account whose NFT holdings are requested.
+    /// </param>
+    /// <param name="cancellationToken">
+    /// Token that cancels the enumeration, including a page request in
+    /// flight. <c>WithCancellation</c> on the result works as well.
     /// </param>
     /// <param name="filters">
     /// Additional query filters. The endpoint supports
@@ -122,10 +134,15 @@ public static class NftDataExtensions
     /// <returns>
     /// An async enumerable of NFT records.
     /// </returns>
-    public static IAsyncEnumerable<NftData> GetAccountNftsAsync(this MirrorRestClient client, EntityId account, params IMirrorQueryParameter[] filters)
+    public static IAsyncEnumerable<NftData> GetAccountNftsAsync(this MirrorRestClient client, EntityId account, CancellationToken cancellationToken, params IMirrorQueryParameter[] filters)
     {
         var path = GenerateInitialPath($"accounts/{account.ToMirrorString()}/nfts", new PageLimit(100), filters);
-        return client.GetPagedItemsAsync<NftDataPage, NftData>(path, MirrorJsonContext.Default.NftDataPage);
+        return client.GetPagedItemsAsync<NftDataPage, NftData>(path, MirrorJsonContext.Default.NftDataPage, cancellationToken);
+    }
+    /// <inheritdoc cref="GetAccountNftsAsync(MirrorRestClient, EntityId, CancellationToken, IMirrorQueryParameter[])"/>
+    public static IAsyncEnumerable<NftData> GetAccountNftsAsync(this MirrorRestClient client, EntityId account, params IMirrorQueryParameter[] filters)
+    {
+        return client.GetAccountNftsAsync(account, CancellationToken.None, filters);
     }
     /// <summary>
     /// Enumerates the individual NFT serials that have been minted
@@ -139,6 +156,10 @@ public static class NftDataExtensions
     /// <param name="token">
     /// The NFT class whose individual serials are requested.
     /// </param>
+    /// <param name="cancellationToken">
+    /// Token that cancels the enumeration, including a page request in
+    /// flight. <c>WithCancellation</c> on the result works as well.
+    /// </param>
     /// <param name="filters">
     /// Additional query filters. The endpoint supports
     /// <see cref="AccountFilter"/> (current holder),
@@ -148,9 +169,14 @@ public static class NftDataExtensions
     /// <returns>
     /// An async enumerable of NFT records.
     /// </returns>
-    public static IAsyncEnumerable<NftData> GetTokenNftsAsync(this MirrorRestClient client, EntityId token, params IMirrorQueryParameter[] filters)
+    public static IAsyncEnumerable<NftData> GetTokenNftsAsync(this MirrorRestClient client, EntityId token, CancellationToken cancellationToken, params IMirrorQueryParameter[] filters)
     {
         var path = GenerateInitialPath($"tokens/{token.ToMirrorString()}/nfts", new PageLimit(100), filters);
-        return client.GetPagedItemsAsync<NftDataPage, NftData>(path, MirrorJsonContext.Default.NftDataPage);
+        return client.GetPagedItemsAsync<NftDataPage, NftData>(path, MirrorJsonContext.Default.NftDataPage, cancellationToken);
+    }
+    /// <inheritdoc cref="GetTokenNftsAsync(MirrorRestClient, EntityId, CancellationToken, IMirrorQueryParameter[])"/>
+    public static IAsyncEnumerable<NftData> GetTokenNftsAsync(this MirrorRestClient client, EntityId token, params IMirrorQueryParameter[] filters)
+    {
+        return client.GetTokenNftsAsync(token, CancellationToken.None, filters);
     }
 }

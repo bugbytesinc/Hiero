@@ -13,6 +13,7 @@ public sealed class ResponseCodeConverter : JsonConverter<ResponseCode>
     /// </summary>
     private static readonly Dictionary<string, ResponseCode> _mapDesc = new()
     {
+        { "UNRECOGNIZED", ResponseCode.Unrecognized },
         { "RPC_ERROR", ResponseCode.RpcError },
         { "OK", ResponseCode.Ok },
         { "INVALID_TRANSACTION", ResponseCode.InvalidTransaction },
@@ -404,12 +405,20 @@ public sealed class ResponseCodeConverter : JsonConverter<ResponseCode>
         { "NODE_ACCOUNT_HAS_ZERO_BALANCE", ResponseCode.NodeAccountHasZeroBalance },
         { "TRANSFER_TO_FEE_COLLECTION_ACCOUNT_NOT_ALLOWED", ResponseCode.TransferToFeeCollectionAccountNotAllowed },
         { "TOO_MANY_HOOK_INVOCATIONS", ResponseCode.TooManyHookInvocations },
+        { "INVALID_REGISTERED_NODE_ID", ResponseCode.InvalidRegisteredNodeId },
+        { "INVALID_REGISTERED_ENDPOINT", ResponseCode.InvalidRegisteredEndpoint },
+        { "REGISTERED_ENDPOINTS_EXCEEDED_LIMIT", ResponseCode.RegisteredEndpointsExceededLimit },
+        { "INVALID_REGISTERED_ENDPOINT_ADDRESS", ResponseCode.InvalidRegisteredEndpointAddress },
+        { "INVALID_REGISTERED_ENDPOINT_TYPE", ResponseCode.InvalidRegisteredEndpointType },
+        { "REGISTERED_NODE_STILL_ASSOCIATED", ResponseCode.RegisteredNodeStillAssociated },
+        { "MAX_REGISTERED_NODES_EXCEEDED", ResponseCode.MaxRegisteredNodesExceeded },
     };
     /// <summary>
     /// Map of the response code enum value to string text value.
     /// </summary>
     private static readonly Dictionary<ResponseCode, string> _mapCode = new()
     {
+        { ResponseCode.Unrecognized, "UNRECOGNIZED" },
         { ResponseCode.RpcError, "RPC_ERROR" },
         { ResponseCode.Ok, "OK" },
         { ResponseCode.InvalidTransaction, "INVALID_TRANSACTION" },
@@ -801,15 +810,31 @@ public sealed class ResponseCodeConverter : JsonConverter<ResponseCode>
         { ResponseCode.NodeAccountHasZeroBalance, "NODE_ACCOUNT_HAS_ZERO_BALANCE" },
         { ResponseCode.TransferToFeeCollectionAccountNotAllowed, "TRANSFER_TO_FEE_COLLECTION_ACCOUNT_NOT_ALLOWED" },
         { ResponseCode.TooManyHookInvocations, "TOO_MANY_HOOK_INVOCATIONS" },
+        { ResponseCode.InvalidRegisteredNodeId, "INVALID_REGISTERED_NODE_ID" },
+        { ResponseCode.InvalidRegisteredEndpoint, "INVALID_REGISTERED_ENDPOINT" },
+        { ResponseCode.RegisteredEndpointsExceededLimit, "REGISTERED_ENDPOINTS_EXCEEDED_LIMIT" },
+        { ResponseCode.InvalidRegisteredEndpointAddress, "INVALID_REGISTERED_ENDPOINT_ADDRESS" },
+        { ResponseCode.InvalidRegisteredEndpointType, "INVALID_REGISTERED_ENDPOINT_TYPE" },
+        { ResponseCode.RegisteredNodeStillAssociated, "REGISTERED_NODE_STILL_ASSOCIATED" },
+        { ResponseCode.MaxRegisteredNodesExceeded, "MAX_REGISTERED_NODES_EXCEEDED" },
     };
     /// <inheritdoc />
     public override ResponseCode Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        if (_mapDesc.TryGetValue(reader.GetString()!, out ResponseCode code))
+        // A token that is not a JSON string cannot be a status at all, and a
+        // string the map does not know cannot be resolved to one.  Both yield
+        // Unrecognized rather than throwing: these statuses arrive inside
+        // larger Mirror Node payloads, and one unreadable value should not
+        // fail the deserialization of an entire page of results.
+        if (reader.TokenType == JsonTokenType.String)
         {
-            return code;
+            var value = reader.GetString();
+            if (value is not null && _mapDesc.TryGetValue(value, out ResponseCode code))
+            {
+                return code;
+            }
         }
-        return (ResponseCode)(-500);
+        return ResponseCode.Unrecognized;
     }
     /// <inheritdoc />
     public override void Write(Utf8JsonWriter writer, ResponseCode code, JsonSerializerOptions options)
@@ -820,7 +845,11 @@ public sealed class ResponseCodeConverter : JsonConverter<ResponseCode>
         }
         else
         {
-            writer.WriteStringValue(string.Empty);
+            // A value outside the map is one no network produced — a raw cast,
+            // or a code added to the enum without a matching map entry.  Emit
+            // the same marker an unreadable status produces, so the value still
+            // names itself and reads back as Unrecognized.
+            writer.WriteStringValue(_mapCode[ResponseCode.Unrecognized]);
         }
     }
 }

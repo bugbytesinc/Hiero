@@ -34,7 +34,10 @@ public sealed class QueryContractParams
     /// </summary>
     public long ReturnedDataGasAllowance { get; set; }
     /// <summary>
-    /// Name of the contract function to call.
+    /// Name of the contract function to call.  Leave it empty (or
+    /// <code>null</code>), with no <see cref="MethodArgs"/>, to call the
+    /// contract with no call data, which runs its <c>receive</c> or
+    /// <c>fallback</c> function.
     /// </summary>
     public string MethodName { get; set; } = default!;
     /// <summary>
@@ -56,7 +59,7 @@ public sealed class QueryContractParams
     /// </summary>
     public bool ThrowOnFail { get; set; } = true;
     /// <summary>
-    /// Optional Cancellation token that can interrupt the query.
+    /// Optional cancellation token that stops the query.
     /// </summary>
     public CancellationToken? CancellationToken { get; set; }
 }
@@ -89,9 +92,9 @@ public static class QueryContractExtensions
     /// <returns>
     /// The results from the local contract query call.
     /// </returns>
-    /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
+    /// <exception cref="ArgumentException">If required arguments are missing or invalid.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
+    /// <exception cref="PrecheckException">If the gateway node refused the query.</exception>
     /// <exception cref="ContractException">If the request was accepted by the network but the contract failed for
     /// some reason.  Contains additional information returned from the contract virtual machine.  Only thrown if
     /// the <see cref="QueryContractParams.ThrowOnFail"/> is set to <code>true</code>, the default, otherwise

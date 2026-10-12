@@ -1036,7 +1036,12 @@ public class CreateNftTests
     [Test]
     public async Task Can_Schedule_A_Create_Nft()
     {
-        await using var fxPayer = await TestAccount.CreateAsync(fx => fx.CreateParams.InitialBalance = 20_00_000_000);
+        // The schedule's payer pays the token creation when it executes,
+        // about $2 on testnet in October 2026 (~22 hbar). Fund it in USD,
+        // as the fee is set, so the margin holds as the hbar price moves;
+        // teardown returns what is left.
+        var payerFunding = (ulong)await TestNetwork.TinybarsFromCentsAsync(500);
+        await using var fxPayer = await TestAccount.CreateAsync(fx => fx.CreateParams.InitialBalance = payerFunding);
         var fxTemplate = await TestNft.CreateAsync();
         await using var client = await TestNetwork.CreateClientAsync();
         var scheduledReceipt = await client.ScheduleAsync(new ScheduleParams

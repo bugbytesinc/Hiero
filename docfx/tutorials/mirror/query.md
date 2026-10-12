@@ -299,6 +299,24 @@ OpcodeStackProjectionFilter.Include
 OpcodeStorageProjectionFilter.Include
 ```
 
+## Cancellation
+
+Every mirror query takes a `CancellationToken`. It comes last or, when the query takes filters, just before them:
+
+```csharp
+using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+TokenData? token = await mirror.GetTokenAsync(tokenId, cts.Token);
+await foreach (var tx in mirror.GetTransactionsAsync(cts.Token, AccountFilter.Is(account))) { }
+```
+
+A paged query also honors `WithCancellation`, which suits code handed the enumerable by someone else:
+
+```csharp
+await foreach (var tx in transactions.WithCancellation(cts.Token)) { }
+```
+
+Either way the token cancels the page request in flight, and the call ends with an `OperationCanceledException`. A request that outlasts the `HttpClient`'s own `Timeout` ends with a `TaskCanceledException` wrapping a `TimeoutException`.
+
 ## Consensus queries vs. mirror queries
 
 | | `ConsensusClient` | `MirrorRestClient` |

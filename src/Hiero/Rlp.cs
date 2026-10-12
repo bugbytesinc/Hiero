@@ -11,11 +11,25 @@ namespace Hiero;
 public static class Rlp
 {
     /// <summary>
-    /// RLP-encodes one or more data items into a byte array.
+    /// RLP-encodes one or more data items into a byte array.  A single
+    /// argument is encoded as that item alone; two or more arguments are
+    /// encoded as an RLP list.  Calling with no arguments produces an
+    /// empty list (<c>0xC0</c>), and a <c>null</c> array produces
+    /// <c>0x80</c>.
     /// </summary>
-    /// <param name="data">The data items to encode. Supports byte arrays, strings, numeric types, and nested arrays.</param>
+    /// <param name="data">
+    /// The data items to encode: <c>byte[]</c>,
+    /// <c>ReadOnlyMemory&lt;byte&gt;</c>, <c>string</c>, non-negative
+    /// <c>int</c>, <c>long</c>, <c>ulong</c>, <c>short</c>, <c>ushort</c>,
+    /// <c>uint</c> and <c>BigInteger</c> values, <c>decimal</c> values
+    /// (the fractional part is truncated), <c>null</c> (encoded as an
+    /// empty string), and nested arrays of these (encoded as lists).
+    /// Other types, such as <c>byte</c>, <c>sbyte</c>, <c>float</c> and
+    /// <c>double</c>, are not supported.
+    /// </param>
     /// <returns>The RLP-encoded byte array.</returns>
     /// <exception cref="ArgumentException">If a data item is of an unsupported type.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">If a numeric data item is negative.</exception>
     public static byte[] Encode(params object?[] data)
     {
         if (data == null)
@@ -33,6 +47,7 @@ public static class Rlp
     /// </summary>
     /// <param name="data">The RLP-encoded byte array to decode.</param>
     /// <returns>An array of decoded objects, where each element is either a byte array or a nested array of objects.</returns>
+    /// <exception cref="FormatException">If the data is not valid RLP: an item's declared length runs past the end of the data, or a length prefix is too long to describe data held in memory.</exception>
     public static object[] Decode(byte[] data)
     {
         return DecodeItems(data);
@@ -299,43 +314,10 @@ public static class Rlp
         var index = 0;
         while (ptr < data.Length)
         {
-            var code = data[ptr];
-            if (code <= 0x7f)
-            {
-                byte[] item = [code];
-                result[index++] = item;
-                ptr++;
-            }
-            else if (code <= 0xb7)
-            {
-                int length = code - 0x80;
-                byte[] item = new byte[length];
-                data.Slice(ptr + 1, length).CopyTo(item);
-                result[index++] = item;
-                ptr += length + 1;
-            }
-            else if (code <= 0xbf)
-            {
-                int lengthSize = code - 0xb7;
-                int length = ReadLength(data.Slice(ptr + 1, lengthSize));
-                byte[] item = new byte[length];
-                data.Slice(ptr + lengthSize + 1, length).CopyTo(item);
-                result[index++] = item;
-                ptr += length + lengthSize + 1;
-            }
-            else if (code <= 0xf7)
-            {
-                int length = code - 0xc0;
-                result[index++] = DecodeItems(data.Slice(ptr + 1, length));
-                ptr += length + 1;
-            }
-            else
-            {
-                int lengthSize = code - 0xf7;
-                int length = ReadLength(data.Slice(ptr + 1, lengthSize));
-                result[index++] = DecodeItems(data.Slice(ptr + lengthSize + 1, length));
-                ptr += length + lengthSize + 1;
-            }
+            var (start, length, isList) = ReadItemPrefix(data, ptr);
+            var payload = data.Slice(start, length);
+            result[index++] = isList ? DecodeItems(payload) : payload.ToArray();
+            ptr = start + length;
         }
         return result;
     }
@@ -346,41 +328,74 @@ public static class Rlp
         var ptr = 0;
         while (ptr < data.Length)
         {
-            var code = data[ptr];
-            if (code <= 0x7f)
-            {
-                ptr++;
-            }
-            else if (code <= 0xb7)
-            {
-                ptr += code - 0x80 + 1;
-            }
-            else if (code <= 0xbf)
-            {
-                int lengthSize = code - 0xb7;
-                ptr += ReadLength(data.Slice(ptr + 1, lengthSize)) + lengthSize + 1;
-            }
-            else if (code <= 0xf7)
-            {
-                ptr += code - 0xc0 + 1;
-            }
-            else
-            {
-                int lengthSize = code - 0xf7;
-                ptr += ReadLength(data.Slice(ptr + 1, lengthSize)) + lengthSize + 1;
-            }
+            var (start, length, _) = ReadItemPrefix(data, ptr);
+            // Every item occupies at least one byte, so this always advances.
+            ptr = start + length;
             count++;
         }
         return count;
     }
 
-    private static int ReadLength(ReadOnlySpan<byte> source)
+    /// <summary>
+    /// Reads the prefix of the item at the given offset: where its payload
+    /// starts, how long it is, and whether it is a list. Checks that the
+    /// payload lies within the data, so a crafted length can neither run
+    /// past the end nor stall the decoder.
+    /// </summary>
+    private static (int Start, int Length, bool IsList) ReadItemPrefix(ReadOnlySpan<byte> data, int ptr)
     {
-        var length = 0;
-        for (var i = 0; i < source.Length; i++)
+        var code = data[ptr];
+        int start;
+        int length;
+        bool isList;
+        if (code <= 0x7f)
         {
-            length = (length << 8) + source[i];
+            return (ptr, 1, false);
         }
-        return length;
+        else if (code <= 0xb7)
+        {
+            (start, length, isList) = (ptr + 1, code - 0x80, false);
+        }
+        else if (code <= 0xbf)
+        {
+            (start, length) = ReadLongLength(data, ptr, code - 0xb7);
+            isList = false;
+        }
+        else if (code <= 0xf7)
+        {
+            (start, length, isList) = (ptr + 1, code - 0xc0, true);
+        }
+        else
+        {
+            (start, length) = ReadLongLength(data, ptr, code - 0xf7);
+            isList = true;
+        }
+        if (length > data.Length - start)
+        {
+            throw new FormatException($"The RLP item at offset {ptr} declares {length} bytes of content, but only {data.Length - start} remain.");
+        }
+        return (start, length, isList);
+    }
+
+    private static (int Start, int Length) ReadLongLength(ReadOnlySpan<byte> data, int ptr, int lengthSize)
+    {
+        if (lengthSize > 4)
+        {
+            throw new FormatException($"The RLP item at offset {ptr} has a {lengthSize}-byte length prefix, describing more data than can be held in memory.");
+        }
+        if (lengthSize > data.Length - ptr - 1)
+        {
+            throw new FormatException($"The RLP item at offset {ptr} is truncated within its length prefix.");
+        }
+        long length = 0;
+        foreach (var b in data.Slice(ptr + 1, lengthSize))
+        {
+            length = (length << 8) | b;
+        }
+        if (length > int.MaxValue)
+        {
+            throw new FormatException($"The RLP item at offset {ptr} declares {length} bytes of content, more than can be held in memory.");
+        }
+        return (ptr + 1 + lengthSize, (int)length);
     }
 }

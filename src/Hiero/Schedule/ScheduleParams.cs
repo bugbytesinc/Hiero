@@ -60,10 +60,11 @@ public sealed class ScheduleParams
     /// </summary>
     public Signatory? Signatory { get; set; }
     /// <summary>
-    /// Optional cancellation token for this schedule creation request.
-    /// If set, this token takes precedence over any cancellation token
-    /// defined by the inner scheduled transaction parameters.
-    /// </summary>    
+    /// Optional cancellation token.  Cancelling stops the client waiting;
+    /// it cannot recall a transaction already sent.  Cancelled after the
+    /// send, the outcome is unknown: settle it by its transaction id on a
+    /// mirror node rather than resubmitting it.
+    /// </summary>
     public CancellationToken? CancellationToken { get; set; }
 }
 internal sealed class ScheduleParamsOrchestrator : TransactionParams<ScheduleReceipt>, INetworkParams<ScheduleReceipt>
@@ -144,10 +145,10 @@ public static class ScheduleExtensions
     /// A receipt containing the schedule ID and the scheduled
     /// transaction ID that will be used when executed.
     /// </returns>
-    /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
+    /// <exception cref="ArgumentException">If required arguments are missing or invalid.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
-    /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
+    /// <exception cref="PrecheckException">If the gateway node refused the transaction. Only a code about the transaction itself proves it did not execute; any other code leaves the outcome unknown, so settle it by its transaction id on a mirror node rather than resubmitting it (see <see cref="PrecheckException"/>).</exception>
+    /// <exception cref="ConsensusException">If the outcome could not be confirmed: the transaction may have executed, so settle it by its transaction id on a mirror node rather than resubmitting it.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
     /// <example>
     /// Convenience overload: schedule a transaction directly without wrapping
@@ -179,10 +180,10 @@ public static class ScheduleExtensions
     /// A receipt containing the schedule ID and the scheduled
     /// transaction ID that will be used when executed.
     /// </returns>
-    /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
+    /// <exception cref="ArgumentException">If required arguments are missing or invalid.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
-    /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
+    /// <exception cref="PrecheckException">If the gateway node refused the transaction. Only a code about the transaction itself proves it did not execute; any other code leaves the outcome unknown, so settle it by its transaction id on a mirror node rather than resubmitting it (see <see cref="PrecheckException"/>).</exception>
+    /// <exception cref="ConsensusException">If the outcome could not be confirmed: the transaction may have executed, so settle it by its transaction id on a mirror node rather than resubmitting it.</exception>
     /// <exception cref="TransactionException">If the network rejected the create request as invalid or had missing data.</exception>
     /// <example>
     /// Full <see cref="ScheduleParams"/> overload — use when you need an

@@ -30,8 +30,9 @@ public class NftTransactionData
     public ConsensusTimeStamp Consensus { get; set; }
     /// <summary>
     /// True when this transaction was executed under an
-    /// allowance granted by the current owner rather than by the
-    /// owner directly.
+    /// allowance granted by the account that owned the serial at
+    /// the time of the transaction, rather than by that owner
+    /// directly.
     /// </summary>
     [JsonPropertyName("is_approval")]
     [JsonConverter(typeof(BooleanMirrorConverter))]
@@ -89,6 +90,10 @@ public static class NftTransactionDataExtensions
     /// <param name="nft">
     /// The NFT (token + serial) whose history is requested.
     /// </param>
+    /// <param name="cancellationToken">
+    /// Token that cancels the enumeration, including a page request in
+    /// flight. <c>WithCancellation</c> on the result works as well.
+    /// </param>
     /// <param name="filters">
     /// Additional query filters. The endpoint supports
     /// <see cref="TimestampFilter"/>, <see cref="PageLimit"/>,
@@ -97,9 +102,14 @@ public static class NftTransactionDataExtensions
     /// <returns>
     /// An async enumerable of the NFT's transaction records.
     /// </returns>
-    public static IAsyncEnumerable<NftTransactionData> GetNftTransactionHistoryAsync(this MirrorRestClient client, Nft nft, params IMirrorQueryParameter[] filters)
+    public static IAsyncEnumerable<NftTransactionData> GetNftTransactionHistoryAsync(this MirrorRestClient client, Nft nft, CancellationToken cancellationToken, params IMirrorQueryParameter[] filters)
     {
         var path = GenerateInitialPath($"tokens/{nft.Token.ToMirrorString()}/nfts/{nft.SerialNumber}/transactions", new PageLimit(100), filters);
-        return client.GetPagedItemsAsync<NftTransactionDataPage, NftTransactionData>(path, MirrorJsonContext.Default.NftTransactionDataPage);
+        return client.GetPagedItemsAsync<NftTransactionDataPage, NftTransactionData>(path, MirrorJsonContext.Default.NftTransactionDataPage, cancellationToken);
+    }
+    /// <inheritdoc cref="GetNftTransactionHistoryAsync(MirrorRestClient, Nft, CancellationToken, IMirrorQueryParameter[])"/>
+    public static IAsyncEnumerable<NftTransactionData> GetNftTransactionHistoryAsync(this MirrorRestClient client, Nft nft, params IMirrorQueryParameter[] filters)
+    {
+        return client.GetNftTransactionHistoryAsync(nft, CancellationToken.None, filters);
     }
 }

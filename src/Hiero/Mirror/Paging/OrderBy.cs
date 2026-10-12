@@ -19,11 +19,11 @@ public class OrderBy : IMirrorPaging
     /// <summary>
     /// Requests that results be returned in ascending order.
     /// </summary>
-    public static OrderBy Ascending = new OrderBy(true);
+    public static readonly OrderBy Ascending = new OrderBy(true);
     /// <summary>
     /// Requests that results be returned in descending order.
     /// </summary>
-    public static OrderBy Descending = new OrderBy(false);
+    public static readonly OrderBy Descending = new OrderBy(false);
     /// <summary>
     /// Flag indicating the sorting order
     /// is ascending (otherwise descending).

@@ -31,7 +31,7 @@ public sealed record FileInfo
     /// A descriptor of all the keys required to sign transactions 
     /// editing and otherwise manipulating the contents of this file.
     /// </summary>
-    public Endorsement[] Endorsements { get; private init; }
+    public IReadOnlyList<Endorsement> Endorsements { get; private init; }
     /// <summary>
     /// Flag indicating the file has been deleted.
     /// </summary>
@@ -80,11 +80,9 @@ public static class FileInfoExtensions
     /// <returns>
     /// The contents of the file as a blob of bytes.
     /// </returns>
-    /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
+    /// <exception cref="ArgumentException">If required arguments are missing or invalid.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
-    /// <exception cref="ConsensusException">If the network was unable to come to consensus before the duration of the transaction expired.</exception>
-    /// <exception cref="TransactionException">If the network rejected the request as invalid or had missing data.</exception>
+    /// <exception cref="PrecheckException">If the gateway node refused the query.</exception>
     public static async Task<ReadOnlyMemory<byte>> GetFileContentAsync(this ConsensusClient client, EntityId file, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
     {
         var response = await Engine.QueryAsync(client, new FileGetContentsQuery { FileID = new FileID(file) }, cancellationToken, configure).ConfigureAwait(false);
@@ -108,9 +106,9 @@ public static class FileInfoExtensions
     /// <returns>
     /// The details of the network file, excluding content.
     /// </returns>
-    /// <exception cref="ArgumentOutOfRangeException">If required arguments are missing.</exception>
+    /// <exception cref="ArgumentException">If required arguments are missing or invalid.</exception>
     /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
-    /// <exception cref="PrecheckException">If the gateway node rejected the request upon submission.</exception>
+    /// <exception cref="PrecheckException">If the gateway node refused the query.</exception>
     public static async Task<FileInfo> GetFileInfoAsync(this ConsensusClient client, EntityId file, CancellationToken cancellationToken = default, Action<IConsensusContext>? configure = null)
     {
         return new FileInfo(await Engine.QueryAsync(client, new FileGetInfoQuery { FileID = new FileID(file) }, cancellationToken, configure).ConfigureAwait(false));

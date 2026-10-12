@@ -95,6 +95,22 @@ public class ContractResultData
     [JsonConverter(typeof(BigIntegerConverter))]
     public BigInteger GasPrice { get; set; }
     /// <summary>
+    /// The maximum total fee per gas the sender of a wrapped EIP-1559
+    /// (type 2) or later ethereum transaction offered; zero for other
+    /// transaction types.
+    /// </summary>
+    [JsonPropertyName("max_fee_per_gas")]
+    [JsonConverter(typeof(BigIntegerConverter))]
+    public BigInteger MaxFeePerGas { get; set; }
+    /// <summary>
+    /// The maximum priority fee (tip) per gas the sender of a wrapped
+    /// EIP-1559 (type 2) or later ethereum transaction offered; zero
+    /// for other transaction types.
+    /// </summary>
+    [JsonPropertyName("max_priority_fee_per_gas")]
+    [JsonConverter(typeof(BigIntegerConverter))]
+    public BigInteger MaxPriorityFeePerGas { get; set; }
+    /// <summary>
     /// The transaction’s consensus timestamp.
     /// </summary>
     [JsonPropertyName("timestamp")]
@@ -165,7 +181,8 @@ public class ContractResultData
     [JsonPropertyName("logs")]
     public ContractLogData[]? Logs { get; set; }
     /// <summary>
-    /// integer of the transaction type, 0x0 for legacy transactions, 0x1 for access list types, 0x2 for dynamic fees.
+    /// integer of the transaction type, 0x0 for legacy transactions, 0x1 for access list types, 0x2 for dynamic fees,
+    /// 0x4 for EIP-7702 set-code transactions.
     /// </summary>
     [JsonPropertyName("type")]
     [JsonConverter(typeof(IntMirrorConverter))]
@@ -176,6 +193,16 @@ public class ContractResultData
     [JsonPropertyName("status")]
     [JsonConverter(typeof(BigIntegerConverter))]
     public BigInteger TransactionStatus { get; set; }
+    /// <summary>
+    /// The HAPI status of the transaction that produced this result.
+    /// </summary>
+    /// <remarks>
+    /// A status the network reports but this build of the SDK does not know
+    /// reads as <see cref="ResponseCode.Unrecognized"/> rather than failing
+    /// the surrounding query.
+    /// </remarks>
+    [JsonPropertyName("result")]
+    public ResponseCode Status { get; set; }
     /// <summary>
     /// Chain ID
     /// </summary>
@@ -190,6 +217,130 @@ public class ContractResultData
     [JsonPropertyName("error_message")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? ErrorMessage { get; set; }
+    /// <summary>
+    /// The initcode of a contract create that failed; empty otherwise.
+    /// </summary>
+    [JsonPropertyName("failed_initcode")]
+    [JsonConverter(typeof(HexStringToBytesConverter))]
+    public ReadOnlyMemory<byte> FailedInitcode { get; set; }
+    /// <summary>
+    /// The EIP-2930 access list of the wrapped ethereum transaction:
+    /// the contracts and storage slots it declared up front. Empty for
+    /// transactions that declared none, and null from mirror nodes that
+    /// predate the structured form (see <see cref="AccessListConverter"/>).
+    /// </summary>
+    [JsonPropertyName("access_list")]
+    [JsonConverter(typeof(AccessListConverter))]
+    public AccessListEntryData[]? AccessList { get; set; }
+    /// <summary>
+    /// The EIP-7702 authorization list of a wrapped set-code (type 4)
+    /// ethereum transaction: the delegations it asked the network to
+    /// install. Null for other transaction types.
+    /// </summary>
+    [JsonPropertyName("authorization_list")]
+    public EvmAuthorizationData[]? AuthorizationList { get; set; }
+    /// <summary>
+    /// The contract storage slots the call read or wrote. Reported only
+    /// when the result is retrieved individually (by transaction id,
+    /// hash or timestamp), not in result listings.
+    /// </summary>
+    [JsonPropertyName("state_changes")]
+    public ContractStateChangeData[]? StateChanges { get; set; }
+}
+/// <summary>
+/// One entry of an EIP-2930 access list: a contract and the storage
+/// slots of it the transaction declared it would touch.
+/// </summary>
+public class AccessListEntryData
+{
+    /// <summary>
+    /// The address of the accessed contract.
+    /// </summary>
+    [JsonPropertyName("address")]
+    public EvmAddress Address { get; set; } = default!;
+    /// <summary>
+    /// The accessed storage keys, each 32 bytes.
+    /// </summary>
+    [JsonPropertyName("storage_keys")]
+    [JsonConverter(typeof(HexStringArraytoBytesArrayConverter))]
+    public ReadOnlyMemory<byte>[] StorageKeys { get; set; } = [];
+}
+/// <summary>
+/// One entry of an EIP-7702 authorization list: a signed request to
+/// delegate the signing account's code to another address.
+/// </summary>
+public class EvmAuthorizationData
+{
+    /// <summary>
+    /// The address the account's code is delegated to.
+    /// </summary>
+    [JsonPropertyName("address")]
+    public EvmAddress Address { get; set; } = default!;
+    /// <summary>
+    /// The chain the authorization is valid on; zero for any chain.
+    /// </summary>
+    [JsonPropertyName("chain_id")]
+    [JsonConverter(typeof(BigIntegerConverter))]
+    public BigInteger ChainId { get; set; }
+    /// <summary>
+    /// The signing account's nonce the authorization is bound to.
+    /// </summary>
+    [JsonPropertyName("nonce")]
+    [JsonConverter(typeof(LongMirrorConverter))]
+    public long Nonce { get; set; }
+    /// <summary>
+    /// The r value of the authorization signature.
+    /// </summary>
+    [JsonPropertyName("r")]
+    [JsonConverter(typeof(BigIntegerConverter))]
+    public BigInteger SignatureR { get; set; }
+    /// <summary>
+    /// The s value of the authorization signature.
+    /// </summary>
+    [JsonPropertyName("s")]
+    [JsonConverter(typeof(BigIntegerConverter))]
+    public BigInteger SignatureS { get; set; }
+    /// <summary>
+    /// The y-parity (recovery id) of the authorization signature, 0 or
+    /// 1. Hex encoded on the wire like the other signature values.
+    /// </summary>
+    [JsonPropertyName("y_parity")]
+    [JsonConverter(typeof(BigIntegerConverter))]
+    public BigInteger YParity { get; set; }
+}
+/// <summary>
+/// A contract storage slot a call read, and possibly wrote.
+/// </summary>
+public class ContractStateChangeData
+{
+    /// <summary>
+    /// The EVM address of the contract owning the slot.
+    /// </summary>
+    [JsonPropertyName("address")]
+    public EvmAddress Address { get; set; } = default!;
+    /// <summary>
+    /// The HAPI entity id of the contract owning the slot.
+    /// </summary>
+    [JsonPropertyName("contract_id")]
+    public EntityId Contract { get; set; } = default!;
+    /// <summary>
+    /// The storage slot.
+    /// </summary>
+    [JsonPropertyName("slot")]
+    [JsonConverter(typeof(BigIntegerConverter))]
+    public BigInteger Slot { get; set; }
+    /// <summary>
+    /// The value the call read from the slot.
+    /// </summary>
+    [JsonPropertyName("value_read")]
+    [JsonConverter(typeof(HexStringToBytesConverter))]
+    public ReadOnlyMemory<byte> ValueRead { get; set; }
+    /// <summary>
+    /// The value the call wrote to the slot; empty when it only read.
+    /// </summary>
+    [JsonPropertyName("value_written")]
+    [JsonConverter(typeof(HexStringToBytesConverter))]
+    public ReadOnlyMemory<byte> ValueWritten { get; set; }
 }
 /// <summary>
 /// Extension methods for querying contract execution results from the mirror node.
@@ -213,6 +364,10 @@ public static class ContractResultDataExtensions
     /// <param name="contract">
     /// The entityId of the contract
     /// </param>
+    /// <param name="cancellationToken">
+    /// Token that cancels the enumeration, including a page request in
+    /// flight. <c>WithCancellation</c> on the result works as well.
+    /// </param>
     /// <param name="filters">
     /// Additional query parameters. The endpoint supports
     /// <see cref="BlockHashFilter"/>, <see cref="BlockNumberFilter"/>,
@@ -228,10 +383,15 @@ public static class ContractResultDataExtensions
     /// a separate <c>GetTransactionAsync</c> lookup by consensus
     /// timestamp.
     /// </returns>
-    public static IAsyncEnumerable<ContractResultData> GetContractResultsAsync(this MirrorRestClient client, EntityId contract, params IMirrorQueryParameter[] filters)
+    public static IAsyncEnumerable<ContractResultData> GetContractResultsAsync(this MirrorRestClient client, EntityId contract, CancellationToken cancellationToken, params IMirrorQueryParameter[] filters)
     {
         var path = GenerateInitialPath($"contracts/{contract.ToMirrorString()}/results", new PageLimit(100), filters);
-        return client.GetPagedItemsAsync<ContractResultDataPage, ContractResultData>(path, MirrorJsonContext.Default.ContractResultDataPage);
+        return client.GetPagedItemsAsync<ContractResultDataPage, ContractResultData>(path, MirrorJsonContext.Default.ContractResultDataPage, cancellationToken);
+    }
+    /// <inheritdoc cref="GetContractResultsAsync(MirrorRestClient, EntityId, CancellationToken, IMirrorQueryParameter[])"/>
+    public static IAsyncEnumerable<ContractResultData> GetContractResultsAsync(this MirrorRestClient client, EntityId contract, params IMirrorQueryParameter[] filters)
+    {
+        return client.GetContractResultsAsync(contract, CancellationToken.None, filters);
     }
     /// <summary>
     /// Retrieves the single contract result produced by the given
@@ -248,6 +408,9 @@ public static class ContractResultDataExtensions
     /// <param name="timestamp">
     /// The consensus timestamp identifying the execution.
     /// </param>
+    /// <param name="cancellationToken">
+    /// Token that cancels the request.
+    /// </param>
     /// <param name="filters">
     /// Additional query parameters. The endpoint supports
     /// <see cref="HbarTransferProjectionFilter"/> to opt out of the
@@ -256,10 +419,15 @@ public static class ContractResultDataExtensions
     /// <returns>
     /// The contract result, or null if not found.
     /// </returns>
-    public static Task<ContractResultData?> GetContractResultByTimestampAsync(this MirrorRestClient client, EntityId contract, ConsensusTimeStamp timestamp, params IMirrorQueryParameter[] filters)
+    public static Task<ContractResultData?> GetContractResultByTimestampAsync(this MirrorRestClient client, EntityId contract, ConsensusTimeStamp timestamp, CancellationToken cancellationToken, params IMirrorQueryParameter[] filters)
     {
         var path = GenerateInitialPath($"contracts/{contract.ToMirrorString()}/results/{timestamp}", filters);
-        return client.GetSingleItemAsync(path, MirrorJsonContext.Default.ContractResultData);
+        return client.GetSingleItemAsync(path, MirrorJsonContext.Default.ContractResultData, cancellationToken);
+    }
+    /// <inheritdoc cref="GetContractResultByTimestampAsync(MirrorRestClient, EntityId, ConsensusTimeStamp, CancellationToken, IMirrorQueryParameter[])"/>
+    public static Task<ContractResultData?> GetContractResultByTimestampAsync(this MirrorRestClient client, EntityId contract, ConsensusTimeStamp timestamp, params IMirrorQueryParameter[] filters)
+    {
+        return client.GetContractResultByTimestampAsync(contract, timestamp, CancellationToken.None, filters);
     }
     /// <summary>
     /// Retrieve the contract results for a specific transaction by hash.
@@ -270,6 +438,9 @@ public static class ContractResultDataExtensions
     /// <param name="evmTransactionHash">
     /// The EVM TransactionId hash (not to be confused with the raw HAPI transaction hash)
     /// </param>
+    /// <param name="cancellationToken">
+    /// Token that cancels the request.
+    /// </param>
     /// <param name="filters">
     /// Optional projection toggles recognized by this endpoint —
     /// currently <see cref="HbarTransferProjectionFilter"/>, which
@@ -279,10 +450,15 @@ public static class ContractResultDataExtensions
     /// <returns>
     /// The contract results data, or null if not found.
     /// </returns>
-    public static Task<ContractResultData?> GetContractResultByTransactionHashAsync(this MirrorRestClient client, EvmHash evmTransactionHash, params IMirrorProjection[] filters)
+    public static Task<ContractResultData?> GetContractResultByTransactionHashAsync(this MirrorRestClient client, EvmHash evmTransactionHash, CancellationToken cancellationToken, params IMirrorProjection[] filters)
     {
         var path = GenerateInitialPath($"contracts/results/{evmTransactionHash}", filters);
-        return client.GetSingleItemAsync(path, MirrorJsonContext.Default.ContractResultData);
+        return client.GetSingleItemAsync(path, MirrorJsonContext.Default.ContractResultData, cancellationToken);
+    }
+    /// <inheritdoc cref="GetContractResultByTransactionHashAsync(MirrorRestClient, EvmHash, CancellationToken, IMirrorProjection[])"/>
+    public static Task<ContractResultData?> GetContractResultByTransactionHashAsync(this MirrorRestClient client, EvmHash evmTransactionHash, params IMirrorProjection[] filters)
+    {
+        return client.GetContractResultByTransactionHashAsync(evmTransactionHash, CancellationToken.None, filters);
     }
     /// <summary>
     /// Retrieve the contract results for a specific transaction by HAPI transaction ID
@@ -293,6 +469,9 @@ public static class ContractResultDataExtensions
     /// <param name="transactionId">
     /// The HAPI transaction id, not the EVM transaction hash
     /// </param>
+    /// <param name="cancellationToken">
+    /// Token that cancels the request.
+    /// </param>
     /// <param name="filters">
     /// Optional projection toggles recognized by this endpoint —
     /// currently <see cref="HbarTransferProjectionFilter"/>, which
@@ -302,11 +481,20 @@ public static class ContractResultDataExtensions
     /// <returns>
     /// The contract results data or null if not found
     /// </returns>
+    /// <exception cref="ArgumentException">
+    /// If the transaction id is scheduled: this mirror node route cannot
+    /// select a scheduled transaction.
+    /// </exception>
+    public static Task<ContractResultData?> GetContractResultByTransactionIdAsync(this MirrorRestClient client, TransactionId transactionId, CancellationToken cancellationToken, params IMirrorProjection[] filters)
+    {
+        var (txId, txFilters) = MirrorFormatForContractResult(transactionId, nonceSupported: true, nameof(transactionId));
+        var path = GenerateInitialPath($"contracts/results/{txId}", txFilters, filters);
+        return client.GetSingleItemAsync(path, MirrorJsonContext.Default.ContractResultData, cancellationToken);
+    }
+    /// <inheritdoc cref="GetContractResultByTransactionIdAsync(MirrorRestClient, TransactionId, CancellationToken, IMirrorProjection[])"/>
     public static Task<ContractResultData?> GetContractResultByTransactionIdAsync(this MirrorRestClient client, TransactionId transactionId, params IMirrorProjection[] filters)
     {
-        var (txId, txFilters) = MirrorFormat(transactionId);
-        var path = GenerateInitialPath($"contracts/results/{txId}", txFilters, filters);
-        return client.GetSingleItemAsync(path, MirrorJsonContext.Default.ContractResultData);
+        return client.GetContractResultByTransactionIdAsync(transactionId, CancellationToken.None, filters);
     }
     /// <summary>
     /// Retrieves a single contract-call result by its position within a
@@ -327,20 +515,23 @@ public static class ContractResultDataExtensions
     /// <param name="position">
     /// The transaction position within the block.
     /// </param>
+    /// <param name="cancellationToken">
+    /// Optional token that cancels the request.
+    /// </param>
     /// <returns>
     /// The contract results data or null if not found.
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">
     /// Thrown when <paramref name="blockHash"/> is neither 32 nor 48 bytes long.
     /// </exception>
-    public static async Task<ContractResultData?> GetContractResultByBlockAndPositionAsync(this MirrorRestClient client, ReadOnlyMemory<byte> blockHash, long position)
+    public static async Task<ContractResultData?> GetContractResultByBlockAndPositionAsync(this MirrorRestClient client, ReadOnlyMemory<byte> blockHash, long position, CancellationToken cancellationToken = default)
     {
         if (blockHash.Length != 32 && blockHash.Length != 48)
         {
             throw new ArgumentOutOfRangeException(nameof(blockHash), "Block hash must be 32 bytes (EVM) or 48 bytes (Hedera SHA-384).");
         }
         var path = GenerateInitialPath("contracts/results", BlockHashFilter.Is(blockHash), TransactionIndexFilter.Is(position));
-        var list = await client.GetSingleItemAsync(path, MirrorJsonContext.Default.ContractResultDataPage).ConfigureAwait(false);
+        var list = await client.GetSingleItemAsync(path, MirrorJsonContext.Default.ContractResultDataPage, cancellationToken).ConfigureAwait(false);
         var results = list?.Results;
         return results is { Length: > 0 } ? results[0] : null;
     }
@@ -357,6 +548,10 @@ public static class ContractResultDataExtensions
     /// record-file hash returned by the mirror, or a 32-byte EVM
     /// block hash for callers that have one.
     /// </param>
+    /// <param name="cancellationToken">
+    /// Optional token that cancels the enumeration, including a page request in
+    /// flight. <c>WithCancellation</c> on the result works as well.
+    /// </param>
     /// <returns>
     /// An async enumerable of contract-call results in the block; may
     /// be empty if the block contained no contract calls.
@@ -364,25 +559,29 @@ public static class ContractResultDataExtensions
     /// <exception cref="ArgumentOutOfRangeException">
     /// Thrown when <paramref name="blockHash"/> is neither 32 nor 48 bytes long.
     /// </exception>
-    public static IAsyncEnumerable<ContractResultData> GetContractResultsByBlockHashAsync(this MirrorRestClient client, ReadOnlyMemory<byte> blockHash)
+    public static IAsyncEnumerable<ContractResultData> GetContractResultsByBlockHashAsync(this MirrorRestClient client, ReadOnlyMemory<byte> blockHash, CancellationToken cancellationToken = default)
     {
         if (blockHash.Length != 32 && blockHash.Length != 48)
         {
             throw new ArgumentOutOfRangeException(nameof(blockHash), "Block hash must be 32 bytes (EVM) or 48 bytes (Hedera SHA-384).");
         }
         var path = GenerateInitialPath("contracts/results", BlockHashFilter.Is(blockHash), new PageLimit(100), OrderBy.Ascending);
-        return client.GetPagedItemsAsync<ContractResultDataPage, ContractResultData>(path, MirrorJsonContext.Default.ContractResultDataPage);
+        return client.GetPagedItemsAsync<ContractResultDataPage, ContractResultData>(path, MirrorJsonContext.Default.ContractResultDataPage, cancellationToken);
     }
     /// <summary>
     /// Enumerates contract-call results across every contract on the
     /// network from <c>/api/v1/contracts/results</c>. Same filter
-    /// palette as <see cref="GetContractResultsAsync"/>, without the
+    /// palette as <see cref="GetContractResultsAsync(MirrorRestClient, EntityId, CancellationToken, IMirrorQueryParameter[])"/>, without the
     /// per-contract scoping, plus the
     /// <see cref="HbarTransferProjectionFilter"/> toggle on the
     /// HBAR-transfer subtree.
     /// </summary>
     /// <param name="client">
     /// Mirror Rest Client to use for the request.
+    /// </param>
+    /// <param name="cancellationToken">
+    /// Token that cancels the enumeration, including a page request in
+    /// flight. <c>WithCancellation</c> on the result works as well.
     /// </param>
     /// <param name="filters">
     /// Additional query parameters. The endpoint supports
@@ -398,10 +597,15 @@ public static class ContractResultDataExtensions
     /// An async enumerable of contract-call records. Empty when no
     /// results match the supplied criteria.
     /// </returns>
-    public static IAsyncEnumerable<ContractResultData> GetAllContractResultsAsync(this MirrorRestClient client, params IMirrorQueryParameter[] filters)
+    public static IAsyncEnumerable<ContractResultData> GetAllContractResultsAsync(this MirrorRestClient client, CancellationToken cancellationToken, params IMirrorQueryParameter[] filters)
     {
         var path = GenerateInitialPath("contracts/results", new PageLimit(100), OrderBy.Ascending, filters);
-        return client.GetPagedItemsAsync<ContractResultDataPage, ContractResultData>(path, MirrorJsonContext.Default.ContractResultDataPage);
+        return client.GetPagedItemsAsync<ContractResultDataPage, ContractResultData>(path, MirrorJsonContext.Default.ContractResultDataPage, cancellationToken);
+    }
+    /// <inheritdoc cref="GetAllContractResultsAsync(MirrorRestClient, CancellationToken, IMirrorQueryParameter[])"/>
+    public static IAsyncEnumerable<ContractResultData> GetAllContractResultsAsync(this MirrorRestClient client, params IMirrorQueryParameter[] filters)
+    {
+        return client.GetAllContractResultsAsync(CancellationToken.None, filters);
     }
     /// <summary>
     /// Retrieves the EVM chain id (EIP-155) that this mirror's network uses.
@@ -425,19 +629,23 @@ public static class ContractResultDataExtensions
     /// <param name="client">
     /// Mirror Rest Client to use for the request.
     /// </param>
+    /// <param name="cancellationToken">
+    /// Optional token that cancels the request.
+    /// </param>
     /// <returns>
     /// The Chain ID of the network.
     /// </returns>
     /// <exception cref="MirrorException">
     /// Thrown when the mirror node holds no Ethereum-wrapped transaction from
     /// which to read the chain id (typically a network with no EVM/relay traffic
-    /// yet, such as a freshly-started local network).
+    /// yet, such as a freshly-started local network), or when the contract
+    /// result of the most recent one is unavailable or carries no chain id.
     /// </exception>
-    public static async Task<BigInteger> GetChainIdAsync(this MirrorRestClient client)
+    public static async Task<BigInteger> GetChainIdAsync(this MirrorRestClient client, CancellationToken cancellationToken = default)
     {
-        await foreach (var transaction in client.GetTransactionsAsync(TransactionTypeFilter.EthereumTransaction, OrderBy.Descending).ConfigureAwait(false))
+        await foreach (var transaction in client.GetTransactionsAsync(cancellationToken, TransactionTypeFilter.EthereumTransaction, OrderBy.Descending).ConfigureAwait(false))
         {
-            var result = await client.GetContractResultByTransactionIdAsync(transaction.TransactionId).ConfigureAwait(false);
+            var result = await client.GetContractResultByTransactionIdAsync(transaction.TransactionId, cancellationToken).ConfigureAwait(false);
             if (result is not null && result.ChainId != BigInteger.Zero)
             {
                 return result.ChainId;

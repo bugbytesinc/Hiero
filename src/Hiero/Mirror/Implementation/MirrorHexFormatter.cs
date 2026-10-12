@@ -16,8 +16,27 @@ internal static class MirrorHexFormatter
         });
     }
 
+    private static readonly BigInteger TwoToThe256 = BigInteger.One << 256;
+    private static readonly BigInteger MinSigned256 = -(BigInteger.One << 255);
+
+    /// <summary>
+    /// Formats a 32-byte EVM word. A negative value, as a signed parse of a
+    /// word with its top bit set produces, is written as its 256-bit two's
+    /// complement.
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// If the value is negative and does not fit in a signed 256-bit word.
+    /// </exception>
     internal static string FormatPrefixedPadded32(BigInteger value)
     {
+        if (value.Sign < 0)
+        {
+            if (value < MinSigned256)
+            {
+                throw new ArgumentOutOfRangeException(nameof(value), "A negative value must fit in a signed 256-bit word.");
+            }
+            value += TwoToThe256;
+        }
         var byteCount = value.GetByteCount(isUnsigned: true);
         var encodedByteCount = Math.Max(byteCount, 32);
         byte[]? rented = null;

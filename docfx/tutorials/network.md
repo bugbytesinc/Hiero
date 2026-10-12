@@ -109,19 +109,19 @@ var child = client.Clone(ctx =>
 var receipt = await child.TransferAsync(from, to, amount);
 ```
 
-## Balance-only queries (no payer needed)
+## Reading balances (no payer needed)
 
-Querying an account balance is free — you only need an `Endpoint`, no `Payer` or `Signatory`:
+Consensus nodes no longer answer free balance queries — the public Hedera
+networks removed them in July 2026. Read balances from a mirror node instead;
+it needs no `Payer`, `Signatory` or consensus node `Endpoint`:
 
 ```csharp
-await using var client = new ConsensusClient(ctx =>
+var mirror = new MirrorRestClient(new HttpClient
 {
-    ctx.Endpoint = new ConsensusNodeEndpoint(
-        new EntityId(0, 0, 3),
-        new Uri("https://0.testnet.hedera.com:50211"));
+    BaseAddress = new Uri("https://testnet.mirrornode.hedera.com")
 });
 
-var balance = await client.GetAccountBalanceAsync(new EntityId(0, 0, 98));
+var balance = await mirror.GetAccountBalanceAsync(new EntityId(0, 0, 98));
 ```
 
 ## See also

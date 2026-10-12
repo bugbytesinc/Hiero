@@ -1,3 +1,4 @@
+using Hiero.Mirror;
 using Hiero.Test.Helpers;
 using Hiero.Test.Integration.Fixtures;
 
@@ -33,6 +34,32 @@ public class GetTokenInfoTests
         await Assert.That(info.Deleted).IsFalse();
         await Assert.That(info.Type).IsEqualTo(TokenType.Fungible);
         await Assert.That(info.Symbol).IsEqualTo(fx.CreateParams.Symbol);
+    }
+
+    [Test]
+    public async Task Can_Read_Delegatable_Contract_Keys()
+    {
+        await using var contract = await GreetingContract.CreateAsync();
+        var delegatable = new Endorsement(KeyType.DelegatableContract, contract.ContractReceipt.Contract);
+        await using var fx = await TestToken.CreateAsync(fx => fx.CreateParams.SupplyEndorsement = delegatable);
+        await using var client = await TestNetwork.CreateClientAsync();
+
+        var info = await client.GetTokenInfoAsync(fx.CreateReceipt!.Token);
+        await Assert.That(info.SupplyEndorsement).IsEqualTo(delegatable);
+        await Assert.That(info.SupplyEndorsement!.Type).IsEqualTo(KeyType.DelegatableContract);
+        await Assert.That(info.SupplyEndorsement.Contract).IsEqualTo(contract.ContractReceipt.Contract);
+
+        var mirror = await TestNetwork.GetMirrorRestClientAsync();
+        TokenData? data = null;
+        for (var attempt = 0; attempt < 60 && data is null; attempt++)
+        {
+            data = await mirror.GetTokenAsync(fx.CreateReceipt!.Token);
+            if (data is null)
+            {
+                await Task.Delay(1000);
+            }
+        }
+        await Assert.That(data!.SupplyEndorsement).IsEqualTo(delegatable);
     }
 
     [Test]

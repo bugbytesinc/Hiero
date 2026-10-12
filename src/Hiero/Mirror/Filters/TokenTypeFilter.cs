@@ -10,9 +10,9 @@ namespace Hiero.Mirror.Filters;
 /// <remarks>
 /// The three values are the OpenAPI enum
 /// <c>ALL | FUNGIBLE_COMMON | NON_FUNGIBLE_UNIQUE</c>. Exposed
-/// as static properties (following the <see cref="OrderBy"/>
-/// precedent) rather than factories because the value set is
-/// closed and fully known at compile time.
+/// as static readonly fields (following the <see cref="OrderBy"/>
+/// precedent of predefined instances) rather than factories
+/// because the value set is closed and fully known at compile time.
 /// </remarks>
 public sealed class TokenTypeFilter : IMirrorFilter
 {

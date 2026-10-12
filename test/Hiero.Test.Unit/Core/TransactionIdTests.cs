@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 #pragma warning disable CS8600, CS8602, CS8604 // Null assignments and dereferences are intentional in these tests
+using Google.Protobuf;
 using Hiero.Implementation;
 using Hiero.Test.Helpers;
 using Proto;
@@ -284,5 +285,33 @@ public class TransactionIdTests
         TransactionID proto = null;
         var txId = proto.AsTransactionId();
         await Assert.That(txId).IsEqualTo(TransactionId.None);
+    }
+
+    [Test]
+    public async Task A_DateTime_Late_In_A_Second_Keeps_Its_Nanos_In_Range()
+    {
+        // The last tick of a second; a double rounds the total up to the next
+        // second, which once left the nanos negative.
+        var dateTime = new DateTime(2026, 10, 10, 12, 0, 0, DateTimeKind.Utc).AddTicks(TimeSpan.TicksPerSecond - 1);
+        var transactionId = new TransactionId(new EntityId(0, 0, 2), dateTime);
+        await Assert.That(transactionId.ValidStartSeconds).IsEqualTo(new DateTimeOffset(2026, 10, 10, 12, 0, 0, TimeSpan.Zero).ToUnixTimeSeconds());
+        await Assert.That(transactionId.ValidStartNanos).IsEqualTo(999_999_900);
+    }
+
+    [Test]
+    public async Task Invoice_From_Body_Bytes_Carries_The_Cancellation_Token()
+    {
+        using var cts = new CancellationTokenSource();
+        var body = new TransactionBody { TransactionID = new TransactionID(new TransactionId(new EntityId(0, 0, 2), 1_700_000_000, 0)) };
+        IInvoice invoice = new Invoice(body.ToByteArray(), 0, cts.Token);
+        await Assert.That(invoice.CancellationToken).IsEqualTo(cts.Token);
+    }
+
+    [Test]
+    public async Task A_Local_DateTime_Gives_The_Same_Transaction_Id_As_Its_Utc_Equivalent()
+    {
+        var utc = new DateTime(2026, 10, 10, 12, 0, 0, DateTimeKind.Utc).AddTicks(1_234_567);
+        var payer = new EntityId(0, 0, 2);
+        await Assert.That(new TransactionId(payer, utc.ToLocalTime())).IsEqualTo(new TransactionId(payer, utc));
     }
 }

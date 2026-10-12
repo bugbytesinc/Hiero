@@ -52,7 +52,7 @@ public class MirrorTopicAndTransactionDataTests
         await Assert.That(data!.TransactionId).IsEqualTo(record.TransactionId);
         await Assert.That(data.Consensus == record.Consensus!.Value).IsTrue();
         await Assert.That(data.TransactionType).IsEqualTo("CRYPTOTRANSFER");
-        await Assert.That(data.Status).IsEqualTo("SUCCESS");
+        await Assert.That(data.Status).IsEqualTo(ResponseCode.Success);
         await Assert.That(data.Nonce).IsEqualTo(0);
         await Assert.That(data.IsScheduled).IsFalse();
         await Assert.That(data.CryptoTransfers).IsNotNull();
@@ -106,7 +106,9 @@ public class MirrorTopicAndTransactionDataTests
         {
             await Assert.That(tx.TransactionId).IsNotNull();
             await Assert.That(tx.Consensus.Seconds > 0).IsTrue();
-            await Assert.That(string.IsNullOrWhiteSpace(tx.Status)).IsFalse();
+            // Stronger than the old "status string is not blank": asserts the
+            // value actually resolved to a code this SDK knows.
+            await Assert.That(tx.Status).IsNotEqualTo(ResponseCode.Unrecognized);
         }
     }
 }

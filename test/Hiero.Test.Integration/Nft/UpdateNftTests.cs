@@ -1291,13 +1291,15 @@ public class UpdateNftTests
     }
 
     [Test]
-    public async Task Can_Schedule_And_Sign_Update_Nft_Metadata()
+    public async Task Can_Not_Schedule_Update_Nft_Metadata()
     {
         await using var fxPayer = await TestAccount.CreateAsync(fx => fx.CreateParams.InitialBalance = 20_00_000_000);
         await using var fxNft = await TestNft.CreateAsync();
         var serialNumber = fxNft.MintReceipt!.SerialNumbers[0];
         var newMetadata = Generator.SHA384Hash();
         await using var client = await TestNetwork.CreateClientAsync();
+        // A metadata update can't be scheduled: TokenUpdateNfts is not in
+        // the network's scheduling whitelist.
         var ex = await Assert.That(async () =>
         {
             await client.ScheduleAsync(new ScheduleParams
@@ -1310,6 +1312,13 @@ public class UpdateNftTests
                     Signatory = fxNft.MetadataPrivateKey,
                 },
                 Payer = fxPayer
+            }, ctx =>
+            {
+                // Testnet answers BUSY rather than naming the whitelist.
+                // Keep the retry window short so that BUSY surfaces, rather
+                // than the default ~3 minute window outliving the transaction's
+                // validity and ending in TRANSACTION_EXPIRED.
+                ctx.RetryCount = 5;
             });
         }).ThrowsException();
         // SOLO VS TESTNET

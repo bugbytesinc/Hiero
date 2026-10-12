@@ -12,8 +12,8 @@ namespace Hiero.Mirror;
 /// A single entry in the call graph of a historical contract
 /// transaction — one per nested EVM call (CALL, CREATE,
 /// DELEGATECALL, precompile invocation, etc.). Retrieved via
-/// <see cref="ContractActionDataExtensions.GetContractActionsByTransactionHashAsync"/>
-/// and <see cref="ContractActionDataExtensions.GetContractActionsByTransactionIdAsync"/>.
+/// <see cref="ContractActionDataExtensions.GetContractActionsByTransactionHashAsync(MirrorRestClient, EvmHash, CancellationToken, IMirrorQueryParameter[])"/>
+/// and <see cref="ContractActionDataExtensions.GetContractActionsByTransactionIdAsync(MirrorRestClient, TransactionId, CancellationToken, IMirrorQueryParameter[])"/>.
 /// </summary>
 public class ContractActionData
 {
@@ -74,7 +74,8 @@ public class ContractActionData
     public int Index { get; set; }
     /// <summary>
     /// The call's input data (EVM calldata or contract-creation
-    /// bytecode). Null when the server did not record input data.
+    /// bytecode). Empty when the server did not record input data,
+    /// which is indistinguishable from empty calldata.
     /// </summary>
     [JsonPropertyName("input")]
     [JsonConverter(typeof(HexStringToBytesConverter))]
@@ -92,7 +93,7 @@ public class ContractActionData
     [JsonPropertyName("recipient_type")]
     public string? RecipientType { get; set; }
     /// <summary>
-    /// Data returned from this call, when any. Null when no result
+    /// Data returned from this call, when any. Empty when no result
     /// data was recorded.
     /// </summary>
     [JsonPropertyName("result_data")]
@@ -143,6 +144,10 @@ public static class ContractActionDataExtensions
     /// The EVM transaction hash (not to be confused with the raw
     /// HAPI transaction hash).
     /// </param>
+    /// <param name="cancellationToken">
+    /// Token that cancels the enumeration, including a page request in
+    /// flight. <c>WithCancellation</c> on the result works as well.
+    /// </param>
     /// <param name="filters">
     /// Optional filters — <see cref="ContractActionIndexFilter"/>
     /// for narrowing the action position, plus the standard
@@ -152,10 +157,15 @@ public static class ContractActionDataExtensions
     /// The sequence of contract actions for the transaction; empty if
     /// the transaction has no recorded actions or was not found.
     /// </returns>
-    public static IAsyncEnumerable<ContractActionData> GetContractActionsByTransactionHashAsync(this MirrorRestClient client, EvmHash evmTransactionHash, params IMirrorQueryParameter[] filters)
+    public static IAsyncEnumerable<ContractActionData> GetContractActionsByTransactionHashAsync(this MirrorRestClient client, EvmHash evmTransactionHash, CancellationToken cancellationToken, params IMirrorQueryParameter[] filters)
     {
         var path = GenerateInitialPath($"contracts/results/{evmTransactionHash}/actions", new PageLimit(100), filters);
-        return client.GetPagedItemsAsync<ContractActionDataPage, ContractActionData>(path, MirrorJsonContext.Default.ContractActionDataPage);
+        return client.GetPagedItemsAsync<ContractActionDataPage, ContractActionData>(path, MirrorJsonContext.Default.ContractActionDataPage, cancellationToken);
+    }
+    /// <inheritdoc cref="GetContractActionsByTransactionHashAsync(MirrorRestClient, EvmHash, CancellationToken, IMirrorQueryParameter[])"/>
+    public static IAsyncEnumerable<ContractActionData> GetContractActionsByTransactionHashAsync(this MirrorRestClient client, EvmHash evmTransactionHash, params IMirrorQueryParameter[] filters)
+    {
+        return client.GetContractActionsByTransactionHashAsync(evmTransactionHash, CancellationToken.None, filters);
     }
     /// <summary>
     /// Retrieves the ordered call graph of a historical contract
@@ -167,6 +177,10 @@ public static class ContractActionDataExtensions
     /// <param name="transactionId">
     /// The HAPI transaction id, not the EVM transaction hash.
     /// </param>
+    /// <param name="cancellationToken">
+    /// Token that cancels the enumeration, including a page request in
+    /// flight. <c>WithCancellation</c> on the result works as well.
+    /// </param>
     /// <param name="filters">
     /// Optional filters — <see cref="ContractActionIndexFilter"/>
     /// for narrowing the action position, plus the standard
@@ -176,10 +190,19 @@ public static class ContractActionDataExtensions
     /// The sequence of contract actions for the transaction; empty if
     /// the transaction has no recorded actions or was not found.
     /// </returns>
+    /// <exception cref="ArgumentException">
+    /// If the transaction id is scheduled or carries a child nonce: this
+    /// mirror node route cannot select either.
+    /// </exception>
+    public static IAsyncEnumerable<ContractActionData> GetContractActionsByTransactionIdAsync(this MirrorRestClient client, TransactionId transactionId, CancellationToken cancellationToken, params IMirrorQueryParameter[] filters)
+    {
+        var (txId, txFilters) = MirrorFormatForContractResult(transactionId, nonceSupported: false, nameof(transactionId));
+        var path = GenerateInitialPath($"contracts/results/{txId}/actions", new PageLimit(100), txFilters, filters);
+        return client.GetPagedItemsAsync<ContractActionDataPage, ContractActionData>(path, MirrorJsonContext.Default.ContractActionDataPage, cancellationToken);
+    }
+    /// <inheritdoc cref="GetContractActionsByTransactionIdAsync(MirrorRestClient, TransactionId, CancellationToken, IMirrorQueryParameter[])"/>
     public static IAsyncEnumerable<ContractActionData> GetContractActionsByTransactionIdAsync(this MirrorRestClient client, TransactionId transactionId, params IMirrorQueryParameter[] filters)
     {
-        var (txId, txFilters) = MirrorFormat(transactionId);
-        var path = GenerateInitialPath($"contracts/results/{txId}/actions", new PageLimit(100), txFilters, filters);
-        return client.GetPagedItemsAsync<ContractActionDataPage, ContractActionData>(path, MirrorJsonContext.Default.ContractActionDataPage);
+        return client.GetContractActionsByTransactionIdAsync(transactionId, CancellationToken.None, filters);
     }
 }

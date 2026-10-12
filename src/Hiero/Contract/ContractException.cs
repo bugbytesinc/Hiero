@@ -21,9 +21,11 @@ namespace Hiero;
 /// </para>
 /// <para>
 /// For <see cref="ResponseCode.InsufficientGas"/>, increase the
-/// <c>Gas</c> property on your <see cref="CallContractParams"/> or
-/// <see cref="QueryContractParams"/> and retry. For other codes, review
-/// the contract's Solidity logic and the inputs that caused the revert.
+/// <c>Gas</c> property on your <see cref="QueryContractParams"/> and
+/// retry. For other codes, review the contract's Solidity logic and the
+/// inputs that caused the revert. Only contract queries raise this
+/// exception; a <see cref="CallContractParams"/> transaction that fails
+/// raises <see cref="TransactionException"/> instead.
 /// </para>
 /// <para>
 /// When using <see cref="QueryContractParams"/>, you can suppress this
@@ -35,8 +37,8 @@ namespace Hiero;
 public sealed class ContractException : Exception
 {
     /// <summary>
-    /// The <see cref="ResponseCode"/> returned by the network
-    /// prior to transaction request expiration.
+    /// The <see cref="ResponseCode"/> the node returned for the
+    /// contract query (e.g. <see cref="ResponseCode.ContractRevertExecuted"/>).
     /// </summary>
     public ResponseCode Status { get; private set; }
     /// <summary>
@@ -45,8 +47,9 @@ public sealed class ContractException : Exception
     /// </summary>
     public TransactionId TransactionId { get; private set; }
     /// <summary>
-    /// If the returned status is <see cref="ResponseCode.InsufficientTxFee"/>
-    /// this value will contain the transaction fee necessary to execute the transaction.
+    /// The cost value from the query's response header.  The network sets
+    /// it only when a cost estimate is requested, so it is normally 0 here;
+    /// it is not a fee the query needs in order to succeed.
     /// </summary>
     public ulong RequiredFee { get; private set; }
     /// <summary>
@@ -65,11 +68,11 @@ public sealed class ContractException : Exception
     /// The TransactionId ID of the request that failed.
     /// </param>
     /// <param name="code">
-    /// The final <see cref="ResponseCode"/> returned by the network 
-    /// prior to transaction request expiration.
+    /// The <see cref="ResponseCode"/> the node returned for the
+    /// contract query.
     /// </param>
     /// <param name="cost">
-    /// The fee cost associated with the failed transaction.
+    /// The cost value from the query's response header, normally 0.
     /// </param>
     /// <param name="callResult">
     /// The results returned from the contract, which may include

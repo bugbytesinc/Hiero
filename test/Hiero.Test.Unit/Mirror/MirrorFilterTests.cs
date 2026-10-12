@@ -357,6 +357,24 @@ public class MirrorFilterTests
     }
 
     [Test]
+    public async Task EvmTopicFilter_Encodes_A_Signed_Parse_Of_A_Topic_As_The_Same_Word()
+    {
+        // The ERC-20 Transfer event signature; its top bit is set, so a signed
+        // hex parse yields a negative number for the same 32-byte word.
+        const string transfer = "ddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
+        var signed = BigInteger.Parse("0" + transfer, System.Globalization.NumberStyles.HexNumber) - (BigInteger.One << 256);
+        await Assert.That(signed.Sign).IsEqualTo(-1);
+        await Assert.That(EvmTopicFilter.Is(0, signed).Value).IsEqualTo("0x" + transfer);
+        await Assert.That(SlotFilter.Is(BigInteger.MinusOne).Value).IsEqualTo("0x" + new string('f', 64));
+    }
+
+    [Test]
+    public async Task EvmTopicFilter_Rejects_A_Negative_Value_Wider_Than_A_Word()
+    {
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(async () => await Task.Run(() => EvmTopicFilter.Is(0, -(BigInteger.One << 256))));
+    }
+
+    [Test]
     public async Task SlotFilter_Has_Correct_Value_For_Large_Slot()
     {
         var slot = new BigInteger(Generator.Integer(1, 1_000_000));

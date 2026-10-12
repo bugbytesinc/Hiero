@@ -18,10 +18,12 @@ public class TopicData
     [JsonPropertyName("topic_id")]
     public EntityId Topic { get; set; } = default!;
     /// <summary>
-    /// The public administrator endorsements required for controlling this topic.
+    /// The public administrator endorsements required for controlling this
+    /// topic, or <c>null</c> when the topic has no admin key and can no
+    /// longer be updated or deleted.
     /// </summary>
     [JsonPropertyName("admin_key")]
-    public Endorsement Administrator { get; set; } = default!;
+    public Endorsement? Administrator { get; set; }
     /// <summary>
     /// The ID of the associated auto renew account
     /// </summary>
@@ -50,11 +52,30 @@ public class TopicData
     [JsonPropertyName("memo")]
     public string Memo { get; set; } = default!;
     /// <summary>
-    /// The public submit endorsements required for 
-    /// submitting messages to this topic
+    /// The custom fees (HIP-991) charged for each message submitted to
+    /// the topic. A topic carries fixed fees only, so the fractional and
+    /// royalty fee lists are always empty.
+    /// </summary>
+    [JsonPropertyName("custom_fees")]
+    public CustomFeeData? Royalties { get; set; }
+    /// <summary>
+    /// The endorsement required to change the topic's custom fees
+    /// (HIP-991); null when the fees cannot be changed.
+    /// </summary>
+    [JsonPropertyName("fee_schedule_key")]
+    public Endorsement? RoyaltiesEndorsement { get; set; }
+    /// <summary>
+    /// Endorsements whose signers may submit messages to the topic
+    /// without paying its custom fees (HIP-991).
+    /// </summary>
+    [JsonPropertyName("fee_exempt_key_list")]
+    public Endorsement[] RoyaltyExemptEndorsements { get; set; } = [];
+    /// <summary>
+    /// The public submit endorsements required for submitting messages to
+    /// this topic, or <c>null</c> when anyone may submit.
     /// </summary>
     [JsonPropertyName("submit_key")]
-    public Endorsement Submit { get; set; } = default!;
+    public Endorsement? Submit { get; set; }
     /// <summary>
     /// The consensus timestamp range this topic covers.
     /// </summary>
@@ -78,6 +99,9 @@ public static class TopicDataExtensions
     /// <param name="topic">
     /// The ID of the topic to retrieve.
     /// </param>
+    /// <param name="cancellationToken">
+    /// Token that cancels the request.
+    /// </param>
     /// <param name="filters">
     /// Reserved for forward compatibility. The endpoint currently
     /// accepts no query parameters per the OpenAPI spec; any filters
@@ -86,9 +110,14 @@ public static class TopicDataExtensions
     /// <returns>
     /// The information for the specified topic, or null if not found.
     /// </returns>
-    public static Task<TopicData?> GetTopicAsync(this MirrorRestClient client, EntityId topic, params IMirrorQueryParameter[] filters)
+    public static Task<TopicData?> GetTopicAsync(this MirrorRestClient client, EntityId topic, CancellationToken cancellationToken, params IMirrorQueryParameter[] filters)
     {
         var path = GenerateInitialPath($"topics/{topic.ToMirrorString()}", filters);
-        return client.GetSingleItemAsync(path, MirrorJsonContext.Default.TopicData);
+        return client.GetSingleItemAsync(path, MirrorJsonContext.Default.TopicData, cancellationToken);
+    }
+    /// <inheritdoc cref="GetTopicAsync(MirrorRestClient, EntityId, CancellationToken, IMirrorQueryParameter[])"/>
+    public static Task<TopicData?> GetTopicAsync(this MirrorRestClient client, EntityId topic, params IMirrorQueryParameter[] filters)
+    {
+        return client.GetTopicAsync(topic, CancellationToken.None, filters);
     }
 }

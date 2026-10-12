@@ -48,6 +48,12 @@ public class TokenAllowanceData
     [JsonPropertyName("amount")]
     [JsonConverter(typeof(LongMirrorConverter))]
     public long Amount { get; set; }
+    /// <summary>
+    /// The consensus-timestamp range during which this
+    /// allowance record is valid.
+    /// </summary>
+    [JsonPropertyName("timestamp")]
+    public TimestampRangeData? Timestamp { get; set; }
 }
 /// <summary>
 /// Extension methods for querying token allowance data from the mirror node.
@@ -69,6 +75,10 @@ public static class TokenAllowanceDataExtensions
     /// <param name="account">
     /// The account whose token-allowance grants are requested.
     /// </param>
+    /// <param name="cancellationToken">
+    /// Token that cancels the enumeration, including a page request in
+    /// flight. <c>WithCancellation</c> on the result works as well.
+    /// </param>
     /// <param name="filters">
     /// Additional query parameters. The endpoint supports
     /// <see cref="SpenderFilter"/>, <see cref="TokenFilter"/>,
@@ -86,9 +96,14 @@ public static class TokenAllowanceDataExtensions
     /// <c>gt(e)</c>/<c>eq</c> pairings). Violating the rule yields a
     /// server-side 400; the SDK does not enforce client-side.
     /// </remarks>
-    public static IAsyncEnumerable<TokenAllowanceData> GetAccountTokenAllowancesAsync(this MirrorRestClient client, EntityId account, params IMirrorQueryParameter[] filters)
+    public static IAsyncEnumerable<TokenAllowanceData> GetAccountTokenAllowancesAsync(this MirrorRestClient client, EntityId account, CancellationToken cancellationToken, params IMirrorQueryParameter[] filters)
     {
         var path = GenerateInitialPath($"accounts/{account.ToMirrorString()}/allowances/tokens", new PageLimit(100), filters);
-        return client.GetPagedItemsAsync<TokenAllowanceDataPage, TokenAllowanceData>(path, MirrorJsonContext.Default.TokenAllowanceDataPage);
+        return client.GetPagedItemsAsync<TokenAllowanceDataPage, TokenAllowanceData>(path, MirrorJsonContext.Default.TokenAllowanceDataPage, cancellationToken);
+    }
+    /// <inheritdoc cref="GetAccountTokenAllowancesAsync(MirrorRestClient, EntityId, CancellationToken, IMirrorQueryParameter[])"/>
+    public static IAsyncEnumerable<TokenAllowanceData> GetAccountTokenAllowancesAsync(this MirrorRestClient client, EntityId account, params IMirrorQueryParameter[] filters)
+    {
+        return client.GetAccountTokenAllowancesAsync(account, CancellationToken.None, filters);
     }
 }

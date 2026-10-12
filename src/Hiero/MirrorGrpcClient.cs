@@ -12,6 +12,21 @@ namespace Hiero;
 /// HCS streaming service.  It is used to subscribe to a topic
 /// and forward the messages returned by the mirror node in 
 /// near real-time to a .NET channel for processing.
+/// <para>
+/// <b>Thread safety.</b> An instance is safe for concurrent use and is
+/// intended to be shared — a singleton registered with dependency injection
+/// is the expected pattern. Each operation builds its own child context, so
+/// concurrent calls share no mutable state, and the underlying gRPC channels
+/// are pooled in a thread-safe cache.
+/// </para>
+/// <para>
+/// <see cref="Configure"/> is the exception. It mutates this instance's own
+/// context in place, which every in-flight operation reads through, and is
+/// meant for setup before the client is used or while it is otherwise idle.
+/// To vary settings on a live client, pass the per-call <c>configure</c>
+/// argument — it applies only to that one call — or take a separately
+/// configured instance with <see cref="Clone"/>.
+/// </para>
 /// </remarks>
 public sealed class MirrorGrpcClient : IAsyncDisposable
 {
@@ -24,6 +39,11 @@ public sealed class MirrorGrpcClient : IAsyncDisposable
     /// for the value, and to its parent until a value has been set.
     /// </summary>
     private readonly MirrorContextStack _context;
+    /// <summary>
+    /// Set once this client has released its context, so a second
+    /// dispose cannot release the shared parent chain a second time.
+    /// </summary>
+    private int _disposed;
     /// <summary>
     /// Creates a new instance of a Hedera Mirror Network MirrorGrpcClient.
     /// </summary>
@@ -70,8 +90,7 @@ public sealed class MirrorGrpcClient : IAsyncDisposable
         // that are unreachable and can't be "Reset".
         // At the moment, there are no defaults to set
         // but we still want a "root".
-        _context = new MirrorContextStack(new MirrorContextStack(channelFactory));
-        configure?.Invoke(_context);
+        _context = MirrorContextStack.Configure(new MirrorContextStack(new MirrorContextStack(channelFactory)), configure);
     }
     /// <summary>
     /// Internal implementation of mirror client creation.  Accounts for  newly created 
@@ -87,8 +106,7 @@ public sealed class MirrorGrpcClient : IAsyncDisposable
     /// </param>
     private MirrorGrpcClient(MirrorContextStack parent, Action<IMirrorGrpcContext>? configure)
     {
-        _context = new MirrorContextStack(parent);
-        configure?.Invoke(_context);
+        _context = MirrorContextStack.Configure(new MirrorContextStack(parent), configure);
     }
     /// <summary>
     /// Updates the configuration of this instance of a mirror client through 
@@ -99,6 +117,15 @@ public sealed class MirrorGrpcClient : IAsyncDisposable
     /// the configuration details of this client instance.  Values can be retrieved 
     /// and set within the context of the method invocation.
     /// </param>
+    /// <remarks>
+    /// Mutates this client's own context in place. Every operation already in
+    /// flight reads its inherited settings through that context, so calling
+    /// this concurrently with active work can let a call observe a partially
+    /// applied configuration. Configure before use, or while the client is
+    /// idle. For a live client, prefer the per-call <c>configure</c> argument
+    /// (scoped to that call alone) or <see cref="Clone"/> for a separately
+    /// configured instance.
+    /// </remarks>
     public void Configure(Action<IMirrorGrpcContext> configure)
     {
         if (configure == null)
@@ -136,6 +163,10 @@ public sealed class MirrorGrpcClient : IAsyncDisposable
     /// </returns>
     public ValueTask DisposeAsync()
     {
+        if (Interlocked.Exchange(ref _disposed, 1) != 0)
+        {
+            return ValueTask.CompletedTask;
+        }
         return _context.DisposeAsync();
     }
     /// <summary>
@@ -161,7 +192,8 @@ public sealed class MirrorGrpcClient : IAsyncDisposable
     /// <see cref="MirrorGrpcException"/> is thrown.
     /// </returns>
     /// <exception cref="ArgumentNullException">If required arguments are missing.</exception>
-    /// <exception cref="InvalidOperationException">If required context configuration is missing or a parameter is invalid.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">If the ending time is before the starting time.</exception>
+    /// <exception cref="InvalidOperationException">If required context configuration is missing.</exception>
     /// <exception cref="MirrorGrpcException">If the mirror node stream faulted during request processing or upon submission.</exception>
     /// <example>
     /// Live stream from the current time forward — reads keep pace with the
@@ -222,9 +254,13 @@ public sealed class MirrorGrpcClient : IAsyncDisposable
         {
             await ProcessResultStreamAsync(subscribeParameters.Topic).ConfigureAwait(false);
         }
-        catch (RpcException ex) when (ex.StatusCode == StatusCode.Cancelled)
+        catch (RpcException ex) when (ex.StatusCode == StatusCode.Cancelled && cancelTokenSource.IsCancellationRequested)
         {
             // Cancelled is an expected closing condition, not an error
+        }
+        catch (OperationCanceledException) when (cancelTokenSource.IsCancellationRequested)
+        {
+            // Cancelled while waiting for room in a full channel.
         }
         catch (RpcException ex) when (ex.StatusCode == StatusCode.NotFound)
         {
@@ -264,16 +300,12 @@ public sealed class MirrorGrpcClient : IAsyncDisposable
                     SequenceNumber = data.SequenceNumber,
                     SegmentInfo = data.ChunkInfo is not null ? new MessageSegmentInfo(data.ChunkInfo) : null
                 };
-                if (!writer.TryWrite(message))
+                if (!await writer.WriteOnceAsync(message, cancelTokenSource.Token).ConfigureAwait(false))
                 {
-                    while (await writer.WaitToWriteAsync(cancelTokenSource.Token).ConfigureAwait(false))
-                    {
-                        if (!writer.TryWrite(message))
-                        {
-                            cancelTokenSource.Cancel();
-                            return;
-                        }
-                    }
+                    // The consuming side completed the channel, which
+                    // ends the subscription normally.
+                    cancelTokenSource.Cancel();
+                    return;
                 }
             }
         }
@@ -287,9 +319,7 @@ public sealed class MirrorGrpcClient : IAsyncDisposable
     /// </summary>
     private MirrorContextStack CreateChildContext(Action<IMirrorGrpcContext>? configure)
     {
-        var context = new MirrorContextStack(_context);
-        configure?.Invoke(context);
-        return context;
+        return MirrorContextStack.Configure(new MirrorContextStack(_context), configure);
     }
     /// <summary>
     /// The default algorithm for creating channels for the
@@ -314,7 +344,13 @@ public sealed class MirrorGrpcClient : IAsyncDisposable
                 KeepAlivePingTimeout = TimeSpan.FromSeconds(30),
                 KeepAlivePingDelay = TimeSpan.FromSeconds(60),
                 KeepAlivePingPolicy = HttpKeepAlivePingPolicy.Always
-            }
+            },
+            // The channel must dispose the handler it was given: without
+            // this, a disposed client leaves the handler's connection pool
+            // holding a keep-alive-pinged HTTP/2 connection to the mirror
+            // node until garbage collection, so applications that create
+            // and dispose clients repeatedly accumulate live connections.
+            DisposeHttpClient = true
         };
         return GrpcChannel.ForAddress(uri, options);
     }

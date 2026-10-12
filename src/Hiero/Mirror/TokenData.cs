@@ -70,10 +70,8 @@ public class TokenData
     /// <summary>
     /// Optional address of the account supporting the auto renewal of 
     /// the token at expiration time.  The token lifetime will be
-    /// extended by the RenewPeriod at expiration time if this account
-    /// contains sufficient funds.  The private key associated with
-    /// this account must sign the transaction if RenewAccount is
-    /// specified.
+    /// extended by <see cref="RenewPeriodInSeconds"/> at expiration time
+    /// if this account contains sufficient funds.
     /// </summary>
     [JsonPropertyName("auto_renew_account")]
     public EntityId? RenewAccount { get; set; }
@@ -117,8 +115,9 @@ public class TokenData
     [JsonPropertyName("kyc_key")]
     public Endorsement? GrantKycEndorsement { get; set; }
     /// <summary>
-    /// Administrator key for signing transactions that can pause or continue
-    /// the exchange of all assets across all accounts on the network.
+    /// Administrator key for signing transactions that pause or unpause
+    /// this token.  While paused, the token cannot be transferred or
+    /// otherwise modified; it has no effect on any other token.
     /// </summary>
     [JsonPropertyName("pause_key")]
     public Endorsement? PauseEndorsement { get; set; }
@@ -177,6 +176,8 @@ public class TokenData
     /// <summary>
     /// Expiration date for the token.  Will renew as determined by the
     /// renew period and balance of auto renew account.
+    /// <see cref="ConsensusTimeStamp.MinValue"/> when the mirror node
+    /// reports none.
     /// </summary>
     [JsonPropertyName("expiry_timestamp")]
     [JsonConverter(typeof(ConsensusTimeStampForTokenExpirationConverter))]
@@ -212,6 +213,9 @@ public static class TokenDataExtensions
     /// <param name="token">
     /// The ID of the token to retrieve.
     /// </param>
+    /// <param name="cancellationToken">
+    /// Token that cancels the request.
+    /// </param>
     /// <param name="filters">
     /// Additional query parameters. The endpoint supports
     /// <see cref="TimestampFilter"/>.
@@ -220,9 +224,14 @@ public static class TokenDataExtensions
     /// The token information, or null if the token id is unknown to
     /// the mirror node.
     /// </returns>
-    public static Task<TokenData?> GetTokenAsync(this MirrorRestClient client, EntityId token, params IMirrorQueryParameter[] filters)
+    public static Task<TokenData?> GetTokenAsync(this MirrorRestClient client, EntityId token, CancellationToken cancellationToken, params IMirrorQueryParameter[] filters)
     {
         var path = GenerateInitialPath($"tokens/{token.ToMirrorString()}", filters);
-        return client.GetSingleItemAsync(path, MirrorJsonContext.Default.TokenData);
+        return client.GetSingleItemAsync(path, MirrorJsonContext.Default.TokenData, cancellationToken);
+    }
+    /// <inheritdoc cref="GetTokenAsync(MirrorRestClient, EntityId, CancellationToken, IMirrorQueryParameter[])"/>
+    public static Task<TokenData?> GetTokenAsync(this MirrorRestClient client, EntityId token, params IMirrorQueryParameter[] filters)
+    {
+        return client.GetTokenAsync(token, CancellationToken.None, filters);
     }
 }

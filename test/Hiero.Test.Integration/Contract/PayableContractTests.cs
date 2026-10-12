@@ -45,7 +45,7 @@ public class PayableContractTests
         await Assert.That(record.Result.Nonces).IsEmpty();
 
         // Ensure matches API version.
-        var apiBalance = await client.GetContractBalanceAsync(fx.ContractReceipt!.Contract);
+        var apiBalance = await TestNetwork.GetCryptoBalanceAsync(fx.ContractReceipt!.Contract);
         await Assert.That(apiBalance).IsEqualTo((ulong)fx.ContractParams.InitialBalance);
     }
 
@@ -82,7 +82,7 @@ public class PayableContractTests
         await Assert.That(result.EvmAddress).IsEqualTo(EvmAddress.None);
 
         // Ensure matches API version.
-        var apiBalance = await client.GetContractBalanceAsync(fx.ContractReceipt!.Contract);
+        var apiBalance = await TestNetwork.GetCryptoBalanceAsync(fx.ContractReceipt!.Contract);
         await Assert.That(apiBalance).IsEqualTo((ulong)fx.ContractParams.InitialBalance);
 
         // Ensure matches Info version
@@ -212,7 +212,7 @@ public class PayableContractTests
         await Assert.That(contractBalanceBefore.Result!.Result.As<long>()).IsEqualTo(fxContract.ContractParams.InitialBalance);
 
         // Ensure matches API version.
-        var apiBalance = await client.GetContractBalanceAsync(fxContract.ContractReceipt!.Contract);
+        var apiBalance = await TestNetwork.GetCryptoBalanceAsync(fxContract.ContractReceipt!.Contract);
         await Assert.That(apiBalance).IsEqualTo((ulong)fxContract.ContractParams.InitialBalance);
 
         // Ensure matches Info version
@@ -248,7 +248,7 @@ public class PayableContractTests
         await Assert.That(contractBalanceAfter.Result!.Result.As<long>()).IsEqualTo(fxContract.ContractParams.InitialBalance);
 
         // Ensure matches API version.
-        apiBalance = await client.GetContractBalanceAsync(fxContract.ContractReceipt!.Contract);
+        apiBalance = await TestNetwork.GetCryptoBalanceAsync(fxContract.ContractReceipt!.Contract);
         await Assert.That(apiBalance).IsEqualTo((ulong)fxContract.ContractParams.InitialBalance);
 
         // Ensure matches Info version
@@ -312,7 +312,7 @@ public class PayableContractTests
         await Assert.That(contractBalanceBefore.Result!.Result.As<long>()).IsEqualTo(fxContract.ContractParams.InitialBalance);
 
         // Ensure matches API version.
-        var apiBalance = await client.GetContractBalanceAsync(fxContract.ContractReceipt!.Contract);
+        var apiBalance = await TestNetwork.GetCryptoBalanceAsync(fxContract.ContractReceipt!.Contract);
         await Assert.That(apiBalance).IsEqualTo((ulong)fxContract.ContractParams.InitialBalance);
 
         // Call the contract, sending to the address of the now deleted account
@@ -344,7 +344,7 @@ public class PayableContractTests
         await Assert.That(contractBalanceAfter.Result!.Result.As<long>()).IsEqualTo(fxContract.ContractParams.InitialBalance);
 
         // Ensure matches API version.
-        apiBalance = await client.GetContractBalanceAsync(fxContract.ContractReceipt!.Contract);
+        apiBalance = await TestNetwork.GetCryptoBalanceAsync(fxContract.ContractReceipt!.Contract);
         await Assert.That(apiBalance).IsEqualTo((ulong)fxContract.ContractParams.InitialBalance);
 
         // Try to get info on the deleted account, but this will fail because the
@@ -378,7 +378,7 @@ public class PayableContractTests
         await using var client = await TestNetwork.CreateClientAsync();
 
         ulong initialBalance = (ulong)fx.ContractParams.InitialBalance;
-        var apiBalanceBefore = await client.GetContractBalanceAsync(fx.ContractReceipt!.Contract);
+        var apiBalanceBefore = await TestNetwork.GetCryptoBalanceAsync(fx.ContractReceipt!.Contract);
         var infoBalanceBefore = (await client.GetContractInfoAsync(fx.ContractReceipt!.Contract)).Balance;
         var callBalanceBeforeReceipt = await client.CallContractAsync(new CallContractParams
         {
@@ -403,7 +403,7 @@ public class PayableContractTests
         await Assert.That(record.Status).IsEqualTo(ResponseCode.Success);
 
         ulong finalBalance = (ulong)fx.ContractParams.InitialBalance + (ulong)extraFunds;
-        var apiBalanceAfter = await client.GetContractBalanceAsync(fx.ContractReceipt!.Contract);
+        var apiBalanceAfter = await TestNetwork.GetCryptoBalanceAsync(fx.ContractReceipt!.Contract);
         var infoBalanceAfter = (await client.GetContractInfoAsync(fx.ContractReceipt!.Contract)).Balance;
         var callBalanceAfterReceipt = await client.CallContractAsync(new CallContractParams
         {
@@ -425,7 +425,7 @@ public class PayableContractTests
         await using var client = await TestNetwork.CreateClientAsync();
 
         ulong initialBalance = (ulong)fx.ContractParams.InitialBalance;
-        var apiBalanceBefore = await client.GetContractBalanceAsync(fx.ContractReceipt!.Contract);
+        var apiBalanceBefore = await TestNetwork.GetCryptoBalanceAsync(fx.ContractReceipt!.Contract);
         var infoBalanceBefore = (await client.GetContractInfoAsync(fx.ContractReceipt!.Contract)).Balance;
         var callBalanceBeforeReceipt = await client.CallContractAsync(new CallContractParams
         {
@@ -444,7 +444,7 @@ public class PayableContractTests
         await Assert.That(transferReceipt.Status).IsEqualTo(ResponseCode.Success);
 
         ulong finalBalance = (ulong)fx.ContractParams.InitialBalance + (ulong)extraFunds;
-        var apiBalanceAfter = await client.GetContractBalanceAsync(fx.ContractReceipt!.Contract);
+        var apiBalanceAfter = await TestNetwork.GetCryptoBalanceAsync(fx.ContractReceipt!.Contract);
         var infoBalanceAfter = (await client.GetContractInfoAsync(fx.ContractReceipt!.Contract)).Balance;
         var callBalanceAfterReceipt = await client.CallContractAsync(new CallContractParams
         {
@@ -457,5 +457,39 @@ public class PayableContractTests
         await Assert.That(apiBalanceAfter).IsEqualTo(finalBalance);
         await Assert.That(infoBalanceAfter).IsEqualTo(finalBalance);
         await Assert.That(callBalanceAfter).IsEqualTo(finalBalance);
+    }
+
+    [Test]
+    public async Task Can_Call_A_Receive_Function_With_No_Method_Name()
+    {
+        // A contract that, like a Solidity receive(), succeeds only when called
+        // with no call data: CALLDATASIZE ISZERO PUSH1 9 JUMPI PUSH1 0 DUP1
+        // REVERT JUMPDEST STOP, behind init code that returns it.
+        var byteCode = Convert.FromHexString("600b600c600039600b6000f3" + "3615600957600080fd5b00");
+        await using var client = await TestNetwork.CreateClientAsync();
+        var created = await client.CreateContractAsync(new CreateContractParams
+        {
+            ByteCode = byteCode,
+            Gas = 200_000,
+            RenewPeriod = TimeSpan.FromSeconds(7890000)
+        });
+
+        var receipt = await client.CallContractAsync(new CallContractParams
+        {
+            Contract = created.Contract,
+            Gas = 50_000,
+            PayableAmount = 1_000
+        });
+        await Assert.That(receipt.Status).IsEqualTo(ResponseCode.Success);
+        await Assert.That(await TestNetwork.GetCryptoBalanceAsync(created.Contract)).IsEqualTo(1_000ul);
+
+        // Naming any method sends a selector, which this contract refuses.
+        var tex = await Assert.ThrowsAsync<TransactionException>(async () => await client.CallContractAsync(new CallContractParams
+        {
+            Contract = created.Contract,
+            Gas = 50_000,
+            MethodName = "anything"
+        }));
+        await Assert.That(tex!.Status).IsEqualTo(ResponseCode.ContractRevertExecuted);
     }
 }

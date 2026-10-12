@@ -1,0 +1,16 @@
+<Solution>
+  <Project Path="BlockRepeater/BlockRepeater.csproj" />
+  <Project Path="BlockSubscription/BlockSubscription.csproj" />
+  <Project Path="ConsensusService/ConsensusService.csproj" />
+  <Project Path="CreateNft/CreateNft.csproj" />
+  <Project Path="CreateToken/CreateToken.csproj" />
+  <Project Path="DocSnippets/DocSnippets.csproj" />
+  <Project Path="FileService/FileService.csproj" />
+  <Project Path="MirrorQueries/MirrorQueries.csproj" />
+  <Project Path="QueryBalance/QueryBalance.csproj" />
+  <Project Path="ScheduleTransaction/ScheduleTransaction.csproj" />
+  <Project Path="SmartContract/SmartContract.csproj" />
+  <Project Path="TokenAirdrop/TokenAirdrop.csproj" />
+  <Project Path="TopicSubscription/TopicSubscription.csproj" />
+  <Project Path="TransferCrypto/TransferCrypto.csproj" />
+</Solution>

@@ -31,7 +31,9 @@ public class TestAliasAccount : IHasCryptoBalance, IHasTokenBalance, IAsyncDispo
         await using var client = await TestNetwork.CreateClientAsync();
         fixture.TransferReceipt = await client.TransferAsync(TestNetwork.Payer, fixture.Alias, fixture.InitialTransfer, ctx => ctx.Memo = Generator.Code(20));
         var allReceipts = await client.GetAllReceiptsAsync(fixture.TransferReceipt.TransactionId);
-        fixture.CreateReceipt = allReceipts.OfType<CreateAccountReceipt>().First();
+        // The network creates the account on the transfer's behalf, so its
+        // receipt arrives as a child of the transfer, not the transfer's own.
+        fixture.CreateReceipt = allReceipts.Children.OfType<CreateAccountReceipt>().Single();
         TestContext.Current?.OutputWriter.WriteLine("SETUP COMPLETED: Pay to Alias Account Instance");
         return fixture;
     }
@@ -45,7 +47,7 @@ public class TestAliasAccount : IHasCryptoBalance, IHasTokenBalance, IAsyncDispo
         try
         {
             await using var client = await TestNetwork.CreateClientAsync();
-            var balance = await client.GetAccountBalanceAsync(CreateReceipt.Address);
+            var balance = await TestNetwork.GetCryptoBalanceAsync(CreateReceipt.Address);
             if (balance > 0_00_120_000)
             {
                 await client.TransferAsync(CreateReceipt.Address, TestNetwork.Payer, (long)balance, ctx => ctx.Signatory = new Signatory(ctx.Signatory!, PrivateKey));
@@ -63,8 +65,7 @@ public class TestAliasAccount : IHasCryptoBalance, IHasTokenBalance, IAsyncDispo
         {
             return 0;
         }
-        await using var client = await TestNetwork.CreateClientAsync();
-        return await client.GetAccountBalanceAsync(CreateReceipt.Address);
+        return await TestNetwork.GetCryptoBalanceAsync(CreateReceipt.Address);
     }
     public async Task<long?> GetTokenBalanceAsync(EntityId token)
     {

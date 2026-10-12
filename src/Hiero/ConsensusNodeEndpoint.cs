@@ -1,6 +1,9 @@
 ﻿// SPDX-License-Identifier: Apache-2.0
 using Hiero.Converters;
 using System.Diagnostics;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
+using System.Text;
 using System.Text.Json.Serialization;
 
 namespace Hiero;
@@ -39,8 +42,9 @@ public sealed record ConsensusNodeEndpoint
     /// and hostname validation can never succeed against a TLS (port 50212)
     /// endpoint.  When this hash is supplied and the <see cref="Uri"/> scheme is
     /// <c>https</c>, the client's default channel factory pins the connection to
-    /// this hash instead of using chain/hostname validation.  When empty, the
-    /// default factory falls back to standard TLS validation (appropriate for
+    /// this hash instead of using chain/hostname validation; a custom channel
+    /// factory does the same with <see cref="MatchesCertificate"/>.  When empty,
+    /// the default factory falls back to standard TLS validation (appropriate for
     /// proxy-fronted DNS endpoints that present a chain-valid certificate).
     /// This value participates in equality (by content): two endpoints that pin
     /// to different certificate hashes — or one that pins and one that does not —
@@ -102,6 +106,66 @@ public sealed record ConsensusNodeEndpoint
         Uri = uri;
         Node = node;
         CertificateHash = certificateHash;
+    }
+    /// <summary>
+    /// Determines whether a certificate presented by this endpoint during the
+    /// TLS handshake is the one the network's address book published for it,
+    /// by comparing the certificate's hash to <see cref="CertificateHash"/>.
+    /// </summary>
+    /// <remarks>
+    /// A custom channel factory passed to
+    /// <see cref="ConsensusClient(Func{ConsensusNodeEndpoint, Grpc.Net.Client.GrpcChannel}, Action{IConsensusContext})"/>
+    /// replaces the default factory, and with it the default factory's
+    /// certificate pinning.  Call this method from the factory's
+    /// <c>RemoteCertificateValidationCallback</c> to pin the TLS connection
+    /// the same way:
+    /// <code>
+    /// SslOptions = new SslClientAuthenticationOptions
+    /// {
+    ///     RemoteCertificateValidationCallback = (_, cert, _, _) =&gt; endpoint.MatchesCertificate(cert)
+    /// }
+    /// </code>
+    /// The hash is the SHA-384 of the certificate's PEM text with one trailing
+    /// newline, the address book's convention, compared in constant time.  An
+    /// endpoint with no <see cref="CertificateHash"/> matches no certificate;
+    /// with nothing to pin to, a factory should leave standard TLS validation in
+    /// place for it, as the default factory does.
+    /// </remarks>
+    /// <param name="certificate">
+    /// The certificate the endpoint presented, as passed to a
+    /// <c>RemoteCertificateValidationCallback</c>; null when it presented none.
+    /// The certificate is not modified or disposed.
+    /// </param>
+    /// <returns>
+    /// True when this endpoint has a <see cref="CertificateHash"/> and the
+    /// certificate's hash equals it; otherwise false.
+    /// </returns>
+    public bool MatchesCertificate(X509Certificate? certificate)
+    {
+        if (certificate is null || CertificateHash.IsEmpty)
+        {
+            return false;
+        }
+        return CryptographicOperations.FixedTimeEquals(ComputeCertHash(certificate), CertificateHash.Span);
+    }
+    /// <summary>
+    /// Computes the address-book certificate hash for a presented TLS certificate:
+    /// the SHA-384 of the certificate's standard PEM text including exactly one
+    /// trailing newline after the <c>-----END CERTIFICATE-----</c> line, the value
+    /// the network publishes as <c>node_cert_hash</c>.  The PEM text is encoded
+    /// from the certificate's DER bytes, as
+    /// <see cref="X509Certificate2.ExportCertificatePem"/> does, so the caller's
+    /// certificate object is only read.
+    /// </summary>
+    /// <param name="certificate">The certificate presented during the TLS handshake.</param>
+    /// <returns>The 48-byte SHA-384 hash to compare against the expected value.</returns>
+    internal static byte[] ComputeCertHash(X509Certificate certificate)
+    {
+        var pem = PemEncoding.Write("CERTIFICATE", certificate.GetRawCertData());
+        var text = new byte[pem.Length + 1];
+        Encoding.ASCII.GetBytes(pem, text);
+        text[^1] = (byte)'\n';
+        return SHA384.HashData(text);
     }
     /// <summary>
     /// Determines equality with another <see cref="ConsensusNodeEndpoint"/>.
